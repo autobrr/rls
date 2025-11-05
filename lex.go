@@ -568,6 +568,12 @@ func NewGenreLexer() Lexer {
 	}
 }
 
+// groupShortTagAllow permits certain short tags to still be parsed as release
+// groups even if they also exist in taginfo (eg, MAX).
+var groupShortTagAllow = map[string]bool{
+	"MAX": true,
+}
+
 // NewGroupLexer creates a tag lexer for a group.
 func NewGroupLexer() Lexer {
 	const delim, invalid = '-', ` _.()[]{}+`
@@ -608,7 +614,7 @@ func NewGroupLexer() Lexer {
 				s := src[l+j+1 : n]
 				if grp := bytes.Trim(s, " \t_"); len(grp) != 0 &&
 					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && group.Match(grp))) &&
-					!shortTags[string(grp)] &&
+					(!shortTags[string(grp)] || groupShortTagAllow[string(grp)]) &&
 					(len(end) == 0 || !bracket.MatchString(end[len(end)-1].Text())) {
 					return start, append(
 						end,

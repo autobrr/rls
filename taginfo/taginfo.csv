@@ -138,6 +138,7 @@ collection,LearnNowOnline,,,,education,1
 collection,LinkedIn.Learning,LinkedIn Learning,linkedin[\-\._ ]?learning,,education,1
 collection,LinuxCBT,,linux[\-\._ ]?cbt(?:[\-\._ ]?com)?,,education,1
 collection,Lynda,,lynda(?:[\-\._ ]?com)?,,education,1
+collection,MAX,Max,(?-i:MAX),,,
 collection,MTV,MTV Networks,,,,
 collection,MUBI,Mubi,,,,
 collection,NBC,National Broadcasting Company,,,,

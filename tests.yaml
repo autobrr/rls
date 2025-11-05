@@ -1903,6 +1903,18 @@
   other: "BOXSET"
   language: "NORDiC"
   group: "TWASERiES"
+"Game of Thrones S01 1080p MAX WEB-DL DD+ 5.1 Atmos DV HDR H.265-Kitsune":
+  type: "series"
+  title: "Game of Thrones"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "MAX"
+  series: 1
+  codec: "H.265"
+  hdr: "DV HDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "Kitsune"
 "Game of Thrones - 4x03 - Breaker of Chains":
   type: "episode"
   title: "Game of Thrones"
