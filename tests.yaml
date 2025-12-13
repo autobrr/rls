@@ -3334,12 +3334,12 @@
   group: "DVT"
   unused: "15TH BIRTHDAY"
 "Dead.Dungeon.v1.0.11-SiMPLEX":
-  type: "app"
+  type: "game"
   title: "Dead Dungeon"
   version: "v1.0.11"
   group: "SiMPLEX"
 "Depraved.v1.1a_56.Update.v1.1d.57-SiMPLEX":
-  type: "app"
+  type: "game"
   title: "Depraved"
   version: "v1.1a_56"
   other: "UPDATE"

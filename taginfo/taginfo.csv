@@ -737,3 +737,20 @@ source,Whitelabel,Whitelabel Promo,whitelabel|wlp,,music,1
 source,WORKPRiNT,Workprint,workprint|wp,,movie,1
 source,XBOXDVD,Xbox (DVD),,,game,1
 source,$1INCH.ViNYL,Vinyl ($i inch),(\d\d?)[\-\._ ]?inch(?:[\-\._ ]?vinyl)?,,music,1
+group,CODEX,CODEX,,,game,1
+group,CPY,CPY,,,game,1
+group,DARKSiDERS,DARKSiDERS,(?-i:DARKS[iI]DERS),,game,1
+group,DODI,DODI,(?-i:DOD[iI]),,game,1
+group,EMPRESS,EMPRESS,,,game,1
+group,FLT,FLT,,,game,1
+group,HOODLUM,HOODLUM,,,game,1
+group,I_KnoW,I_KnoW,i[\-\._ ]?know,,game,1
+group,PLAZA,PLAZA,,,game,1
+group,PROPHET,PROPHET,,,game,1
+group,RAZOR1911,RAZOR1911,razor[\-\._ ]?1911,,game,1
+group,RELOADED,RELOADED,,,game,1
+group,RUNE,RUNE,,,game,1
+group,SiMPLEX,SiMPLEX,(?-i:S[iI]MPL[eE]X),,game,1
+group,SKIDROW,SKIDROW,(?-i:SK[iI]DR[oO]W),,game,1
+group,TENOKE,TENOKE,,,game,1
+group,TiNYiSO,TiNYiSO,(?-i:T[iI]NY[iI]SO),,game,1
