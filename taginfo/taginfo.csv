@@ -754,3 +754,55 @@ group,SiMPLEX,SiMPLEX,(?-i:S[iI]MPL[eE]X),,game,1
 group,SKIDROW,SKIDROW,(?-i:SK[iI]DR[oO]W),,game,1
 group,TENOKE,TENOKE,,,game,1
 group,TiNYiSO,TiNYiSO,(?-i:T[iI]NY[iI]SO),,game,1
+group,3DM,3DM,,,game,1
+group,ALI213,ALI213,,,game,1
+group,AGB,AGB Golden Team,agb(?:[\-\._ ]golden[\-\._ ]team)?,,game,1
+group,Black.Box,Black Box,black[\-\._ ]?box,,game,1
+group,DCRES,DCRES,,,game,1
+group,DWi,DEaL.WiTH.iT,dw[iI]|deal[\-\._ ]?with[\-\._ ]?it,,game,1
+group,Fei,Fei,,,game,1
+group,FitGirl,FitGirl,fit[\-\._ ]?girl,,game,1
+group,FLUGEL,FLUGEL,,,game,1
+group,FTS,FTS,,,game,1
+group,KaOS,KaOS,,,game,1
+group,Kortal,Kortal,,,game,1
+group,MKDEV,MKDEV,,,game,1
+group,P2PGAMES,P2PGAMES,p2p[\-\._ ]?games,,game,1
+group,PAROVOZ,PAROVOZ,,,game,1
+group,RAF,RAF,,,game,1
+group,ReviveDC,ReviveDC,revive[\-\._ ]?dc,,game,1
+group,REVOLT,REVOLT,,,game,1
+group,RVTDOX,RVTDOX,,,game,1
+group,RVTFIX,RVTFIX,,,game,1
+group,TeaMCrossFirE,TeaMCrossFirE,team[\-\._ ]?cross[\-\._ ]?fire,,game,1
+group,THETA,THETA,,,game,1
+group,TPTB,TPTB,,,game,1
+group,VRP,VRP,,,game,1
+group,XB3,XB3,,,game,1
+group,ZKY,ZKY,,,game,1
+group,0x0007,0x0007,,,game,1
+group,0x0815,0x0815,,,game,1
+group,3DiSO,3DiSO,,,game,1
+group,ANOMALY,ANOMALY,,,game,1
+group,BAT,BAT,,,game,1
+group,BLASTCiTY,BLASTCiTY,(?-i:BLAST[cC][iI]TY),,game,1
+group,CONSPIR4CY,CONSPIRACY,conspir4cy|conspiracy,,game,1
+group,DEViANCE,DEViANCE,(?-i:D[eE]V[iI][aA]NC[eE]),,game,1
+group,DiNOBYTES,DiNOBYTES,(?-i:D[iI]?N[oO0]B[yY]T[eE]S),,game,1
+group,DUPLEX,DUPLEX,,,game,1
+group,ECHELON,ECHELON,,,game,1
+group,FAiRLiGHT,FAiRLiGHT,(?-i:FA[iI]RL[iI]GHT),,game,1
+group,GENESiS,GENESiS,(?-i:G[eE]N[eE]S[iI]S),,game,1
+group,GOD,GOD,,,game,1
+group,HI2U,HI2U,hi[\-\._ ]?2[\-\._ ]?u,,game,1
+group,HYBRiD,HYBRiD,(?-i:HYBR[iI]D),,game,1
+group,KALISTO,KALISTO,(?-i:KAL[iI]STO),,game,1
+group,MYTH,MYTH,,,game,1
+group,NiTROUS,NiTROUS,(?-i:N[iI]TROUS),,game,1
+group,PARADOX,PARADOX,,,game,1
+group,POSTMORTEM,POSTMORTEM,,,game,1
+group,RiTUEL,RiTUEL,(?-i:R[iI]TU[eE]L),,game,1
+group,STEAMPUNKS,STEAMPUNKS,steam[\-\._ ]?punks,,game,1
+group,ViTALiTY,ViTALiTY,(?-i:V[iI]T[aA]L[iI]TY),,game,1
+group,VACE,VACE,,,game,1
+group,VREX,VREX,,,game,1
