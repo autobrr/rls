@@ -686,6 +686,17 @@
   channels: "5.1"
   group: "NTG"
   ext: "mkv"
+"Chainsaw.Man.-.The.Movie.Reze.Arc.2025.1080p.MA.WEB-DL.DUAL.DDP5.1.Atmos.H.264-BYNDR":
+  type: "movie"
+  title: "Chainsaw Man - The Movie Reze Arc"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "MA"
+  year: 2025
+  codec: "H.264"
+  audio: "DUAL.AUDIO DDP Atmos"
+  channels: "5.1"
+  group: "BYNDR"
 "Fear.and.Loathing.in.Las.Vegas.1998.The.Criterion.Collection.1080p.BluRay.DTS.x264-HiFi":
   type: "movie"
   title: "Fear and Loathing in Las Vegas"

@@ -130,6 +130,7 @@ collection,iGN.com,,ign\.com,,,
 collection,IMAX,,(?-i:IMAX),,,
 collection,iPlayer,BBC iPlayer,(?-i:iP)(?:layer)?,,,
 collection,iTunes,,(?-i:iT)(?:unes)?,,,
+collection,MA,Movies Anywhere,(?-i:MA),,movie,
 collection,JAV,Japanese Adult Video,,,,
 collection,JPOP,Japanese Pop,,,music,1
 collection,KelbyOne,,kelby(?:[\-\._ ]?(?:one|training))?,,education,1
