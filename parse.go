@@ -507,6 +507,17 @@ func (b *TagBuilder) fixMusic(r *Release) {
 
 // collect collects tags into the release.
 func (b *TagBuilder) collect(r *Release) {
+	// determine pivot and the text end prior to pivot — only consider series
+	// tags that occur before this 'end' (the first text prior to the pivot).
+	// Note: do not include TagTypeSeries when computing the pivot here —
+	// including it causes the pivot to point to series tags themselves and
+	// leads to misclassification when series tags appear early in the name.
+	// compute pivot based on source/resolution/version so that series tags
+	// following a title or year (TagTypeDate) are still accepted. Excluding
+	// TagTypeDate prevents dates from moving the pivot before legitimate
+	// series tokens.
+	_, seriesTextEnd := b.pivots(r, TagTypeSource, TagTypeResolution, TagTypeVersion)
+
 	for i := 0; i < len(r.tags); i++ {
 		switch r.tags[i].typ {
 		case TagTypeText:
@@ -534,12 +545,26 @@ func (b *TagBuilder) collect(r *Release) {
 		case TagTypeDate:
 			r.Year, r.Month, r.Day = r.tags[i].Date()
 		case TagTypeSeries:
-			series, episode := r.tags[i].Series()
+			// only accept series tags from the initial part of the release
+			// name (typically after the title or year). series tokens found
+			// after the pivot (eg. in codec/version sections) are ignored.
+			if i >= seriesTextEnd {
+				// treat as text (leave for unused/group heuristics)
+				r.tags[i] = r.tags[i].As(TagTypeText, nil)
+				break
+			}
+			// inspect raw tag captures so we can detect explicit episode captures
+			tag := r.tags[i]
+			series, episode := tag.Series()
 			if r.Series == 0 {
 				r.Series = series
 			}
-			if r.Episode == 0 {
-				r.Episode = episode
+			// if the tag actually captured an episode (even "0"), set episode
+			if len(tag.v) > 2 && tag.v[2] != "" {
+				// prefer first explicit episode capture
+				if r.Episode == 0 && (episode != 0 || tag.v[2] == "0") {
+					r.Episode = episode
+				}
 			}
 		case TagTypeVersion:
 			if r.Version == "" {
@@ -627,6 +652,14 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 		return r.Type
 	}
 	n := len(r.tags)
+	// detect explicit episode captures in tags (including "0")
+	episodePresent := false
+	for _, t := range r.tags {
+		if t.Is(TagTypeSeries) && len(t.v) > 2 && t.v[2] != "" {
+			episodePresent = true
+			break
+		}
+	}
 	// inspect types
 	var app, series, movie bool
 	for i := n; i > 0; i-- {
@@ -642,12 +675,12 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			}
 			return typ
 		case Series, Episode:
-			if r.Episode != 0 || (r.Series == 0 && r.Episode == 0) && !contains(r.Other, "BOXSET") {
+			if episodePresent || (r.Series == 0 && !episodePresent) && !contains(r.Other, "BOXSET") {
 				return Episode
 			}
 			return Series
 		case Education:
-			if r.Series == 0 && r.Episode == 0 {
+			if r.Series == 0 && !episodePresent {
 				return Education
 			}
 		case Music:
@@ -664,7 +697,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 		// exclusive tag not superseded by version/episode/date
 		if r.tags[i-1].InfoExcl() &&
 			r.Version == "" &&
-			r.Series == 0 && r.Episode == 0 &&
+			r.Series == 0 && !episodePresent &&
 			r.Day == 0 && r.Month == 0 {
 			return typ
 		}
@@ -690,7 +723,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 	}
 	// defaults
 	switch {
-	case r.Episode != 0 || (r.Year != 0 && r.Month != 0 && r.Day != 0):
+	case episodePresent || (r.Year != 0 && r.Month != 0 && r.Day != 0):
 		return Episode
 	case r.Series != 0 || series:
 		return Series
@@ -1180,7 +1213,17 @@ func (b *TagBuilder) unused(r *Release, i int) {
 		case r.Sum == "" && b.sum.MatchString(s) && strings.ContainsAny(s, "0123456789"):
 			r.Sum, r.unused = s, r.unused[:n-1]
 		case r.Group == "" && !b.digits.MatchString(s):
-			r.Group, r.unused = s, r.unused[:n-1]
+			// if the unused tag was originally a series token, reconstruct
+			// a normalized series-like group (eg. "S97") using the numeric
+			// capture rather than the raw captured text (which may include
+			// punctuation such as a trailing dot).
+			if r.tags[r.unused[n-1]].Was(TagTypeSeries) {
+				series, _ := r.tags[r.unused[n-1]].Series()
+				r.Group = fmt.Sprintf("S%v", series)
+			} else {
+				r.Group = s
+			}
+			r.unused = r.unused[:n-1]
 		}
 	}
 }

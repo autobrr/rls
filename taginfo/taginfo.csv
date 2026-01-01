@@ -179,6 +179,7 @@ collection,VTC,,,,education,1
 collection,WAKA,Wakanim,(?-i:WAKA),,,
 collection,WiiWare,WiiWare Shop,,,game,1
 collection,Wiley,,wiley(?:[\-\._ ]?com)?,,education,1
+collection,WOWP,WOW Presents Plus,(?-i:WOWP)|WOW Presents Plus,,,
 collection,XBLA,Xbox Live Arcade,,,game,1
 collection,XXX,Adult,(?-i:XXX),,,
 collection,YOUTUBE,YouTube,(?-i:YOUTUBE)|(?-i:YT),,,

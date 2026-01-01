@@ -1973,12 +1973,13 @@
   site: "SubsPlease"
   sum: "C00D6C68"
 "Hold.The.Sunset.S01E00.Christmas.Special.720p.HDTV.X264-MTB":
-  type: "series"
+  type: "episode"
   title: "Hold The Sunset"
   subtitle: "Christmas Special"
   source: "HDTV"
   resolution: "720p"
   series: 1
+  episode: 0
   codec: "x264"
   group: "MTB"
 "HollyRandall.15.03.09.Black.Angelika.and.Nick.Lang.Take.Me.Home.Tonight.XXX.1080p.x264-GAGViD":
@@ -3693,3 +3694,40 @@
   type: "game"
   title: "Oddsparks An Automation Adventure Coaster Rush"
   group: "RUNE"
+"Big Fat Quiz S2025E02 1080p ALL4 WEB-DL AAC 2.0 H.264-RAWR":
+  type: "episode"
+  title: "Big Fat Quiz"
+  source: "WEB-DL"
+  resolution: "1080p"
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  series: 2025
+  Episode: 2
+  collection: "ALL4"
+  group: "RAWR"
+"Robotech The Macross Saga E00 Extended Pilot 1080p BluRay x264-PRESENT":
+  type: "episode"
+  title: "Robotech The Macross Saga"
+  subtitle: "Pilot"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 0
+  Episode: 0
+  cut: "Extended.Cut"
+  codec: "x264"
+  group: "PRESENT"
+# to do: fix subtitle as "Meet the Queens of Season 1"
+"Drag Race Philippines: Slaysian Royale S01E00 Meet the Queens of Season 1 1080p WOWP WEB-DL AAC 2.0 H.264-Kitsune":
+  type: "episode"
+  title: "Drag Race Philippines: Slaysian Royale"
+  subtitle: "Meet the Queens of"
+  source: "WEB-DL"
+  resolution: "1080p"
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  series: 1
+  Episode: 0
+  group: "Kitsune"
+  collection: "WOWP"
