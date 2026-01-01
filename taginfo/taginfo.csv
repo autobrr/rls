@@ -128,7 +128,7 @@ collection,IBM.Press,IBM Press,ibm[\-\._ ]?press,,education,1
 collection,IDT.Radio,ID&T Radio,idt[\-\._ ]?radio,,music,1
 collection,iGN.com,,ign\.com,,,
 collection,IMAX,,(?-i:IMAX),,,
-collection,iPlayer,BBC iPlayer,(?-i:iP)(?:layer)?,,,
+collection,iPlayer,BBC iPlayer,(?-i:iP|IP)(?:layer)?,,,
 collection,iTunes,,(?-i:iT)(?:unes)?,,,
 collection,MA,Movies Anywhere,(?-i:MA),,movie,
 collection,JAV,Japanese Adult Video,,,,

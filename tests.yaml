@@ -2310,6 +2310,18 @@
   site: "chibi-Doki"
   sum: "988DB090"
   ext: "mkv"
+"Show.S01E01.1080p.IP.WEB-DL.AAC2.0.H.264-GROUP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "iPlayer"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "GROUP"
 "Skins.S06E10.Finale.German.DD20.Dubbed.DL.720p.AmazonHD.x264-TVS":
   type: "episode"
   title: "Skins"
