@@ -25,6 +25,7 @@ func Join(quote bool, strs ...string) string {
 // Build builds a regexp for strings.
 //
 // Config options:
+//
 //	i - ignore case
 //	^ - add ^ start anchor
 //	a - add \b start anchor

@@ -3,6 +3,7 @@ package rls
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math"
 	"regexp"
@@ -261,8 +262,8 @@ func (tag Tag) Info() *taginfo.Taginfo {
 // SingleEp returns true when the
 func (tag Tag) SingleEp() bool {
 	if tag.typ.Is(TagTypeSeries) {
-		s, e := tag.Series()
-		return s == 0 && e != 0 && tag.v[1] == "" && tag.v[0] == tag.v[2]
+		s, _ := tag.Series()
+		return s == 0 && len(tag.v) > 2 && tag.v[2] != "" && tag.v[1] == "" && tag.v[0] == tag.v[2]
 	}
 	return false
 }
@@ -346,7 +347,7 @@ func (tag Tag) Normalize() string {
 		return strconv.Itoa(year)
 	case TagTypeSeries:
 		series, episode := tag.Series()
-		if episode != 0 {
+		if len(tag.v) > 2 && tag.v[2] != "" {
 			return fmt.Sprintf("S%02dE%02d", series, episode)
 		}
 		return fmt.Sprintf("S%02d", series)
@@ -521,7 +522,10 @@ func (tag Tag) Series() (int, int) {
 func (tag Tag) Episodes() []int {
 	var v []int
 	for _, b := range tag.v[2:] {
-		if episode, _ := strconv.Atoi(b); episode != 0 {
+		if b == "" {
+			continue
+		}
+		if episode, err := strconv.Atoi(b); err == nil {
 			v = append(v, episode)
 		}
 	}
@@ -702,6 +706,12 @@ const (
 	Music
 	Series
 )
+
+// MarshalJSON ensures that when this type is converted to JSON,
+// it uses its string representation instead of the integer value.
+func (t Type) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.String())
+}
 
 // ParseType parses a type from s.
 func ParseType(s string) Type {

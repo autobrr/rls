@@ -41,3 +41,12 @@ func main() {
 	//   group: NOiR
 }
 ```
+## Build standalone cli
+```
+go build ./cmd/rls
+```
+
+## Run tests
+```
+go test ./...
+```

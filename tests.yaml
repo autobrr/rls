@@ -94,7 +94,7 @@
   source: "BluRay"
   year: 1992
   other: "INTERNAL"
-  language: "SWEDiSH SUBPACK"
+  language: "SWEDISH SUBPACK"
   group: "SiN"
 "(2001)A Space Odyssey(1961).mkv":
   type: "movie"
@@ -127,7 +127,7 @@
   codec: "x264"
   audio: "DUAL.AUDIO"
   channels: "6.0"
-  language: "ENGLiSH HiNDI"
+  language: "ENGLISH HINDI"
   group: "GOPISAHI"
   unused: "Esub"
 "2012(2009).1080p.Dual Audio(Hindi+English) 5.1 Audios":
@@ -137,7 +137,7 @@
   year: 2009
   audio: "DUAL.AUDIO"
   channels: "5.1"
-  language: "HiNDI ENGLiSH"
+  language: "HINDI ENGLISH"
 "2012 (2009) 1080p BrRip x264 - 1.7GB - YIFY":
   type: "movie"
   title: "2012"
@@ -227,7 +227,7 @@
   year: 2011
   codec: "x264.HQ"
   other: "3D Half-SBS"
-  language: "FRENCH MULTiSUB"
+  language: "FRENCH MULTISUB"
   group: "TUSAHD"
 "Adam.Carolla.Not.Taco.Bell.Material.2019.WEB-DL":
   type: "movie"
@@ -252,7 +252,7 @@
   audio: "DD"
   channels: "5.1"
   other: "UPSCALED"
-  language: "HiNDI"
+  language: "HINDI"
   group: "M2Tv"
   unused: "DesiSCR Rip Mafiaking"
 "Akte.X.Jenseits.der.Wahrheit.R5.Line.Dubbed.German.READ.NFO.XviD-VCF":
@@ -485,7 +485,7 @@
   year: 2006
   other: "DIRFIX COMPLETE"
   cut: "Extended.Cut"
-  language: "MULTi"
+  language: "MULTI"
   group: "MONUMENT"
 "(Comedy) Netflix Originals - Dave Chappelle - Deep in the Heart of Texas (2017) 1080p WEBRip DD5.1 x264-TrollHD.mkv":
   type: "movie"
@@ -671,7 +671,7 @@
   source: "BluRay"
   resolution: "720p"
   year: 1965
-  language: "VOSTFR RUSSiAN"
+  language: "VOSTFR RUSSIAN"
   group: "Popo"
   unused: "Russ Meyer Liosaa"
 "FAT.A.Documentary.2019.1080p.AMZN.WEB-DL.DDP5.1.H.264-NTG.mkv":
@@ -713,7 +713,7 @@
   source: "DVDSCR"
   resolution: "576p"
   codec: "H.264"
-  language: "ENGLiSH HARDSUB"
+  language: "ENGLISH HARDSUB"
   site: "ValdikSS"
   ext: "mkv"
 "\t foo\nbar\n\f\r1080p \t\nbluray\n\t":
@@ -771,7 +771,7 @@
   source: "HDTV"
   resolution: "720p"
   codec: "x264"
-  language: "DANiSH"
+  language: "DANISH"
   group: "SKANK"
 "(horror)Heart-.Burn+.-.h-264.D-Z0N3 {{ secret }}":
   type: "movie"
@@ -834,7 +834,7 @@
   year: 2014
   codec: "x264"
   audio: "AAC"
-  language: "ENGLiSH"
+  language: "ENGLISH"
   group: "CPG"
 "Jack.And.The.Cuckoo-Clock.Heart.2013.BRRip XViD":
   type: "movie"
@@ -1119,7 +1119,7 @@
   audio: "DDP Atmos"
   channels: "5.1"
   other: "HYBRiD"
-  language: "ENGLiSH"
+  language: "ENGLISH"
   group: "HONE"
   ext: "mkv"
 "South.Park.Bigger.Longer.and.Uncut.1999.1080p.Blu-ray.AVC.TrueHD.5.1.REMUX-FraMeSToR":
@@ -1350,7 +1350,7 @@
   disc: "1x"
   codec: "x264"
   audio: "AAC"
-  language: "HiNDI"
+  language: "HINDI"
   group: "Hon3y"
   site: "DDR"
 "The.Treasure.of.the.Sierra.Madre.1948.BluRay.1080p.FLAC.1.0.VC-1.REMUX-FraMeSToR":
@@ -1588,7 +1588,7 @@
   series: 1
   episode: 1
   codec: "XViD"
-  language: "SWEDiSH"
+  language: "SWEDISH"
   group: "HDR"
 "1899.S01.PROPER.1080p.NF.WEB-DL.DDP5.1.Atmos.H.264-FLUX":
   type: "series"
@@ -1759,7 +1759,7 @@
   resolution: "720p"
   series: 2
   episode: 20
-  language: "RUSSiAN ENGLiSH"
+  language: "RUSSIAN ENGLISH"
 "Core.Kyoto.S05E16.Tatami.The.Flooring.Underlying.Japanese.Culture.HDTV.x264-DARKFLiX":
   type: "episode"
   title: "Core Kyoto"
@@ -1912,7 +1912,7 @@
   audio: "DD"
   channels: "2.0"
   other: "BOXSET"
-  language: "NORDiC"
+  language: "NORDIC"
   group: "TWASERiES"
 "Game of Thrones - 4x03 - Breaker of Chains":
   type: "episode"
@@ -1973,12 +1973,13 @@
   site: "SubsPlease"
   sum: "C00D6C68"
 "Hold.The.Sunset.S01E00.Christmas.Special.720p.HDTV.X264-MTB":
-  type: "series"
+  type: "episode"
   title: "Hold The Sunset"
   subtitle: "Christmas Special"
   source: "HDTV"
   resolution: "720p"
   series: 1
+  episode: 0
   codec: "x264"
   group: "MTB"
 "HollyRandall.15.03.09.Black.Angelika.and.Nick.Lang.Take.Me.Home.Tonight.XXX.1080p.x264-GAGViD":
@@ -2696,7 +2697,7 @@
   episode: 8
   audio: "AAC"
   channels: "2.0"
-  language: "ENGLiSH SUBBED"
+  language: "ENGLISH SUBBED"
   group: "ZR"
   ext: "mkv"
   unused: "Shuumatsu no Harem"
@@ -3346,7 +3347,7 @@
   arch: "x64"
   year: 2019
   version: "v21.0.12"
-  language: "MULTi"
+  language: "MULTI"
   group: "WEBiSO"
 "Atlassian.Fisheye.and.Crucible.v4.7.0.MultiOS.Incl.KeyMaker.and.Patch.15TH.BIRTHDAY-DVT":
   type: "app"
@@ -3506,7 +3507,7 @@
   platform: "NSW"
   version: "v1.90"
   other: "UPDATE"
-  language: "MULTi"
+  language: "MULTI"
   group: "SUXXORS"
 "Super_Mario_3D_World_plus_Bowsers_Fury_Update_v1.1.0_NSW-VENOM":
   type: "game"
@@ -3610,7 +3611,7 @@
   source: "AUDiOBOOK"
   year: 2021
   other: "INTERNAL"
-  language: "SWEDiSH"
+  language: "SWEDISH"
   group: "OLDSWE"
 "PLURALSIGHT.3DS.MAX.RIGGING.FUNDAMENTALS-JGTiSO":
   type: "education"
@@ -3705,3 +3706,40 @@
   type: "game"
   title: "Oddsparks An Automation Adventure Coaster Rush"
   group: "RUNE"
+"Big Fat Quiz S2025E02 1080p ALL4 WEB-DL AAC 2.0 H.264-RAWR":
+  type: "episode"
+  title: "Big Fat Quiz"
+  source: "WEB-DL"
+  resolution: "1080p"
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  series: 2025
+  Episode: 2
+  collection: "ALL4"
+  group: "RAWR"
+"Robotech The Macross Saga E00 Extended Pilot 1080p BluRay x264-PRESENT":
+  type: "episode"
+  title: "Robotech The Macross Saga"
+  subtitle: "Pilot"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 0
+  Episode: 0
+  cut: "Extended.Cut"
+  codec: "x264"
+  group: "PRESENT"
+# to do: fix subtitle as "Meet the Queens of Season 1"
+"Drag Race Philippines: Slaysian Royale S01E00 Meet the Queens of Season 1 1080p WOWP WEB-DL AAC 2.0 H.264-Kitsune":
+  type: "episode"
+  title: "Drag Race Philippines: Slaysian Royale"
+  subtitle: "Meet the Queens of"
+  source: "WEB-DL"
+  resolution: "1080p"
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  series: 1
+  Episode: 0
+  group: "Kitsune"
+  collection: "WOWP"

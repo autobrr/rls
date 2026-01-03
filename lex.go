@@ -70,17 +70,17 @@ func DefaultLexers() []Lexer {
 		NewRegexpSourceLexer(TagTypeCollection, true),
 		NewSeriesLexer(
 			// s02, S01E01
-			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]?(?:e(?P<e>\d{1,5}))?\b`,
+			`(?i)^s(?P<s>\d{1,4})[\-\._ ]?(?:e(?P<e>\d{1,5}))?\b`,
 			// S01E02E03, S01E02-E03, S01E03.E04.E05
-			`(?i)^s(?P<s>[0-8]?\d)(?P<m>(?:[\-\._ ]?e\d{1,5}){1,5})\b`,
+			`(?i)^s(?P<s>\d{1,4})(?P<m>(?:[\-\._ ]?e\d{1,5}){1,5})\b`,
 			// S01S02S03
-			`(?i)^(?P<S>(?:s[0-8]?\d){2,4})\b`,
+			`(?i)^(?P<S>(?:s\d{1,4}){2,4})\b`,
 			// 2x1, 1x01
-			`(?i)^(?P<s>[0-8]?\d)x(?P<e>\d{1,3})\b`,
+			`(?i)^(?P<s>\d{1,4})x(?P<e>\d{1,5})\b`,
 			// S01 - 02v3, S07-06, s03-5v.9
-			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]{1,3}(?P<e>\d{1,5})(?:[\-\._ ]{1,3}(?P<v>v\d+(?:\.\d+){0,2}))?\b`,
+			`(?i)^s(?P<s>\d{1,4})[\-\._ ]{1,3}(?P<e>\d{1,5})(?:[\-\._ ]{1,3}(?P<v>v\d+(?:\.\d+){0,2}))?\b`,
 			// Season.01.Episode.02, Series.01.Ep.02, Series.01, Season.01
-			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
+			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>\d{1,2})(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
 			// Vol.1.No.2, vol1no2
 			`(?i)^vol(?:ume)?[\-\._ ]?(?P<s>\d{1,3})(?:[\-\._ ]?(?:number|no)[\-\._ ]?(?P<e>\d{1,5}))\b`,
 			// Episode 15, E009, Ep. 007, Ep.05-07
@@ -88,7 +88,7 @@ func DefaultLexers() []Lexer {
 			// 10v1.7, 13v2
 			`(?i)^(?P<e>\d{1,5})(?P<v>v[\-\._ ]?\d+(?:\.\d){0,2})\b`,
 			// S01.Disc02, s01D3, Series.01.Disc.02, S02DVD3
-			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)[\-\._ ]?(?P<d>(?:disc|disk|dvd|d)[\-\._ ]?(?:\d{1,3}))\b`,
+			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>\d{1,4})[\-\._ ]?(?P<d>(?:disc|disk|dvd|d)[\-\._ ]?(?:\d{1,3}))\b`,
 			// s1957e01
 			`(?i)^s(?P<s>19\d\d)e(?P<e>\d{2,4})\b`,
 		),
@@ -231,7 +231,7 @@ func NewDateLexer(strs ...string) Lexer {
 func NewSeriesLexer(strs ...string) Lexer {
 	var sourcef taginfo.FindFunc
 	lexer := NamedCaptureLexer(strs...)
-	mlt := regexp.MustCompile(`(?i)s(\d?\d)`)
+	mlt := regexp.MustCompile(`(?i)s(\d{1,4})`)
 	mny := regexp.MustCompile(`(?i)[\-\._ ]?e(\d{1,5})`)
 	dsc := regexp.MustCompile(`(?i)^disc|disk|dvd|d`)
 	return TagLexer{
