@@ -3705,3 +3705,12 @@
   type: "game"
   title: "Oddsparks An Automation Adventure Coaster Rush"
   group: "RUNE"
+"Married At First Sight AU S13E02 1080p AV1 10bit-MeGusta":
+  type: "episode"
+  title: "Married At First Sight AU"
+  resolution: "1080p"
+  series: 13
+  episode: 2
+  codec: "AV1"
+  hdr: "HDR10"
+  group: "MeGusta"
