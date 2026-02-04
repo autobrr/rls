@@ -628,7 +628,7 @@
   resolution: "1080p"
   year: 2015
   codec: "x264"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "FLAC"
   channels: "2.0"
   site: "Dekinai"
@@ -890,7 +890,7 @@
   resolution: "1080p"
   year: 2002
   codec: "HEVC"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "DD"
   channels: "5.1"
   other: "EXTRAS"
@@ -2014,7 +2014,7 @@
   year: 2009
   series: 1
   codec: "x265"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "DD"
   channels: "2.0"
   other: "AI.Upscale"
@@ -2225,7 +2225,7 @@
   series: 1
   episode: 8
   codec: "x265"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "DD"
   channels: "5.1"
   group: "JBENT"
@@ -2409,7 +2409,7 @@
   resolution: "1080p"
   series: 1
   codec: "x265 HEVC"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "AAC"
   channels: "5.1"
   other: "COMPLETE"
@@ -2554,7 +2554,7 @@
   series: 33
   episode: 12
   codec: "x265"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "DDP"
   channels: "5.1"
   group: "Goki"
@@ -3712,5 +3712,5 @@
   series: 13
   episode: 2
   codec: "AV1"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   group: "MeGusta"
