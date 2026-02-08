@@ -2231,6 +2231,57 @@
   group: "JBENT"
   site: "TAoE"
   ext: "mkv"
+"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 10-bit AC3 5.1 - JBENT)[TAoE].mkv":
+  type: "episode"
+  title: "Peacemaker"
+  subtitle: "It's Cow or Never"
+  source: "WEBRiP"
+  resolution: "1080p"
+  collection: "HMAX"
+  year: 2022
+  series: 1
+  episode: 8
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "DD"
+  channels: "5.1"
+  group: "JBENT"
+  site: "TAoE"
+  ext: "mkv"
+"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 10 bit AC3 5.1 - JBENT)[TAoE].mkv":
+  type: "episode"
+  title: "Peacemaker"
+  subtitle: "It's Cow or Never"
+  source: "WEBRiP"
+  resolution: "1080p"
+  collection: "HMAX"
+  year: 2022
+  series: 1
+  episode: 8
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "DD"
+  channels: "5.1"
+  group: "JBENT"
+  site: "TAoE"
+  ext: "mkv"
+"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 8-bit AC3 5.1 - JBENT)[TAoE].mkv":
+  type: "episode"
+  title: "Peacemaker"
+  subtitle: "It's Cow or Never"
+  source: "WEBRiP"
+  resolution: "1080p"
+  collection: "HMAX"
+  year: 2022
+  series: 1
+  episode: 8
+  codec: "x265"
+  bitdepth: "8BIT"
+  audio: "DD"
+  channels: "5.1"
+  group: "JBENT"
+  site: "TAoE"
+  ext: "mkv"
 "Power.On.The.Story.Of.Xbox.S01.1080p.AMZN.WEB-DL.DDP2.0.H.264-WELP":
   type: "series"
   title: "Power On The Story Of Xbox"
