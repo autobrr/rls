@@ -366,6 +366,7 @@ func (b *TagBuilder) fixFirst(r *Release) {
 		TagTypeResolution,
 		TagTypeCodec,
 		TagTypeHDR,
+		TagTypeBitDepth,
 		TagTypeAudio,
 		TagTypeOther,
 		TagTypeCut,
@@ -553,6 +554,10 @@ func (b *TagBuilder) collect(r *Release) {
 			r.Codec = append(r.Codec, r.tags[i].Codec())
 		case TagTypeHDR:
 			r.HDR = append(r.HDR, r.tags[i].HDR())
+		case TagTypeBitDepth:
+			if r.BitDepth == "" {
+				r.BitDepth = r.tags[i].BitDepth()
+			}
 		case TagTypeAudio:
 			r.Audio = append(r.Audio, r.tags[i].Audio())
 		case TagTypeChannels:
@@ -675,6 +680,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			TagTypeDate,
 			TagTypeCodec,
 			TagTypeHDR,
+			TagTypeBitDepth,
 			TagTypeAudio,
 			TagTypeResolution,
 			TagTypeSource,
@@ -761,6 +767,7 @@ func (b *TagBuilder) unset(r *Release) {
 			TagTypeCollection,
 			TagTypeCodec,
 			TagTypeHDR,
+			TagTypeBitDepth,
 			TagTypeAudio,
 			TagTypeChannels,
 			TagTypeOther,
@@ -789,6 +796,8 @@ func (b *TagBuilder) unset(r *Release) {
 				r.Codec, r.tags[i] = remove(r.Codec, s), r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeHDR && contains(r.HDR, s):
 				r.HDR, r.tags[i] = remove(r.HDR, s), r.tags[i].As(TagTypeText, nil)
+			case typ == TagTypeBitDepth && r.BitDepth == s:
+				r.BitDepth, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeAudio && contains(r.Audio, s):
 				r.Audio, r.tags[i] = remove(r.Audio, s), r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeChannels && r.Channels == s:

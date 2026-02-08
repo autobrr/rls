@@ -152,6 +152,7 @@ func DefaultLexers() []Lexer {
 		),
 		NewRegexpSourceLexer(TagTypeCodec, true),
 		NewRegexpSourceLexer(TagTypeHDR, true),
+		NewRegexpLexer(TagTypeBitDepth, true),
 		NewAudioLexer(),
 		NewRegexpLexer(TagTypeChannels, true),
 		NewRegexpLexer(TagTypeOther, true),
