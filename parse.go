@@ -1026,7 +1026,7 @@ func (b *TagBuilder) mixTitle(r *Release, i int) (string, int) {
 			break
 		}
 	}
-	title, offset := b.title(r.tags[start:i], TagTypeText, TagTypeOther)
+	title, offset := b.musicTitle(r.tags[start:i], TagTypeText, TagTypeOther)
 	return title, start + offset
 }
 
@@ -1135,6 +1135,52 @@ loop:
 			v = append(v, tags[i].TextReplace(".", " ", -1))
 		case tags[i].Is(TagTypeDelim):
 			if s := tags[i].Delim(); !strings.ContainsAny(s, "()[]{}\\/") && s != "__" {
+				v = append(v, b.delim(s, tags, i, types...))
+			} else {
+				break loop
+			}
+		default:
+			break loop
+		}
+	}
+	// acronyms missing periods
+	s := b.missing.ReplaceAllStringFunc(strings.Join(v, ""), func(a string) string {
+		return strings.TrimLeft(strings.ReplaceAll(strings.TrimSpace(a), " ", "."), ". ") + ". "
+	})
+	// fix oopsie
+	s = strings.ReplaceAll(s, ". .", ". ")
+	// acronymns on single letters
+	s = b.bad.ReplaceAllStringFunc(s, func(a string) string {
+		return b.fix.ReplaceAllString(a, "$1")
+	})
+	// collapse spaces
+	s = b.spaces.ReplaceAllString(s, " ")
+	// collapse ellipsis
+	s = b.ellips.ReplaceAllString(s, "...")
+	// unescape entities
+	s = html.UnescapeString(s)
+	if m := b.plus.FindAllStringIndex(s, -1); len(m) > 1 {
+		s = b.plus.ReplaceAllString(s, " ")
+	}
+	// trim
+	return strings.TrimFunc(s, isTitleTrimDelim), i
+}
+
+// musicTitle is like title(), but allows '/' delimiters inside music titles.
+//
+// This avoids truncating titles like "Forever / Together".
+func (b *TagBuilder) musicTitle(tags []Tag, types ...TagType) (string, int) {
+	var v []string
+	var i int
+loop:
+	for ; i < len(tags); i++ {
+		switch {
+		case tags[i].Is(types...):
+			v = append(v, tags[i].TextReplace(".", " ", -1))
+		case tags[i].Is(TagTypeDelim):
+			if s := tags[i].Delim(); strings.TrimSpace(s) == "/" {
+				v = append(v, " / ")
+			} else if !strings.ContainsAny(s, "()[]{}\\") && s != "__" {
 				v = append(v, b.delim(s, tags, i, types...))
 			} else {
 				break loop
