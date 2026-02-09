@@ -184,6 +184,15 @@
   sum: "ABCD1234"
   pass: "secret"
   ext: "m2ts"
+"4 Idle Hands S01 GBR PAL DVD9 DD 2.0":
+  type: "series"
+  title: "4 Idle Hands"
+  series: 1
+  resolution: "576p"
+  size: "DVD9"
+  region: "GBR"
+  audio: "DD"
+  channels: "2.0"
 "8-Bit.Christmas.(2021)(2160p.HMAX-WEBRip.DoVi HDR.x265.crf18.S97.E-AC3.5.1.Atmos)[cTurtle-4K].torrent":
   type: "movie"
   title: "8-Bit Christmas"
@@ -561,6 +570,15 @@
   language: "GERMAN"
   size: "DVDR"
   group: "RSG"
+"Die.Horde.2009.UNCUT.DUAL.COMPLETE.BLURAY-MAMA":
+  type: "movie"
+  title: "Die Horde"
+  source: "BluRay"
+  year: 2009
+  audio: "DUAL.AUDIO"
+  other: "COMPLETE"
+  cut: "Uncut"
+  group: "MAMA"
 "Dinosaur 13 2014 WEBrip XviD AC3 MiLLENiUM":
   type: "movie"
   title: "Dinosaur 13"
@@ -582,6 +600,17 @@
   other: "RESTORATiON REMUX"
   group: "EDPH"
   ext: "torrent"
+"Dolan.s.Cadillac.2009.1080p.BEL.Blu-ray.VC-1.DTS-HD.MA.5.1-Pacifical":
+  type: "movie"
+  title: "Dolan s Cadillac"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2009
+  codec: "VC-1"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  region: "BEL"
+  group: "Pacifical"
 "Dont.Blink.2014.1080p.AMZN-CBR.WEB-DL.DDP5.1.H.264-NTG.mkv":
   type: "movie"
   title: "Dont Blink"
@@ -620,6 +649,17 @@
   codec: "XViD"
   audio: "DD"
   group: "MrSeeN-SiMPLE"
+"Drive.Angry.2011.1080p.EUR.Blu-ray.AVC.DTS-HD.MA.5.1-Tux":
+  type: "movie"
+  title: "Drive Angry"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2011
+  codec: "AVC"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  region: "EUR"
+  group: "Tux"
 "[Dekinai]_Dungeon_Ni_Deai_O_Motomeru_No_Wa_Machigatte_Iru_Darouka_~Familia_Myth~_(2015)_[BD_1080p_x264_10bit_-_FLAC_2_0]":
   type: "movie"
   title: "Dungeon Ni Deai O Motomeru No Wa Machigatte Iru Darouka"
@@ -1551,6 +1591,17 @@
   other: "MD"
   language: "GERMAN"
   group: "CIS"
+"Zombeavers.2014.1080p.ESP.Blu-ray.AVC.DTS-HD.MA.5.1-TayTO":
+  type: "movie"
+  title: "Zombeavers"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2014
+  codec: "AVC"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  region: "ESP"
+  group: "TayTO"
 "Zombie.Bloody.Demons.UNCUT.GERMAN.1987.DL.1080p.BluRay.x264-GOREHOUNDS":
   type: "movie"
   title: "Zombie Bloody Demons"
