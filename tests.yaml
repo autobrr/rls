@@ -3786,3 +3786,12 @@
   source: "WEB"
   year: 2025
   audio: "FLAC LOSSLESS"
+"OLING [SE] - Come Closer (Original Club Mix) [2025] (WEB FLAC Lossless)":
+  type: "music"
+  artist: "OLING"
+  title: "Come Closer"
+  subtitle: "Original Club Mix"
+  source: "WEB"
+  year: 2025
+  audio: "FLAC LOSSLESS"
+  other: "REMiX"

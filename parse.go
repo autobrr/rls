@@ -986,6 +986,10 @@ func (b *TagBuilder) musicTitles(r *Release) int {
 			break
 		}
 	}
+	// Strip trailing bracketed country codes (common on music trackers), e.g. "Artist [SE] - Title".
+	if r.Artist != "" {
+		r.Artist = stripTrailingBracketCountryCode(r.Artist)
+	}
 	// check if date was skipped / at end
 	i, skipped, ok := b.checkDate(r, i)
 	if ok {
@@ -1181,14 +1185,40 @@ loop:
 func (b *TagBuilder) musicTitle(tags []Tag, types ...TagType) (string, int) {
 	var v []string
 	var i int
+	var bracketCountry bool
 loop:
 	for ; i < len(tags); i++ {
 		switch {
 		case tags[i].Is(types...):
 			v = append(v, tags[i].TextReplace(".", " ", -1))
 		case tags[i].Is(TagTypeDelim):
-			if s := tags[i].Delim(); strings.TrimSpace(s) == "/" {
+			s := tags[i].Delim()
+			trim := strings.TrimSpace(s)
+			if trim == "/" {
 				v = append(v, " / ")
+			} else if trim == "[" && !bracketCountry &&
+				i+2 < len(tags) &&
+				tags[i+1].Is(TagTypeText) &&
+				tags[i+2].Is(TagTypeDelim) {
+				// Allow "[SE]" style country markers in the artist chunk:
+				// OLING [SE] - Come Closer ...
+				code := strings.TrimSpace(tags[i+1].Text())
+				nextDelim := strings.TrimSpace(tags[i+2].Delim())
+				if len(code) == 2 && isAlpha(code) && strings.HasPrefix(nextDelim, "]") {
+					v = append(v, " [")
+					bracketCountry = true
+				} else {
+					break loop
+				}
+			} else if bracketCountry && strings.HasPrefix(trim, "]") {
+				// Preserve closing bracket and keep dash separators for later splitting.
+				v = append(v, "]")
+				if strings.Contains(s, "-") {
+					v = append(v, " - ")
+				} else {
+					v = append(v, " ")
+				}
+				bracketCountry = false
 			} else if !strings.ContainsAny(s, "()[]{}\\") && s != "__" {
 				v = append(v, b.delim(s, tags, i, types...))
 			} else {
@@ -1219,6 +1249,37 @@ loop:
 	}
 	// trim
 	return strings.TrimFunc(s, isTitleTrimDelim), i
+}
+
+func stripTrailingBracketCountryCode(s string) string {
+	s = strings.TrimSpace(s)
+	lb := strings.LastIndex(s, "[")
+	if lb == -1 {
+		return s
+	}
+	tail := strings.TrimSpace(s[lb:])
+	if !strings.HasPrefix(tail, "[") {
+		return s
+	}
+	code := strings.TrimPrefix(tail, "[")
+	code = strings.TrimSpace(strings.TrimSuffix(code, "]"))
+	if len(code) != 2 || !isAlpha(code) {
+		return s
+	}
+	// Accept both "[SE]" and "[SE" because artist splitting trims trailing delimiters.
+	if tail != "["+code && tail != "["+code+"]" {
+		return s
+	}
+	return strings.TrimSpace(s[:lb])
+}
+
+func isAlpha(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
 }
 
 // unused sets the unused text on the release.
