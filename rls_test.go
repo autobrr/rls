@@ -506,6 +506,7 @@ func TestExport_taginfo(t *testing.T) {
 			comparePlatform(a, b),
 			compareCodec(a, b),
 			compareHDR(a, b),
+			compareString(a[1], b[1]),
 			compareChannels(a, b),
 			compareSuffix(a, b),
 			comparePrefix(a[1], b[1]),
@@ -730,6 +731,7 @@ type rls struct {
 
 	Codec    string
 	HDR      string
+	Bitdepth string
 	Audio    string
 	Channels string
 	Other    string
@@ -791,6 +793,7 @@ func buildRls(r Release) rls {
 
 		Codec:    strings.Join(r.Codec, " "),
 		HDR:      strings.Join(r.HDR, " "),
+		Bitdepth: r.BitDepth,
 		Audio:    strings.Join(r.Audio, " "),
 		Channels: r.Channels,
 		Other:    strings.Join(r.Other, " "),

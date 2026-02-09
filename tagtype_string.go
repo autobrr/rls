@@ -22,29 +22,31 @@ func _() {
 	_ = x[TagTypeDisc-11]
 	_ = x[TagTypeCodec-12]
 	_ = x[TagTypeHDR-13]
-	_ = x[TagTypeAudio-14]
-	_ = x[TagTypeChannels-15]
-	_ = x[TagTypeOther-16]
-	_ = x[TagTypeCut-17]
-	_ = x[TagTypeEdition-18]
-	_ = x[TagTypeLanguage-19]
-	_ = x[TagTypeSize-20]
-	_ = x[TagTypeRegion-21]
-	_ = x[TagTypeContainer-22]
-	_ = x[TagTypeGenre-23]
-	_ = x[TagTypeID-24]
-	_ = x[TagTypeGroup-25]
-	_ = x[TagTypeMeta-26]
-	_ = x[TagTypeExt-27]
+	_ = x[TagTypeBitDepth-14]
+	_ = x[TagTypeAudio-15]
+	_ = x[TagTypeChannels-16]
+	_ = x[TagTypeOther-17]
+	_ = x[TagTypeCut-18]
+	_ = x[TagTypeEdition-19]
+	_ = x[TagTypeLanguage-20]
+	_ = x[TagTypeSize-21]
+	_ = x[TagTypeRegion-22]
+	_ = x[TagTypeContainer-23]
+	_ = x[TagTypeGenre-24]
+	_ = x[TagTypeID-25]
+	_ = x[TagTypeGroup-26]
+	_ = x[TagTypeMeta-27]
+	_ = x[TagTypeExt-28]
 }
 
-const _TagType_name = "WhitespaceDelimTextPlatformArchSourceResolutionCollectionDateSeriesVersionDiscCodecHDRAudioChannelsOtherCutEditionLanguageSizeRegionContainerGenreIDGroupMetaExt"
+const _TagType_name = "WhitespaceDelimTextPlatformArchSourceResolutionCollectionDateSeriesVersionDiscCodecHDRBitDepthAudioChannelsOtherCutEditionLanguageSizeRegionContainerGenreIDGroupMetaExt"
 
-var _TagType_index = [...]uint8{0, 10, 15, 19, 27, 31, 37, 47, 57, 61, 67, 74, 78, 83, 86, 91, 99, 104, 107, 114, 122, 126, 132, 141, 146, 148, 153, 157, 160}
+var _TagType_index = [...]uint8{0, 10, 15, 19, 27, 31, 37, 47, 57, 61, 67, 74, 78, 83, 86, 94, 99, 107, 112, 115, 122, 130, 134, 140, 149, 154, 156, 161, 165, 168}
 
 func (i TagType) String() string {
-	if i < 0 || i >= TagType(len(_TagType_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_TagType_index)-1 {
 		return "TagType(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _TagType_name[_TagType_index[i]:_TagType_index[i+1]]
+	return _TagType_name[_TagType_index[idx]:_TagType_index[idx+1]]
 }

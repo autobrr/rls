@@ -668,7 +668,7 @@
   resolution: "1080p"
   year: 2015
   codec: "x264"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "FLAC"
   channels: "2.0"
   site: "Dekinai"
@@ -726,6 +726,17 @@
   channels: "5.1"
   group: "NTG"
   ext: "mkv"
+"Chainsaw.Man.-.The.Movie.Reze.Arc.2025.1080p.MA.WEB-DL.DUAL.DDP5.1.Atmos.H.264-BYNDR":
+  type: "movie"
+  title: "Chainsaw Man - The Movie Reze Arc"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "MA"
+  year: 2025
+  codec: "H.264"
+  audio: "DUAL.AUDIO DDP Atmos"
+  channels: "5.1"
+  group: "BYNDR"
 "Fear.and.Loathing.in.Las.Vegas.1998.The.Criterion.Collection.1080p.BluRay.DTS.x264-HiFi":
   type: "movie"
   title: "Fear and Loathing in Las Vegas"
@@ -919,7 +930,7 @@
   resolution: "1080p"
   year: 2002
   codec: "HEVC"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "DD"
   channels: "5.1"
   other: "EXTRAS"
@@ -2054,7 +2065,7 @@
   year: 2009
   series: 1
   codec: "x265"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "DD"
   channels: "2.0"
   other: "AI.Upscale"
@@ -2265,7 +2276,58 @@
   series: 1
   episode: 8
   codec: "x265"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
+  audio: "DD"
+  channels: "5.1"
+  group: "JBENT"
+  site: "TAoE"
+  ext: "mkv"
+"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 10-bit AC3 5.1 - JBENT)[TAoE].mkv":
+  type: "episode"
+  title: "Peacemaker"
+  subtitle: "It's Cow or Never"
+  source: "WEBRiP"
+  resolution: "1080p"
+  collection: "HMAX"
+  year: 2022
+  series: 1
+  episode: 8
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "DD"
+  channels: "5.1"
+  group: "JBENT"
+  site: "TAoE"
+  ext: "mkv"
+"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 10 bit AC3 5.1 - JBENT)[TAoE].mkv":
+  type: "episode"
+  title: "Peacemaker"
+  subtitle: "It's Cow or Never"
+  source: "WEBRiP"
+  resolution: "1080p"
+  collection: "HMAX"
+  year: 2022
+  series: 1
+  episode: 8
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "DD"
+  channels: "5.1"
+  group: "JBENT"
+  site: "TAoE"
+  ext: "mkv"
+"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 8-bit AC3 5.1 - JBENT)[TAoE].mkv":
+  type: "episode"
+  title: "Peacemaker"
+  subtitle: "It's Cow or Never"
+  source: "WEBRiP"
+  resolution: "1080p"
+  collection: "HMAX"
+  year: 2022
+  series: 1
+  episode: 8
+  codec: "x265"
+  bitdepth: "8BIT"
   audio: "DD"
   channels: "5.1"
   group: "JBENT"
@@ -2350,6 +2412,18 @@
   site: "chibi-Doki"
   sum: "988DB090"
   ext: "mkv"
+"Show.S01E01.1080p.IP.WEB-DL.AAC2.0.H.264-GROUP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "iPlayer"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "GROUP"
 "Skins.S06E10.Finale.German.DD20.Dubbed.DL.720p.AmazonHD.x264-TVS":
   type: "episode"
   title: "Skins"
@@ -2437,7 +2511,7 @@
   resolution: "1080p"
   series: 1
   codec: "x265 HEVC"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "AAC"
   channels: "5.1"
   other: "COMPLETE"
@@ -2582,7 +2656,7 @@
   series: 33
   episode: 12
   codec: "x265"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "DDP"
   channels: "5.1"
   group: "Goki"
@@ -3385,12 +3459,12 @@
   group: "DVT"
   unused: "15TH BIRTHDAY"
 "Dead.Dungeon.v1.0.11-SiMPLEX":
-  type: "app"
+  type: "game"
   title: "Dead Dungeon"
   version: "v1.0.11"
   group: "SiMPLEX"
 "Depraved.v1.1a_56.Update.v1.1d.57-SiMPLEX":
-  type: "app"
+  type: "game"
   title: "Depraved"
   version: "v1.1a_56"
   other: "UPDATE"
@@ -3729,3 +3803,16 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
+"Oddsparks.An.Automation.Adventure.Coaster.Rush-RUNE":
+  type: "game"
+  title: "Oddsparks An Automation Adventure Coaster Rush"
+  group: "RUNE"
+"Married At First Sight AU S13E02 1080p AV1 10bit-MeGusta":
+  type: "episode"
+  title: "Married At First Sight AU"
+  resolution: "1080p"
+  series: 13
+  episode: 2
+  codec: "AV1"
+  bitdepth: "10BIT"
+  group: "MeGusta"
