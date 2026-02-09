@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/moistari/rls/reutil"
 	"github.com/moistari/rls/taginfo"
@@ -750,11 +751,23 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if m := re.FindSubmatch(buf[i:n]); m != nil {
+				if typ == TagTypeRegion && !isUpperToken(src[i:i+len(m[0])]) {
+					return start, end, i, n, false
+				}
 				return append(start, NewTag(typ, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
 			}
 			return start, end, i, n, false
 		},
 	}
+}
+
+func isUpperToken(s []byte) bool {
+	for _, r := range string(s) {
+		if unicode.IsLower(r) {
+			return false
+		}
+	}
+	return true
 }
 
 // NewRegexpSourceLexer creates a tag lexer for a regexp.
