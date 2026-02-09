@@ -751,8 +751,10 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if m := re.FindSubmatch(buf[i:n]); m != nil {
-				if typ == TagTypeRegion && !isUpperToken(src[i:i+len(m[0])]) {
-					return start, end, i, n, false
+				if typ == TagTypeRegion {
+					if !isUpperToken(src[i:i+len(m[0])]) || !hasRegionBoundaries(src, i, i+len(m[0])) {
+						return start, end, i, n, false
+					}
 				}
 				return append(start, NewTag(typ, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
 			}
@@ -768,6 +770,29 @@ func isUpperToken(s []byte) bool {
 		}
 	}
 	return true
+}
+
+func hasRegionBoundaries(src []byte, start, end int) bool {
+	if start == 0 || end >= len(src) {
+		return false
+	}
+	prev, next := src[start-1], src[end]
+	if prev == '-' || next == '-' {
+		return false
+	}
+	if !isRegionBoundary(prev) || !isRegionBoundary(next) {
+		return false
+	}
+	return true
+}
+
+func isRegionBoundary(b byte) bool {
+	switch b {
+	case ' ', '.', '_', '[', ']', '(', ')':
+		return true
+	default:
+		return false
+	}
 }
 
 // NewRegexpSourceLexer creates a tag lexer for a regexp.
