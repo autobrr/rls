@@ -3765,3 +3765,42 @@
   codec: "AV1"
   bitdepth: "10BIT"
   group: "MeGusta"
+"Big Fat Quiz S1957E02 1080p ALL4 WEB-DL AAC 2.0 H.264-RAWR":
+  type: "episode"
+  title: "Big Fat Quiz"
+  source: "WEB-DL"
+  resolution: "1080p"
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  series: 1957
+  episode: 2
+  collection: "ALL4"
+  year: 1957
+  group: "RAWR"
+"Big Fat Quiz S2025E02 1080p ALL4 WEB-DL AAC 2.0 H.264-RAWR":
+  type: "episode"
+  title: "Big Fat Quiz"
+  source: "WEB-DL"
+  resolution: "1080p"
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  series: 2025
+  episode: 2
+  collection: "ALL4"
+  year: 2025
+  group: "RAWR"
+"ZDFzeit.S2022E23.Die.Kraft.der.Koenigin.-.Schwedens.starke.Frauen.GERMAN.DOKU.720.WEB.H264-KUO":
+  type: "episode"
+  title: "ZDFzeit"
+  subtitle: "Die Kraft der Koenigin - Schwedens starke Frauen"
+  source: "WEB"
+  codec: "H.264"
+  series: 2022
+  episode: 23
+  language: "GERMAN"
+  genre: "Documentary"
+  group: "KUO"
+  year: 2022
+  unused: "720"
