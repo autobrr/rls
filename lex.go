@@ -90,7 +90,7 @@ func DefaultLexers() []Lexer {
 			// S01.Disc02, s01D3, Series.01.Disc.02, S02DVD3
 			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)[\-\._ ]?(?P<d>(?:disc|disk|dvd|d)[\-\._ ]?(?:\d{1,3}))\b`,
 			// s1957e01
-			`(?i)^s(?P<s>19\d\d)e(?P<e>\d{2,4})\b`,
+			`(?i)^s(?P<s>(?:19|20)\d\d)e(?P<e>\d{2,4})\b`,
 		),
 		NewDiscSourceYearLexer(
 			// VLS2004, 2DVD1999, 4CD2003
@@ -303,7 +303,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 						tags = append(tags, NewTag(TagTypeSeries, nil, append(m[j], nil)...))
 					}
 				}
-				if len(series) == 4 && bytes.HasPrefix(series, []byte{'1', '9'}) {
+				if len(series) == 4 && (bytes.HasPrefix(series, []byte{'1', '9'}) || bytes.HasPrefix(series, []byte{'2', '0'})) {
 					tags = append(tags, NewTag(TagTypeDate, nil, nil, series, nil, nil))
 				}
 				return append(
