@@ -3804,3 +3804,38 @@
   group: "KUO"
   year: 2022
   unused: "720"
+"Formula1 2025 Round22 USA Las Vegas Race F1LIVE F1TV WEB-DL 1080p h264 English-MWR":
+  type: "episode"
+  title: "Formula1"
+  subtitle: ""
+  year: 2025
+  collection: "F1LIVE"
+  source: "WEB-DL"
+  resolution: "1080p"
+  codec: "H.264"
+  language: "ENGLiSH"
+  group: "MWR"
+  region: "USA"
+  unused: "Round22 Las Vegas Race"
+"Formula1.2025.Round04.Bahrain.FP2.F1TV.WEB-DL.2160p.HLG.H265.Multi-MWR":
+  type: "episode"
+  title: "Formula1"
+  subtitle: ""
+  year: 2025
+  collection: "F1TV"
+  source: "WEB-DL"
+  resolution: "2160p"
+  hdr: "HLG"
+  codec: "H.265"
+  group: "MWR"
+  unused: "Round04 Bahrain FP2 Multi"
+"Formula1 2025 Mexican Grand Prix Practice Two 1080p WEB h264-VERUM":
+  type: "episode"
+  title: "Formula1"
+  subtitle: "Mexican Grand Prix Practice Two"
+  year: 2025
+  source: "WEB"
+  resolution: "1080p"
+  codec: "H.264"
+  group: "VERUM"
+  unused: "Mexican Grand Prix Practice Two"
