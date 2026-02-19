@@ -815,4 +815,5 @@ group,RiTUEL,RiTUEL,(?-i:R[iI]TU[eE]L),,game,1
 group,STEAMPUNKS,STEAMPUNKS,steam[\-\._ ]?punks,,game,1
 group,ViTALiTY,ViTALiTY,(?-i:V[iI]T[aA]L[iI]TY),,game,1
 group,VACE,VACE,,,game,1
+group,VERUM,VERUM,,,episode,1
 group,VREX,VREX,,,game,1
