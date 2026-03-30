@@ -1235,6 +1235,14 @@ func (b *TagBuilder) normalizeFormula1(r *Release) {
 	oldTitle := r.Title
 	title := strings.TrimSpace(strings.TrimLeft(strings.TrimLeftFunc(oldTitle, isTitleTrimDelim), ": "))
 
+	// Formula1 uses several episode numbering styles. Prefer RoundNN over YYYYxNN,
+	// and ignore SYYYYENN-style episode numbers in this normalization path.
+	if episode, ok := formula1EpisodeNumber(raw); ok {
+		r.Episode = episode
+	} else if formula1SeasonEpisodeRe.MatchString(raw) {
+		r.Episode = 0
+	}
+
 	// Provider is better represented as collection for Formula1 releases.
 	switch {
 	case strings.Contains(orig, "skyf1uhd"):
@@ -1314,6 +1322,26 @@ func (b *TagBuilder) normalizeFormula1(r *Release) {
 	r.Other = nil
 	r.unused = nil
 	r.Genre = ""
+}
+
+var (
+	formula1YearxEpisodeRe  = regexp.MustCompile(`(?i)\b(?:19|20)\d{2}\s*[x]\s*(\d{1,3})\b`)
+	formula1RoundRe         = regexp.MustCompile(`(?i)\bround(?:[\-\._ ]*)(\d{1,3})\b`)
+	formula1SeasonEpisodeRe = regexp.MustCompile(`(?i)\bs(?:19|20)\d{2}e\d{1,4}\b`)
+)
+
+func formula1EpisodeNumber(raw string) (int, bool) {
+	if m := formula1RoundRe.FindStringSubmatch(raw); m != nil {
+		if n, err := strconv.Atoi(m[1]); err == nil {
+			return n, true
+		}
+	}
+	if m := formula1YearxEpisodeRe.FindStringSubmatch(raw); m != nil {
+		if n, err := strconv.Atoi(m[1]); err == nil {
+			return n, true
+		}
+	}
+	return 0, false
 }
 
 func (b *TagBuilder) formulaSubtitle(r *Release, oldTitle string) string {
