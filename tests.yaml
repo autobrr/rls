@@ -3810,7 +3810,7 @@
   subtitle: "China.Sprint.Race"
   source: "WEB-DL"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HLG"
   audio: "DD"
@@ -3823,7 +3823,7 @@
   subtitle: "China.Sprint.Race"
   source: "WEB"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "DV HDR"
   group: "BILLIE"
@@ -3831,6 +3831,7 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Sprint.Race"
+  series: 2026
   episode: 2
   source: "UHDTV"
   resolution: "2160p"
@@ -3843,10 +3844,9 @@
   type: "episode"
   title: "Formula1"
   subtitle: "Australia.Teds.Qualifying.Notebook"
-  episode: 1
   source: "UHDTV"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HDR"
   audio: "DDP Atmos"
@@ -3858,7 +3858,7 @@
   subtitle: "Australia.Weekend.Warmup"
   source: "WEB"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HLG"
   group: "BILLIE"
@@ -3866,10 +3866,9 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Drivers.Press.Conference"
-  episode: 2
   source: "UHDTV"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HDR"
   audio: "DDP Atmos"
@@ -3880,10 +3879,9 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Paddock.Uncut"
-  episode: 2
   source: "UHDTV"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HDR"
   audio: "DDP Atmos"
@@ -3896,7 +3894,7 @@
   subtitle: "China.Sprint.Qualifying"
   source: "WEB-DL"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HLG"
   audio: "DD"
@@ -3909,7 +3907,7 @@
   subtitle: "China.Sprint.Qualifying"
   source: "WEB"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "DV HDR"
   group: "BILLIE"
@@ -3917,6 +3915,7 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Sprint.Qualifying"
+  series: 2026
   episode: 2
   source: "HDTV"
   resolution: "2160p"
@@ -3931,7 +3930,7 @@
   subtitle: "China.Sprint.Qualifying"
   source: "HDTV"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HDR"
   audio: "DDP Atmos"
@@ -3942,6 +3941,7 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Sprint.Qualifying"
+  series: 2026
   episode: 2
   source: "HDTV"
   resolution: "1080p"
@@ -3953,10 +3953,9 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Teds.Sprint.Notebook"
-  episode: 2
   source: "UHDTV"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HDR"
   audio: "DDP Atmos"
@@ -3970,9 +3969,7 @@
   alt: "Live+International"
   source: "WEB-DL"
   resolution: "2160p"
-  year: 2026
   series: 2026
-  episode: 3
   codec: "H.265"
   hdr: "HLG"
   audio: "DD"
@@ -3986,9 +3983,7 @@
   alt: "Live"
   source: "WEB-DL"
   resolution: "1080p"
-  year: 2026
   series: 2026
-  episode: 3
   codec: "H.265"
   audio: "DD"
   channels: "5.1"
@@ -4001,9 +3996,7 @@
   alt: "International"
   source: "WEB-DL"
   resolution: "1080p"
-  year: 2026
   series: 2026
-  episode: 3
   codec: "H.265"
   audio: "AAC"
   channels: "2.0"
@@ -4013,7 +4006,8 @@
   type: "episode"
   title: "Formula1"
   subtitle: "Japan.FP2"
-  episode: 3
+  series: 2026
+  episode: 21
   source: "WEB-DL"
   resolution: "1080p"
   codec: "H.265"
@@ -4026,7 +4020,8 @@
   type: "episode"
   title: "Formula1"
   subtitle: "Japan.FP1"
-  episode: 3
+  series: 2026
+  episode: 20
   source: "WEB-DL"
   resolution: "1080p"
   codec: "H.265"
@@ -4039,10 +4034,9 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Full.Event"
-  episode: 2
   source: "WEB-DL"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "DV HDR10+"
   audio: "DD"
@@ -4055,9 +4049,7 @@
   alt: "Live+International"
   source: "WEB-DL"
   resolution: "2160p"
-  year: 2026
   series: 2026
-  episode: 2
   codec: "H.265"
   hdr: "HLG"
   audio: "DD"
@@ -4068,7 +4060,8 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Qualifying"
-  episode: 2
+  series: 2026
+  episode: 18
   source: "WEB-DL"
   resolution: "1080p"
   codec: "H.265"
@@ -4084,9 +4077,7 @@
   alt: "International"
   source: "WEB-DL"
   resolution: "1080p"
-  year: 2026
   series: 2026
-  episode: 1
   codec: "H.264"
   audio: "AAC"
   channels: "2.0"
@@ -4098,7 +4089,7 @@
   subtitle: "Japan.FP1"
   source: "WEB-DL"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HLG"
   audio: "AAC"
@@ -4109,6 +4100,7 @@
   type: "episode"
   title: "Formula1"
   subtitle: "Japan.Qualifying"
+  series: 2026
   episode: 3
   source: "HDTV"
   resolution: "2160p"
@@ -4121,10 +4113,9 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Teds.Notebook"
-  episode: 2
   source: "UHDTV"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HDR"
   audio: "DDP Atmos"
@@ -4135,10 +4126,9 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Team.Principals"
-  episode: 2
   source: "UHDTV"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   hdr: "HDR"
   audio: "DDP Atmos"
   channels: "5.1"
@@ -4149,7 +4139,7 @@
   subtitle: "China.Weekend.Warmup"
   source: "WEB"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HLG"
   group: "BILLIE"
@@ -4157,10 +4147,9 @@
   type: "episode"
   title: "Formula1"
   subtitle: "China.Jolyon.Palmers.Analysis"
-  episode: 2
   source: "WEB-DL"
   resolution: "1080p"
-  year: 2026
+  series: 2026
   codec: "H.264"
   audio: "AAC"
   channels: "2.0"
@@ -4170,6 +4159,7 @@
   type: "episode"
   title: "Formula1"
   subtitle: "Australia.Race"
+  series: 2026
   episode: 1
   source: "UHDTV"
   resolution: "2160p"
@@ -4184,7 +4174,7 @@
   subtitle: "Australia"
   source: "WEB"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "DV HDR"
   group: "BILLIE"
@@ -4194,7 +4184,7 @@
   subtitle: "Australia.Grand.Prix.Race"
   source: "WEB-DL"
   resolution: "2160p"
-  year: 2026
+  series: 2026
   codec: "H.265"
   hdr: "HLG"
   audio: "AAC"
@@ -4205,10 +4195,9 @@
   type: "episode"
   title: "Formula1"
   subtitle: "Las.Vegas.Race"
-  episode: 22
   source: "WEB-DL"
   resolution: "1080p"
-  year: 2025
+  series: 2025
   codec: "H.264"
   language: "ENGLiSH"
   collection: "F1TV"
