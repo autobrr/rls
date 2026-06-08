@@ -863,6 +863,18 @@
   audio: "DTS-HD.MA"
   channels: "7.1"
   group: "DON"
+"IMAX.-.Journey.to.the.South.Pacific.2013.2160p.UHD.BluRay.DTS-HD.MA.7.1.HDR10P.x265-DON":
+  type: "movie"
+  title: "Journey to the South Pacific"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  collection: "IMAX"
+  year: 2013
+  codec: "x265"
+  hdr: "HDR10+"
+  audio: "DTS-HD.MA"
+  channels: "7.1"
+  group: "DON"
 "Jurassic.World.Fallen.Kingdom.2018.UHD.BluRay.2160p.DTSX.7.1.HEVC.REMUX-FraMeSToR":
   type: "movie"
   title: "Jurassic World Fallen Kingdom"
