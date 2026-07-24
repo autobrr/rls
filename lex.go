@@ -159,11 +159,51 @@ func DefaultLexers() []Lexer {
 		NewRegexpLexer(TagTypeCut, true),
 		NewRegexpLexer(TagTypeEdition, true),
 		NewRegexpLexer(TagTypeLanguage, false),
-		NewRegexpLexer(TagTypeRegion, true),
+		NewRegionLexer(true),
 		NewRegexpLexer(TagTypeContainer, true),
 		NewGenreLexer(),
 		NewIDLexer(),
 		NewEpisodeLexer(),
+	}
+}
+
+// NewRegionLexer is a specialized lexer for TagTypeRegion.
+//
+// Why: the generic regexp lexer relies on regexp `\\b` boundaries (ASCII-ish),
+// which can incorrectly match region tags at the start of non-ASCII words
+// (e.g. "EURÊKA"). This lexer only matches a region token when it is followed
+// by a delimiter (as defined by isAnyDelim) or end-of-string.
+func NewRegionLexer(ignoreCase bool) TagLexer {
+	var f taginfo.FindFunc
+	var re *regexp.Regexp
+	return TagLexer{
+		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
+			info := infos[strings.ToLower(TagTypeRegion.String())]
+			cfg := `^`
+			if ignoreCase {
+				cfg = `^i`
+			}
+			// Require a delimiter (as defined by isAnyDelim) or end-of-string after the region.
+			// This avoids matching prefixes inside words, especially with non-ASCII letters.
+			re = regexp.MustCompile(reutil.Taginfo(cfg, info...) + `(?:$|[\t\n\f\r \(\)\+,\-\._\[/\\\]\{\}~])`)
+			f = taginfo.Find(info...)
+		},
+		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			if m := re.FindSubmatch(buf[i:n]); m != nil {
+				// m[1] is the captured region token (from reutil.Taginfo's group).
+				if len(m[0]) != len(m[1]) {
+					v := src[i : i+len(m[1])]
+					delim := src[i+len(m[1]) : i+len(m[0])]
+					return append(
+						start,
+						NewTag(TagTypeRegion, f, [][]byte{v, v}...),
+						NewTag(TagTypeDelim, nil, [][]byte{delim, delim}...),
+					), end, i + len(m[0]), n, true
+				}
+				return append(start, NewTag(TagTypeRegion, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
+			}
+			return start, end, i, n, false
+		},
 	}
 }
 
