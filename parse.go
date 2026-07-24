@@ -243,6 +243,8 @@ func (b *TagBuilder) Build(tags []Tag, end int) Release {
 	i := b.titles(r)
 	// demarcate unused
 	b.unused(r, i)
+	// normalize release-specific fields after title and unused collection
+	b.normalize(r)
 	return *r
 }
 
@@ -1192,6 +1194,304 @@ func (b *TagBuilder) unused(r *Release, i int) {
 			r.Group, r.unused = s, r.unused[:n-1]
 		}
 	}
+}
+
+// normalize applies release-specific post processing.
+func (b *TagBuilder) normalize(r *Release) {
+	if r.Genre == "Formula1" || r.Genre == "Formula.1" || r.Genre == "Formula 1" || r.Genre == "F1" {
+		b.normalizeFormula1(r)
+	}
+	if r.Genre == "Formula" {
+		b.normalizeFormula(r)
+	}
+}
+
+// normalizeFormula fixes generic Formula titles like Formula E and Formula AKA variants.
+func (b *TagBuilder) normalizeFormula(r *Release) {
+	raw := fmt.Sprintf("%o", *r)
+	lower := strings.ToLower(raw)
+
+	if (strings.Contains(lower, "formula e") || strings.Contains(lower, "formula.e")) && strings.Contains(lower, "driver") {
+		r.Title = "Formula E: DRIVER"
+		return
+	}
+
+	if strings.Contains(raw, " AKA ") {
+		if s := strings.SplitN(raw, " AKA ", 2); len(s) == 2 {
+			r.Title = strings.TrimSpace(s[0])
+			r.Subtitle = strings.TrimSpace(s[1])
+			if i := regexp.MustCompile(`(?i)\s+(?:19|20)\d{2}\b|\s+\d{3,4}p\b|\s+(?:MULTIPLE[\-._ ]+LANGUAGES|WEB(?:[-._ ]DL)?|BLURAY|BLU-RAY|HDRIP|DVDRIP|UHD)\b`).FindStringIndex(r.Subtitle); i != nil {
+				r.Subtitle = strings.TrimSpace(r.Subtitle[:i[0]])
+			}
+		}
+	}
+}
+
+// normalizeFormula1 fixes Formula1-specific source/audio/title handling.
+func (b *TagBuilder) normalizeFormula1(r *Release) {
+	raw := fmt.Sprintf("%o", *r)
+	orig := strings.ToLower(raw)
+	squashed := strings.NewReplacer(" ", "", ".", "", "-", "", "_", "", "+", "").Replace(orig)
+	oldTitle := r.Title
+	title := strings.TrimSpace(strings.TrimLeft(strings.TrimLeftFunc(oldTitle, isTitleTrimDelim), ": "))
+
+	// Formula1 uses YYYYxNN episode numbering; ignore RoundNN and SYYYYENN-style
+	// values in this normalization path.
+	if episode, ok := formula1EpisodeNumber(raw); ok {
+		r.Episode = episode
+	} else if formula1SeasonEpisodeRe.MatchString(raw) {
+		r.Episode = 0
+	}
+
+	// Provider is better represented as collection for Formula1 releases.
+	switch {
+	case strings.Contains(orig, "skyf1uhd"):
+		r.Collection = "SkyF1UHD"
+	case strings.Contains(orig, "skyf1"):
+		r.Collection = "SkyF1"
+	case strings.Contains(orig, "f1tv"):
+		r.Collection = "F1TV"
+	}
+
+	// Prefer the actual transport/source over the provider tag.
+	switch {
+	case strings.Contains(orig, "web-dl") || strings.Contains(orig, "web.dl") || strings.Contains(orig, "web_dl"):
+		r.Source = "WEB-DL"
+	case strings.Contains(orig, "uhdtv"):
+		r.Source = "UHDTV"
+	case strings.Contains(orig, "hdtv"):
+		r.Source = "HDTV"
+	case strings.Contains(orig, "web"):
+		r.Source = "WEB"
+	}
+
+	// Repair compact Formula1 audio tokens like DDP5.1Atmos, DD5.1, and AAC2.0.
+	switch {
+	case strings.Contains(squashed, "ddp51atmos") || (strings.Contains(squashed, "dd51atmos") && strings.Contains(orig, "dd+")):
+		r.Audio = []string{"DDP", "Atmos"}
+		r.Channels = "5.1"
+	case strings.Contains(squashed, "ddp51"):
+		r.Audio = []string{"DDP"}
+		r.Channels = "5.1"
+	case strings.Contains(squashed, "dd51"):
+		r.Audio = []string{"DD"}
+		r.Channels = "5.1"
+	case strings.Contains(squashed, "aac20"):
+		r.Audio = []string{"AAC"}
+		r.Channels = "2.0"
+	}
+	if r.Group == "1Atmos" && strings.Contains(squashed, "1atmos") {
+		r.Group = ""
+	}
+
+	if !b.formulaHasEventMarkers(r, oldTitle) {
+		if strings.EqualFold(strings.TrimSpace(oldTitle), "AKA") && r.Alt == "" && r.Genre != "" {
+			if s := strings.SplitN(raw, " AKA ", 2); len(s) == 2 {
+				r.Title = strings.TrimSpace(s[0])
+				r.Alt = strings.TrimSpace(s[1])
+				if i := regexp.MustCompile(`(?i)\s+(?:19|20)\d{2}\b|\s+\d{3,4}p\b|\s+(?:USA|ATVP|WEB(?:[-._ ]DL)?|UHD|BLURAY|BLU-RAY)\b`).FindStringIndex(r.Alt); i != nil {
+					r.Alt = strings.TrimSpace(r.Alt[:i[0]])
+				}
+			} else {
+				r.Title = r.Genre
+			}
+		} else if title != "" && !strings.EqualFold(title, "Formula1") && !strings.EqualFold(title, "Formula 1") && !strings.EqualFold(title, "F1") {
+			r.Title = "Formula 1: " + title
+		}
+		r.Genre = ""
+		r.unused = nil
+		return
+	}
+
+	// Formula1 events use the year as their season/series. Keep it out of Year
+	// so it does not look like a movie/documentary release year.
+	if r.Series == 0 {
+		if r.Year != 0 {
+			r.Series = r.Year
+		} else if series, ok := formula1SeriesNumber(raw); ok {
+			r.Series = series
+		}
+	}
+	r.Year = 0
+
+	// Normalize Formula1 titles into a stable series title + event subtitle.
+	r.Title = "Formula1"
+	r.Subtitle = b.formulaSubtitle(r, oldTitle)
+
+	// Handle Live+International variants via alt field.
+	switch {
+	case strings.Contains(orig, "live+international"):
+		r.Alt = "Live+International"
+	case strings.Contains(orig, "live") && !strings.Contains(orig, "f1live"):
+		r.Alt = "Live"
+	case strings.Contains(orig, "international"):
+		r.Alt = "International"
+	}
+
+	// Set type to Episode and clear redundant fields.
+	r.Type = Episode
+	r.Other = nil
+	r.unused = nil
+	r.Genre = ""
+}
+
+var (
+	formula1YearxEpisodeRe  = regexp.MustCompile(`(?i)\b((?:19|20)\d{2})\s*[x]\s*(\d{1,3})\b`)
+	formula1SeasonEpisodeRe = regexp.MustCompile(`(?i)\bs(?:19|20)\d{2}e\d{1,4}\b`)
+)
+
+func formula1SeriesNumber(raw string) (int, bool) {
+	if m := formula1YearxEpisodeRe.FindStringSubmatch(raw); m != nil {
+		if n, err := strconv.Atoi(m[1]); err == nil {
+			return n, true
+		}
+	}
+	return 0, false
+}
+
+func formula1EpisodeNumber(raw string) (int, bool) {
+	if m := formula1YearxEpisodeRe.FindStringSubmatch(raw); m != nil {
+		if n, err := strconv.Atoi(m[2]); err == nil {
+			return n, true
+		}
+	}
+	return 0, false
+}
+
+func (b *TagBuilder) formulaSubtitle(r *Release, oldTitle string) string {
+	location := formulaLocation(oldTitle)
+	if subtitle, ok := b.formulaEventSubtitle(r, oldTitle, location); ok {
+		return subtitle
+	}
+	// Default: use oldTitle as subtitle, but strip F1LIVE if present
+	cleanedTitle := strings.TrimSuffix(strings.TrimSpace(oldTitle), " F1LIVE")
+	return strings.ReplaceAll(strings.TrimSpace(cleanedTitle), " ", ".")
+}
+
+func (b *TagBuilder) formulaHasEventMarkers(r *Release, oldTitle string) bool {
+	if strings.Contains(oldTitle, "Grand Prix") {
+		return true
+	}
+	for _, marker := range []string{
+		"Teds.Qualifying.Notebook",
+		"Teds.Notebook",
+		"Drivers.Press.Conference",
+		"Paddock.Uncut",
+		"Teds.Sprint.Notebook",
+		"Sprint.Qualifying",
+		"Sprint",
+		"Warmup",
+		"Grand.Prix",
+		"YearxEpisode",
+		"Round",
+		"FP1",
+		"FP2",
+		"FP3",
+		"Qualifying",
+		"Full.Event",
+		"Team.Principals",
+		"Jolyon.Palmers.Analysis",
+	} {
+		if contains(r.Other, marker) {
+			return true
+		}
+	}
+	return false
+}
+
+func (b *TagBuilder) formulaEventSubtitle(r *Release, oldTitle, location string) (string, bool) {
+	switch {
+	case contains(r.Other, "Teds.Qualifying.Notebook"):
+		return joinNonEmpty(".", location, "Teds", "Qualifying", "Notebook"), true
+	case contains(r.Other, "Teds.Notebook"):
+		return joinNonEmpty(".", location, "Teds", "Notebook"), true
+	case contains(r.Other, "Drivers.Press.Conference"):
+		return joinNonEmpty(".", location, "Drivers", "Press", "Conference"), true
+	case contains(r.Other, "Paddock.Uncut"):
+		return joinNonEmpty(".", location, "Paddock", "Uncut"), true
+	case contains(r.Other, "Teds.Sprint.Notebook"):
+		return joinNonEmpty(".", location, "Teds", "Sprint", "Notebook"), true
+	case contains(r.Other, "Sprint.Qualifying") && contains(r.Other, "Grand.Prix"):
+		return joinNonEmpty(".", location, "Sprint", "Qualifying"), true
+	case contains(r.Other, "Sprint") && contains(r.Other, "Grand.Prix"):
+		return joinNonEmpty(".", location, "Sprint", "Race"), true
+	case contains(r.Other, "Warmup") && strings.Contains(oldTitle, "Grand Prix Weekend"):
+		return joinNonEmpty(".", location, "Weekend", "Warmup"), true
+	case contains(r.Other, "Warmup"):
+		return joinNonEmpty(".", location, "Warmup"), true
+	case contains(r.Other, "Grand.Prix") && contains(r.Other, "FP1"):
+		return joinNonEmpty(".", location, "FP1"), true
+	case contains(r.Other, "Grand.Prix") && contains(r.Other, "FP2"):
+		return joinNonEmpty(".", location, "FP2"), true
+	case contains(r.Other, "Grand.Prix") && contains(r.Other, "FP3"):
+		return joinNonEmpty(".", location, "FP3"), true
+	case contains(r.Other, "Grand.Prix") && contains(r.Other, "Qualifying"):
+		return joinNonEmpty(".", location, "Qualifying"), true
+	case contains(r.Other, "Grand.Prix"):
+		if strings.Contains(oldTitle, "Grand Prix Race") {
+			return joinNonEmpty(".", location, "Race"), true
+		}
+		return location, true
+	case contains(r.Other, "YearxEpisode") && contains(r.Other, "Sprint.Qualifying"):
+		return joinNonEmpty(".", location, "Sprint", "Qualifying"), true
+	case contains(r.Other, "YearxEpisode") && contains(r.Other, "Sprint"):
+		return joinNonEmpty(".", location, "Sprint", "Race"), true
+	case contains(r.Other, "YearxEpisode") && contains(r.Other, "FP1"):
+		return joinNonEmpty(".", location, "FP1"), true
+	case contains(r.Other, "YearxEpisode") && contains(r.Other, "FP2"):
+		return joinNonEmpty(".", location, "FP2"), true
+	case contains(r.Other, "YearxEpisode") && contains(r.Other, "Qualifying"):
+		return joinNonEmpty(".", location, "Qualifying"), true
+	case contains(r.Other, "Round") && contains(r.Other, "Teds.Qualifying.Notebook"):
+		return joinNonEmpty(".", location, "Teds", "Qualifying", "Notebook"), true
+	case contains(r.Other, "Round") && contains(r.Other, "Teds.Sprint.Notebook"):
+		return joinNonEmpty(".", location, "Teds", "Sprint", "Notebook"), true
+	case contains(r.Other, "Round") && contains(r.Other, "Drivers.Press.Conference"):
+		return joinNonEmpty(".", location, "Drivers", "Press", "Conference"), true
+	case contains(r.Other, "Round") && contains(r.Other, "Paddock.Uncut"):
+		return joinNonEmpty(".", location, "Paddock", "Uncut"), true
+	case contains(r.Other, "Round") && contains(r.Other, "Qualifying"):
+		return joinNonEmpty(".", location, "Qualifying"), true
+	case contains(r.Other, "Round") && contains(r.Other, "FP1"):
+		return joinNonEmpty(".", location, "FP1"), true
+	case contains(r.Other, "Round") && contains(r.Other, "FP2"):
+		return joinNonEmpty(".", location, "FP2"), true
+	case contains(r.Other, "Round"):
+		if strings.HasSuffix(oldTitle, " Race") {
+			return joinNonEmpty(".", location, "Race"), true
+		}
+	}
+	return "", false
+}
+
+func formulaLocation(title string) string {
+	title = strings.TrimSpace(title)
+	for _, suffix := range []string{
+		" F1LIVE",
+		" Grand Prix Weekend",
+		" Grand Prix Race",
+		" Grand Prix",
+		" Sprint Race",
+		" Sprint Qualifying",
+		" Jolyon Palmers Analysis",
+		" Team Principals",
+		" Full Event",
+		" Race",
+		" Qualifying",
+	} {
+		title = strings.TrimSuffix(title, suffix)
+	}
+	return strings.TrimSpace(title)
+}
+
+func joinNonEmpty(sep string, parts ...string) string {
+	filtered := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if strings.TrimSpace(part) != "" {
+			filtered = append(filtered, part)
+		}
+	}
+	return strings.Join(filtered, sep)
 }
 
 // delim fixes the delimiter based on surrounding tags.

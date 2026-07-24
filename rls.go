@@ -155,7 +155,18 @@ func (r Release) SeriesEpisodes() [][]int {
 		}
 		return v[i][0] < v[j][0]
 	})
-	return v
+	if len(v) < 2 {
+		return v
+	}
+	dedup := v[:1]
+	for _, pair := range v[1:] {
+		last := dedup[len(dedup)-1]
+		if pair[0] == last[0] && pair[1] == last[1] {
+			continue
+		}
+		dedup = append(dedup, pair)
+	}
+	return dedup
 }
 
 // Unused returns text tags not used in titles.

@@ -309,6 +309,7 @@ genre,Family,,,,movie,
 genre,Fantasy,,,,movie,
 genre,Film-Noir,,film[\-\._ ]?noir,,movie,
 genre,Food,,,,movie,
+genre,Formula.1,Formula 1,,formula(?:[\-\._ ]?1)?|f1,episode,1
 genre,Game-Show,,game[\-\._ ]?show,,series,
 genre,History,,,,movie,
 genre,Horror,,,,movie,
@@ -373,7 +374,7 @@ language,PORTUGUESE,Portuguese,(?i:portuguese)|PT,,,
 language,ROMANiAN,Romanian,(?i:romanian)|RO,,,
 language,RUSSiAN,Russian,(?i:rus(?:sian)?)|RU,,,
 language,SLOVAK,Slovak,SLOVAK|SK,,,
-language,SPANiSH,Spanish,(?i:spanish)|SPA|ES,,,
+language,SPANiSH,Spanish,(?i:spanish|castellano)|SPA|ES,,,
 language,SUBBED,Subbed,(?i:subbed),,,
 language,SUBFORCED,Subbed (forced),(?i:subforced|forcedsub),,,
 language,SUBPACK,Subs (pack),(?i:subs?[\-\._ ]?pack),,,
@@ -418,10 +419,14 @@ other,DNR,Digital Noise Reduction,(?-i:DNR),,movie,1
 other,DOX,Dox,,,,
 other,EAC,Exact Audio Copy,(?-i:EAC),,music,1
 other,EXTRAS,Extras,(?:(?:plus|including|incl|inc)[\-\._ ]?)?extras(?:[\-\._ ]?only)?,,,
+other,FP1,Free Practice 1,fp[\-\._ ]?1,,episode,1
+other,FP2,Free Practice 2,fp[\-\._ ]?2,,episode,1
+other,FP3,Free Practice 3,fp[\-\._ ]?3,,episode,1
 other,FiNAL,Final,(?-i:F[iI]N[aA]L),,,
 other,FiX,Fix,(?-i:F[iI]X),,,
 other,FS,Fullscreen,(?-i:FS),,,
 other,Half-SBS,3D (half side-by-side),h(?:alf)?[\-\._ ]?sbs,,movie,1
+other,Grand.Prix,Grand Prix,grand[\-\._ ]?prix,,episode,1
 other,HAPPY.NEW.YEAR,Holiday (new year),(?-i:HAPPY[\-\._ ]NEW[\-\._ ]YEARS?),,,
 other,HiGHLiGHTS,Highlights,(?-i:H[iI]GHL[iI]GHTS),,,
 other,HiRES,High Resolution,(?-i:H[iI]RES),,,
@@ -458,7 +463,11 @@ other,PROMO,Promo,,,music,
 other,PROOFFiX,Fix (proof),,,,
 other,PROOF,Proof,(?-i:PROOF),,,
 other,PROPER,Proper,,,,
+other,Press.Conference,Press Conference,press[\-\._ ]?conference,,episode,1
+other,Qualifying,,qualifying,,episode,1
 other,RARFiX,Fix (rar),,,,
+other,Sprint.Qualifying,Sprint Qualifying,sprint[\-\._ ]?qualifying,,episode,1
+other,Sprint,Sprint,sprint,,episode,1
 other,READNFO,Read NFO,read[\-\._ ]?i?nfo,,,
 other,REAL.PROPER,Proper (real),real[\-\._ ]?proper,,,
 other,REAL,Real,(?-i:REAL),,,
@@ -475,6 +484,7 @@ other,RERiP,Re-rip,re[\-\._ ]?rip,,,
 other,RESTORATiON,Restoration,,,movie,
 other,RETAiL,Retail,,,,
 other,RiP,Rip,(?-i:RiP),,,
+other,Round,,round(?:[\-\._ ]?\d\d?\d?)?,,episode,1
 other,SAMPLEFiX,Fix (sample),,,movie,
 other,SAMPLER,Sampler,(?:album[\-\._ ]?)?sampler,,music,1
 other,SBS,3D (side-by-side),,,movie,1
@@ -485,6 +495,11 @@ other,Strategy.Guide,Strategy Guide,strategy[\-\._ ]?guide,,book,1
 other,SUB100,Sub 100,sub[\-\._ ]?100,,app,
 other,SYNCFiX,Fix (sync),,,movie,
 other,TRACKFiX,Fix (track),track[\-\._ ]?fix,,music,1
+other,Teds.Notebook,Ted's Notebook,teds?[\-\._ ]?notebook,,episode,1
+other,Teds.Qualifying.Notebook,Ted's Qualifying Notebook,teds?[\-\._ ]?(?:qualifying[\-\._ ]?)?notebook(?:[\-\._ ]?qualifying)?,,episode,1
+other,Teds.Sprint.Notebook,Ted's Sprint Notebook,teds?[\-\._ ]?(?:sprint[\-\._ ]?)?notebook(?:[\-\._ ]?sprint)?,,episode,1
+other,Drivers.Press.Conference,Drivers Press Conference,drivers?[\-\._ ]?press[\-\._ ]?conference,,episode,1
+other,Paddock.Uncut,Paddock Uncut,paddock[\-\._ ]?uncut,,episode,1
 other,TUTORiAL,Tutorial,(?-i:T[uU]T[oO]R[iI][aA]L),,education,1
 other,UNRELEASED,Unreleased,,,music,1
 other,UPDATE,Update,,,app,
@@ -497,6 +512,8 @@ other,VR180,,vr[\-\._ ]?180,,movie,
 other,VR,,,,movie,
 other,WORKING,Working,(?-i:W[oO]RK[iI]NG),,app,
 other,WS,Widescreen,widescreen|ws,,movie,
+other,Warmup,,warm[\-\._ ]?up,,episode,1
+other,YearxEpisode,Year x Episode,yearxepisode|(?:19|20)\d\dx\d\d?\d?,,episode,1
 other,$1X,,((?:19|20)[\d|x])x,,music,1
 other,Plus.$2.Trainer,Trainer ($2),(?:plus[\-\._ ])?(\d\d?)[\-\._ ]?trainer,,game,1
 platform,AIX,,,,app,1
@@ -672,6 +689,7 @@ source,DVD,Digital Video Disc,dvd,,movie,
 source,DVTV,Digital Versatile Television,,,,
 source,eBook,,ebooks?,,book,
 source,EP,Extended Play,(?-i:EP),,music,1
+source,F1TV,,f1tv,,episode,1
 source,FESTiVAL,Festival,(?-i:F[eE]ST[iI]V[aA]L),,movie,
 source,FM,,(?-i:FM),,music,1
 source,HDCAM,CAM (HD),hd[-\._ ]?cam,,movie,
@@ -709,6 +727,8 @@ source,SP,Standard Play,(?-i:SP),,music,1
 source,STREAM,Stream,(?-i:STREAM),,music,1
 source,SVCDRiP,Super Video CD (rip),svcd[\-\._ ]?rip,,music,
 source,SVCD,Super Video CD,,,music,
+source,SkyF1,Sky Sports F1,skyf1,,episode,1
+source,SkyF1UHD,Sky Sports F1 UHD,skyf1uhd,,episode,1
 source,TAPE,Tape,(?-i:TAPE),,music,1
 source,TC,Telecine,telecine|tc,,movie,
 source,TS,Telesync,telesync|ts,,movie,
