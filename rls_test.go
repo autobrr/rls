@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/autobrr/rls/taginfo"
 	"github.com/google/go-cmp/cmp"
-	"github.com/moistari/rls/taginfo"
 	"golang.org/x/text/transform"
 )
 

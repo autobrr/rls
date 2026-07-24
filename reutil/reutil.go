@@ -4,7 +4,7 @@ package reutil
 import (
 	"strings"
 
-	"github.com/moistari/rls/taginfo"
+	"github.com/autobrr/rls/taginfo"
 )
 
 // Join joins strings into a regexp (ie, `(str 0|str 1|...)`), optionally
@@ -25,6 +25,7 @@ func Join(quote bool, strs ...string) string {
 // Build builds a regexp for strings.
 //
 // Config options:
+//
 //	i - ignore case
 //	^ - add ^ start anchor
 //	a - add \b start anchor

@@ -1,10 +1,10 @@
-# about
+# rls
 
-a package to parse release names. see [go doc](https://pkg.go.dev/github.com/moistari/rls).
+This is a fork of [moistari/rls](https://github.com/moistari/rls)
 
+rls is a package to parse release names. see [go doc](https://pkg.go.dev/github.com/autobrr/rls).
 
-## use
-
+## Usage example
 
 ```go
 package main
@@ -12,7 +12,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/moistari/rls"
+	"github.com/autobrr/rls"
 )
 
 func main() {

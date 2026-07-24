@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/moistari/rls/reutil"
-	"github.com/moistari/rls/taginfo"
+	"github.com/autobrr/rls/reutil"
+	"github.com/autobrr/rls/taginfo"
 )
 
 // LexFunc is the signature for lexer funcs.

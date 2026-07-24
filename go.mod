@@ -1,4 +1,4 @@
-module github.com/moistari/rls
+module github.com/autobrr/rls
 
 go 1.23.0
 
