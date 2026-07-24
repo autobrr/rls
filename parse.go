@@ -10,8 +10,8 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/moistari/rls/reutil"
-	"github.com/moistari/rls/taginfo"
+	"github.com/autobrr/rls/reutil"
+	"github.com/autobrr/rls/taginfo"
 )
 
 // TagParser is a release tag parser.

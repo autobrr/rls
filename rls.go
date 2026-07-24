@@ -12,7 +12,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/moistari/rls/taginfo"
+	"github.com/autobrr/rls/taginfo"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 )

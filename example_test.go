@@ -3,7 +3,7 @@ package rls_test
 import (
 	"fmt"
 
-	"github.com/moistari/rls"
+	"github.com/autobrr/rls"
 )
 
 func ExampleParse() {
