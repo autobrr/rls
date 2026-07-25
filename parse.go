@@ -275,6 +275,7 @@ func (b *TagBuilder) init(r *Release) {
 	// reset language/other/arch/platform prior to end
 	_ = b.reset(r, end, TagTypeLanguage, TagTypeArch, TagTypePlatform)
 	b.fixFirst(r)
+	b.fixSourceWeb(r)
 	start := b.start(r, 0)
 	b.fixBad(r, start, end)
 	b.fixNoText(r, end)
@@ -422,6 +423,24 @@ func (b *TagBuilder) fixSpecial(r *Release, i int, series bool) {
 			typ == TagTypeCut && l == "dc",
 			series && (typ == TagTypeArch || typ == TagTypePlatform):
 			r.tags[i-1] = r.tags[i-1].As(TagTypeText, nil)
+		}
+	}
+}
+
+// fixSourceWeb fixes a bare web source tag preceded by text when a more
+// specific source tag follows, as the web tag is part of a title (ie,
+// 'Show.S03E03.A.Dark.Web.1080p.WEBRip...').
+func (b *TagBuilder) fixSourceWeb(r *Release) {
+	for i := 0; i < r.end; i++ {
+		if !r.tags[i].Is(TagTypeSource) || r.tags[i].Source() != "WEB" || !isolated(r.tags[:r.end], i, -1) {
+			continue
+		}
+		// seek more specific source after i
+		for j := i + 1; j < r.end; j++ {
+			if r.tags[j].Is(TagTypeSource) && r.tags[j].Source() != "WEB" {
+				r.tags[i] = r.tags[i].As(TagTypeText, nil)
+				break
+			}
 		}
 	}
 }

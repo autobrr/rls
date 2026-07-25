@@ -451,6 +451,17 @@
   audio: "DUAL.AUDIO DD"
   other: "INTERNAL"
   group: "io"
+"Chainsaw.Man.-.The.Movie.Reze.Arc.2025.1080p.MA.WEB-DL.DUAL.DDP5.1.Atmos.H.264-BYNDR":
+  type: "movie"
+  title: "Chainsaw Man - The Movie Reze Arc"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "MA"
+  year: 2025
+  codec: "H.264"
+  audio: "DUAL.AUDIO DDP Atmos"
+  channels: "5.1"
+  group: "BYNDR"
 "Coco.Avant.Chanel.2009.FRENCH.NORDiCSUBS.COMPLETE.BDR-CULTBDR":
   type: "movie"
   title: "Coco Avant Chanel"
@@ -686,17 +697,6 @@
   channels: "5.1"
   group: "NTG"
   ext: "mkv"
-"Chainsaw.Man.-.The.Movie.Reze.Arc.2025.1080p.MA.WEB-DL.DUAL.DDP5.1.Atmos.H.264-BYNDR":
-  type: "movie"
-  title: "Chainsaw Man - The Movie Reze Arc"
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "MA"
-  year: 2025
-  codec: "H.264"
-  audio: "DUAL.AUDIO DDP Atmos"
-  channels: "5.1"
-  group: "BYNDR"
 "Fear.and.Loathing.in.Las.Vegas.1998.The.Criterion.Collection.1080p.BluRay.DTS.x264-HiFi":
   type: "movie"
   title: "Fear and Loathing in Las Vegas"
@@ -1478,6 +1478,14 @@
   type: "movie"
   title: "under the sea: 20,000 leagues"
   resolution: "1080p"
+"Unfriended.Dark.Web.2018.1080p.WEBRip.x264-RARBG":
+  type: "movie"
+  title: "Unfriended Dark Web"
+  source: "WEBRiP"
+  resolution: "1080p"
+  year: 2018
+  codec: "x264"
+  group: "RARBG"
 "USA.A.West.Coast.Journey.2016.UHD.BluRay.2160p.DTS-HD.MA.5.1.HEVC.REMUX-FraMeSToR":
   type: "movie"
   title: "USA A West Coast Journey"
@@ -1706,6 +1714,32 @@
   language: "GERMAN"
   size: "DVDR"
   group: "ITG"
+"Big Fat Quiz S1957E02 1080p ALL4 WEB-DL AAC 2.0 H.264-RAWR":
+  type: "episode"
+  title: "Big Fat Quiz"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ALL4"
+  year: 1957
+  series: 1957
+  episode: 2
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "RAWR"
+"Big Fat Quiz S2025E02 1080p ALL4 WEB-DL AAC 2.0 H.264-RAWR":
+  type: "episode"
+  title: "Big Fat Quiz"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ALL4"
+  year: 2025
+  series: 2025
+  episode: 2
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "RAWR"
 "Big.Mouth.S02.1080p.WEB.EAC3.51.x264-BTN":
   type: "series"
   title: "Big Mouth"
@@ -1818,6 +1852,28 @@
   audio: "DDP"
   channels: "2.0"
   group: "NTb"
+"Doctor.Who.S02E05.The.Web.Planet.1080p.WEB-DL.AAC2.0.H.264-GROUP":
+  type: "episode"
+  title: "Doctor Who"
+  subtitle: "The Web Planet"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 2
+  episode: 5
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "GROUP"
+"Doctor.Who.S05E05.The.Web.of.Fear.1080p.BluRay.x264-GROUP":
+  type: "episode"
+  title: "Doctor Who"
+  subtitle: "The Web of Fear"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 5
+  episode: 5
+  codec: "x264"
+  group: "GROUP"
 "Doctor.Who.2005.8x11.Dark.Water.720p.HDTV.x264-FoV[rartv]":
   type: "episode"
   title: "Doctor Who"
@@ -2116,6 +2172,15 @@
   other: "REMUX"
   group: "EPSiLON"
   ext: "mkv"
+"Married At First Sight AU S13E02 1080p AV1 10bit-MeGusta":
+  type: "episode"
+  title: "Married At First Sight AU"
+  resolution: "1080p"
+  series: 13
+  episode: 2
+  codec: "AV1"
+  bitdepth: "10BIT"
+  group: "MeGusta"
 "Marvel's.Agents.of.S.H.I.E.L.D.S02E01.Shadows.1080p.WEB-DL.DD5.1":
   type: "episode"
   title: "Marvel's Agents of S.H.I.E.L.D."
@@ -2226,7 +2291,7 @@
   resolution: "720p"
   series: 1
   episode: 46
-"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 10bit AC3 5.1 - JBENT)[TAoE].mkv":
+"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 10 bit AC3 5.1 - JBENT)[TAoE].mkv":
   type: "episode"
   title: "Peacemaker"
   subtitle: "It's Cow or Never"
@@ -2260,7 +2325,7 @@
   group: "JBENT"
   site: "TAoE"
   ext: "mkv"
-"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 10 bit AC3 5.1 - JBENT)[TAoE].mkv":
+"Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 10bit AC3 5.1 - JBENT)[TAoE].mkv":
   type: "episode"
   title: "Peacemaker"
   subtitle: "It's Cow or Never"
@@ -2385,6 +2450,34 @@
   audio: "AAC"
   channels: "2.0"
   group: "GROUP"
+"Silo.S03E03.A.Dark.Web.1080p.ATVP.WEBRip.DDP5.1.Atmos.x265.10bit-Kronos":
+  type: "episode"
+  title: "Silo"
+  subtitle: "A Dark Web"
+  source: "WEBRiP"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 3
+  episode: 3
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "Kronos"
+"silo.s03e03.a.dark.web.1080p.atvp.webrip.ddp5.1.atmos.x265.10bit-kronos":
+  type: "episode"
+  title: "silo"
+  subtitle: "a dark web"
+  source: "WEBRiP"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 3
+  episode: 3
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "kronos"
 "Skins.S06E10.Finale.German.DD20.Dubbed.DL.720p.AmazonHD.x264-TVS":
   type: "episode"
   title: "Skins"
@@ -2736,6 +2829,25 @@
   codec: "H.264"
   language: "FRENCH"
   group: "PROPJOE"
+"Web.of.Lies.S06E01.1080p.WEB.h264-GROUP":
+  type: "episode"
+  title: "Web of Lies"
+  source: "WEB"
+  resolution: "1080p"
+  series: 6
+  episode: 1
+  codec: "H.264"
+  group: "GROUP"
+"Web.of.Lies.S06E01.Deadly.Deception.720p.WEBRip.x264-GROUP":
+  type: "episode"
+  title: "Web of Lies"
+  subtitle: "Deadly Deception"
+  source: "WEBRiP"
+  resolution: "720p"
+  series: 6
+  episode: 1
+  codec: "x264"
+  group: "GROUP"
 "Winx.Club.S06E16.Die.Zombie-Invasion.GERMAN.DUBBED.DL.720p.WEB-DL.h264-pbw":
   type: "episode"
   title: "Winx Club"
@@ -2818,6 +2930,19 @@
   channels: "5.1"
   group: "FLUX"
   ext: "mkv"
+"ZDFzeit.S2022E23.Die.Kraft.der.Koenigin.-.Schwedens.starke.Frauen.GERMAN.DOKU.720.WEB.H264-KUO":
+  type: "episode"
+  title: "ZDFzeit"
+  subtitle: "Die Kraft der Koenigin - Schwedens starke Frauen"
+  source: "WEB"
+  year: 2022
+  series: 2022
+  episode: 23
+  codec: "H.264"
+  language: "GERMAN"
+  genre: "Documentary"
+  group: "KUO"
+  unused: "720"
 "Zébra.2009.S00.x264-group":
   type: "series"
   title: "Zébra"
@@ -3419,17 +3544,6 @@
   other: "Incl.Keygen Incl.Patch"
   group: "DVT"
   unused: "15TH BIRTHDAY"
-"Dead.Dungeon.v1.0.11-SiMPLEX":
-  type: "game"
-  title: "Dead Dungeon"
-  version: "v1.0.11"
-  group: "SiMPLEX"
-"Depraved.v1.1a_56.Update.v1.1d.57-SiMPLEX":
-  type: "game"
-  title: "Depraved"
-  version: "v1.1a_56"
-  other: "UPDATE"
-  group: "SiMPLEX"
 "Dox.v2.20-LAXiTY":
   type: "app"
   title: "Dox"
@@ -3530,6 +3644,17 @@
   version: "v1.17.2"
   other: "UPDATE"
   group: "SUXXORS"
+"Dead.Dungeon.v1.0.11-SiMPLEX":
+  type: "game"
+  title: "Dead Dungeon"
+  version: "v1.0.11"
+  group: "SiMPLEX"
+"Depraved.v1.1a_56.Update.v1.1d.57-SiMPLEX":
+  type: "game"
+  title: "Depraved"
+  version: "v1.1a_56"
+  other: "UPDATE"
+  group: "SiMPLEX"
 "Diablo_III_Eternal_Collection_Update_v2.6.9.68709_NSW-VENOM":
   type: "game"
   title: "Diablo III Eternal Collection"
@@ -3563,6 +3688,10 @@
   platform: "PS4"
   version: "v2.04"
   group: "CUSA25551"
+"Oddsparks.An.Automation.Adventure.Coaster.Rush-RUNE":
+  type: "game"
+  title: "Oddsparks An Automation Adventure Coaster Rush"
+  group: "RUNE"
 "SAMURAI_SHODOWN_MULTI_Update_v1.90_NSW-SUXXORS":
   type: "game"
   title: "SAMURAI SHODOWN"
@@ -3764,55 +3893,3 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
-"Oddsparks.An.Automation.Adventure.Coaster.Rush-RUNE":
-  type: "game"
-  title: "Oddsparks An Automation Adventure Coaster Rush"
-  group: "RUNE"
-"Married At First Sight AU S13E02 1080p AV1 10bit-MeGusta":
-  type: "episode"
-  title: "Married At First Sight AU"
-  resolution: "1080p"
-  series: 13
-  episode: 2
-  codec: "AV1"
-  bitdepth: "10BIT"
-  group: "MeGusta"
-"Big Fat Quiz S1957E02 1080p ALL4 WEB-DL AAC 2.0 H.264-RAWR":
-  type: "episode"
-  title: "Big Fat Quiz"
-  source: "WEB-DL"
-  resolution: "1080p"
-  codec: "H.264"
-  audio: "AAC"
-  channels: "2.0"
-  series: 1957
-  episode: 2
-  collection: "ALL4"
-  year: 1957
-  group: "RAWR"
-"Big Fat Quiz S2025E02 1080p ALL4 WEB-DL AAC 2.0 H.264-RAWR":
-  type: "episode"
-  title: "Big Fat Quiz"
-  source: "WEB-DL"
-  resolution: "1080p"
-  codec: "H.264"
-  audio: "AAC"
-  channels: "2.0"
-  series: 2025
-  episode: 2
-  collection: "ALL4"
-  year: 2025
-  group: "RAWR"
-"ZDFzeit.S2022E23.Die.Kraft.der.Koenigin.-.Schwedens.starke.Frauen.GERMAN.DOKU.720.WEB.H264-KUO":
-  type: "episode"
-  title: "ZDFzeit"
-  subtitle: "Die Kraft der Koenigin - Schwedens starke Frauen"
-  source: "WEB"
-  codec: "H.264"
-  series: 2022
-  episode: 23
-  language: "GERMAN"
-  genre: "Documentary"
-  group: "KUO"
-  year: 2022
-  unused: "720"
