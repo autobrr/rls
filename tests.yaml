@@ -31,6 +31,7 @@
   title: "S.H.I.E.L.D. was C.O.O.L."
 "[BBT-RMX]_Servant_x_Service":
   title: "Servant x Service"
+  group: "BBT-RMX"
   site: "BBT-RMX"
 "TEST.A.Documentary":
   title: "TEST A Documentary"
@@ -75,6 +76,7 @@
   resolution: "1080p"
   year: 2011
   audio: "DTS-HD"
+  group: "test"
   site: "test"
 "50.50.2011.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR.mkv":
   type: "movie"
@@ -650,6 +652,7 @@
   bitdepth: "10BIT"
   audio: "FLAC"
   channels: "2.0"
+  group: "Dekinai"
   site: "Dekinai"
 "E.T.the.Extra-Terrestrial.1982.UHD.BluRay.2160p.DTS-X.7.1.HEVC.REMUX-FraMeSToR":
   type: "movie"
@@ -722,6 +725,7 @@
   resolution: "576p"
   codec: "H.264"
   language: "ENGLiSH HARDSUB"
+  group: "ValdikSS"
   site: "ValdikSS"
   ext: "mkv"
 "\t foo\nbar\n\f\r1080p \t\nbluray\n\t":
@@ -982,9 +986,10 @@
   title: "Naruto the Movie 3 - Guardians of the Crescent Moon Kingdom"
   source: "BluRay"
   resolution: "1080p"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "DD DTS-HD.MA"
   region: "JPN"
+  group: "Koten_Gars"
   site: "Koten_Gars"
   sum: "1EE5162E"
   ext: "mkv"
@@ -1192,6 +1197,7 @@
   codec: "H.264"
   audio: "TrueHD"
   channels: "5.1"
+  group: "UTW-TMD"
   site: "UTW-TMD"
   sum: "9F311DAB"
   ext: "mkv"
@@ -1804,6 +1810,7 @@
   title: "Clockwork Planet"
   resolution: "480p"
   episode: 10
+  group: "HorribleSubs"
   site: "HorribleSubs"
   ext: "mkv"
 "Community.s02e20.rus.eng.720p.Kybik.v.Kybe":
@@ -1847,6 +1854,7 @@
   title: "Detective Conan"
   resolution: "1080p"
   episode: 862
+  group: "HorribleSubs"
   site: "HorribleSubs"
   ext: "mkv"
 "DI.Ray.S01.1080p.AMZN.WEB-DL.DDP2.0.H.264-NTb":
@@ -2046,6 +2054,7 @@
   title: "Higurashi no Naku Koro ni Sotsu"
   resolution: "1080p"
   episode: 9
+  group: "SubsPlease"
   site: "SubsPlease"
   sum: "C00D6C68"
 "Hold.The.Sunset.S01E00.Christmas.Special.720p.HDTV.X264-MTB":
@@ -2163,6 +2172,7 @@
   series: 1
   episode: 1
   audio: "AAC"
+  group: "P9"
   site: "P9"
   ext: "mkv"
 "Looney.Tunes.S1958E13.Knighty.Knight.Bugs.1080p.BluRay.REMUX.AVC.DD.1.0-EPSiLON.mkv":
@@ -2223,6 +2233,7 @@
   episode: 5
   codec: "x264"
   audio: "OGG"
+  group: "RaX"
   site: "RaX"
   sum: "585d9971"
   ext: "mkv"
@@ -2236,6 +2247,7 @@
   version: "v2"
   codec: "H.264"
   audio: "AAC"
+  group: "Conclave-Mendoi"
   site: "Conclave-Mendoi"
   sum: "4863FBE8"
   ext: "mkv"
@@ -2289,6 +2301,7 @@
   title: "One Piece"
   resolution: "1080p"
   episode: 1125
+  group: "SubsPlease"
   site: "SubsPlease"
   sum: "7E631F90"
   ext: "mkv"
@@ -2421,6 +2434,7 @@
   title: "Saikin Yatotta Maid ga Ayashii"
   resolution: "1080p"
   episode: 9
+  group: "SubsPlease"
   site: "SubsPlease"
   sum: "990FF01E"
   ext: "mkv"
@@ -2443,6 +2457,7 @@
   episode: 13
   version: "v0"
   cut: "Uncensored.Cut Directors.Cut"
+  group: "chibi-Doki"
   site: "chibi-Doki"
   sum: "988DB090"
   ext: "mkv"

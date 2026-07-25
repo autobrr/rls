@@ -49,7 +49,7 @@ audio,OPUS,Opus,,,,
 audio,TrueHD,Dolby TrueHD,(?:dolby[\-\._ ]?)?true[\-\._ ]?hd,,movie,
 audio,VBR,Variable Bit Rate,,,music,1
 bitdepth,8BIT,,8[\-\. ]?bit,,movie,
-bitdepth,10BIT,,10[\-\. ]?bit,,movie,
+bitdepth,10BIT,,10[\-\. ]?bit|hi[\-\. ]?10p?,,movie,
 bitdepth,12BIT,,12[\-\. ]?bit,,movie,
 channels,7.1,,7\.1(?:[\-\._ ]?audios?)?,,,
 channels,7.0,,7\.0(?:[\-\._ ]?audios?)?,,,
@@ -205,7 +205,7 @@ container,M4V,,,,movie,
 container,PDF,Portable Document Format (PDF),,,book,
 container,WMV,Windows Media Video (WMV),,,movie,
 cut,Censored.Cut,Censored,censored(?:[\-\._ ]cut)?,,movie,
-cut,Directors.Cut,Director's,director[\-\._ ']?s[\-\._ ]cut|(?-i:DC),,movie,
+cut,Directors.Cut,Director's,director[\-\._ ']?s[\-\._ ]cut,,movie,
 cut,Extended.Cut,Extended,extended(?:[\-\._ ](?:version|edition|cut))?,,,
 cut,Final.Cut,Final,final[\-\._ ]cut,,movie,
 cut,International.Cut,International,international[\-\._ ]cut,,movie,
@@ -327,8 +327,8 @@ genre,Thriller,,,,movie,
 genre,Travel,,,,movie,
 genre,War,,,,movie,
 genre,Western,,,,movie,
-hdr,HDR10+,High Dynamic Range (10-bit+),hdr[\-\.]?10\+|hdr10plus|hdr[\-\.]?10P|hi10p,,movie,
-hdr,HDR10,High Dynamic Range (10-bit),hdr[\-\.]?10|hi10,,movie,
+hdr,HDR10+,High Dynamic Range (10-bit+),hdr[\-\.]?10\+|hdr10plus|hdr[\-\.]?10P,,movie,
+hdr,HDR10,High Dynamic Range (10-bit),hdr[\-\.]?10,,movie,
 hdr,HDR+,High Dynamic Range+,hdr\+,,movie,
 hdr,HDR,High Dynamic Range,,,movie,
 hdr,HLG,Hybrid Log-Gamma,,,movie,
@@ -443,7 +443,7 @@ other,JB,Jailbroken,(?-i:JB),,game,1
 other,KONTAKT,Samples (Kontakt),(?-i:KONTAKT),,music,1
 other,LD,Line Dubbed,,,,
 other,MD,Mic Dubbed,(?-i:MD),,,
-other,MERRY.XMAS,Holiday (xmas),(?-i:.ERRY[\-\._ ](?:XMAS|CHRISTMAS)),,,
+other,MERRY.XMAS,Holiday (xmas),(?-i:MERRY[\-\._ ](?:XMAS|CHRISTMAS)),,,
 other,minimalNR,Minimal Noise-Reduction,minimal[\-\._ ]?nr,,movie,1
 other,MOViE.PACK,Movie Pack,movie[\-\._ ]?pack,,movie,1
 other,MULTiFORMAT,Multiformat,,,music,1
@@ -504,7 +504,7 @@ platform,ANDROiD,Android,(?-i:ANDRO[iI]D),,app,
 platform,DOS,,(?-i:DOS),,app,1
 platform,3DS,Nintendo 3DS,(?-i:3DS),,game,1
 platform,DSi,Nintendo DSi,,,game,1
-platform,FC,Nintendo Famicom,,,game,1
+platform,Famicom,Nintendo Famicom,,,game,1
 platform,FreeBSD,,free[\-\._ ]?bsd,,app,1
 platform,GBA,Nintendo Gameboy Advanced,,,game,1
 platform,GB,Nintendo Gameboy,,,game,1
@@ -590,7 +590,7 @@ resolution,2880p,5k (2880p),2880p|5k|5120x2880,,,
 resolution,2160p,UltraHD 4K (2160p),2160p|3840x2160|uhd|ultra[\-\._ ]?hd|4k,,,
 resolution,1800p,QHD+ (1800p),1800p|3200x1800,,,
 resolution,1440p,QHD (1440p),1440p|2560x1440,,,
-resolution,1080p,FullHD (1080p),1080[ip]|1920x1080,,,
+resolution,1080p,FullHD (1080p),1080[ip]|1920x1080|1440x1080,,,
 resolution,900p,HD+ (900p),900[ip]|1600x900,,,
 resolution,720p,HD (720p),720[ip]|1280x720,,,
 resolution,576p,PAL (576p),576[ip]|720x576|pal,,,

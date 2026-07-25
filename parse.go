@@ -2,7 +2,6 @@ package rls
 
 import (
 	"bytes"
-	"fmt"
 	"html"
 	"regexp"
 	"strconv"
@@ -218,8 +217,8 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		digpre:     b.digpre,
 		digsuf:     b.digsuf,
 		infos:      infos,
-		containerf: taginfo.Find(infos["container"]...),
-		audiof:     taginfo.Find(infos["audio"]...),
+		containerf: findFunc(infos["container"]...),
+		audiof:     findFunc(infos["audio"]...),
 	}
 }
 
@@ -241,9 +240,33 @@ func (b *TagBuilder) Build(tags []Tag, end int) Release {
 	b.unset(r)
 	// read titles
 	i := b.titles(r)
+	// fansub style names carry the release group in a leading bracket, which is
+	// captured as a site meta tag. surface it as the group when no group was
+	// otherwise found. done before unused so the last-unused-text fallback in
+	// unused does not claim an unrelated token as the group.
+	b.leadingGroup(r)
 	// demarcate unused
 	b.unused(r, i)
 	return *r
+}
+
+// leadingGroup sets the group from a site meta tag appearing in a leading
+// bracket (ie, '[SubsPlease] Show - 04 ...'), when no group was found.
+func (b *TagBuilder) leadingGroup(r *Release) {
+	if r.Group != "" || r.Site == "" {
+		return
+	}
+	for i := 0; i < len(r.tags); i++ {
+		switch {
+		case r.tags[i].Is(TagTypeWhitespace, TagTypeDelim):
+			continue
+		case r.tags[i].Is(TagTypeMeta):
+			if k, v := r.tags[i].Meta(); k == "site" && v == r.Site {
+				r.Group = v
+			}
+		}
+		return
+	}
 }
 
 // init fixes the initial tag set.
@@ -357,8 +380,11 @@ func (b *TagBuilder) end(r *Release, i int) int {
 // fixFirst fixes the first non text tag if it was badly matched.
 func (b *TagBuilder) fixFirst(r *Release) {
 	var i int
-	// seek
-	for ; i < r.end && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim); i++ {
+	// seek. meta is skipped along with whitespace and delimiters: a leading
+	// bracket holds the site or the fansub group, never part of the title, and
+	// stopping on it left the first real title token unchecked (ie,
+	// '[Group] Complete Manual - 04' kept COMPLETE as an other tag).
+	for ; i < r.end && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeMeta); i++ {
 	}
 	if i != r.end && r.tags[i].Is(
 		TagTypePlatform,
@@ -473,6 +499,11 @@ func (b *TagBuilder) fixIsolated(r *Release) {
 			TagTypeOther,
 			TagTypeArch,
 			TagTypePlatform,
+			// region is deliberately absent. Adding it fixes 'ATP.Tour.US.Open'
+			// but breaks '[UK version]' and 'Videogame EUR NSW', which are
+			// structurally identical and genuinely regions. A region between two
+			// words is not separable from a title containing a region name
+			// without knowing where the title ends.
 		) &&
 			isolated(r.tags[:r.end], i-1, -1) &&
 			isolated(r.tags[:r.end], i-1, +1) &&
@@ -568,7 +599,7 @@ func (b *TagBuilder) collect(r *Release) {
 			}
 		case TagTypeDisc:
 			if r.Disc == "" {
-				r.Disc = fmt.Sprintf("%s", r.tags[i])
+				r.Disc = r.tags[i].Disc()
 			}
 		case TagTypeCodec:
 			r.Codec = append(r.Codec, r.tags[i].Codec())
@@ -912,7 +943,7 @@ func (b *TagBuilder) movieTitles(r *Release) int {
 		return b.boxTitle(r, start, offset)
 	}
 	for pos = date + 1; pos < len(r.tags) && hasSubtitle && pos < resolution; pos++ {
-		hasSubtitle = hasSubtitle && r.tags[pos].Is(TagTypeDelim, TagTypeText, TagTypeCut, TagTypeEdition)
+		hasSubtitle = hasSubtitle && r.tags[pos].Is(TagTypeDelim, TagTypeText, TagTypeCut, TagTypeEdition, TagTypeLanguage)
 	}
 	// capture subtitle
 	if hasSubtitle {
@@ -1327,5 +1358,10 @@ func isolated(tags []Tag, i, inc int) bool {
 	for i += inc; 0 < i && i < len(tags)-1 && tags[i+inc].Is(TagTypeWhitespace, TagTypeDelim); i += inc {
 	}
 	i += inc
+	// the len(tags)-1 bound is deliberate: it excludes the final tag, which at
+	// this point in the build is usually an as-yet unidentified group (the
+	// group is only settled in unused). Widening it to len(tags) makes
+	// 'MiniMeters v0 8 4 Beta MacOS BTCR' treat the trailing group BTCR as
+	// title text and lose the MacOS platform.
 	return 0 <= i && i < len(tags)-1 && tags[i].Is(TagTypeText)
 }

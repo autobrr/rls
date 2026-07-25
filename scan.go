@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"sync/atomic"
 
 	"golang.org/x/sync/errgroup"
@@ -27,6 +28,7 @@ type ReleaseScanner struct {
 	workers int
 	next    int64
 	err     error
+	mu      sync.Mutex
 	errs    []error
 }
 
@@ -93,13 +95,6 @@ func (s *ReleaseScanner) ScanReader(ctx context.Context, r io.Reader) <-chan *Sc
 
 // run parses from in, places on out.
 func (s *ReleaseScanner) run(ctx context.Context, worker int, in, out chan *Scan) error {
-	var id int64
-	var str string
-	defer func() {
-		if err := recover(); err != nil {
-			s.errs = append(s.errs, &ScanRecoverError{worker, id, str, debug.Stack(), err})
-		}
-	}()
 	for {
 		select {
 		case <-ctx.Done():
@@ -108,8 +103,14 @@ func (s *ReleaseScanner) run(ctx context.Context, worker int, in, out chan *Scan
 			if scan == nil || scan.ID == 0 {
 				return nil
 			}
-			id, str = scan.ID, scan.Line
-			scan.Release = s.parser.ParseRelease([]byte(scan.Line))
+			// a release that panics the parser must not take the worker with
+			// it: recovering here and continuing keeps the remaining input
+			// flowing. recovering at the func level instead would retire the
+			// worker, and once every worker has retired the producer blocks
+			// forever and the out channel is never closed.
+			if !s.parse(worker, scan) {
+				continue
+			}
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
@@ -119,10 +120,33 @@ func (s *ReleaseScanner) run(ctx context.Context, worker int, in, out chan *Scan
 	}
 }
 
+// parse parses scan, recovering from a panic in the parser. Reports false when
+// the parse panicked, in which case the error has been recorded and the scan
+// should be skipped.
+func (s *ReleaseScanner) parse(worker int, scan *Scan) (ok bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			s.mu.Lock()
+			s.errs = append(s.errs, &ScanRecoverError{worker, scan.ID, scan.Line, debug.Stack(), err})
+			s.mu.Unlock()
+			ok = false
+		}
+	}()
+	scan.Release = s.parser.ParseRelease([]byte(scan.Line))
+	return true
+}
+
 // Err returns the last encountered error.
 func (s *ReleaseScanner) Err() error {
-	if len(s.errs) != 0 {
-		return s.errs[0]
+	s.mu.Lock()
+	errs := len(s.errs)
+	var first error
+	if errs != 0 {
+		first = s.errs[0]
+	}
+	s.mu.Unlock()
+	if errs != 0 {
+		return first
 	}
 	if !errors.Is(s.err, context.Canceled) {
 		return s.err
