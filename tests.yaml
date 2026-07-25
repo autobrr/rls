@@ -552,6 +552,14 @@
   channels: "2.0"
   other: "REMUX"
   group: "FraMeSToR"
+"deep.web.2015.1080p.web.x264-group":
+  type: "movie"
+  title: "deep web"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2015
+  codec: "x264"
+  group: "group"
 "Deerskin.2019.1080p.BluRay.EAC3.x264-ZQ.mkv":
   type: "movie"
   title: "Deerskin"
@@ -2450,6 +2458,33 @@
   audio: "AAC"
   channels: "2.0"
   group: "GROUP"
+"Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB.DDP5.1.Atmos.x265.10bit-Kronos":
+  type: "episode"
+  title: "Silo"
+  subtitle: "A Dark Web"
+  source: "WEB"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 3
+  episode: 3
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "Kronos"
+"Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
+  type: "episode"
+  title: "Silo"
+  subtitle: "A Dark Web"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 3
+  episode: 3
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "Kronos"
 "Silo.S03E03.A.Dark.Web.1080p.ATVP.WEBRip.DDP5.1.Atmos.x265.10bit-Kronos":
   type: "episode"
   title: "Silo"
@@ -2609,6 +2644,19 @@
   codec: "XViD"
   group: "LOL"
   site: "eztv"
+"The.Dark.Web.S01E01.Pilot.1080p.AMZN.WEB.DDP5.1.H.264-NTb":
+  type: "episode"
+  title: "The Dark Web"
+  subtitle: "Pilot"
+  source: "WEB"
+  resolution: "1080p"
+  collection: "AMZN"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "NTb"
 "The.Drunk.And.On.Drugs.Happy.Funtime.Hour.S01.WS.DSRip.XviD.torrent":
   type: "series"
   title: "The Drunk And On Drugs Happy Funtime Hour"

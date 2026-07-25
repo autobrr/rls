@@ -427,17 +427,18 @@ func (b *TagBuilder) fixSpecial(r *Release, i int, series bool) {
 	}
 }
 
-// fixSourceWeb fixes a bare web source tag preceded by text when a more
-// specific source tag follows, as the web tag is part of a title (ie,
+// fixSourceWeb fixes a bare web source tag preceded by text when any source
+// tag follows, as a release names its source once amongst the technical tags:
+// a preceding web tag is part of a title (ie,
 // 'Show.S03E03.A.Dark.Web.1080p.WEBRip...').
 func (b *TagBuilder) fixSourceWeb(r *Release) {
 	for i := 0; i < r.end; i++ {
 		if !r.tags[i].Is(TagTypeSource) || r.tags[i].Source() != "WEB" || !isolated(r.tags[:r.end], i, -1) {
 			continue
 		}
-		// seek more specific source after i
+		// seek source after i
 		for j := i + 1; j < r.end; j++ {
-			if r.tags[j].Is(TagTypeSource) && r.tags[j].Source() != "WEB" {
+			if r.tags[j].Is(TagTypeSource) {
 				r.tags[i] = r.tags[i].As(TagTypeText, nil)
 				break
 			}
