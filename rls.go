@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"unicode"
 	"unicode/utf8"
 
@@ -417,9 +418,24 @@ func (tag Tag) Match(s string, verb rune, types ...TagType) bool {
 		}
 	}
 	if verb == 'r' {
-		return regexp.MustCompile(s).MatchString(v)
+		return matchRE(s).MatchString(v)
 	}
 	return s == v
+}
+
+// reCache caches the regexps compiled for Match's 'r' verb, which would
+// otherwise recompile the caller's pattern on every call.
+var reCache sync.Map // string -> *regexp.Regexp
+
+// matchRE returns the compiled regexp for s. As with regexp.MustCompile, an
+// invalid pattern panics.
+func matchRE(s string) *regexp.Regexp {
+	if v, ok := reCache.Load(s); ok {
+		return v.(*regexp.Regexp)
+	}
+	re := regexp.MustCompile(s)
+	reCache.Store(s, re)
+	return re
 }
 
 // Format satisfies the fmt.Formatter interface.
@@ -1104,9 +1120,18 @@ func NewCleaner() transform.Transformer {
 	)
 }
 
+// cleaners pools the transform chains used by MustClean. Building the chain is
+// the dominant cost of a call, and a transform.Transformer carries state across
+// Reset so a single shared instance would not be safe for concurrent use.
+var cleaners = sync.Pool{
+	New: func() any { return NewCleaner() },
+}
+
 // MustClean applies the Clean transform to s.
 func MustClean(s string) string {
-	s, _, err := transform.String(NewCleaner(), s)
+	t := cleaners.Get().(transform.Transformer)
+	defer cleaners.Put(t)
+	s, _, err := transform.String(t, s)
 	if err != nil {
 		panic(err)
 	}
@@ -1142,10 +1167,17 @@ func NewNormalizer() transform.Transformer {
 	)
 }
 
+// normalizers pools the transform chains used by MustNormalize. See cleaners.
+var normalizers = sync.Pool{
+	New: func() any { return NewNormalizer() },
+}
+
 // MustNormalize applies the Normalize transform to s, returning a lower cased,
 // clean form of s useful for matching titles.
 func MustNormalize(s string) string {
-	s, _, err := transform.String(NewNormalizer(), s)
+	t := normalizers.Get().(transform.Transformer)
+	defer normalizers.Put(t)
+	s, _, err := transform.String(t, s)
 	if err != nil {
 		panic(err)
 	}

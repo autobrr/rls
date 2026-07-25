@@ -51,8 +51,8 @@ func DefaultLexers() []Lexer {
 			`req`, `(`, `)`, `(REQ(?:UEST)?)`,
 			// {REQ}
 			`req`, `{`, `}`, `(REQ(?:UEST)?)`,
-			// [ABCD1234]
-			`sum`, `[`, `]`, `([0-9A-F]{8})`,
+			// [ABCD1234], [abcd1234] -- crc32 checksums are written in either case
+			`sum`, `[`, `]`, `((?i:[0-9A-F]{8}))`,
 			// [site]
 			`site`, `[`, `]`, `([^ \t\]]{1,32})`,
 			// -={site}=-
@@ -642,6 +642,14 @@ func NewMetaLexer(strs ...string) Lexer {
 	}
 	var delim *regexp.Regexp
 	var shortTags map[string]bool
+	// lead matches a leading bracket whose contents contain a space. fansub
+	// release groups regularly do ('[Anime Time]', '[Mad Le Zisell]'), but the
+	// general site pattern disallows spaces because a bracket elsewhere in a
+	// name holds a block of tags ('[1080p HEVC]'), not a group. restricting
+	// this to offset 0 keeps those apart.
+	lead := regexp.MustCompile(`^\[([^\]\t\r\n\f]{1,40})\]`)
+	// leadTags rejects a leading bracket that is really a block of tags.
+	leadTags := regexp.MustCompile(`(?i)(^|[\-\._ ])(\d{3,4}[ip]|\d{3,4}x\d{3,4}|[xh][\-\. ]?26[45]|hevc|avc|aac|flac|opus|blu[\-\. ]?ray|web[\-\. ]?dl|bd(?:rip)?|dvd|\d{1,2}[\-\. ]?bit|hi10p?|dual[\-\. ]?audio|multi[\-\. ]?subs?)($|[\-\._ ])`)
 	return TagLexer{
 		Init: func(_ map[string][]*taginfo.Taginfo, re *regexp.Regexp, short map[string]bool) {
 			delim, shortTags = re, short
@@ -654,6 +662,18 @@ func NewMetaLexer(strs ...string) Lexer {
 			var v []byte
 			var matched, short bool
 			prev := make(map[string]bool, o)
+			// leading bracket release group containing a space
+			if i == 0 {
+				if g := lead.FindSubmatch(src[i:n]); g != nil {
+					// the value is the trimmed contents; an internal space is
+					// what distinguishes a group from a padded single token
+					// ('[ www.Speed.cd ]'), which the site pattern handles.
+					if t := bytes.TrimSpace(g[1]); bytes.ContainsRune(t, ' ') && !leadTags.Match(t) {
+						start = append(start, NewTag(TagTypeMeta, nil, g[0], []byte(`site`), t))
+						i, prev[`site`] = i+len(g[0]), true
+					}
+				}
+			}
 			// prefixes
 			for ; i < n; i++ {
 				matched = false
