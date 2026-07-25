@@ -443,7 +443,7 @@ other,JB,Jailbroken,(?-i:JB),,game,1
 other,KONTAKT,Samples (Kontakt),(?-i:KONTAKT),,music,1
 other,LD,Line Dubbed,,,,
 other,MD,Mic Dubbed,(?-i:MD),,,
-other,MERRY.XMAS,Holiday (xmas),(?-i:.ERRY[\-\._ ](?:XMAS|CHRISTMAS)),,,
+other,MERRY.XMAS,Holiday (xmas),(?-i:MERRY[\-\._ ](?:XMAS|CHRISTMAS)),,,
 other,minimalNR,Minimal Noise-Reduction,minimal[\-\._ ]?nr,,movie,1
 other,MOViE.PACK,Movie Pack,movie[\-\._ ]?pack,,movie,1
 other,MULTiFORMAT,Multiformat,,,music,1

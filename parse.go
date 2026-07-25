@@ -2,7 +2,6 @@ package rls
 
 import (
 	"bytes"
-	"fmt"
 	"html"
 	"regexp"
 	"strconv"
@@ -218,8 +217,8 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		digpre:     b.digpre,
 		digsuf:     b.digsuf,
 		infos:      infos,
-		containerf: taginfo.Find(infos["container"]...),
-		audiof:     taginfo.Find(infos["audio"]...),
+		containerf: findFunc(infos["container"]...),
+		audiof:     findFunc(infos["audio"]...),
 	}
 }
 
@@ -600,7 +599,7 @@ func (b *TagBuilder) collect(r *Release) {
 			}
 		case TagTypeDisc:
 			if r.Disc == "" {
-				r.Disc = fmt.Sprintf("%s", r.tags[i])
+				r.Disc = r.tags[i].Disc()
 			}
 		case TagTypeCodec:
 			r.Codec = append(r.Codec, r.tags[i].Codec())
