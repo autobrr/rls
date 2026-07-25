@@ -116,6 +116,8 @@ collection,DSCP,Discovery+,dsc[p\+],,,
 collection,DSNP,Disney+,dsn[p+],,,
 collection,DSNY,Disney,,,,
 collection,eShop,Nintendo eShop,,,game,1
+collection,F1TV,,,,episode,1
+collection,F1LIVE,,,,episode,1
 collection,FBWatch,Facebook Watch,,,,
 collection,FE,Freeform,,,,
 collection,3FM,NPO 3FM,,,music,1
@@ -165,6 +167,9 @@ collection,SF,Shout! Factory,(?-i:SF),,,
 collection,SiriusXM,Sirius XM,sirius[\-\._ ]?xm,,music,1
 collection,Skillfeed,,,,education,1
 collection,Skillshare,,skillshare(?:[\-\._ ]?com)?,,education,1
+collection,SKY,Sky Sports,,,episode,1
+collection,SKYF1UHD,Sky Sports F1 4K,,,episode,1
+collection,SKYF1HD,Sky Sports F1 HD,,,episode,1
 collection,Sonic.Academy,Sonic Academy,sonic[\-\._ ]?academy(?:[\-\._ ]?com)?,,education,1
 collection,STAN,Stan,,,,
 collection,STV,Straight-to-Video,,,movie,
@@ -810,4 +815,5 @@ group,RiTUEL,RiTUEL,(?-i:R[iI]TU[eE]L),,game,1
 group,STEAMPUNKS,STEAMPUNKS,steam[\-\._ ]?punks,,game,1
 group,ViTALiTY,ViTALiTY,(?-i:V[iI]T[aA]L[iI]TY),,game,1
 group,VACE,VACE,,,game,1
+group,VERUM,VERUM,,,episode,1
 group,VREX,VREX,,,game,1
