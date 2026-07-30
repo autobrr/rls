@@ -989,6 +989,18 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	if r.Month != 0 && r.Day != 0 {
 		typ = TagTypeDate
 	}
+	// a parenthetical between the title and the series/date tag is part of the
+	// show title (ie, '[SubsPlease] Kanteishi (Kari) - 01 ...'): scene naming
+	// folds it into the title itself ('Kanteishi.Kari.S01...'). surface the
+	// folded form as the alternate title, and resume past the closing
+	// delimiter so the text is not left unused, where the group fallback in
+	// unused would claim it.
+	if i, s := b.parenTitle(r, pos, typ); s != "" {
+		if r.Alt == "" && r.Title != "" {
+			r.Alt = r.Title + " " + s
+		}
+		pos = i
+	}
 	// seek text after date/series, collecting any skipped text
 	for ; pos < len(r.tags) && !r.tags[pos].Is(typ); pos++ {
 		if r.tags[pos].Is(TagTypeText) {
@@ -1024,6 +1036,47 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	var offset int
 	r.Subtitle, offset = b.title(r.tags[pos:], TagTypeText)
 	return pos + offset
+}
+
+// parenTitle collects a parenthetical title part sitting between the title
+// and the series/date tag, returning the position of the closing delimiter
+// and the collected text. it only fires when the parenthetical holds bare
+// text and the series/date tag follows it, so typed parentheticals
+// ('(720p)', '(2019)') and trailing metadata are never captured.
+func (b *TagBuilder) parenTitle(r *Release, pos int, typ TagType) (int, string) {
+	if pos >= len(r.tags) || !r.tags[pos].Is(TagTypeDelim) || !strings.HasSuffix(r.tags[pos].Delim(), "(") {
+		return pos, ""
+	}
+	var v []string
+	for i := pos + 1; i < len(r.tags); i++ {
+		switch {
+		case r.tags[i].Is(TagTypeText):
+			v = append(v, r.tags[i].Text())
+		case r.tags[i].Is(TagTypeDelim):
+			s := r.tags[i].Delim()
+			if !strings.ContainsAny(s, "()[]{}\\/") {
+				continue
+			}
+			if !strings.HasPrefix(s, ")") || len(v) == 0 {
+				return pos, ""
+			}
+			// closing delimiter: require the series/date tag next
+			for j := i + 1; ; j++ {
+				switch {
+				case j == len(r.tags):
+					return pos, ""
+				case r.tags[j].Is(typ):
+					return i, strings.Join(v, " ")
+				case r.tags[j].Is(TagTypeWhitespace, TagTypeDelim):
+					continue
+				}
+				return pos, ""
+			}
+		default:
+			return pos, ""
+		}
+	}
+	return pos, ""
 }
 
 // musicTitles sets the titles for music.

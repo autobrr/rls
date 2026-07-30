@@ -69,15 +69,6 @@
   cut: "Uncut"
   language: "GERMAN DL"
   group: "ETM"
-"[test]50.50.2011.BluRay.1080p.DTS-HD":
-  type: "movie"
-  title: "50 50"
-  source: "BluRay"
-  resolution: "1080p"
-  year: 2011
-  audio: "DTS-HD"
-  group: "test"
-  site: "test"
 "50.50.2011.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR.mkv":
   type: "movie"
   title: "50 50"
@@ -90,6 +81,15 @@
   other: "REMUX"
   group: "FraMeSToR"
   ext: "mkv"
+"[test]50.50.2011.BluRay.1080p.DTS-HD":
+  type: "movie"
+  title: "50 50"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2011
+  audio: "DTS-HD"
+  group: "test"
+  site: "test"
 "1492.Conquest.of.Paradise.1992.SWEDiSH.SUBPACK.BluRay-SiN_iNT":
   type: "movie"
   title: "1492 Conquest of Paradise"
@@ -2175,6 +2175,30 @@
   group: "P9"
   site: "P9"
   ext: "mkv"
+"Kanteishi (Kari) - 01 (720p)":
+  type: "episode"
+  title: "Kanteishi"
+  alt: "Kanteishi Kari"
+  resolution: "720p"
+  episode: 1
+"[SubsPlease] Kanteishi (Kari) - 01 (720p) [CBB279E1].mkv":
+  type: "episode"
+  title: "Kanteishi"
+  alt: "Kanteishi Kari"
+  resolution: "720p"
+  episode: 1
+  group: "SubsPlease"
+  site: "SubsPlease"
+  sum: "CBB279E1"
+  ext: "mkv"
+"[SubsPlease] Kanteishi (Kari) S01 (720p)":
+  type: "series"
+  title: "Kanteishi"
+  alt: "Kanteishi Kari"
+  resolution: "720p"
+  series: 1
+  group: "SubsPlease"
+  site: "SubsPlease"
 "Looney.Tunes.S1958E13.Knighty.Knight.Bugs.1080p.BluRay.REMUX.AVC.DD.1.0-EPSiLON.mkv":
   type: "episode"
   title: "Looney Tunes"
@@ -2230,6 +2254,7 @@
 "[RaX]Mezzo(DSA)_-_05_-_[x264_ogg]_[585d9971].mkv":
   type: "episode"
   title: "Mezzo"
+  alt: "Mezzo DSA"
   episode: 5
   codec: "x264"
   audio: "OGG"
@@ -2237,7 +2262,6 @@
   site: "RaX"
   sum: "585d9971"
   ext: "mkv"
-  unused: "DSA"
 "[Conclave-Mendoi]_Mobile_Suit_Gundam_00_S2_-_01v2_[1280x720_H.264_AAC][4863FBE8].mkv":
   type: "episode"
   title: "Mobile Suit Gundam 00"
@@ -2473,6 +2497,19 @@
   audio: "AAC"
   channels: "2.0"
   group: "GROUP"
+"Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
+  type: "episode"
+  title: "Silo"
+  subtitle: "A Dark Web"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 3
+  episode: 3
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "Kronos"
 "Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB.DDP5.1.Atmos.x265.10bit-Kronos":
   type: "episode"
   title: "Silo"
@@ -2484,19 +2521,6 @@
   episode: 3
   codec: "x265"
   bitdepth: "10BIT"
-  audio: "DDP Atmos"
-  channels: "5.1"
-  group: "Kronos"
-"Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
-  type: "episode"
-  title: "Silo"
-  subtitle: "A Dark Web"
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "ATVP"
-  series: 3
-  episode: 3
-  codec: "H.264"
   audio: "DDP Atmos"
   channels: "5.1"
   group: "Kronos"
@@ -2926,6 +2950,7 @@
   type: "episode"
   title: "World's End Harem"
   subtitle: "2022 Airing"
+  alt: "World's End Harem Shuumatsu no Harem"
   source: "HDTV"
   resolution: "1080p"
   collection: "AT-X"
@@ -2937,7 +2962,6 @@
   language: "ENGLiSH SUBBED"
   group: "ZR"
   ext: "mkv"
-  unused: "Shuumatsu no Harem"
 "WWE.Clash.at.the.Castle.2022.PPV.1080p.PCOK.WEB-DL.AAC2.0.H.264-ShiNobi":
   type: "episode"
   title: "WWE Clash at the Castle"
