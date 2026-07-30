@@ -966,6 +966,14 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	if r.Month != 0 && r.Day != 0 {
 		typ = TagTypeDate
 	}
+	// a parenthetical between the title and the series/date tag belongs to
+	// the title ('Kanteishi (Kari) - 01' announces as 'Kanteishi.Kari.S01')
+	if i, s := b.parenTitle(r, pos, typ); s != "" {
+		if r.Alt == "" && r.Title != "" {
+			r.Alt = r.Title + " " + s
+		}
+		pos = i
+	}
 	// seek text after date/series, collecting any skipped text
 	for ; pos < len(r.tags) && !r.tags[pos].Is(typ); pos++ {
 		if r.tags[pos].Is(TagTypeText) {
@@ -1001,6 +1009,32 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	var offset int
 	r.Subtitle, offset = b.title(r.tags[pos:], TagTypeText)
 	return pos + offset
+}
+
+// parenTitle collects a parenthetical title part sitting between the title
+// and the series/date tag, returning the position of the closing delimiter
+// and the collected text. it only fires when the parenthetical holds bare
+// text and the series/date tag follows it, so typed parentheticals
+// ('(720p)', '(2019)') and trailing metadata are never captured.
+func (b *TagBuilder) parenTitle(r *Release, pos int, typ TagType) (int, string) {
+	if pos >= len(r.tags) || !r.tags[pos].Is(TagTypeDelim) || !strings.HasSuffix(r.tags[pos].Delim(), "(") {
+		return pos, ""
+	}
+	s, i := b.title(r.tags[pos+1:], TagTypeText)
+	i += pos + 1
+	if s == "" || i == len(r.tags) || !r.tags[i].Is(TagTypeDelim) || !strings.HasPrefix(r.tags[i].Delim(), ")") {
+		return pos, ""
+	}
+	// closing delimiter: require the series/date tag next
+	for j := i + 1; j < len(r.tags); j++ {
+		switch {
+		case r.tags[j].Is(typ):
+			return i, s
+		case !r.tags[j].Is(TagTypeWhitespace, TagTypeDelim):
+			return pos, ""
+		}
+	}
+	return pos, ""
 }
 
 // musicTitles sets the titles for music.

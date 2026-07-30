@@ -2240,6 +2240,36 @@
   audio: "AAC"
   site: "P9"
   ext: "mkv"
+"Kanteishi (Kari) - 01 (720p)":
+  type: "episode"
+  title: "Kanteishi"
+  alt: "Kanteishi Kari"
+  resolution: "720p"
+  episode: 1
+"[SubsPlease] Kanteishi (Kari) - 01 (720p) [CBB279E1].mkv":
+  type: "episode"
+  title: "Kanteishi"
+  alt: "Kanteishi Kari"
+  resolution: "720p"
+  episode: 1
+  site: "SubsPlease"
+  sum: "CBB279E1"
+  ext: "mkv"
+"[SubsPlease] Kanteishi (Kari) S01 (720p)":
+  type: "series"
+  title: "Kanteishi"
+  alt: "Kanteishi Kari"
+  resolution: "720p"
+  series: 1
+  site: "SubsPlease"
+"[Grp] Show (Kari) 1080p WEB-DL - 01":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  episode: 1
+  group: "Kari"
+  site: "Grp"
 "Looney.Tunes.S1958E13.Knighty.Knight.Bugs.1080p.BluRay.REMUX.AVC.DD.1.0-EPSiLON.mkv":
   type: "episode"
   title: "Looney Tunes"
@@ -2295,13 +2325,13 @@
 "[RaX]Mezzo(DSA)_-_05_-_[x264_ogg]_[585d9971].mkv":
   type: "episode"
   title: "Mezzo"
+  alt: "Mezzo DSA"
   episode: 5
   codec: "x264"
   audio: "OGG"
   site: "RaX"
   sum: "585d9971"
   ext: "mkv"
-  unused: "DSA"
 "[Conclave-Mendoi]_Mobile_Suit_Gundam_00_S2_-_01v2_[1280x720_H.264_AAC][4863FBE8].mkv":
   type: "episode"
   title: "Mobile Suit Gundam 00"
@@ -3083,6 +3113,7 @@
   type: "episode"
   title: "World's End Harem"
   subtitle: "2022 Airing"
+  alt: "World's End Harem Shuumatsu no Harem"
   source: "HDTV"
   resolution: "1080p"
   collection: "AT-X"
@@ -3094,7 +3125,6 @@
   language: "ENGLiSH SUBBED"
   group: "ZR"
   ext: "mkv"
-  unused: "Shuumatsu no Harem"
 "WWE.Clash.at.the.Castle.2022.PPV.1080p.PCOK.WEB-DL.AAC2.0.H.264-ShiNobi":
   type: "episode"
   title: "WWE Clash at the Castle"
