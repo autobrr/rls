@@ -59,6 +59,12 @@ func TestParseRelease(t *testing.T) {
 	}
 }
 
+func TestParseDottedGroup(t *testing.T) {
+	if group := ParseString("Title.2024.1080p.WEB-DL.x264-E.N.D").Group; group != "E.N.D" {
+		t.Fatalf("expected group E.N.D, got %q", group)
+	}
+}
+
 func TestCollapser(t *testing.T) {
 	tests := []struct {
 		s string

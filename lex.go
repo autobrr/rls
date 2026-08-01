@@ -577,6 +577,10 @@ func NewGenreLexer() Lexer {
 // spacedGroup bounds a group name whose words are space- or underscore-separated.
 var spacedGroup = regexp.MustCompile(`(?i)^[a-z_ ]{2,10}$`)
 
+// dottedGroup bounds a group name of three or more single letters separated by
+// periods (ie, 'E.N.D').
+var dottedGroup = regexp.MustCompile(`(?i)^(?:[a-z]\.){2,}[a-z]$`)
+
 // NewGroupLexer creates a tag lexer for a group.
 func NewGroupLexer() Lexer {
 	const delim, invalid = '-', ` _.()[]{}+`
@@ -616,7 +620,7 @@ func NewGroupLexer() Lexer {
 			if j := bytes.LastIndexByte(buf[l:n], delim); j != -1 {
 				s := src[l+j+1 : n]
 				if grp := bytes.Trim(s, " \t_"); len(grp) != 0 &&
-					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && spacedGroup.Match(grp))) &&
+					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && (spacedGroup.Match(grp) || dottedGroup.Match(grp)))) &&
 					!shortTags[string(grp)] &&
 					(len(end) == 0 || !bracket.MatchString(end[len(end)-1].Text())) {
 					return start, append(
