@@ -572,7 +572,7 @@ func NewGenreLexer() Lexer {
 // NewGroupLexer creates a tag lexer for a group.
 func NewGroupLexer() Lexer {
 	const delim, invalid = '-', ` _.()[]{}+`
-	year, group := regexp.MustCompile(`\b(19|20)\d{2}\b`), regexp.MustCompile(`(?i)^[a-z_ ]{2,10}$`)
+	year, group := regexp.MustCompile(`\b(19|20)\d{2}\b`), regexp.MustCompile(`(?i)^(?:[a-z_ ]{2,10}|(?:[a-z]\.){2,}[a-z])$`)
 	bracket := regexp.MustCompile(`^[\]\)\}]`)
 	var groupf, otherf taginfo.FindFunc
 	var re, special *regexp.Regexp
