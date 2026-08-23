@@ -462,6 +462,14 @@
   audio: "DUAL.AUDIO DDP Atmos"
   channels: "5.1"
   group: "BYNDR"
+"Clockwork.Shores.2026.1080p.BluRay.x265-RUNE":
+  type: "movie"
+  title: "Clockwork Shores"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2026
+  codec: "x265"
+  group: "RUNE"
 "Coco.Avant.Chanel.2009.FRENCH.NORDiCSUBS.COMPLETE.BDR-CULTBDR":
   type: "movie"
   title: "Coco Avant Chanel"
@@ -1713,6 +1721,16 @@
   channels: "5.1"
   group: "NTb"
   ext: "torrent"
+"Azure.Circles.Ghost.Realm.S01.1080p.BluRay.Opus2.0.x265-RUNE":
+  type: "series"
+  title: "Azure Circles Ghost Realm"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x265"
+  audio: "OPUS"
+  channels: "2.0"
+  group: "RUNE"
 "Beverly.Hills.90210.S04DVD7.German.DVDR-ITG":
   type: "series"
   title: "Beverly Hills 90210"
@@ -1814,6 +1832,32 @@
   series: 2
   episode: 20
   language: "RUSSiAN ENGLiSH"
+"Copper.Skies.S00.1080p.BluRay.x265-CODEX":
+  type: "series"
+  title: "Copper Skies"
+  source: "BluRay"
+  resolution: "1080p"
+  codec: "x265"
+  group: "CODEX"
+"Copper.Skies.S02E03.1080p.BluRay.x265-CODEX":
+  type: "episode"
+  title: "Copper Skies"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 2
+  episode: 3
+  codec: "x265"
+  group: "CODEX"
+"Copper.Skies.2026.08.23.1080p.WEB.x265-CODEX":
+  type: "episode"
+  title: "Copper Skies"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  month: 8
+  day: 23
+  codec: "x265"
+  group: "CODEX"
 "Core.Kyoto.S05E16.Tatami.The.Flooring.Underlying.Japanese.Culture.HDTV.x264-DARKFLiX":
   type: "episode"
   title: "Core Kyoto"
@@ -2458,6 +2502,19 @@
   audio: "AAC"
   channels: "2.0"
   group: "GROUP"
+"Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
+  type: "episode"
+  title: "Silo"
+  subtitle: "A Dark Web"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 3
+  episode: 3
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "Kronos"
 "Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB.DDP5.1.Atmos.x265.10bit-Kronos":
   type: "episode"
   title: "Silo"
@@ -2469,19 +2526,6 @@
   episode: 3
   codec: "x265"
   bitdepth: "10BIT"
-  audio: "DDP Atmos"
-  channels: "5.1"
-  group: "Kronos"
-"Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
-  type: "episode"
-  title: "Silo"
-  subtitle: "A Dark Web"
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "ATVP"
-  series: 3
-  episode: 3
-  codec: "H.264"
   audio: "DDP Atmos"
   channels: "5.1"
   group: "Kronos"
@@ -3672,6 +3716,41 @@
   disc: "CD2"
   other: "PROPER Incl.Patchtool READNFO"
   group: "MiRROR"
+"Clockwork.Gardens.v1.0-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  version: "v1.0"
+  group: "CODEX"
+"Clockwork.Gardens.1080p.PS5-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  platform: "PS5"
+  resolution: "1080p"
+  group: "CODEX"
+"Clockwork.Gardens.4K.Texture.Pack-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  resolution: "2160p"
+  group: "CODEX"
+  unused: "Texture Pack"
+"Clockwork.Gardens.S01.PS5-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  platform: "PS5"
+  series: 1
+  group: "CODEX"
+"Clockwork.Gardens.Season.1-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  series: 1
+  group: "CODEX"
+"Clockwork.Gardens.2026.08.23-CODEX":
+  type: "game"
+  title: "Clockwork Gardens 2026"
+  year: 2026
+  month: 8
+  day: 23
+  group: "CODEX"
 "Command_And_Conquer_Generals_v1.05.NoCD.Proper-Alpha_Team":
   type: "game"
   title: "Command And Conquer Generals"
