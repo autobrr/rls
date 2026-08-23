@@ -653,9 +653,10 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 	}
 	n := len(r.tags)
 	// inspect types
-	var app, series, movie bool
+	var app, series, movie, video bool
 	for _, tag := range r.tags {
 		series = series || tag.Is(TagTypeSeries)
+		video = video || (!tag.Is(TagTypeGroup) && tag.InfoType() == Movie)
 	}
 	for i := n; i > 0; i-- {
 		typ := r.tags[i-1].InfoType()
@@ -663,7 +664,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 		switch typ {
 		case Book, Game:
 			if typ == Game && r.tags[i-1].Is(TagTypeGroup) &&
-				(series || r.Resolution != "" || (r.Year != 0 && r.Month != 0 && r.Day != 0)) {
+				video && (series || r.Resolution != "" || (r.Year != 0 && r.Month != 0 && r.Day != 0)) {
 				continue
 			}
 			// peek for comic, education, magazine
