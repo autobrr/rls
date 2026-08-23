@@ -59,6 +59,31 @@ func TestParseRelease(t *testing.T) {
 	}
 }
 
+func TestParseRelease_GameGroupDefersToVideoStructure(t *testing.T) {
+	tests := []struct {
+		name    string
+		release string
+		want    Type
+	}{
+		{name: "tv season", release: "Azure.Circles.Ghost.Realm.S01.1080p.BluRay.Opus2.0.x265-RUNE", want: Series},
+		{name: "tv episode", release: "Copper.Skies.S02E03.1080p.BluRay.x265-CODEX", want: Episode},
+		{name: "tv special", release: "Copper.Skies.S00.1080p.BluRay.x265-CODEX", want: Series},
+		{name: "dated episode", release: "Copper.Skies.2026.08.23.1080p.WEB.x265-CODEX", want: Episode},
+		{name: "movie", release: "Clockwork.Shores.2026.1080p.BluRay.x265-RUNE", want: Movie},
+		{name: "game", release: "Clockwork.Gardens.v1.0-CODEX", want: Game},
+		{name: "game with TV-like token", release: "Clockwork.Gardens.S01.PS5-CODEX", want: Game},
+		{name: "game with video-like token", release: "Clockwork.Gardens.1080p.PS5-CODEX", want: Game},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseString(tt.release).Type; got != tt.want {
+				t.Errorf("ParseString(%q).Type = %s, want %s", tt.release, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestCollapser(t *testing.T) {
 	tests := []struct {
 		s string
