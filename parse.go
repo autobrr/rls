@@ -1217,8 +1217,31 @@ func (b *TagBuilder) unused(r *Release, i int) {
 		case r.Sum == "" && b.sum.MatchString(s) && strings.ContainsAny(s, "0123456789"):
 			r.Sum, r.unused = s, r.unused[:n-1]
 		case r.Group == "" && !b.digits.MatchString(s):
+			last := r.unused[n-1]
 			r.Group, r.unused = s, r.unused[:n-1]
+			b.widenGroup(r, last)
 		}
+	}
+}
+
+// widenGroup joins the leftover words in front of a guessed group when single
+// spaces separate them, so "(... - DarQ HONE)" yields the same group as
+// "-DarQ HONE". A run outside the group lexer's bound on a spaced group keeps
+// the single word, as the lexer would.
+func (b *TagBuilder) widenGroup(r *Release, i int) {
+	n := len(r.unused)
+	for ; n > 0 && r.unused[n-1] == i-2 && r.tags[i-1].Text() == " "; n-- {
+		i = r.unused[n-1]
+	}
+	if n == len(r.unused) {
+		return
+	}
+	v := make([]string, 0, len(r.unused)-n+1)
+	for _, j := range r.unused[n:] {
+		v = append(v, r.tags[j].Text())
+	}
+	if group := strings.Join(append(v, r.Group), " "); spacedGroup.MatchString(group) {
+		r.Group, r.unused = group, r.unused[:n]
 	}
 }
 

@@ -1203,6 +1203,15 @@
   other: "minimalNR"
   group: "4K83"
   ext: "mkv"
+"Stillwater Ridge (2020) (1080p BluRay x265 - Some Long Words Here)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  group: "Here"
+  unused: "Some Long Words"
 "[UTW-TMD]_Summer_Wars_[BD][h264-720p][TrueHD5.1][9F311DAB].mkv":
   type: "movie"
   title: "Summer Wars"
@@ -2738,6 +2747,44 @@
   other: "HR"
   container: "WMV"
   group: "KTR"
+"Stillwater Ridge (2022) S01 (1080p BluRay x265 SDR DDP 5.1 English - Kelp NOVA)":
+  type: "series"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP"
+  channels: "5.1"
+  language: "ENGLiSH"
+  group: "Kelp NOVA"
+"Stillwater Ridge 2022 S01 1080p BluRay DD+ 5.1 x265-Kelp NOVA":
+  type: "series"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "Kelp NOVA"
+"Stillwater Ridge (2022) S01 (1080p BluRay x265 SDR DDP 5.1 English - Kelp-NOVA)":
+  type: "series"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP"
+  channels: "5.1"
+  language: "ENGLiSH"
+  group: "NOVA"
+  unused: "Kelp"
 "Superstore S02 1080p Amazon WEB-DL DD+ 5.1 x264-TrollHD":
   type: "series"
   title: "Superstore"
