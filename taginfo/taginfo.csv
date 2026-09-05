@@ -18,7 +18,7 @@ audio,24BIT,,(?-i:24B[iI]T),,music,1
 audio,16BIT,,,,music,1
 audio,CBR,Constant Bit Rate,,,,
 audio,DDPA,Dolby Digital+ Atmos (E-AC-3+Atmos),dd[p\+]a,,movie,
-audio,DDP,Dolby Digital+ (E-AC-3),dd[p\+]|e[\-\._ ]?ac3,,movie,
+audio,DDP,Dolby Digital+ (E-AC-3),dd[p\+]|e[\-\._ ]?ac[\-\._ ]?3,,movie,
 audio,DD,Dolby Digital (AC-3),dd|ac3|dolby[\-\._ ]?digital,,movie,
 audio,DTS-HD.HRA,DTS (HD HRA),dts[\-\._ ]?hd[\-\._ ]?hra,,movie,
 audio,DTS-HD.HR,DTS (HD HR),dts[\-\._ ]?hd[\-\._ ]?hr,,movie,

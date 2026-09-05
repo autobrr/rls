@@ -959,6 +959,17 @@
   year: 2014
   audio: "DUAL.AUDIO"
   size: "1400MB"
+"Movie.2024.1080p.BluRay.x264.8-bit.EAC-3-GROUP.mkv":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP"
+  group: "GROUP"
+  ext: "mkv"
 "Movie.Title.2015.DVD-R-Pate":
   type: "movie"
   title: "Movie Title"
@@ -2490,6 +2501,16 @@
   site: "chibi-Doki"
   sum: "988DB090"
   ext: "mkv"
+"Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
+  type: "series"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP"
+  group: "GROUP"
 "Show.S01E01.1080p.IP.WEB-DL.AAC2.0.H.264-GROUP":
   type: "episode"
   title: "Show"
@@ -2502,6 +2523,55 @@
   audio: "AAC"
   channels: "2.0"
   group: "GROUP"
+"Show.S01E01.1080p.WEB-DL.x264.10-bit.E-AC-3-GROUP.mkv":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  bitdepth: "10BIT"
+  audio: "DDP"
+  group: "GROUP"
+  ext: "mkv"
+"Show.S01E01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP.mkv":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP"
+  group: "GROUP"
+  ext: "mkv"
+"Show.S01E01.1080p.WEB-DL.x264.8-bit.eac-3-GROUP.mkv":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP"
+  group: "GROUP"
+  ext: "mkv"
+"[Group] Show (2024) - 01 (S01E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2024
+  series: 1
+  episode: 1
+  seriesEpisodes: "S00E01 S01E01"
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP DUAL.AUDIO"
+  site: "Group"
 "Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
   type: "episode"
   title: "Silo"
