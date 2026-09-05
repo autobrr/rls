@@ -176,7 +176,6 @@ type TagBuilder struct {
 	sum *regexp.Regexp
 	// digits matches all digits.
 	digits *regexp.Regexp
-	spaced *regexp.Regexp
 	// digpre matches digit prefixes.
 	digpre *regexp.Regexp
 	// digsuf matches digit suffixes.
@@ -200,7 +199,6 @@ func NewTagBuilder() *TagBuilder {
 		plus:    regexp.MustCompile(`(\+)`),
 		sum:     regexp.MustCompile(`(?i)^[a-f0-9]{8}$`),
 		digits:  regexp.MustCompile(`^\d+$`),
-		spaced:  regexp.MustCompile(`(?i)^[a-z_ ]{2,10}$`),
 		digpre:  regexp.MustCompile(`^\d+`),
 		digsuf:  regexp.MustCompile(`\d+$`),
 	}
@@ -217,7 +215,6 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		plus:       b.plus,
 		sum:        b.sum,
 		digits:     b.digits,
-		spaced:     b.spaced,
 		digpre:     b.digpre,
 		digsuf:     b.digsuf,
 		infos:      infos,
@@ -1243,7 +1240,7 @@ func (b *TagBuilder) widenGroup(r *Release, i int) {
 	for _, j := range r.unused[n:] {
 		v = append(v, r.tags[j].Text())
 	}
-	if group := strings.Join(append(v, r.Group), " "); b.spaced.MatchString(group) {
+	if group := strings.Join(append(v, r.Group), " "); spacedGroup.MatchString(group) {
 		r.Group, r.unused = group, r.unused[:n]
 	}
 }
