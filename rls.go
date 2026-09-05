@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"unicode"
 	"unicode/utf8"
 
@@ -417,9 +418,24 @@ func (tag Tag) Match(s string, verb rune, types ...TagType) bool {
 		}
 	}
 	if verb == 'r' {
-		return regexp.MustCompile(s).MatchString(v)
+		return matchRE(s).MatchString(v)
 	}
 	return s == v
+}
+
+// reCache caches the regexps compiled for Match's 'r' verb, which would
+// otherwise recompile the caller's pattern on every call.
+var reCache sync.Map // string -> *regexp.Regexp
+
+// matchRE returns the compiled regexp for s. As with regexp.MustCompile, an
+// invalid pattern panics.
+func matchRE(s string) *regexp.Regexp {
+	if v, ok := reCache.Load(s); ok {
+		return v.(*regexp.Regexp)
+	}
+	re := regexp.MustCompile(s)
+	reCache.Store(s, re)
+	return re
 }
 
 // Format satisfies the fmt.Formatter interface.
@@ -505,18 +521,33 @@ func (tag Tag) Collection() string {
 	return tag.normalize(tag.v[1], tag.v[2:]...)
 }
 
+// atoi parses a decimal, reporting 0 when s is not one. Unlike strconv.Atoi it
+// allocates nothing on failure, and every caller here discards the error --
+// those discarded *NumError values were 2.4% of all objects allocated.
+func atoi(s string) int {
+	if s == "" || len(s) > 18 {
+		return 0
+	}
+	n := 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c < '0' || c > '9' {
+			return 0
+		}
+		n = n*10 + int(c-'0')
+	}
+	return n
+}
+
 // Date normalizes the date value.
 func (tag Tag) Date() (int, int, int) {
-	year, _ := strconv.Atoi(tag.v[1])
-	month, _ := strconv.Atoi(tag.v[2])
-	day, _ := strconv.Atoi(tag.v[3])
+	year, month, day := atoi(tag.v[1]), atoi(tag.v[2]), atoi(tag.v[3])
 	return year, month, day
 }
 
 // Series normalizes the series value.
 func (tag Tag) Series() (int, int) {
-	series, _ := strconv.Atoi(tag.v[1])
-	episode, _ := strconv.Atoi(tag.v[2])
+	series, episode := atoi(tag.v[1]), atoi(tag.v[2])
 	return series, episode
 }
 
@@ -524,7 +555,7 @@ func (tag Tag) Series() (int, int) {
 func (tag Tag) Episodes() []int {
 	var v []int
 	for _, b := range tag.v[2:] {
-		if episode, _ := strconv.Atoi(b); episode != 0 {
+		if episode := atoi(b); episode != 0 {
 			v = append(v, episode)
 		}
 	}
@@ -538,7 +569,7 @@ func (tag Tag) Version() string {
 
 // Disc normmalizes the disc value.
 func (tag Tag) Disc() string {
-	disc, _ := strconv.Atoi(tag.v[2])
+	disc := atoi(tag.v[2])
 	switch tag.v[1] {
 	case "CD", "DVD":
 		return fmt.Sprintf("%s%d", tag.v[1], disc)
@@ -1104,9 +1135,18 @@ func NewCleaner() transform.Transformer {
 	)
 }
 
+// cleaners pools the transform chains used by MustClean. Building the chain is
+// the dominant cost of a call, and a transform.Transformer carries state across
+// Reset so a single shared instance would not be safe for concurrent use.
+var cleaners = sync.Pool{
+	New: func() any { return NewCleaner() },
+}
+
 // MustClean applies the Clean transform to s.
 func MustClean(s string) string {
-	s, _, err := transform.String(NewCleaner(), s)
+	t := cleaners.Get().(transform.Transformer)
+	defer cleaners.Put(t)
+	s, _, err := transform.String(t, s)
 	if err != nil {
 		panic(err)
 	}
@@ -1142,10 +1182,17 @@ func NewNormalizer() transform.Transformer {
 	)
 }
 
+// normalizers pools the transform chains used by MustNormalize. See cleaners.
+var normalizers = sync.Pool{
+	New: func() any { return NewNormalizer() },
+}
+
 // MustNormalize applies the Normalize transform to s, returning a lower cased,
 // clean form of s useful for matching titles.
 func MustNormalize(s string) string {
-	s, _, err := transform.String(NewNormalizer(), s)
+	t := normalizers.Get().(transform.Transformer)
+	defer normalizers.Put(t)
+	s, _, err := transform.String(t, s)
 	if err != nil {
 		panic(err)
 	}
