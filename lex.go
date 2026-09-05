@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/autobrr/rls/reutil"
 	"github.com/autobrr/rls/taginfo"
@@ -159,7 +160,7 @@ func DefaultLexers() []Lexer {
 		NewRegexpLexer(TagTypeCut, true),
 		NewRegexpLexer(TagTypeEdition, true),
 		NewRegexpLexer(TagTypeLanguage, false),
-		NewRegexpLexer(TagTypeRegion, true),
+		NewRegionLexer(),
 		NewRegexpLexer(TagTypeContainer, true),
 		NewGenreLexer(),
 		NewIDLexer(),
@@ -754,6 +755,56 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if m := re.FindSubmatch(buf[i:n]); m != nil {
 				return append(start, NewTag(typ, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
+			}
+			return start, end, i, n, false
+		},
+	}
+}
+
+// NewRegionLexer creates a tag lexer for regions with uppercase and boundary checks.
+func NewRegionLexer() TagLexer {
+	var f taginfo.FindFunc
+	var re *regexp.Regexp
+	isUpperToken := func(s []byte) bool {
+		for _, r := range string(s) {
+			if unicode.IsLower(r) {
+				return false
+			}
+		}
+		return true
+	}
+	isRegionBoundary := func(b byte) bool {
+		switch b {
+		case ' ', '.', '_', '[', ']', '(', ')':
+			return true
+		default:
+			return false
+		}
+	}
+	hasRegionBoundaries := func(src []byte, start, end int) bool {
+		if start == 0 || end >= len(src) {
+			return false
+		}
+		prev, next := src[start-1], src[end]
+		if prev == '-' || next == '-' {
+			return false
+		}
+		if !isRegionBoundary(prev) || !isRegionBoundary(next) {
+			return false
+		}
+		return true
+	}
+	return TagLexer{
+		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
+			info := infos[strings.ToLower(TagTypeRegion.String())]
+			re, f = regexp.MustCompile(reutil.Taginfo(`^ib`, info...)), taginfo.Find(info...)
+		},
+		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			if m := re.FindSubmatch(buf[i:n]); m != nil {
+				if !isUpperToken(src[i:i+len(m[0])]) || !hasRegionBoundaries(src, i, i+len(m[0])) {
+					return start, end, i, n, false
+				}
+				return append(start, NewTag(TagTypeRegion, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
 			}
 			return start, end, i, n, false
 		},
