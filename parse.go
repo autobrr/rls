@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -966,6 +967,20 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	if r.Month != 0 && r.Day != 0 {
 		typ = TagTypeDate
 	}
+	// a parenthetical between the title and the series/date tag is part of
+	// the title. one word is a suffix ('Kanteishi (Kari) - 01' announces as
+	// 'Kanteishi.Kari.S01'), several words are an alternate title ('World's
+	// End Harem (Shuumatsu no Harem)'). an AKA title already carries its own
+	// alt, so leave it to the AKA split
+	if i, s := b.parenTitle(r, pos, typ); s != "" && r.Title != "" && !strings.Contains(r.Title, " AKA ") {
+		// ponytail: word count is a naive split, add a lookup if fansubs prove it wrong
+		if strings.ContainsRune(s, ' ') {
+			r.Alt = s
+		} else {
+			r.Title += " " + s
+		}
+		pos = i
+	}
 	// seek text after date/series, collecting any skipped text
 	for ; pos < len(r.tags) && !r.tags[pos].Is(typ); pos++ {
 		if r.tags[pos].Is(TagTypeText) {
@@ -1001,6 +1016,36 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	var offset int
 	r.Subtitle, offset = b.title(r.tags[pos:], TagTypeText)
 	return pos + offset
+}
+
+// parenTitle collects a parenthetical title part between the title and the
+// series/date tag. It returns the position of the closing delimiter and the
+// collected text. The parenthetical must hold bare text, and the series/date
+// tag must follow it. Typed parentheticals ('(720p)', '(2019)') and trailing
+// metadata are never captured.
+func (b *TagBuilder) parenTitle(r *Release, pos int, typ TagType) (int, string) {
+	if !peek(r.tags, pos, TagTypeDelim) || !strings.HasSuffix(r.tags[pos].Delim(), "(") {
+		return pos, ""
+	}
+	s, i := b.title(r.tags[pos+1:], TagTypeText)
+	i += pos + 1
+	if s == "" || !peek(r.tags, i, TagTypeDelim) || !strings.HasPrefix(r.tags[i].Delim(), ")") {
+		return pos, ""
+	}
+	// a year demoted to text by an earlier date reset is still a year
+	if slices.ContainsFunc(r.tags[pos+1:i], func(tag Tag) bool { return tag.Was(TagTypeDate) }) {
+		return pos, ""
+	}
+	// closing delimiter: require the series/date tag next
+	for j := i + 1; j < len(r.tags); j++ {
+		switch {
+		case r.tags[j].Is(typ):
+			return i, s
+		case !r.tags[j].Is(TagTypeWhitespace, TagTypeDelim):
+			return pos, ""
+		}
+	}
+	return pos, ""
 }
 
 // musicTitles sets the titles for music.
