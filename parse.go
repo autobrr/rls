@@ -967,11 +967,19 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	if r.Month != 0 && r.Day != 0 {
 		typ = TagTypeDate
 	}
-	// a parenthetical between the title and the series/date tag belongs to
-	// the title ('Kanteishi (Kari) - 01' announces as 'Kanteishi.Kari.S01').
-	// an AKA title already carries its own alt, so leave it to the AKA split
+	// a parenthetical between the title and the series/date tag is part of
+	// the title. one word is a suffix ('Kanteishi (Kari) - 01' announces as
+	// 'Kanteishi.Kari.S01'), several words are an alternate title ('World's
+	// End Harem (Shuumatsu no Harem)'). an AKA title already carries its own
+	// alt, so leave it to the AKA split
 	if i, s := b.parenTitle(r, pos, typ); s != "" && r.Title != "" && !strings.Contains(r.Title, " AKA ") {
-		r.Alt, pos = r.Title+" "+s, i
+		// ponytail: word count is a naive split, add a lookup if fansubs prove it wrong
+		if strings.ContainsRune(s, ' ') {
+			r.Alt = s
+		} else {
+			r.Title += " " + s
+		}
+		pos = i
 	}
 	// seek text after date/series, collecting any skipped text
 	for ; pos < len(r.tags) && !r.tags[pos].Is(typ); pos++ {

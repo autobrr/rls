@@ -2250,14 +2250,12 @@
   ext: "mkv"
 "Kanteishi (Kari) - 01 (720p)":
   type: "episode"
-  title: "Kanteishi"
-  alt: "Kanteishi Kari"
+  title: "Kanteishi Kari"
   resolution: "720p"
   episode: 1
 "[SubsPlease] Kanteishi (Kari) - 01 (720p) [CBB279E1].mkv":
   type: "episode"
-  title: "Kanteishi"
-  alt: "Kanteishi Kari"
+  title: "Kanteishi Kari"
   resolution: "720p"
   episode: 1
   site: "SubsPlease"
@@ -2265,8 +2263,7 @@
   ext: "mkv"
 "[SubsPlease] Kanteishi (Kari) S01 (720p)":
   type: "series"
-  title: "Kanteishi"
-  alt: "Kanteishi Kari"
+  title: "Kanteishi Kari"
   resolution: "720p"
   series: 1
   site: "SubsPlease"
@@ -2324,8 +2321,7 @@
   site: "ettv"
 "[RaX]Mezzo(DSA)_-_05_-_[x264_ogg]_[585d9971].mkv":
   type: "episode"
-  title: "Mezzo"
-  alt: "Mezzo DSA"
+  title: "Mezzo DSA"
   episode: 5
   codec: "x264"
   audio: "OGG"
@@ -3129,7 +3125,7 @@
   type: "episode"
   title: "World's End Harem"
   subtitle: "2022 Airing"
-  alt: "World's End Harem Shuumatsu no Harem"
+  alt: "Shuumatsu no Harem"
   source: "HDTV"
   resolution: "1080p"
   collection: "AT-X"
