@@ -2025,6 +2025,14 @@
   channels: "2.0"
   group: "WELP"
   ext: "mkv"
+"Example Show AKA Alternate Show (Kari) S01E01 720p":
+  type: "episode"
+  title: "Example Show"
+  alt: "Alternate Show"
+  resolution: "720p"
+  series: 1
+  episode: 1
+  group: "Kari"
 "Exosquad.1993.S01S02.COMPLETE.x264-PTM":
   type: "series"
   title: "Exosquad"
@@ -2262,14 +2270,6 @@
   resolution: "720p"
   series: 1
   site: "SubsPlease"
-"[Grp] Show (Kari) 1080p WEB-DL - 01":
-  type: "episode"
-  title: "Show"
-  source: "WEB-DL"
-  resolution: "1080p"
-  episode: 1
-  group: "Kari"
-  site: "Grp"
 "Looney.Tunes.S1958E13.Knighty.Knight.Bugs.1080p.BluRay.REMUX.AVC.DD.1.0-EPSiLON.mkv":
   type: "episode"
   title: "Looney Tunes"
@@ -2551,6 +2551,14 @@
   site: "chibi-Doki"
   sum: "988DB090"
   ext: "mkv"
+"[Grp] Show (Kari) 1080p WEB-DL - 01":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  episode: 1
+  group: "Kari"
+  site: "Grp"
 "Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
   type: "series"
   title: "Show"
@@ -2622,6 +2630,14 @@
   bitdepth: "8BIT"
   audio: "DDP DUAL.AUDIO"
   site: "Group"
+"Show (2019) 2024.01.01 720p":
+  type: "episode"
+  title: "Show"
+  resolution: "720p"
+  year: 2024
+  month: 1
+  day: 1
+  unused: "2019"
 "Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
   type: "episode"
   title: "Silo"

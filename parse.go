@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -967,12 +968,10 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 		typ = TagTypeDate
 	}
 	// a parenthetical between the title and the series/date tag belongs to
-	// the title ('Kanteishi (Kari) - 01' announces as 'Kanteishi.Kari.S01')
-	if i, s := b.parenTitle(r, pos, typ); s != "" {
-		if r.Alt == "" && r.Title != "" {
-			r.Alt = r.Title + " " + s
-		}
-		pos = i
+	// the title ('Kanteishi (Kari) - 01' announces as 'Kanteishi.Kari.S01').
+	// an AKA title already carries its own alt, so leave it to the AKA split
+	if i, s := b.parenTitle(r, pos, typ); s != "" && r.Title != "" && !strings.Contains(r.Title, " AKA ") {
+		r.Alt, pos = r.Title+" "+s, i
 	}
 	// seek text after date/series, collecting any skipped text
 	for ; pos < len(r.tags) && !r.tags[pos].Is(typ); pos++ {
@@ -1011,18 +1010,22 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	return pos + offset
 }
 
-// parenTitle collects a parenthetical title part sitting between the title
-// and the series/date tag, returning the position of the closing delimiter
-// and the collected text. it only fires when the parenthetical holds bare
-// text and the series/date tag follows it, so typed parentheticals
-// ('(720p)', '(2019)') and trailing metadata are never captured.
+// parenTitle collects a parenthetical title part between the title and the
+// series/date tag. It returns the position of the closing delimiter and the
+// collected text. The parenthetical must hold bare text, and the series/date
+// tag must follow it. Typed parentheticals ('(720p)', '(2019)') and trailing
+// metadata are never captured.
 func (b *TagBuilder) parenTitle(r *Release, pos int, typ TagType) (int, string) {
-	if pos >= len(r.tags) || !r.tags[pos].Is(TagTypeDelim) || !strings.HasSuffix(r.tags[pos].Delim(), "(") {
+	if !peek(r.tags, pos, TagTypeDelim) || !strings.HasSuffix(r.tags[pos].Delim(), "(") {
 		return pos, ""
 	}
 	s, i := b.title(r.tags[pos+1:], TagTypeText)
 	i += pos + 1
-	if s == "" || i == len(r.tags) || !r.tags[i].Is(TagTypeDelim) || !strings.HasPrefix(r.tags[i].Delim(), ")") {
+	if s == "" || !peek(r.tags, i, TagTypeDelim) || !strings.HasPrefix(r.tags[i].Delim(), ")") {
+		return pos, ""
+	}
+	// a year demoted to text by an earlier date reset is still a year
+	if slices.ContainsFunc(r.tags[pos+1:i], func(tag Tag) bool { return tag.Was(TagTypeDate) }) {
 		return pos, ""
 	}
 	// closing delimiter: require the series/date tag next
