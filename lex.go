@@ -512,11 +512,16 @@ func NewAudioLexer() Lexer {
 			for _, info := range channels {
 				v = append(v, strings.ReplaceAll(info.Tag(), `.`, `[\._ ]?`))
 			}
-			re = regexp.MustCompile(reutil.Taginfo(`^i`, audio...) + `(?:[\-\._ ]?(` + strings.Join(v, "|") + `))?(?:\b|[\-\._ ])`)
+			codec := reutil.Taginfo(``, infos["codec"]...)
+			re = regexp.MustCompile(reutil.Taginfo(`^i`, audio...) + `(?:[\-\._ ]?(` + strings.Join(v, "|") + `))?(?:\b|[\-\._ ]|(` + codec + `(?:\b|[\-\._ ])))`)
 			audiof, channelsf = taginfo.Find(audio...), taginfo.Find(channels...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if m := re.FindSubmatch(src[i:n]); m != nil {
+				// Leave an attached codec and its delimiter for the next lexer.
+				if len(m[3]) != 0 {
+					m[0] = bytes.TrimSuffix(m[0], m[3])
+				}
 				l := len(m[0])
 				if len(m[2]) != 0 {
 					m[0] = bytes.TrimSuffix(m[0], m[2])

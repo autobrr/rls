@@ -1824,6 +1824,17 @@
   other: "WS"
   size: "DVD9"
   group: "NoRBiT"
+"Cells.at.Work.S01.1080p.BluRay.FLAC2.0x265-Main10p-CTR":
+  type: "series"
+  title: "Cells at Work"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x265"
+  audio: "FLAC"
+  channels: "2.0"
+  group: "CTR"
+  unused: "Main10p"
 "Clickbait.2021.S01.2160p.NF.WEBRiP.DDPA5.1.HDR.x265-182K":
   type: "series"
   title: "Clickbait"
