@@ -4148,3 +4148,28 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
+"Severance.S01.with.Audio.Description.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-NTb":
+  type: "series"
+  title: "Severance"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 1
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  other: "Audio.Description"
+  group: "NTb"
+"Severance.S01E03.Audio.Description.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-NTb":
+  type: "episode"
+  title: "Severance"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 1
+  episode: 3
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  other: "Audio.Description"
+  group: "NTb"
