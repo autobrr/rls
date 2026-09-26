@@ -481,6 +481,7 @@ other,SAMPLER,Sampler,(?:album[\-\._ ]?)?sampler,,music,1
 other,SBS,3D (side-by-side),,,movie,1
 other,SCRUBBED,Scrubbed,,,game,1
 other,Serial.Fix,Fix (serial),serial[\-\._ ]?fix,,app,
+other,Sign.Language,Sign Language,(?:with[\-\._ ](?:b?asl|bsl|auslan)|(?:with[\-\._ ])?(?:american|british|australian)?[\-\._ ]?sign[\-\._ ]language),,movie,
 other,Special.Features,Special Features,(?:(?:with|incl?)[\-\._ ])?special[\-\._ ]features,,movie,
 other,Strategy.Guide,Strategy Guide,strategy[\-\._ ]?guide,,book,1
 other,SUB100,Sub 100,sub[\-\._ ]?100,,app,

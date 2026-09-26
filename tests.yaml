@@ -4173,3 +4173,15 @@
   channels: "5.1"
   other: "Audio.Description"
   group: "NTb"
+"Siren.The.Voices.of.Shelley.Beattie.2026.with.ASL.1080p.AMZN.WEB-DL.DDP5.1.H.264-Kitsune":
+  type: "movie"
+  title: "Siren The Voices of Shelley Beattie"
+  year: 2026
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  other: "Sign.Language"
+  group: "Kitsune"
