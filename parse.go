@@ -276,6 +276,7 @@ func (b *TagBuilder) init(r *Release) {
 	_ = b.reset(r, end, TagTypeLanguage, TagTypeArch, TagTypePlatform)
 	b.fixFirst(r)
 	b.fixSourceWeb(r)
+	b.fixSourceUHD(r)
 	start := b.start(r, 0)
 	b.fixBad(r, start, end)
 	b.fixNoText(r, end)
@@ -440,6 +441,25 @@ func (b *TagBuilder) fixSourceWeb(r *Release) {
 		for j := i + 1; j < r.end; j++ {
 			if r.tags[j].Is(TagTypeSource) {
 				r.tags[i] = r.tags[i].As(TagTypeText, nil)
+				break
+			}
+		}
+	}
+}
+
+// fixSourceUHD fixes a bare uhd source tag next to a web source tag with only
+// resolution tags between, as the uhd marks a web source and not a bluray (ie,
+// 'Movie.2022.UHD.2160p.WEB...' or 'Movie.2022.2160p.WEB.UHD...'). The first
+// of the pair is changed, as the first source tag is collected.
+func (b *TagBuilder) fixSourceUHD(r *Release) {
+	for i := range r.end {
+		if !r.tags[i].Is(TagTypeSource) || !strings.EqualFold(r.tags[i].Text(), "UHD") {
+			continue
+		}
+		for _, inc := range []int{1, -1} {
+			if j, s := webSource(r.tags[:r.end], i, inc); j != -1 {
+				k := min(i, j)
+				r.tags[k] = NewTag(TagTypeSource, r.tags[i].f, []byte(r.tags[k].v[0]), []byte("UHD."+s))
 				break
 			}
 		}
@@ -1359,4 +1379,23 @@ func isolated(tags []Tag, i, inc int) bool {
 	}
 	i += inc
 	return 0 <= i && i < len(tags)-1 && tags[i].Is(TagTypeText)
+}
+
+// webSource seeks a web source tag in the indicated incremental direction
+// (-1/+1) from i, skipping whitespace/delim/resolution tags, returning its
+// position and normalized source, or -1 when not found.
+func webSource(tags []Tag, i, inc int) (int, string) {
+	for i += inc; 0 <= i && i < len(tags); i += inc {
+		if tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeResolution) {
+			continue
+		}
+		if tags[i].Is(TagTypeSource) {
+			switch s := tags[i].Source(); s {
+			case "WEB", "WEB-DL", "WEBRiP":
+				return i, s
+			}
+		}
+		break
+	}
+	return -1, ""
 }
