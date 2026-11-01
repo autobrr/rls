@@ -913,6 +913,22 @@
   channels: "7.1"
   other: "REMUX"
   group: "FraMeSToR"
+"[KAIJU] Kaiju Squad (BD 720p Ma10 FLAC)":
+  type: "movie"
+  title: "Kaiju Squad"
+  source: "BluRay"
+  resolution: "720p"
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  site: "KAIJU"
+"[KAIJU] Kaiju Squad (BD 1080p Ma10p FLAC)":
+  type: "movie"
+  title: "Kaiju Squad"
+  source: "BluRay"
+  resolution: "1080p"
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  site: "KAIJU"
 "Kiss the blood off my hands - (Norman FOSTER) - 1948 - VOSTFR - Dvdrip-x264 - kerfiche":
   type: "movie"
   title: "Kiss the blood off my hands"
@@ -1221,6 +1237,18 @@
   year: 2014
   codec: "x264"
   group: "SPARKS"
+"Siren.The.Voices.of.Shelley.Beattie.2026.with.ASL.1080p.AMZN.WEB-DL.DDP5.1.H.264-Kitsune":
+  type: "movie"
+  title: "Siren The Voices of Shelley Beattie"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  year: 2026
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  other: "Sign.Language"
+  group: "Kitsune"
 "Song Of The South 1946 V2 1080p 35mm DD 2.0 x264-RESTORED.mkv":
   type: "movie"
   title: "Song Of The South"
@@ -2608,6 +2636,31 @@
   site: "chibi-Doki"
   sum: "988DB090"
   ext: "mkv"
+"Severance.S01.with.Audio.Description.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-NTb":
+  type: "series"
+  title: "Severance"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 1
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  other: "Audio.Description"
+  group: "NTb"
+"Severance.S01E03.Audio.Description.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-NTb":
+  type: "episode"
+  title: "Severance"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 1
+  episode: 3
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  other: "Audio.Description"
+  group: "NTb"
 "Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
   type: "series"
   title: "Show"
@@ -4235,56 +4288,3 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
-"Severance.S01.with.Audio.Description.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-NTb":
-  type: "series"
-  title: "Severance"
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "ATVP"
-  series: 1
-  codec: "H.264"
-  audio: "DDP Atmos"
-  channels: "5.1"
-  other: "Audio.Description"
-  group: "NTb"
-"Severance.S01E03.Audio.Description.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-NTb":
-  type: "episode"
-  title: "Severance"
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "ATVP"
-  series: 1
-  episode: 3
-  codec: "H.264"
-  audio: "DDP Atmos"
-  channels: "5.1"
-  other: "Audio.Description"
-  group: "NTb"
-"Siren.The.Voices.of.Shelley.Beattie.2026.with.ASL.1080p.AMZN.WEB-DL.DDP5.1.H.264-Kitsune":
-  type: "movie"
-  title: "Siren The Voices of Shelley Beattie"
-  year: 2026
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "AMZN"
-  codec: "H.264"
-  audio: "DDP"
-  channels: "5.1"
-  other: "Sign.Language"
-  group: "Kitsune"
-"[KAIJU] Kaiju Squad (BD 720p Ma10 FLAC)":
-  type: "movie"
-  title: "Kaiju Squad"
-  source: "BluRay"
-  resolution: "720p"
-  bitdepth: "10BIT"
-  audio: "FLAC"
-  site: "KAIJU"
-"[KAIJU] Kaiju Squad (BD 1080p Ma10p FLAC)":
-  type: "movie"
-  title: "Kaiju Squad"
-  source: "BluRay"
-  resolution: "1080p"
-  bitdepth: "10BIT"
-  audio: "FLAC"
-  site: "KAIJU"

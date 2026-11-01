@@ -468,9 +468,44 @@ func TestExport_taginfo(t *testing.T) {
 	if s := os.Getenv("TESTS"); s != "export" {
 		return
 	}
-	infos, err := taginfo.LoadFile("taginfo/taginfo.csv")
+	buf, err := exportTaginfo("taginfo/taginfo.csv")
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
+	}
+	if err := os.WriteFile("taginfo/taginfo.csv", buf, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestTaginfo_order checks taginfo.csv is in export order, as a type's tags
+// are matched in file order and the first match wins (ie, WEB-DL must come
+// before WEB).
+func TestTaginfo_order(t *testing.T) {
+	exp, err := exportTaginfo("taginfo/taginfo.csv")
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	buf, err := os.ReadFile("taginfo/taginfo.csv")
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	a, b := strings.Split(string(buf), "\n"), strings.Split(string(exp), "\n")
+	for i := range min(len(a), len(b)) {
+		if a[i] != b[i] {
+			t.Fatalf("taginfo/taginfo.csv line %d is not in export order, expected %q, got %q (run `TESTS=export go test` to fix)", i+1, b[i], a[i])
+		}
+	}
+	if len(a) != len(b) {
+		t.Fatalf("taginfo/taginfo.csv has %d lines, export has %d (run `TESTS=export go test` to fix)", len(a), len(b))
+	}
+}
+
+// exportTaginfo loads the tag info from file, returning it as csv in export
+// order.
+func exportTaginfo(file string) ([]byte, error) {
+	infos, err := taginfo.LoadFile(file)
+	if err != nil {
+		return nil, err
 	}
 	var all [][]string
 	for k, v := range infos {
@@ -506,7 +541,6 @@ func TestExport_taginfo(t *testing.T) {
 			comparePlatform(a, b),
 			compareCodec(a, b),
 			compareHDR(a, b),
-			compareString(a[1], b[1]),
 			compareChannels(a, b),
 			compareSuffix(a, b),
 			comparePrefix(a[1], b[1]),
@@ -525,9 +559,7 @@ func TestExport_taginfo(t *testing.T) {
 	for _, v := range all {
 		_, _ = buf.WriteString(strings.Join(v, ",") + "\n")
 	}
-	if err := os.WriteFile("taginfo/taginfo.csv", buf.Bytes(), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	return buf.Bytes(), nil
 }
 
 func compareRegion(a, b []string) func() int {
