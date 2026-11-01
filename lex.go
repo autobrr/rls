@@ -587,19 +587,38 @@ func NewGroupLexer() Lexer {
 	year := regexp.MustCompile(`\b(19|20)\d{2}\b`)
 	bracket := regexp.MustCompile(`^[\]\)\}]`)
 	var groupf, otherf taginfo.FindFunc
-	var re, special *regexp.Regexp
+	var re, special, tags *regexp.Regexp
 	var shortTags map[string]bool
+	// inTag reports whether the hyphen at h joins the words around it into a
+	// known tag (ie, 'WEB-DL' in 'WEB-DL HEVC'), so it does not start a group.
+	inTag := func(src []byte, h int) bool {
+		a, b := bytes.LastIndexAny(src[:h], invalid)+1, len(src)
+		if k := bytes.IndexAny(src[h+1:], invalid); k != -1 {
+			b = h + 1 + k
+		}
+		return tags.Match(src[a:b])
+	}
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, short map[string]bool) {
 			var v []string
+			var known []*taginfo.Taginfo
 			group, other := infos["group"], infos["other"]
 			for _, info := range other {
 				if s := info.Other(); s != "" {
 					v = append(v, s)
 				}
 			}
+			// only tags that can span a hyphen
+			for typ, ti := range infos {
+				for _, info := range ti {
+					if typ != "group" && strings.Contains(info.RE(), "-") {
+						known = append(known, info)
+					}
+				}
+			}
 			groupf, otherf = taginfo.Find(group...), taginfo.Find(other...)
 			re, special = regexp.MustCompile(`(?i)[\-\._ ]+`+reutil.Taginfo(`$`, group...)), regexp.MustCompile(`(?i)_(`+strings.Join(v, `|`)+`)$`)
+			tags = regexp.MustCompile(reutil.Taginfo(`i^$`, known...))
 			shortTags = short
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
@@ -620,7 +639,7 @@ func NewGroupLexer() Lexer {
 			if j := bytes.LastIndexByte(buf[l:n], delim); j != -1 {
 				s := src[l+j+1 : n]
 				if grp := bytes.Trim(s, " \t_"); len(grp) != 0 &&
-					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && (spacedGroup.Match(grp) || dottedGroup.Match(grp)))) &&
+					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && ((spacedGroup.Match(grp) && !inTag(src[:n], l+j)) || dottedGroup.Match(grp)))) &&
 					!shortTags[string(grp)] &&
 					(len(end) == 0 || !bracket.MatchString(end[len(end)-1].Text())) {
 					return start, append(
