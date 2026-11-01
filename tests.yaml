@@ -679,6 +679,17 @@
   codec: "x264"
   audio: "DUAL.AUDIO"
   container: "MKV"
+"Example.Film.2020.UHD.WEBRip.1080p.DDP.5.1.Atmos.DoVi.HDR.x265-Kyo":
+  type: "movie"
+  title: "Example Film"
+  source: "UHD.WEBRiP"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "DV HDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "Kyo"
 "Fargo.1996.SF.20th.Anniversary.Edition.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-RU4HD":
   type: "movie"
   title: "Fargo"
@@ -959,6 +970,82 @@
   year: 2014
   audio: "DUAL.AUDIO"
   size: "1400MB"
+"Movie.2022.UHD.1080p.WEBRip.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEBRiP"
+  resolution: "1080p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
+"Movie.2022.2160p.UHD.WEB-RIP.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEBRiP"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
+"Movie.2022.2160p.WEB.UHD.H265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB"
+  resolution: "2160p"
+  year: 2022
+  codec: "H.265"
+  group: "GRP"
+"Movie.2022.UHD.2160p.BluRay.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
+"Movie.2022.UHD.2160p.WEB-DL.DDP.5.1.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Movie.2022.UHD.2160p.WEB.H265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB"
+  resolution: "2160p"
+  year: 2022
+  codec: "H.265"
+  group: "GRP"
+"Movie.2022.UHD.WEB-DL.2160p.DDP.5.1.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Movie.2022.UHD.WEB.2160p.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
+"Movie.2022.WEBRip.2160p.UHD.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEBRiP"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
 "Movie.2024.1080p.BluRay.x264.8-bit.EAC-3-GROUP.mkv":
   type: "movie"
   title: "Movie"
