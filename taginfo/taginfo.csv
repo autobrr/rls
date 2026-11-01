@@ -49,7 +49,7 @@ audio,OPUS,Opus,,,,
 audio,TrueHD,Dolby TrueHD,(?:dolby[\-\._ ]?)?true[\-\._ ]?hd,,movie,
 audio,VBR,Variable Bit Rate,,,music,1
 bitdepth,12BIT,,12[\-\. ]?bit,,movie,
-bitdepth,10BIT,,10[\-\. ]?bit|ma10p?,,movie,
+bitdepth,10BIT,,10[\-\. ]?bit|ma10p?|hi-?10p?,,movie,
 bitdepth,8BIT,,8[\-\. ]?bit,,movie,
 channels,7.1,,7\.1(?:[\-\._ ]?audios?)?,,,
 channels,7.0,,7\.0(?:[\-\._ ]?audios?)?,,,
@@ -396,8 +396,8 @@ group,0x0815,,,,game,1
 group,0x0007,,,,game,1
 group,XB3,,,,game,1
 group,ZKY,,,,game,1
-hdr,HDR10+,High Dynamic Range (10-bit+),hdr[\-\.]?10\+|hdr10plus|hdr[\-\.]?10P|hi10p,,movie,
-hdr,HDR10,High Dynamic Range (10-bit),hdr[\-\.]?10|hi10,,movie,
+hdr,HDR10+,High Dynamic Range (10-bit+),hdr[\-\.]?10\+|hdr10plus|hdr[\-\.]?10P,,movie,
+hdr,HDR10,High Dynamic Range (10-bit),hdr[\-\.]?10,,movie,
 hdr,HDR+,High Dynamic Range+,hdr\+,,movie,
 hdr,HDR,High Dynamic Range,,,movie,
 hdr,HLG,Hybrid Log-Gamma,,,movie,

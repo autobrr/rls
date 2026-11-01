@@ -986,6 +986,15 @@
   year: 2014
   audio: "DUAL.AUDIO"
   size: "1400MB"
+"Movie.2020.1080p.BluRay.x264.Hi10P-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  bitdepth: "10BIT"
+  group: "GRP"
 "Movie.2022.1080p.BluRay.x264.8bit-GRP":
   type: "movie"
   title: "Movie"
@@ -1149,7 +1158,7 @@
   title: "Naruto the Movie 3 - Guardians of the Crescent Moon Kingdom"
   source: "BluRay"
   resolution: "1080p"
-  hdr: "HDR10"
+  bitdepth: "10BIT"
   audio: "DD DTS-HD.MA"
   region: "JPN"
   site: "Koten_Gars"
@@ -2659,6 +2668,15 @@
   site: "SubsPlease"
   sum: "990FF01E"
   ext: "mkv"
+"Say.Hi.10.Times.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "Say Hi 10 Times"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Schitt's Creek (2015) - S04E01 - Dead Guy in Room 4 (1080p AMZN WEB-DL x265 MONOLITH).mkv":
   type: "episode"
   title: "Schitt's Creek"
@@ -2706,6 +2724,33 @@
   channels: "5.1"
   other: "Audio.Description"
   group: "NTb"
+"[Group] Show - 01 (BD 1080p Hi10 FLAC)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 1
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  site: "Group"
+"[Group] Show - 01 (BD 1080p Hi10P FLAC)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 1
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  site: "Group"
+"[Group] Show - 01 [BD 1080p Hi-10P FLAC]":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 1
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  site: "Group"
 "Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
   type: "series"
   title: "Show"
