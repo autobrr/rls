@@ -29,6 +29,8 @@
   group: "PETANK"
 "S H I E L D was C O O L":
   title: "S.H.I.E.L.D. was C.O.O.L."
+"S.W.A.T.":
+  title: "S.W.A.T."
 "[BBT-RMX]_Servant_x_Service":
   title: "Servant x Service"
   site: "BBT-RMX"
@@ -506,6 +508,14 @@
   cut: "Extended.Cut"
   language: "MULTi"
   group: "MONUMENT"
+"D.A.R.Y.L.1985.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "D.A.R.Y.L."
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1985
+  codec: "x264"
+  group: "GRP"
 "(Comedy) Netflix Originals - Dave Chappelle - Deep in the Heart of Texas (2017) 1080p WEBRip DD5.1 x264-TrollHD.mkv":
   type: "movie"
   title: "Dave Chappelle - Deep in the Heart of Texas"
@@ -759,6 +769,14 @@
   language: "GERMAN"
   group: "SPORTSBAR"
   unused: "04 Spieltag Hannover 96 vs FSV Mainz 05"
+"G.I.Joe.Retaliation.2013.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "G.I. Joe Retaliation"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2013
+  codec: "x264"
+  group: "GRP"
 "Ghost.in.the.Shell.2017.UHD.BluRay.2160p.TrueHD.Atmos.7.1.HEVC.REMUX-FraMeSToR.mkv":
   type: "movie"
   title: "Ghost in the Shell"
@@ -951,6 +969,14 @@
   other: "EXTRAS"
   group: "SAMPA"
   unused: "x265M"
+"L.A.Confidential.1997.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "L.A. Confidential"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1997
+  codec: "x264"
+  group: "GRP"
 "La.Planete.Des.Singes.L'affrontement.TRUEFRENCH.720p.x264.HDLIGHT\t":
   type: "movie"
   title: "La Planete Des Singes L'affrontement"
@@ -1171,6 +1197,14 @@
   year: 2014
   codec: "XViD"
   group: "ViCKY"
+"P.S.I.Love.You.2007.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "P.S.I. Love You"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2007
+  codec: "x264"
+  group: "GRP"
 "Pirates.of.the.Caribbean.On.Stranger.Tides.2011.BluRay.1080p.AVC.DTS-HDMA.7.1.REMUX-FraMeSToR":
   type: "movie"
   title: "Pirates of the Caribbean On Stranger Tides"
@@ -1190,6 +1224,22 @@
   size: "DVD9"
   group: "DownRev"
   unused: "IL Anonymous"
+"R.I.P.D.2013.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "R.I.P.D."
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2013
+  codec: "x264"
+  group: "GRP"
+"R.I.P.D.2.Rise.of.the.Damned.2022.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "R.I.P.D. 2 Rise of the Damned"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2022
+  codec: "H.264"
+  group: "GRP"
 "Rashômon.1950.1080p.Criterion.Collection.BluRay.FLAC.x264-decibeL.mkv":
   type: "movie"
   title: "Rashômon"
@@ -1273,6 +1323,14 @@
   audio: "DTS"
   other: "COMMENTARY"
   group: "Slappy"
+"S.W.A.T.2003.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "S.W.A.T."
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2003
+  codec: "x264"
+  group: "GRP"
 "Scouts.vs.Zombies.Handbuch.zur.Zombie.Apokalypse.2015.German.AC3.DL.1080p.BluRay.x264-EXQUiSiTE":
   type: "movie"
   title: "Scouts vs Zombies Handbuch zur Zombie Apokalypse"
@@ -1542,6 +1600,14 @@
   audio: "AAC"
   other: "3D SBS"
   group: "ETRG"
+"The.Man.from.U.N.C.L.E.2015.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "The Man from U.N.C.L.E."
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2015
+  codec: "x264"
+  group: "GRP"
 "The Purge: Election Year (2016) HC - 720p HDRiP - 900MB - ShAaNi":
   type: "movie"
   title: "The Purge: Election Year"
@@ -1631,6 +1697,59 @@
   audio: "DDP Atmos"
   channels: "5.1"
   group: "CMRG"
+"Title.2024.1080p.WEB-DL.x264-A.B":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "B"
+  unused: "A"
+"Title.2024.1080p.WEB-DL.x264-E.N.D":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "E.N.D"
+"Title.2024.1080p.WEB-DL.x264-E.N.D.mkv":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "E.N.D"
+  ext: "mkv"
+"Title.2024.1080p.WEB-DL.x264-A.B.C.D.E.F.G.H":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "H"
+  unused: "A B C D E F G"
+"Title.2024.1080p.WEB-DL.x264-D.0.T":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "T"
+  unused: "D 0"
+"Title.2024.1080p.WEB-DL.x264-foo.bar":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "bar"
+  unused: "foo"
 "Tom_And_Jerry_The_Collection_12DVD-DUTCH_COVER-ToP":
   type: "movie"
   title: "Tom And Jerry The Collection"
@@ -1862,6 +1981,15 @@
   language: "GERMAN"
   genre: "Documentary"
   group: "GEO"
+"A.P.Bio.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "A.P. Bio"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "AEW.x.NJPW.Forbidden.Door.2022.PPV.1080p.08Mb.HDTV.x264-WH.mp4":
   type: "episode"
   title: "AEW x NJPW Forbidden Door"
@@ -2149,6 +2277,15 @@
   episode: 12
   codec: "x264"
   group: "fov"
+"Doogie.Howser.M.D.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "Doogie Howser M.D."
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Doogie.Howser.MD.S02E05.DVDRip.XviD-FFNDVD":
   type: "episode"
   title: "Doogie Howser MD"
@@ -2506,6 +2643,15 @@
   other: "PROPER"
   language: "VOSTFR"
   group: "ARK01"
+"Mr.Robot.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "Mr Robot"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Mr Robot S02E11 German DD 51 Synced DL 1080p AmazonHD x264-TVS":
   type: "episode"
   title: "Mr Robot"
@@ -2660,6 +2806,26 @@
   channels: "2.0"
   other: "REMUX"
   ext: "mkv"
+"S.W.A.T. (2017) S07E01 1080p WEB H264-GRP":
+  type: "episode"
+  title: "S.W.A.T."
+  source: "WEB"
+  resolution: "1080p"
+  year: 2017
+  series: 7
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
+"S.W.A.T.2017.S07E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "S.W.A.T."
+  source: "WEB"
+  resolution: "1080p"
+  year: 2017
+  series: 7
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "[SubsPlease] Saikin Yatotta Maid ga Ayashii - 09 (1080p) [990FF01E].mkv":
   type: "episode"
   title: "Saikin Yatotta Maid ga Ayashii"
@@ -3037,6 +3203,15 @@
   audio: "DDP"
   channels: "5.1"
   group: "TrollHD"
+"T.J.Hooker.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "T.J. Hooker"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "The Big Bang Theory S08E06 HDTV XviD-LOL [eztv]":
   type: "episode"
   title: "The Big Bang Theory"
