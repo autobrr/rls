@@ -1244,25 +1244,52 @@ func (b *TagBuilder) unused(r *Release, i int) {
 	}
 }
 
-// widenGroup joins the leftover words in front of a guessed group when single
-// spaces separate them, so "(... - DarQ HONE)" yields the same group as
-// "-DarQ HONE". A run outside the group lexer's bound on a spaced group keeps
-// the single word, as the lexer would.
+// hyphenGroup bounds a group widened from leftover words that follow a hyphen,
+// as in "(... - Kyoshi Mura)": two words of any length that each contain a
+// letter (ie, 'Kyoshi Mura', 'Ky0_Mura'). Leftover words have already failed
+// to lex as tags, so it can be looser than the group lexer's bound.
+var hyphenGroup = regexp.MustCompile(`(?i)^[a-z0-9]*[a-z][a-z0-9]*[ _][a-z0-9]*[a-z][a-z0-9]*$`)
+
+// widenGroup joins the leftover words in front of a guessed group, so
+// "(... - DarQ HONE)" yields the same group as "-DarQ HONE". Words right after
+// a hyphen may be separated by single spaces or underscores, within
+// hyphenGroup or spacedGroup. Other words join across single spaces within
+// spacedGroup only, so trailing alternate titles like "(Meitantei Conan)" are
+// not taken as a group. A run outside the bound keeps the single word.
 func (b *TagBuilder) widenGroup(r *Release, i int) {
+	if n, j := widenRun(r, i, " _"); n < len(r.unused) && j > 0 && strings.Contains(r.tags[j-1].Text(), "-") {
+		if group := joinRun(r, n); hyphenGroup.MatchString(group) || spacedGroup.MatchString(group) {
+			r.Group, r.unused = group, r.unused[:n]
+			return
+		}
+	}
+	if n, _ := widenRun(r, i, " "); n < len(r.unused) {
+		if group := joinRun(r, n); spacedGroup.MatchString(group) {
+			r.Group, r.unused = group, r.unused[:n]
+		}
+	}
+}
+
+// widenRun returns where the run of leftover words in front of the guessed
+// group at tag i starts, as an index into r.unused and into r.tags, when
+// single delimiters from seps separate the words.
+func widenRun(r *Release, i int, seps string) (int, int) {
 	n := len(r.unused)
-	for ; n > 0 && r.unused[n-1] == i-2 && r.tags[i-1].Text() == " "; n-- {
+	for ; n > 0 && r.unused[n-1] == i-2 && len(r.tags[i-1].Text()) == 1 && strings.Contains(seps, r.tags[i-1].Text()); n-- {
 		i = r.unused[n-1]
 	}
-	if n == len(r.unused) {
-		return
-	}
-	v := make([]string, 0, len(r.unused)-n+1)
+	return n, i
+}
+
+// joinRun joins the leftover words from n in r.unused onto the guessed group,
+// keeping their delimiters.
+func joinRun(r *Release, n int) string {
+	var sb strings.Builder
 	for _, j := range r.unused[n:] {
-		v = append(v, r.tags[j].Text())
+		sb.WriteString(r.tags[j].Text())
+		sb.WriteString(r.tags[j+1].Text())
 	}
-	if group := strings.Join(append(v, r.Group), " "); spacedGroup.MatchString(group) {
-		r.Group, r.unused = group, r.unused[:n]
-	}
+	return sb.String() + r.Group
 }
 
 // delim fixes the delimiter based on surrounding tags.

@@ -34,12 +34,16 @@
 "[BBT-RMX]_Servant_x_Service":
   title: "Servant x Service"
   site: "BBT-RMX"
+"Spider-Man Homecoming":
+  title: "Spider-Man Homecoming"
 "TEST.A.Documentary":
   title: "TEST A Documentary"
 "Vol.I.V":
   title: "Vol I.V."
 "WITHNAIL.AND.I":
   title: "WITHNAIL AND I"
+"X-Men Apocalypse":
+  title: "X-Men Apocalypse"
 "You.I.Me":
   title: "You I Me"
 "5.Headed.Shark.Attack.German.2017.MERRY.XMAS.AC3.BDRiP.x264-XF":
@@ -1341,6 +1345,13 @@
   audio: "DD"
   language: "GERMAN DL"
   group: "EXQUiSiTE"
+"[Commie] Senki Zesshou Symphogear XV [720p] (Unofficial Batch)":
+  type: "movie"
+  title: "Senki Zesshou Symphogear XV"
+  resolution: "720p"
+  group: "Batch"
+  site: "Commie"
+  unused: "Unofficial"
 "Sin.City.A.Dame.to.Kill.For.2014.1080p.BluRay.x264-SPARKS":
   type: "movie"
   title: "Sin City A Dame to Kill For"
@@ -1430,6 +1441,127 @@
   other: "minimalNR"
   group: "4K83"
   ext: "mkv"
+"Stillwater Ridge (2020) (1080p BluRay x265 - Kyoshi 51)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  unused: "Kyoshi 51"
+"Stillwater Ridge 2020 1080p Blu-Ray HEVC":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "HEVC"
+"Stillwater Ridge 2020 1080p BluRay DTS-HD MA":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  audio: "DTS-HD.MA"
+"Stillwater Ridge 2020 1080p BluRay DTS-X HEVC":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "HEVC"
+  audio: "DTS-X"
+"Stillwater Ridge 2020 1080p WEB-DL Atmos":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  audio: "Atmos"
+"Stillwater Ridge 2020 1080p WEB-DL HEVC":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  codec: "HEVC"
+"Stillwater Ridge 2020 1080p WEB-DL REPACK":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  other: "REPACK"
+"Stillwater Ridge 2020 1080p WEB-DL x265":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+"Stillwater Ridge 2020 WEB-DL 1080p":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+"Stillwater.Ridge.2020.1080p.BluRay.x265-Dolby Digital":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  audio: "DD"
+"Stillwater.Ridge.2020.1080p.BluRay.x265-Dolby Vision":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "DV"
+"Stillwater.Ridge.2020.1080p.BluRay.x265-Anime_Time":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  group: "Anime_Time"
+"Stillwater Ridge 2020 1080p BluRay x264 - BTN 4K":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "BTN"
+"Stillwater Ridge 2020 1080p BluRay x264-DL Group":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "DL Group"
+"Stillwater Ridge 2020 1080p WEB-DL HEVC-DarQ HONE":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  codec: "HEVC"
+  group: "DarQ HONE"
+"Stillwater Ridge (2020) (1080p BluRay x265 - Long Words Here)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  group: "Here"
+  unused: "Long Words"
 "Stillwater Ridge (2020) (1080p BluRay x265 - Some Long Words Here)":
   type: "movie"
   title: "Stillwater Ridge"
@@ -1439,6 +1571,110 @@
   codec: "x265"
   group: "Here"
   unused: "Some Long Words"
+"Stillwater.Ridge.2020.1080p.BluRay.x265-RED Army":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  group: "RED Army"
+"Stillwater Ridge 2020 2160p WEB-DL HDR10":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  hdr: "HDR10"
+"Stillwater Ridge 2020 BluRay x264 - BTN 4K":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2020
+  codec: "x264"
+  group: "BTN"
+"Stillwater Ridge (2021) (1080p BluRay x265 SDR DDP 5.1 Russian - Ky0 Mura)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP"
+  channels: "5.1"
+  language: "RUSSiAN"
+  group: "Ky0 Mura"
+"Stillwater Ridge (2021) (1080p ATV WEB-DL x265 SDR DDP Atmos 5.1 English - Kyo Muramasa)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  language: "ENGLiSH"
+  group: "Kyo Muramasa"
+  unused: "ATV"
+"Stillwater Ridge (2021) (1080p ATV WEB-DL x265 SDR DDP Atmos 5.1 English - Kyoshi Mura)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  language: "ENGLiSH"
+  group: "Kyoshi Mura"
+  unused: "ATV"
+"Stillwater.Ridge.2021.1080p.WEB-DL.DDP5.1.x265-Kyoshi_Mura":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "Kyoshi_Mura"
+"Stillwater Ridge 2021 1080p WEB-DL DDP5.1 x265-Kyoshiro Muramasa":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "Kyoshiro Muramasa"
+"Stillwater.Ridge.2021.1080p.WEB-DL.DDP5.1.x265-Kyoshiro_Muramasa":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "Kyoshiro_Muramasa"
+"Stillwater Ridge (2021) (2160p UHD BluRay x265 DV HDR DDP 7.1 English - Kyoshi Mura).mkv":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2021
+  codec: "x265"
+  hdr: "DV HDR"
+  audio: "DDP"
+  channels: "7.1"
+  language: "ENGLiSH"
+  group: "Kyoshi Mura"
+  ext: "mkv"
 "[UTW-TMD]_Summer_Wars_[BD][h264-720p][TrueHD5.1][9F311DAB].mkv":
   type: "movie"
   title: "Summer Wars"
@@ -2221,6 +2457,21 @@
   episode: 862
   site: "HorribleSubs"
   ext: "mkv"
+"Detective Conan S01E1207 The J League Starting Whistle 1080p CR WEB-DL AAC2.0 H 264-VARYG (Meitantei Conan, Multi-Subs)":
+  type: "episode"
+  title: "Detective Conan"
+  subtitle: "The J League Starting Whistle"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "CR"
+  series: 1
+  episode: 1207
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  language: "MULTiSUB"
+  group: "Conan"
+  unused: "VARYG Meitantei"
 "DI.Ray.S01.1080p.AMZN.WEB-DL.DDP2.0.H.264-NTb":
   type: "series"
   title: "DI Ray"
@@ -3154,6 +3405,19 @@
   other: "HR"
   container: "WMV"
   group: "KTR"
+"Stillwater Ridge S01E01 WEB-DL x264":
+  type: "episode"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  series: 1
+  episode: 1
+  codec: "x264"
+"Stillwater Ridge S01E01 Spider-Man Returns":
+  type: "episode"
+  title: "Stillwater Ridge"
+  subtitle: "Spider-Man Returns"
+  series: 1
+  episode: 1
 "Stillwater Ridge (2022) S01 (1080p BluRay x265 SDR DDP 5.1 English - Kelp NOVA)":
   type: "series"
   title: "Stillwater Ridge"
