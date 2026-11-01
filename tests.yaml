@@ -986,6 +986,24 @@
   year: 2014
   audio: "DUAL.AUDIO"
   size: "1400MB"
+"Movie.2022.1080p.BluRay.x264.8bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  codec: "x264"
+  bitdepth: "8BIT"
+  group: "GRP"
+"Movie.2022.1080p.BluRay.x265.10.bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  codec: "x265"
+  bitdepth: "10BIT"
+  group: "GRP"
 "Movie.2022.UHD.1080p.WEBRip.x265-GRP":
   type: "movie"
   title: "Movie"
@@ -993,6 +1011,33 @@
   resolution: "1080p"
   year: 2022
   codec: "x265"
+  group: "GRP"
+"Movie 2022 2160p UHD BluRay x265 12 bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  bitdepth: "12BIT"
+  group: "GRP"
+"Movie.2022.2160p.UHD.BluRay.x265.12-bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  bitdepth: "12BIT"
+  group: "GRP"
+"Movie.2022.2160p.UHD.BluRay.x265.12bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  bitdepth: "12BIT"
   group: "GRP"
 "Movie.2022.2160p.UHD.WEB-RIP.x265-GRP":
   type: "movie"
