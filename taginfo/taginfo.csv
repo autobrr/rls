@@ -396,7 +396,7 @@ group,0x0815,,,,game,1
 group,0x0007,,,,game,1
 group,XB3,,,,game,1
 group,ZKY,,,,game,1
-hdr,HDR10+,High Dynamic Range (10-bit+),hdr[\-\.]?10\+|hdr10plus|hdr[\-\.]?10P,,movie,
+hdr,HDR10+,High Dynamic Range (10-bit+),hdr[\-\._ ]?10\+|hdr[\-\._ ]?10[\-\._ ]?plus|hdr[\-\._ ]?10P,,movie,
 hdr,HDR10,High Dynamic Range (10-bit),hdr[\-\.]?10,,movie,
 hdr,HDR+,High Dynamic Range+,hdr\+,,movie,
 hdr,HDR,High Dynamic Range,,,movie,

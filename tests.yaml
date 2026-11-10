@@ -1172,7 +1172,27 @@
   codec: "x265"
   hdr: "HDR10+"
   group: "GROUP"
+"Movie 2024 2160p BluRay x265 DV HDR 10+ DTS-HD MA 5.1-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2024
+  codec: "x265"
+  hdr: "DV HDR10+"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  group: "GROUP"
 "Movie.2024.2160p.BluRay.x265.DV.HDR10+-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2024
+  codec: "x265"
+  hdr: "DV HDR10+"
+  group: "GROUP"
+"Movie.2024.2160p.BluRay.x265.DV.HDR10.PLUS-GROUP":
   type: "movie"
   title: "Movie"
   source: "BluRay"
