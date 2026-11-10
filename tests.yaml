@@ -211,6 +211,13 @@
   type: "movie"
   title: "a file"
   ext: "mkv"
+"A.Movie.2020.700MB.x264-G":
+  type: "movie"
+  title: "A Movie"
+  year: 2020
+  codec: "x264"
+  size: "700MB"
+  group: "G"
 "A.River.Runs.Through.It.1992.Remastered.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR":
   type: "movie"
   title: "A River Runs Through It"

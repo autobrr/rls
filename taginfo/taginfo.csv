@@ -692,7 +692,7 @@ size,MDVDRW,DVD (RW music),m[\-\._ ]?dvd(?:[\-\._ ]?rw),,music,1
 size,MDVDR,DVD (R music),m[\-\._ ]?dvd(?:[\-\._ ]?r),,music,1
 size,MDVD,DVD (music),m[\-\._ ]?dvd,,music,1
 size,512MS,MemoryStick (512mb),,,game,1
-size,$1$2,$1 $2,(\d+(?:\.\d+)?)[\-\._ ]?([kmgt]i?b),,movie,
+size,$1$2,$1 $2,(\d\d?\d?\.\d+|\d+)[\-\._ ]?([kmgt]i?b),,movie,
 source,AHDTV,High-Definition TV (analog),,,movie,
 source,AUDiOBOOK,Audiobook,a(?:udio[\-\._ ]?)?books?,,audiobook,1
 source,BDRiP,BluRay (rip),b[dr]?[\-\._ ]?rip,,movie,
