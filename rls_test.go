@@ -75,6 +75,15 @@ func TestCollapser(t *testing.T) {
 		{"$100 TAXI RIDE", "$100 TAXI RIDE", "100 taxi ride"},
 		{"Mr. & Mrs. Smith", "Mr. & Mrs. Smith", "mr & mrs smith"},
 		{"Bob's Burgers", "Bobs Burgers", "bobs burgers"},
+		// a byte that is not valid utf-8 becomes U+FFFD, as strings.ToValidUTF8
+		// would make it, and the text after it is kept
+		{"Am\xe9lie", "Am\ufffdlie", "am\ufffdlie"},
+		{"Am\xe9rica Latina", "Am\ufffdrica Latina", "am\ufffdrica latina"},
+		{"a\xff\xfeb", "a\ufffdb", "a\ufffdb"},
+		{" \xffTitle  Two ", "\ufffdTitle Two", "\ufffdtitle two"},
+		{"Caf\xc3", "Caf\ufffd", "caf\ufffd"},
+		{"Title \ufffd Two", "Title \ufffd Two", "title \ufffd two"},
+		{"a\ufffd\xffb", "a\ufffd\ufffdb", "a\ufffd\ufffdb"},
 	}
 	for i, test := range tests {
 		c, _, err := transform.String(NewCleaner(), test.s)
@@ -90,6 +99,25 @@ func TestCollapser(t *testing.T) {
 		}
 		if n != test.n {
 			t.Errorf("test %d normalize expected %q, got: %q", i, test.n, n)
+		}
+	}
+}
+
+// TestCollapserLong checks input longer than the buffers a transform chain
+// passes between its links, where a rune can be split across two calls.
+func TestCollapserLong(t *testing.T) {
+	const n = 5000
+	for _, test := range []struct {
+		s, c, n string
+	}{
+		{strings.Repeat("é", n), strings.Repeat("e", n), strings.Repeat("e", n)},
+		{strings.Repeat("É\xff", n), strings.Repeat("E\ufffd", n), strings.Repeat("e\ufffd", n)},
+	} {
+		if c := MustClean(test.s); c != test.c {
+			t.Errorf("clean of %d bytes expected %d bytes, got: %d", len(test.s), len(test.c), len(c))
+		}
+		if n := MustNormalize(test.s); n != test.n {
+			t.Errorf("normalize of %d bytes expected %d bytes, got: %d", len(test.s), len(test.n), len(n))
 		}
 	}
 }

@@ -1246,6 +1246,9 @@ func NewCollapser(lower, trim bool, remove, space string, transformer func(rune,
 }
 
 // Transform satisfies the transform.Transformer interface.
+//
+// A byte that is not valid UTF-8 is written as U+FFFD, one for each run of such
+// bytes, which is what strings.ToValidUTF8(s, "\uFFFD") produces.
 func (c Collapser) Transform(dst, src []byte, atEOF bool) (int, int, error) {
 	var i, l, j, n int
 	var prev, r rune
@@ -1253,8 +1256,10 @@ func (c Collapser) Transform(dst, src []byte, atEOF bool) (int, int, error) {
 	// trim leading spaces
 	if c.Trim {
 		for ; i < s; i = i + l {
-			if r, l = utf8.DecodeRune(src[i:]); r == utf8.RuneError {
-				return n, i + l, transform.ErrShortSrc
+			if r, l = utf8.DecodeRune(src[i:]); r == utf8.RuneError && l == 1 {
+				// an invalid byte is kept, so it ends the leading spaces. a
+				// rune cut short by the end of src is decided below
+				break
 			}
 			if !c.Remove[r] && !c.Space[r] {
 				break
@@ -1263,11 +1268,20 @@ func (c Collapser) Transform(dst, src []byte, atEOF bool) (int, int, error) {
 	}
 	// copy from src to dst
 	var last int
+	var invalid bool
 	for ; i < s; i = i + l {
 		r, l = utf8.DecodeRune(src[i:])
+		if r == utf8.RuneError && l == 1 {
+			// the rest of the rune may be in the next call
+			if !atEOF && !utf8.FullRune(src[i:]) {
+				return n, i, transform.ErrShortSrc
+			}
+			if invalid {
+				continue
+			}
+		}
+		invalid = r == utf8.RuneError && l == 1
 		switch {
-		case r == utf8.RuneError:
-			return n, i + l, transform.ErrShortSrc
 		case c.Space[r] && prev == c.Spc, c.Remove[r], unicode.Is(unicode.Mn, r):
 			continue
 		case c.Space[r]:
