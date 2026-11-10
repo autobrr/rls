@@ -73,9 +73,13 @@ func newPrefilter(infos []*taginfo.Taginfo, ci bool) (*prefilter, bool) {
 		for _, s := range v {
 			run := firstRun(s)
 			if run == "" {
-				// an alternative that opens with a delimiter has no run to key
-				// on; fall back to always running the type
-				return nil, false
+				// an alternative that opens with a non-run byte can never match
+				// at a position maybe is consulted for: maybe only rejects when
+				// buf[i] is a run byte, and such an alternative needs buf[i] to
+				// be its (non-run) first byte. It contributes nothing to key on
+				// and must not cost the type its prefilter ('other' lost its
+				// prefilter to the '-sign-language' spelling of Sign.Language).
+				continue
 			}
 			if len(run) > pf.max {
 				pf.max = len(run)
