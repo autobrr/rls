@@ -43,6 +43,8 @@
   title: "Vol I.V."
 "WITHNAIL.AND.I":
   title: "WITHNAIL AND I"
+"WWE.Monday.Night.Raw":
+  title: "WWE Monday Night Raw"
 "X-Men Apocalypse":
   title: "X-Men Apocalypse"
 "You.I.Me":
@@ -1241,6 +1243,12 @@
   year: 2020
   codec: "x264"
   group: "GRP"
+"Movie.Title.2010.DVDRip.XviD":
+  type: "movie"
+  title: "Movie Title"
+  source: "DVDRiP"
+  year: 2010
+  codec: "XViD"
 "Movie.Title.2015.DVD-R-Pate":
   type: "movie"
   title: "Movie Title"
