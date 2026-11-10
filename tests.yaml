@@ -3270,6 +3270,14 @@
   audio: "FLAC"
   group: "Group"
   site: "Group"
+"[Group] Show - Episode 01 ~ 03 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  seriesEpisodes: "S00E01 S00E02 S00E03"
+  group: "Group"
+  site: "Group"
 "Show.E05.5.1.AAC.1080p.WEB-GRP":
   type: "episode"
   title: "Show"
@@ -3362,6 +3370,24 @@
   audio: "DDP"
   group: "GROUP"
   ext: "mkv"
+"Show.S01E02-04.1080p.WEB-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  seriesEpisodes: "S01E02 S01E03 S01E04"
+  group: "GRP"
+"Show.S01E05-02.1080p.WEB-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "02"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 5
+  group: "GRP"
 "[Group] Show (2024) - 01 (S01E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]":
   type: "episode"
   title: "Show"
@@ -3537,6 +3563,7 @@
   source: "BluRay"
   resolution: "720p"
   episode: 1
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12 S00E13 S00E14 S00E15 S00E16 S00E17 S00E18 S00E19 S00E20 S00E21 S00E22 S00E23 S00E24 S00E25 S00E26 S00E27 S00E28 S00E29 S00E30 S00E31 S00E32 S00E33 S00E34 S00E35 S00E36 S00E37 S00E38 S00E39 S00E40 S00E41 S00E42 S00E43 S00E44 S00E45 S00E46 S00E47 S00E48 S00E49 S00E50 S00E51"
   codec: "x264"
   audio: "DD"
   other: "COMPLETE"

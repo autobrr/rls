@@ -574,13 +574,29 @@ func (tag Tag) Series() (int, int) {
 	return series, episode
 }
 
-// Episodes normalizes the episodes value.
+// Episodes normalizes the episodes value. A "-" between two episodes makes
+// them the ends of a range ('E05-07'), and the episodes in between are
+// included.
 func (tag Tag) Episodes() []int {
 	var v []int
+	// prev is the episode before, which may be the 0 that v leaves out
+	prev, ranged := -1, false
 	for _, b := range tag.v[2:] {
-		if episode := atoi(b); episode != 0 {
+		if b == "-" {
+			ranged = true
+			continue
+		}
+		episode := atoi(b)
+		for j := prev + 1; ranged && prev != -1 && j < episode; j++ {
+			v = append(v, j)
+		}
+		if episode != 0 {
 			v = append(v, episode)
 		}
+		if b != "" {
+			prev = episode
+		}
+		ranged = false
 	}
 	return v
 }

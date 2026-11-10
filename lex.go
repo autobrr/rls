@@ -70,8 +70,8 @@ func DefaultLexers() []Lexer {
 		NewRegexpLexer(TagTypeResolution, true),
 		NewRegexpSourceLexer(TagTypeCollection, true),
 		NewSeriesLexer(
-			// s02, S01E01
-			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]?(?:e(?P<e>\d{1,5}))?\b`,
+			// s02, S01E01, S01E02-04
+			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]?(?:e(?P<e>\d{1,5})(?P<r>-\d{1,3})?)?\b`,
 			// S01E02E03, S01E02-E03, S01E03.E04.E05
 			`(?i)^s(?P<s>[0-8]?\d)(?P<m>(?:[\-\._ ]?e\d{1,5}){1,5})\b`,
 			// S01S02S03
@@ -84,8 +84,8 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
 			// Vol.1.No.2, vol1no2
 			`(?i)^vol(?:ume)?[\-\._ ]?(?P<s>\d{1,3})(?:[\-\._ ]?(?:number|no)[\-\._ ]?(?P<e>\d{1,5}))\b`,
-			// Episode 15, E009, Ep. 007, Ep.05-07, Ep 5.5
-			`(?i)^e(?:p(?:isode)?[\-\._ ]{1,3})?(?P<e>\d{1,5})(?:(?P<x>\.\d)|[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3})?\b`,
+			// Episode 15, E009, Ep. 007, Ep.05-07, Ep 05 ~ 07, Ep 5.5
+			`(?i)^e(?:p(?:isode)?[\-\._ ]{1,3})?(?P<e>\d{1,5})(?:(?P<x>\.\d)|(?P<r>[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3}))?\b`,
 			// 10v1.7, 13v2
 			`(?i)^(?P<e>\d{1,5})(?P<v>v[\-\._ ]?\d+(?:\.\d){0,2})\b`,
 			// S01.Disc02, s01D3, Series.01.Disc.02, S02DVD3
@@ -271,7 +271,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if s, v, i, n, ok := lexer(src, buf, i, n); ok {
 				// collect series, episode, version
-				var series, episode, version, disc, multi, many, dec []byte
+				var series, episode, version, disc, multi, many, rng, dec []byte
 				for l := 0; l < len(v); l += 2 {
 					switch string(v[l]) {
 					case "s":
@@ -286,6 +286,8 @@ func NewSeriesLexer(strs ...string) Lexer {
 						multi = []byte(v[l+1])
 					case "m":
 						many = []byte(v[l+1])
+					case "r":
+						rng = v[l+1]
 					case "x":
 						dec = v[l+1]
 					default:
@@ -293,6 +295,35 @@ func NewSeriesLexer(strs ...string) Lexer {
 					}
 				}
 				var tags []Tag
+				// a range end ('E05-07') is the last episode of the range when
+				// it is higher than the first. Only a bare hyphen or a tilde
+				// is sure to mean a range, which the tag records as a '-'
+				// between the two episodes for Tag.Episodes to fill in: across
+				// ' - ' the two ends are all that is known. A dot and a digit
+				// after the number make it a decimal instead, in a name that
+				// separates its words with spaces ('E03 - 99.419 Specials').
+				//
+				// What is not a range end stays inside an 'Ep' tag, where no
+				// other lexer can take it for an episode, and is handed back
+				// after 'S01E02'.
+				var more [][]byte
+				if k := len(rng); k != 0 {
+					tail := s[len(s)-k:]
+					for k > 0 && tail[k-1] >= '0' && tail[k-1] <= '9' {
+						k--
+					}
+					first, last := atoi(string(episode)), atoi(string(tail[k:]))
+					decimal := bytes.IndexByte(tail[:k], ' ') != -1 && i+1 < n && src[i] == '.' && src[i+1] >= '0' && src[i+1] <= '9'
+					switch {
+					case !decimal && last > first:
+						if k == 1 && tail[0] == '-' || bytes.IndexByte(tail[:k], '~') != -1 {
+							more = append(more, []byte{'-'})
+						}
+						more = append(more, tail[k:])
+					case len(series) != 0:
+						s, i = s[:len(s)-len(tail)], i-len(tail)
+					}
+				}
 				// a decimal episode ('Ep 5.5') stays inside the tag, unless
 				// its digit begins the channels ('E05.5.1.AAC')
 				if len(dec) != 0 && i+1 < n && src[i] == '.' && src[i+1] >= '0' && src[i+1] <= '9' &&
@@ -309,7 +340,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 					l := [][]byte{s, series}
 					switch {
 					case len(many) == 0:
-						l = append(l, episode)
+						l = append(append(l, episode), more...)
 					default:
 						for _, m := range mny.FindAllSubmatch(many, -1) {
 							l = append(l, m[1])
