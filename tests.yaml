@@ -2299,6 +2299,16 @@
   cut: "Uncut"
   language: "GERMAN DL"
   group: "GOREHOUNDS"
+"Zombie.Bloody.Demons.UNGEKÜRZT.GERMAN.1987.DL.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Zombie Bloody Demons"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1987
+  codec: "x264"
+  cut: "Uncut"
+  language: "GERMAN DL"
+  group: "GRP"
 "Zombie Shark The Swimming Dead French 2015 AC3 BDRiP x264-XF":
   type: "movie"
   title: "Zombie Shark The Swimming Dead"

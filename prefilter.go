@@ -22,6 +22,10 @@ import (
 // run against the set of first runs the type can produce never rejects a
 // position the alternation would have matched. A type whose rows cannot all be
 // expanded gets no prefilter and is always run.
+//
+// That holds for ASCII text. Runs are compared byte for byte, and (?i) also
+// matches 'k' and 's' with the non-ASCII runes U+212A and U+017F, so a
+// spelling written with one of those is rejected unless fold is set.
 type prefilter struct {
 	runs map[string]struct{}
 	max  int
@@ -581,7 +585,16 @@ const maxVariants = 4096
 // classes of literals and ranges, and the (?:...) (?i:...) (?-i:...) groups.
 // Anything else (\d, \w, +, *, {n,m}, unescaped ., ^, $) is unsupported and
 // costs the type its prefilter.
+//
+// A regexp with a non-ASCII rune is unsupported too. The expander works on
+// bytes, so '[uü]' would give 'u' and the two bytes of 'ü' as three members,
+// and the spellings built from them match nothing.
 func expandRE(re string, ci bool) ([]string, error) {
+	for i := 0; i < len(re); i++ {
+		if re[i] >= 0x80 {
+			return nil, errUnsupported
+		}
+	}
 	e := &expander{src: re}
 	v, err := e.alt(ci)
 	if err != nil {
@@ -801,8 +814,11 @@ func literalEscape(c byte) bool {
 // lookup to a handful of candidate rows, which are then confirmed with the same
 // Match call as before -- so case sensitive rows, ie (?-i:US|USA), still decide
 // for themselves. Rows that could not be expanded stay in an ordered fallback
-// list, and candidates are visited in row order, so the row selected is
-// identical to the one the scan would have returned.
+// list, and candidates are visited in row order, so for ASCII text the row
+// selected is identical to the one the scan would have returned.
+//
+// The index is upper cased byte for byte, which is not how (?i) folds: 'Opuſ'
+// (U+017F) matches the OPUS row's regexp and is not found here.
 func findFunc(infos ...*taginfo.Taginfo) taginfo.FindFunc {
 	exact := make(map[string][]int32)
 	var rest []int32

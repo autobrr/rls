@@ -49,3 +49,20 @@ func TestPrefilterRejects(t *testing.T) {
 		}
 	}
 }
+
+// TestFindFuncNonASCII checks that the indexed lookup finds the same row as
+// taginfo.Find for a spelling with a non-ASCII letter, which a row's regexp
+// can ask for ('ungek[uü]e?rzt') and the index cannot hold.
+func TestFindFuncNonASCII(t *testing.T) {
+	infos := taginfo.All()["cut"]
+	f, find := findFunc(infos...), taginfo.Find(infos...)
+	for _, s := range []string{"ungekürzt", "UNGEKÜRZT", "Ungekuerzt", "ungekurzt", "uncut"} {
+		exp := find(s)
+		if exp == nil {
+			t.Fatalf("%q expected a cut tag info", s)
+		}
+		if info := f(s); info != exp {
+			t.Errorf("%q expected %q, got: %v", s, exp.Tag(), info)
+		}
+	}
+}
