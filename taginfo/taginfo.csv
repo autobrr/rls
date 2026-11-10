@@ -94,7 +94,7 @@ collection,ATVP,Apple TV+,atv[p\+],,,
 collection,B-Global,Bilibili Global,b[\-\._ ]?global,,,
 collection,BBC,British Broadcasting Corporation,,,,
 collection,BCORE,Bravia Core,,,movie,1
-collection,BOOM,Boomerang,,,,
+collection,BOOM,Boomerang,(?-i:BOOM),,,
 collection,BRAVO,Bravo,(?-i:BRAVO?),,,
 collection,Career.Academy,Career Academy,career[\-\._ ]?academy,,education,1
 collection,CBC,Canadian Broadcasting Corporation,,,,
@@ -166,7 +166,7 @@ collection,SiriusXM,Sirius XM,sirius[\-\._ ]?xm,,music,1
 collection,Skillfeed,,,,education,1
 collection,Skillshare,,skillshare(?:[\-\._ ]?com)?,,education,1
 collection,Sonic.Academy,Sonic Academy,sonic[\-\._ ]?academy(?:[\-\._ ]?com)?,,education,1
-collection,STAN,Stan,,,,
+collection,STAN,Stan,(?-i:STAN),,,
 collection,STV,Straight-to-Video,,,movie,
 collection,STZ,STARZ,st(?:ar)?z,,,
 collection,Total.Training,Total Training,total[\-\._ ]?training,,education,1
