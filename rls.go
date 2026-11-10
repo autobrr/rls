@@ -184,6 +184,21 @@ type Tag struct {
 	f     taginfo.FindFunc
 	prev  TagType
 	prevf taginfo.FindFunc
+	// ninfo and info are the rows f finds for the captured value and for the
+	// normalized value. Both are fixed by typ, v and f, so they are resolved
+	// once when the tag is made rather than on every Normalize and Info call.
+	ninfo *taginfo.Taginfo
+	info  *taginfo.Taginfo
+}
+
+// resolve looks up the tag's rows.
+func (tag Tag) resolve() Tag {
+	tag.ninfo, tag.info = nil, nil
+	if tag.f != nil {
+		tag.ninfo = tag.f(tag.v[1])
+		tag.info = tag.f(tag.Normalize())
+	}
+	return tag
 }
 
 // NewTag creates a new tag.
@@ -199,7 +214,7 @@ func NewTag(typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
 		typ: typ,
 		v:   v,
 		f:   f,
-	}
+	}.resolve()
 }
 
 // ParseTags parses tags from src.
@@ -220,7 +235,7 @@ func (tag Tag) As(typ TagType, f taginfo.FindFunc) Tag {
 		v:     tag.v,
 		prev:  tag.typ,
 		prevf: tag.f,
-	}
+	}.resolve()
 }
 
 // Revert returns a copy of tag as the tag's previous type.
@@ -229,7 +244,7 @@ func (tag Tag) Revert() Tag {
 		typ: tag.prev,
 		f:   tag.prevf,
 		v:   tag.v,
-	}
+	}.resolve()
 }
 
 // Is returns true when tag is of a type.
@@ -254,10 +269,7 @@ func (tag Tag) Was(types ...TagType) bool {
 
 // Info retrieves the tag's tag info.
 func (tag Tag) Info() *taginfo.Taginfo {
-	if tag.f != nil {
-		return tag.f(tag.Normalize())
-	}
-	return nil
+	return tag.info
 }
 
 // SingleEp returns true when the
@@ -311,7 +323,12 @@ func (tag Tag) InfoTitle() string {
 // values in v.
 func (tag Tag) normalize(s string, v ...string) string {
 	if tag.f != nil {
-		if info := tag.f(s); info != nil {
+		// every caller passes the captured value, which is what ninfo is for
+		info := tag.ninfo
+		if len(tag.v) < 2 || s != tag.v[1] {
+			info = tag.f(s)
+		}
+		if info != nil {
 			s = info.Tag()
 		}
 		for i := 0; i < len(v); i++ {
