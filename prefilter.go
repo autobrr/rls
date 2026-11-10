@@ -222,10 +222,19 @@ func requiredLiteral(re string, ci bool) ([]byte, bool) {
 	return lit, fold
 }
 
+// literalWindow bounds how far hasLiteral looks, so that a long name of
+// patterned looking tokens costs a fixed amount per token rather than a scan
+// of everything after it.
+const literalWindow = 256
+
 // hasLiteral reports whether b contains lit, or a non-ASCII byte. The latter
 // is treated as a hit because a case insensitive literal also matches the
-// non-ASCII folds of 'k' and 's' (U+212A, U+017F).
+// non-ASCII folds of 'k' and 's' (U+212A, U+017F). A b longer than
+// literalWindow is not examined and counts as a hit.
 func hasLiteral(b, lit []byte, fold bool) bool {
+	if len(b) > literalWindow {
+		return true
+	}
 	c0 := lit[0]
 	for i := 0; i < len(b); i++ {
 		c := b[i]

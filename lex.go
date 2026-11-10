@@ -904,14 +904,18 @@ func NewMetaLexer(strs ...string) Lexer {
 				}
 			}
 			// prefixes
+			// nb is the first non-space byte at or after i; it only has to be
+			// found again once i has moved past it
+			nb := i - 1
 			for ; i < n; i++ {
 				matched = false
-				c, any := byte(0), false
-				for a := i; a < n; a++ {
-					if !metaSpace(src[a]) {
-						c, any = src[a], true
-						break
+				if nb < i {
+					for nb = i; nb < n && metaSpace(src[nb]); nb++ {
 					}
+				}
+				c, any := byte(0), nb < n
+				if any {
+					c = src[nb]
 				}
 				for l = 0; l < o && !matched; l++ {
 					if gate && (!any || openFirst[l] != c) {
