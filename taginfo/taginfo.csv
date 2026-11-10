@@ -461,7 +461,7 @@ language,VOSTEN,Version Originale Sous-Titrée en Anglais,(?i:vosten),,,
 language,VOSTFR,Version Originale Sous-Titrée en Français,(?i:vostfr),,,
 language,YUGOSLOViAN,Yugoslovian,(?i:yugoslovian)|YU,,,
 language,$1$2UB$3,$2ubs ($1$3),([A-Zi]*)([SD])UB([A-Zi]*),,,
-language,MULTi$2,Multi ($2),(?i:multi)[\-\._ ]?(\d+),,,
+language,MULTi$1,Multi ($1),(?i:multi)[\-\._ ]?(\d+),,,
 other,ADVANCE,Advance,adv(?:anced?)?,,music,1
 other,AI.Upscale,Upscaled (AI),ai[\-\._ ]upscaled?,,movie,
 other,All.Access.Cheat,All Access Cheat,all[\-\._ ]access[\-\._ ](?:cheats?|save),,game,1

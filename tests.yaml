@@ -5016,6 +5016,12 @@
   other: "UPDATE"
   language: "MULTi"
   group: "SUXXORS"
+"Some.Game.v1.2.MULTi9-PROPHET":
+  type: "game"
+  title: "Some Game"
+  version: "v1.2"
+  language: "MULTi9"
+  group: "PROPHET"
 "Super_Mario_3D_World_plus_Bowsers_Fury_Update_v1.1.0_NSW-VENOM":
   type: "game"
   title: "Super Mario 3D World plus Bowsers Fury"

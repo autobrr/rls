@@ -458,6 +458,59 @@ func TestParseRoman(t *testing.T) {
 	}
 }
 
+// TestTagInfo_placeholders checks that every tag info with a $1 ... $N in its
+// tag or title fills it from its own capture groups.
+func TestTagInfo_placeholders(t *testing.T) {
+	types := map[string]TagType{
+		"edition":    TagTypeEdition,
+		"language":   TagTypeLanguage,
+		"other":      TagTypeOther,
+		"resolution": TagTypeResolution,
+		"size":       TagTypeSize,
+		"source":     TagTypeSource,
+	}
+	tests := map[string]struct {
+		s, tag, title string
+	}{
+		"edition/$1.Anniversary.Edition": {"25th Anniversary Edition", "25th.Anniversary.Edition", "Anniversary (25th)"},
+		"language/$1$2UB$3":              {"GERSUB", "GERSUB", "Subs (GER)"},
+		"language/MULTi$1":               {"multi5", "MULTi5", "Multi (5)"},
+		"other/$1X":                      {"19XX", "19XX", "19XX"},
+		"other/Plus.$1.Trainer":          {"plus 10 trainer", "Plus.10.Trainer", "Trainer (10)"},
+		"resolution/$1p":                 {"1600p", "1600p", "Other (1600p)"},
+		"size/$1$2":                      {"4.7GB", "4.7GB", "4.7 GB"},
+		"source/$1INCH.ViNYL":            {"12 inch vinyl", "12INCH.ViNYL", "Vinyl (12 inch)"},
+	}
+	var n int
+	for typ, infos := range taginfo.All() {
+		for _, info := range infos {
+			if !strings.Contains(info.Tag()+info.Title(), "$") {
+				continue
+			}
+			name := typ + "/" + info.Tag()
+			test, ok := tests[name]
+			if !ok {
+				t.Errorf("%s has a placeholder and no test", name)
+				continue
+			}
+			n++
+			if tag, title := info.Expand(test.s); tag != test.tag || title != test.title {
+				t.Errorf("%s expected %q to expand to %q, %q, got: %q, %q", name, test.s, test.tag, test.title, tag, title)
+			}
+			tag := NewTag(types[typ], findFunc(infos...), []byte(test.s), []byte(test.s))
+			if s := tag.Normalize(); s != test.tag {
+				t.Errorf("%s expected %q to normalize to %q, got: %q", name, test.s, test.tag, s)
+			}
+			if s := tag.InfoTitle(); s != test.title {
+				t.Errorf("%s expected %q to have title %q, got: %q", name, test.s, test.title, s)
+			}
+		}
+	}
+	if n != len(tests) {
+		t.Errorf("expected %d tag infos with a placeholder, got: %d", len(tests), n)
+	}
+}
+
 func TestTagInfo_regexp(t *testing.T) {
 	infos, err := taginfo.LoadAll()
 	if err != nil {
