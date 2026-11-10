@@ -840,3 +840,78 @@ func findFunc(infos ...*taginfo.Taginfo) taginfo.FindFunc {
 		return nil
 	}
 }
+
+// A pairSet holds which pairs of leading ASCII bytes a ^-anchored regexp can
+// begin a match with, found by walking the compiled program two bytes deep.
+// Zero width assertions are assumed to hold, so the set over-approximates: a
+// pair outside it cannot start a match.
+type pairSet [128 * 128 / 64]uint64
+
+func (ps *pairSet) has(a, b byte) bool {
+	k := uint(a)<<7 | uint(b)
+	return ps[k>>6]&(1<<(k&63)) != 0
+}
+
+// newPairSet returns the pair set for re, or nil when it could not be built.
+func newPairSet(re string) *pairSet {
+	r, err := syntax.Parse(re, syntax.Perl)
+	if err != nil {
+		return nil
+	}
+	prog, err := syntax.Compile(r.Simplify())
+	if err != nil {
+		return nil
+	}
+	// closure expands pcs through everything that consumes no input,
+	// reporting whether a match is reachable
+	closure := func(pcs []uint32) ([]uint32, bool) {
+		seen, out, match := make(map[uint32]bool), []uint32(nil), false
+		var add func(uint32)
+		add = func(pc uint32) {
+			if seen[pc] {
+				return
+			}
+			seen[pc] = true
+			switch inst := &prog.Inst[pc]; inst.Op {
+			case syntax.InstAlt, syntax.InstAltMatch:
+				add(inst.Out)
+				add(inst.Arg)
+			case syntax.InstCapture, syntax.InstNop, syntax.InstEmptyWidth:
+				add(inst.Out)
+			case syntax.InstMatch:
+				match = true
+			case syntax.InstFail:
+			default:
+				out = append(out, pc)
+			}
+		}
+		for _, pc := range pcs {
+			add(pc)
+		}
+		return out, match
+	}
+	step := func(pcs []uint32, c byte) []uint32 {
+		var out []uint32
+		for _, pc := range pcs {
+			if inst := &prog.Inst[pc]; inst.MatchRune(rune(c)) {
+				out = append(out, inst.Out)
+			}
+		}
+		return out
+	}
+	ps := new(pairSet)
+	s0, match := closure([]uint32{uint32(prog.Start)})
+	if match {
+		return nil // matches the empty string: nothing to rule out
+	}
+	for a := 0; a < 128; a++ {
+		s1, match := closure(step(s0, byte(a)))
+		for b := 0; b < 128; b++ {
+			if match || len(step(s1, byte(b))) != 0 {
+				k := uint(a)<<7 | uint(b)
+				ps[k>>6] |= 1 << (k & 63)
+			}
+		}
+	}
+	return ps
+}

@@ -1114,6 +1114,9 @@ func NamedCaptureLexer(strs ...string) func([]byte, []byte, int, int) ([]byte, [
 	// false when that set could not be bounded, in which case it always runs.
 	var leads [][256]bool
 	var gated []bool
+	// pairs[l] narrows that to the first two bytes: 'Se' can begin a month
+	// name where 'Sh' cannot, though both pass on 'S'.
+	var pairs []*pairSet
 	for l := 0; l < len(strs); l++ {
 		// build regexp and collect subexp indexes
 		re := regexp.MustCompile(strs[l])
@@ -1128,6 +1131,7 @@ func NamedCaptureLexer(strs ...string) func([]byte, []byte, int, int) ([]byte, [
 			lead, ok := leadSet(strs[l])
 			regexps, indexes, subexps = append(regexps, re), append(indexes, idx), append(subexps, names)
 			leads, gated = append(leads, lead), append(gated, ok)
+			pairs = append(pairs, newPairSet(strs[l]))
 		}
 	}
 	o := len(regexps)
@@ -1136,6 +1140,9 @@ func NamedCaptureLexer(strs ...string) func([]byte, []byte, int, int) ([]byte, [
 			// every one of these regexps is ^-anchored, so a match must begin
 			// with buf[i]
 			if gated[l] && i < n && !leads[l][buf[i]] {
+				continue
+			}
+			if ps := pairs[l]; ps != nil && i+1 < n && buf[i] < 0x80 && buf[i+1] < 0x80 && !ps.has(buf[i], buf[i+1]) {
 				continue
 			}
 			if m := regexps[l].FindSubmatch(buf[i:n]); m != nil {
