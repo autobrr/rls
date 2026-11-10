@@ -108,3 +108,16 @@ func BenchmarkParseLong(b *testing.B) {
 		ParseString(longName)
 	}
 }
+
+// trailingDelims is a short title followed by a long run of delimiters. The
+// meta lexer steps back over that run one byte at a time, so the cost of each
+// step has to stay bounded: when it scanned the whole name instead, this took
+// seconds rather than microseconds.
+var trailingDelims = "x" + strings.Repeat("-", 4000)
+
+func BenchmarkParseTrailingDelims(b *testing.B) {
+	b.ReportAllocs()
+	for b.Loop() {
+		ParseString(trailingDelims)
+	}
+}

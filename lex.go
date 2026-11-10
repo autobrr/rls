@@ -680,6 +680,10 @@ func NewGroupLexer() Lexer {
 	}
 }
 
+// metaWindow bounds how far back from the end a meta suffix is searched for.
+// The longest value any pattern accepts is 16+32 bytes plus brackets.
+const metaWindow = 160
+
 // NewMetaLexer creates a tag lexer for a file's meta data.
 func NewMetaLexer(strs ...string) Lexer {
 	if len(strs)%4 != 0 {
@@ -761,8 +765,15 @@ func NewMetaLexer(strs ...string) Lexer {
 			// suffixes
 			for ; i < n; n-- {
 				matched = false
+				// a suffix ends in its closing literal, optionally followed by
+				// whitespace, and is short: bound the scan to the tail
+				lo := max(i, n-metaWindow)
+				tail := bytes.TrimRight(src[lo:n], "\t\n\f\r ")
 				for l = 0; l < o && !matched; l++ {
-					if m = suffix[l].FindSubmatch(src[i:n]); m != nil {
+					if !bytes.HasSuffix(tail, []byte(strs[l*4+2])) {
+						continue
+					}
+					if m = suffix[l].FindSubmatch(src[lo:n]); m != nil {
 						if k, v = strs[l*4], m[1]; hasTwo[l] {
 							k, v = string(m[1]), m[2]
 						}
@@ -779,7 +790,9 @@ func NewMetaLexer(strs ...string) Lexer {
 				} else if !delim.Match(src[n-1 : n]) {
 					break
 				} else {
-					d = append([]byte{src[n-1]}, d...)
+					// the pending delimiters are the bytes right after n, so
+					// extend the slice back by one instead of copying it
+					d = src[n-1 : n+len(d)]
 				}
 			}
 			// backtrack remaining
