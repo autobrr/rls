@@ -621,6 +621,11 @@ func NewGroupLexer() Lexer {
 	var groupf, otherf taginfo.FindFunc
 	var re, special, tags *regexp.Regexp
 	var shortTags map[string]bool
+	// lastRuns holds the final word-run of every spelling a known group row
+	// can take. A known group is anchored to the end of the name, so the name
+	// has to end in one of them for re to match; lastOK is false when a row
+	// could not be expanded, in which case re always runs.
+	lastRuns, lastMax, lastOK := make(map[string]struct{}), 0, true
 	// inTag reports whether the hyphen at h joins the words around it into a
 	// known tag (ie, 'WEB-DL' in 'WEB-DL HEVC'), so it does not start a group.
 	inTag := func(src []byte, h int) bool {
@@ -649,23 +654,48 @@ func NewGroupLexer() Lexer {
 				}
 			}
 			groupf, otherf = findFunc(group...), findFunc(other...)
+			for _, info := range group {
+				exp, err := expandRE(info.RE(), true)
+				if err != nil {
+					lastOK = false
+					break
+				}
+				for _, s := range exp {
+					j := len(s)
+					for j > 0 && runByte(s[j-1]) {
+						j--
+					}
+					if j == len(s) {
+						lastOK = false
+					}
+					lastRuns[strings.ToUpper(s[j:])] = struct{}{}
+					if len(s)-j > lastMax {
+						lastMax = len(s) - j
+					}
+				}
+			}
 			re, special = regexp.MustCompile(`(?i)[\-\._ ]+`+reutil.Taginfo(`$`, group...)), regexp.MustCompile(`(?i)_(`+strings.Join(v, `|`)+`)$`)
 			tags = regexp.MustCompile(reutil.Taginfo(`i^$`, known...))
 			shortTags = short
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
-			// special end tags on groups
-			if m := special.FindSubmatch(src[i:n]); m != nil {
-				end, n = append(end, NewTag(TagTypeOther, otherf, m...)), n-len(m[0])
+			// special end tags on groups. the pattern opens with a literal
+			// underscore, so a name without one cannot match
+			if bytes.IndexByte(src[i:n], '_') != -1 {
+				if m := special.FindSubmatch(src[i:n]); m != nil {
+					end, n = append(end, NewTag(TagTypeOther, otherf, m...)), n-len(m[0])
+				}
 			}
 			// known groups
-			if m := re.FindSubmatch(src[i:n]); m != nil {
-				return start, append(end, NewTag(TagTypeGroup, groupf, m...)), i, n - len(m[0]), true
+			if knownGroupTail(src[i:n], lastRuns, lastMax, lastOK) {
+				if m := re.FindSubmatch(src[i:n]); m != nil {
+					return start, append(end, NewTag(TagTypeGroup, groupf, m...)), i, n - len(m[0]), true
+				}
 			}
 			// clamp to last year
 			l := i
-			if m := year.FindAllSubmatchIndex(buf[l:n], -1); m != nil {
-				l = m[0][1]
+			if m := year.FindIndex(buf[l:n]); m != nil {
+				l = m[1]
 			}
 			// locate delimiter and check valid group
 			if j := bytes.LastIndexByte(buf[l:n], delim); j != -1 {
@@ -690,6 +720,38 @@ func NewGroupLexer() Lexer {
 // metaWindow bounds how far back from the end a meta suffix is searched for.
 // The longest value any pattern accepts is 16+32 bytes plus brackets.
 const metaWindow = 160
+
+// knownGroupTail reports whether s could end in a known group, by testing its
+// final word-run against the final runs the group rows can produce.
+func knownGroupTail(s []byte, runs map[string]struct{}, max int, ok bool) bool {
+	if !ok {
+		return true
+	}
+	j := len(s)
+	for j > 0 && runByte(s[j-1]) {
+		j--
+	}
+	// (?i) folds 'k' and 's' onto the non-ASCII runes U+212A and U+017F, which
+	// are not run bytes; leave anything next to a non-ASCII byte to the regexp
+	if j > 0 && s[j-1] >= 0x80 {
+		return true
+	}
+	if j == len(s) || len(s)-j > max {
+		return false
+	}
+	var key [64]byte
+	if len(s)-j > len(key) {
+		return true
+	}
+	for a, c := range s[j:] {
+		if c >= 'a' && c <= 'z' {
+			c -= 32
+		}
+		key[a] = c
+	}
+	_, found := runs[string(key[:len(s)-j])]
+	return found
+}
 
 // NewMetaLexer creates a tag lexer for a file's meta data.
 func NewMetaLexer(strs ...string) Lexer {
@@ -857,12 +919,43 @@ func metaSpace(c byte) bool {
 func NewExtLexer() Lexer {
 	var extf taginfo.FindFunc
 	var re *regexp.Regexp
+	// window bounds how far from the end a match can start: the period plus
+	// the longest extension, with every character allowed its widest (?i)
+	// fold (three bytes). It is 0 when a row could not be expanded.
+	var window int
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			ext := infos["ext"]
 			re, extf = regexp.MustCompile(`(?i:\.`+reutil.Taginfo("$", ext...)+`)`), findFunc(ext...)
+			for _, info := range ext {
+				exp, err := expandRE(info.RE(), true)
+				if err != nil {
+					window = 0
+					break
+				}
+				for _, s := range exp {
+					if w := 1 + 3*len(s); w > window {
+						window = w
+					}
+				}
+			}
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			// every match ends at n, so only the tail can hold one, and it has
+			// to contain the period the pattern opens with
+			if window != 0 {
+				i0 := i
+				if n-i > window {
+					i0 = n - window
+				}
+				if bytes.IndexByte(src[i0:n], '.') == -1 {
+					return start, end, i, n, false
+				}
+				if m := re.FindSubmatch(src[i0:n]); m != nil {
+					return start, append(end, NewTag(TagTypeExt, extf, m...)), i, n - len(m[0]), true
+				}
+				return start, end, i, n, false
+			}
 			if m := re.FindSubmatch(src[i:n]); m != nil {
 				return start, append(end, NewTag(TagTypeExt, extf, m...)), i, n - len(m[0]), true
 			}
