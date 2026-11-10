@@ -133,13 +133,16 @@ func (r Release) SeriesEpisodes() [][]int {
 			continue
 		}
 		series, _ := tag.Series()
-		for _, episode := range tag.Episodes() {
+		for k, episode := range tag.Episodes() {
 			s := series
 			if s == 0 && last != -1 {
-				var lastEp int
-				s, lastEp = r.tags[last].Series()
-				if 0 < i && fmt.Sprintf("%o", r.tags[i-1]) == "-" {
-					for j := lastEp + 1; j < episode; j++ {
+				s, _ = r.tags[last].Series()
+			}
+			// a hyphen between two episode tags makes a range ('E02-E04'),
+			// which runs from the last episode of the tag before the hyphen
+			if series == 0 && k == 0 && i >= 2 && r.tags[i-2].Is(TagTypeSeries) && fmt.Sprintf("%o", r.tags[i-1]) == "-" {
+				if prev := r.tags[i-2].Episodes(); len(prev) != 0 {
+					for j := prev[len(prev)-1] + 1; j < episode; j++ {
 						v = append(v, []int{s, j})
 					}
 				}

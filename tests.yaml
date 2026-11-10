@@ -3388,6 +3388,16 @@
   series: 1
   episode: 5
   group: "GRP"
+"Show.S04.1080p.BluRay.x264-GRP (E29-E31)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 4
+  episode: 29
+  seriesEpisodes: "S04E29 S04E30 S04E31"
+  codec: "x264"
+  group: "GRP"
 "[Group] Show (2024) - 01 (S01E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]":
   type: "episode"
   title: "Show"
