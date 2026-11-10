@@ -707,6 +707,19 @@ func NewMetaLexer(strs ...string) Lexer {
 		}
 		hasTwo[l] = prefix[l].NumSubexp() == 2
 	}
+	// a prefix pattern can only match when the first non-space byte is the
+	// first byte of its opener, and a suffix pattern only when the text before
+	// the trailing spaces ends in its closer. Checking that first keeps all
+	// eight regexps out of the common case of a name with no brackets.
+	openFirst, closer, gate := make([]byte, o), make([][]byte, o), true
+	for l := 0; l < o; l++ {
+		op, cl := strs[l*4+1], strs[l*4+2]
+		if op == "" || cl == "" || metaSpace(op[0]) || metaSpace(cl[len(cl)-1]) {
+			gate = false
+			continue
+		}
+		openFirst[l], closer[l] = op[0], []byte(cl)
+	}
 	var delim *regexp.Regexp
 	var shortTags map[string]bool
 	// lead matches a leading bracket whose contents contain a space. fansub
@@ -728,7 +741,13 @@ func NewMetaLexer(strs ...string) Lexer {
 			var k string
 			var v []byte
 			var matched, short bool
-			prev := make(map[string]bool, o)
+			var prev map[string]bool
+			seen := func(k string) {
+				if prev == nil {
+					prev = make(map[string]bool, o)
+				}
+				prev[k] = true
+			}
 			// leading bracket release group containing a space
 			if i == 0 {
 				if g := lead.FindSubmatch(src[i:n]); g != nil {
@@ -737,20 +756,32 @@ func NewMetaLexer(strs ...string) Lexer {
 					// ('[ www.Speed.cd ]'), which the site pattern handles.
 					if t := bytes.TrimSpace(g[1]); bytes.ContainsRune(t, ' ') && !leadTags.Match(t) {
 						start = append(start, NewTag(TagTypeMeta, nil, g[0], []byte(`site`), t))
-						i, prev[`site`] = i+len(g[0]), true
+						i += len(g[0])
+						seen(`site`)
 					}
 				}
 			}
 			// prefixes
 			for ; i < n; i++ {
 				matched = false
+				c, any := byte(0), false
+				for a := i; a < n; a++ {
+					if !metaSpace(src[a]) {
+						c, any = src[a], true
+						break
+					}
+				}
 				for l = 0; l < o && !matched; l++ {
+					if gate && (!any || openFirst[l] != c) {
+						continue
+					}
 					if m = prefix[l].FindSubmatch(src[i:n]); m != nil {
 						if k, v = strs[l*4], m[1]; hasTwo[l] {
 							k, v = string(m[1]), m[2]
 						}
 						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]
-						matched, prev[k] = !prev[k] && !short && !bytes.ContainsAny(v, "\t\r\n\f +"), true
+						matched = !prev[k] && !short && !bytes.ContainsAny(v, "\t\r\n\f +")
+						seen(k)
 					}
 				}
 				if matched {
@@ -777,7 +808,7 @@ func NewMetaLexer(strs ...string) Lexer {
 				lo := max(i, n-metaWindow)
 				tail := bytes.TrimRight(src[lo:n], "\t\n\f\r ")
 				for l = 0; l < o && !matched; l++ {
-					if !bytes.HasSuffix(tail, []byte(strs[l*4+2])) {
+					if gate && !bytes.HasSuffix(tail, closer[l]) {
 						continue
 					}
 					if m = suffix[l].FindSubmatch(src[lo:n]); m != nil {
@@ -785,7 +816,8 @@ func NewMetaLexer(strs ...string) Lexer {
 							k, v = string(m[1]), m[2]
 						}
 						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]
-						matched, prev[k] = !prev[k] && !short && !bytes.ContainsAny(v, "\t\r\n\f +"), true
+						matched = !prev[k] && !short && !bytes.ContainsAny(v, "\t\r\n\f +")
+						seen(k)
 					}
 				}
 				if matched {
@@ -810,6 +842,15 @@ func NewMetaLexer(strs ...string) Lexer {
 		},
 		Once: true,
 	}
+}
+
+// metaSpace reports whether c is matched by \s.
+func metaSpace(c byte) bool {
+	switch c {
+	case '\t', '\n', '\f', '\r', ' ':
+		return true
+	}
+	return false
 }
 
 // NewExtLexer creates a tag lexer for a file's extension.
