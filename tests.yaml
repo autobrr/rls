@@ -569,7 +569,7 @@
   type: "movie"
   title: "Deep Web"
   source: "BluRay"
-  resolution: "1080p"
+  resolution: "1080i"
   year: 2015
   codec: "AVC"
   audio: "DTS-HD.MA"
@@ -3280,6 +3280,24 @@
   bitdepth: "8BIT"
   audio: "DDP"
   group: "GROUP"
+"Show.S01E01.480i.DVD.MPEG2-GRP":
+  type: "episode"
+  title: "Show"
+  source: "DVD"
+  resolution: "480i"
+  series: 1
+  episode: 1
+  codec: "MPEG-2"
+  group: "GRP"
+"Show.S01E01.576i.DVD.MPEG2-GRP":
+  type: "episode"
+  title: "Show"
+  source: "DVD"
+  resolution: "576i"
+  series: 1
+  episode: 1
+  codec: "MPEG-2"
+  group: "GRP"
 "Show.S01E01.1080p.IP.WEB-DL.AAC2.0.H.264-GROUP":
   type: "episode"
   title: "Show"
@@ -3917,7 +3935,7 @@
   title: "World's End Harem"
   subtitle: "2022 Airing"
   source: "HDTV"
-  resolution: "1080p"
+  resolution: "1080i"
   collection: "AT-X"
   year: 2021
   series: 1
