@@ -1097,9 +1097,48 @@ func NewMetaLexer(strs ...string) Lexer {
 	lead := regexp.MustCompile(`^\[([^\]\t\r\n\f]{1,40})\]`)
 	// leadTags rejects a leading bracket that is really a block of tags.
 	leadTags := regexp.MustCompile(`(?i)(^|[\-\._ ])(\d{3,4}[ip]|\d{3,4}x\d{3,4}|[xh][\-\. ]?26[45]|hevc|avc|aac|flac|opus|blu[\-\. ]?ray|web[\-\. ]?dl|bd(?:rip)?|dvd|\d{1,2}[\-\. ]?bit|hi10p?|dual[\-\. ]?audio|multi[\-\. ]?subs?)($|[\-\._ ])`)
+	// plus holds the spellings, in upper case, of the tags that end in '+'
+	// ('HDR10+', 'DD+', 'ATV+'). A '+' is a delimiter, and one on the end of
+	// the name is stripped below with the rest, unless it closes one of these.
+	plus, plusMax := make(map[string]struct{}), 0
+	plusTag := func(b []byte) bool {
+		var key [24]byte
+		key[len(key)-1] = '+'
+		for k := len(b) - 2; k >= 0 && len(b)-k <= min(plusMax, len(key)); k-- {
+			c := b[k]
+			if c >= 'a' && c <= 'z' {
+				c -= 32
+			}
+			key[len(key)-len(b)+k] = c
+			// the tag has to begin the word it is in
+			if k != 0 && runByte(b[k-1]) {
+				continue
+			}
+			if _, ok := plus[string(key[len(key)-len(b)+k:])]; ok {
+				return true
+			}
+		}
+		return false
+	}
 	return TagLexer{
-		Init: func(_ map[string][]*taginfo.Taginfo, re *regexp.Regexp, short map[string]bool) {
+		Init: func(infos map[string][]*taginfo.Taginfo, re *regexp.Regexp, short map[string]bool) {
 			delim, shortTags = re, short
+			for _, v := range infos {
+				for _, info := range v {
+					if !strings.Contains(info.RE(), "+") {
+						continue
+					}
+					exp, err := expandRE(info.RE(), true)
+					if err != nil {
+						continue
+					}
+					for _, s := range exp {
+						if strings.HasSuffix(s, "+") {
+							plus[strings.ToUpper(s)], plusMax = struct{}{}, max(plusMax, len(s))
+						}
+					}
+				}
+			}
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			var l int
@@ -1197,7 +1236,7 @@ func NewMetaLexer(strs ...string) Lexer {
 					}
 					end = append(end, NewTag(TagTypeMeta, nil, m[0], []byte(k), v))
 					n = n - len(m[0]) + 1
-				} else if !delim.Match(src[n-1 : n]) {
+				} else if !delim.Match(src[n-1:n]) || src[n-1] == '+' && plusTag(src[i:n]) {
 					break
 				} else {
 					// the pending delimiters are the bytes right after n, so

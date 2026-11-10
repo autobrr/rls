@@ -1065,6 +1065,29 @@
   codec: "x264"
   other: "REMASTERED"
   group: "GRP"
+"Movie (2020) [2160p HDR10+]":
+  type: "movie"
+  title: "Movie"
+  resolution: "2160p"
+  year: 2020
+  hdr: "HDR10+"
+"Movie.2020.2160p.WEB-DL.H.265.DD+":
+  type: "movie"
+  title: "Movie"
+  source: "WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "H.265"
+  audio: "DDP"
+"Movie.2020.2160p.WEB-DL.H.265.HDR10+.mkv":
+  type: "movie"
+  title: "Movie"
+  source: "WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "H.265"
+  hdr: "HDR10+"
+  ext: "mkv"
 "Movie.2022.1080p.BluRay.x264.8bit-GRP":
   type: "movie"
   title: "Movie"
