@@ -121,8 +121,10 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?P<c>[2-9])(?P<x>cds)\b`,
 		),
 		NewDateLexer(
-			// 2006-01-02, 2006
-			`(?i)^(?P<2006>(?:19|20)\d{2})(?:[\-\._ ](?P<01>\d{2})[\-\._ ](?P<02>\d{2}))?\b`,
+			// 2006-01-02
+			`(?i)^(?P<2006>(?:19|20)\d{2})[\-\._ ](?P<01>\d{2})[\-\._ ](?P<02>\d{2})\b`,
+			// 2006
+			`(?i)^(?P<2006>(?:19|20)\d{2})\b`,
 			// 2006-01
 			`(?i)^(?P<2006>(?:19|20)\d{2})?:[\-\._ ](?P<01>\d{2})\b`,
 			// 02-13-2006
@@ -218,6 +220,7 @@ func NewDateLexer(strs ...string) Lexer {
 				}
 				// collect year, month, day
 				var year, month, day []byte
+				var y, m, d int
 				matched := true
 				for l := 0; l < len(v); l += 2 {
 					f, t := string(v[l]), string(v[l+1])
@@ -227,17 +230,21 @@ func NewDateLexer(strs ...string) Lexer {
 					if t, err := time.Parse(f, t); err == nil {
 						switch f {
 						case "06", "2006":
-							year = []byte(strconv.Itoa(t.Year()))
+							y, year = t.Year(), []byte(strconv.Itoa(t.Year()))
 						case "_1", "01", "Jan", "January":
-							month = []byte(fmt.Sprintf("%02d", t.Month()))
+							m, month = int(t.Month()), fmt.Appendf(nil, "%02d", t.Month())
 						case "_2", "02":
-							day = []byte(fmt.Sprintf("%02d", t.Day()))
+							d, day = t.Day(), fmt.Appendf(nil, "%02d", t.Day())
 						default:
 							panic(fmt.Errorf("unknown capture group %q", f))
 						}
 					} else {
 						matched = false
 					}
+				}
+				// the day has to exist in that month of that year
+				if m != 0 && d != 0 && time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC).Day() != d {
+					matched = false
 				}
 				if matched {
 					return append(

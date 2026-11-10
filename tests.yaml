@@ -1406,6 +1406,14 @@
   group: "Commie"
   site: "Commie"
   unused: "Unofficial Batch"
+"Show.2023.02.29.HDTV.x264-GRP":
+  type: "movie"
+  title: "Show"
+  source: "HDTV"
+  year: 2023
+  codec: "x264"
+  group: "GRP"
+  unused: "02 29"
 "Sin.City.A.Dame.to.Kill.For.2014.1080p.BluRay.x264-SPARKS":
   type: "movie"
   title: "Sin City A Dame to Kill For"
@@ -3307,6 +3315,15 @@
   audio: "DDP DUAL.AUDIO"
   group: "Group"
   site: "Group"
+"Show.2024.02.29.HDTV.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "HDTV"
+  year: 2024
+  month: 2
+  day: 29
+  codec: "x264"
+  group: "GRP"
 "Show.13-10-2024.HDTV.x264-GRP":
   type: "episode"
   title: "Show"
