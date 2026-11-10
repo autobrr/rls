@@ -61,6 +61,19 @@ func TestParseRelease(t *testing.T) {
 	}
 }
 
+// TestDateColon checks that a colon before two digits does not make a month.
+func TestDateColon(t *testing.T) {
+	for _, s := range []string{
+		"Show - :.05 [1080p]",
+		"Show.S01E05: 12.Rounds.1080p.WEB.h264-GRP",
+		"[EMBER] 86 - Eighty Six (2021) (Season 1 (EP: 12-23) + Specials) [BDRip] [1080p Dual Audio HEVC 10 bits DDP]",
+	} {
+		if r := ParseString(s); r.Month != 0 {
+			t.Errorf("%q expected no month, got: %d", s, r.Month)
+		}
+	}
+}
+
 func TestCollapser(t *testing.T) {
 	tests := []struct {
 		s string
