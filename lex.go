@@ -84,8 +84,8 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
 			// Vol.1.No.2, vol1no2
 			`(?i)^vol(?:ume)?[\-\._ ]?(?P<s>\d{1,3})(?:[\-\._ ]?(?:number|no)[\-\._ ]?(?P<e>\d{1,5}))\b`,
-			// Episode 15, E009, Ep. 007, Ep.05-07
-			`(?i)^e(?:p(?:isode)?[\-\._ ]{1,3})?(?P<e>\d{1,5})(?:[\-\._ ]{1,3}\d{1,3})?\b`,
+			// Episode 15, E009, Ep. 007, Ep.05-07, Ep 5.5
+			`(?i)^e(?:p(?:isode)?[\-\._ ]{1,3})?(?P<e>\d{1,5})(?:(?P<x>\.\d)|[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3})?\b`,
 			// 10v1.7, 13v2
 			`(?i)^(?P<e>\d{1,5})(?P<v>v[\-\._ ]?\d+(?:\.\d){0,2})\b`,
 			// S01.Disc02, s01D3, Series.01.Disc.02, S02DVD3
@@ -271,7 +271,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if s, v, i, n, ok := lexer(src, buf, i, n); ok {
 				// collect series, episode, version
-				var series, episode, version, disc, multi, many []byte
+				var series, episode, version, disc, multi, many, dec []byte
 				for l := 0; l < len(v); l += 2 {
 					switch string(v[l]) {
 					case "s":
@@ -286,11 +286,19 @@ func NewSeriesLexer(strs ...string) Lexer {
 						multi = []byte(v[l+1])
 					case "m":
 						many = []byte(v[l+1])
+					case "x":
+						dec = v[l+1]
 					default:
 						panic(fmt.Errorf("unknown capture group %q", v[l]))
 					}
 				}
 				var tags []Tag
+				// a decimal episode ('Ep 5.5') stays inside the tag, unless
+				// its digit begins the channels ('E05.5.1.AAC')
+				if len(dec) != 0 && i+1 < n && src[i] == '.' && src[i+1] >= '0' && src[i+1] <= '9' &&
+					(i+2 == n || src[i+2] < '0' || src[i+2] > '9') {
+					s, i = s[:len(s)-len(dec)], i-len(dec)
+				}
 				if len(series) != 0 || len(episode) != 0 {
 					if len(version) != 0 {
 						s = bytes.TrimSuffix(s, version)

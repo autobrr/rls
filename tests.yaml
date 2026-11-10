@@ -3270,6 +3270,22 @@
   audio: "FLAC"
   group: "Group"
   site: "Group"
+"Show.E05.5.1.AAC.1080p.WEB-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  episode: 5
+  audio: "AAC"
+  channels: "5.1"
+  group: "GRP"
+"[Group] Show - Episode 05.5 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 5
+  group: "Group"
+  site: "Group"
 "Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
   type: "series"
   title: "Show"
