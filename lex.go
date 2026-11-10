@@ -558,7 +558,7 @@ func NewAudioLexer() Lexer {
 				v = append(v, strings.ReplaceAll(info.Tag(), `.`, `[\._ ]?`))
 			}
 			codec := reutil.Taginfo(``, infos["codec"]...)
-			re = regexp.MustCompile(reutil.Taginfo(`^i`, audio...) + `(?:[\-\._ ]?(` + strings.Join(v, "|") + `))?(?:\b|[\-\._ ]|(` + codec + `(?:\b|[\-\._ ])))`)
+			re = regexp.MustCompile(reutil.Taginfo(`^i`, audio...) + `(?:[\-\._ ]?(` + strings.Join(v, "|") + `))?(?:\b|[\-\._ ]|(` + codec + `(?:\b|[\-\._ ]))` + plusEnd + `)`)
 			audiof, channelsf = findFunc(audio...), findFunc(channels...)
 			lead, gated = leadSet(re.String())
 		},
@@ -579,6 +579,11 @@ func NewAudioLexer() Lexer {
 					m[0] = bytes.TrimSuffix(m[0], m[3])
 				}
 				l := len(m[0])
+				if len(m[2]) == 0 && l != len(m[1]) && !tagDelim(m[0][len(m[1])]) {
+					// See plusEnd.
+					l = len(m[1])
+					m[0] = m[0][:l]
+				}
 				if len(m[2]) != 0 {
 					// The terminator consumes a delimiter that \b does not see
 					// as a boundary ('AAC2.0_'). Leave it for the delimiter
@@ -1076,6 +1081,19 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 	}
 }
 
+// plusEnd extends a tag terminator for the tags that end in '+' ('HDR10+',
+// 'DD+', 'ATV+'). After a '+' there is a word boundary only when a word byte
+// follows, so the tag also has to be allowed to end the lex window, which is
+// where the group lexer leaves it in 'HDR10+-GRP', and to stand before any
+// other non-word rune ('HDR10+]'). That rune is matched only to test it: the
+// lexers hand it back, unlike a delimiter.
+const plusEnd = `|$|\W`
+
+// tagDelim reports whether c is a delimiter that a tag terminator consumes.
+func tagDelim(c byte) bool {
+	return c == '-' || c == '.' || c == '_' || c == ' '
+}
+
 // NewRegexpSourceLexer creates a tag lexer for a regexp.
 func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 	var f taginfo.FindFunc
@@ -1088,7 +1106,7 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 			if !ignoreCase {
 				s = `^`
 			}
-			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)+`(?:\b|[\-\._ ])`), findFunc(info...)
+			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)+`(?:\b|[\-\._ ]`+plusEnd+`)`), findFunc(info...)
 			pf, _ = newPrefilter(info, ignoreCase)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
@@ -1096,6 +1114,10 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 				return start, end, i, n, false
 			}
 			if m := re.FindSubmatch(src[i:n]); m != nil {
+				if len(m[0]) != len(m[1]) && !tagDelim(m[0][len(m[1])]) {
+					// See plusEnd.
+					m[0] = m[0][:len(m[1])]
+				}
 				if len(m[0]) != len(m[1]) {
 					v, delim := src[i:i+len(m[1])], src[i+len(m[1]):i+len(m[0])]
 					return append(

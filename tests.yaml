@@ -1163,6 +1163,33 @@
   audio: "DDP"
   group: "GROUP"
   ext: "mkv"
+"Movie (2024) (2160p BluRay HDR10+) x265-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2024
+  codec: "x265"
+  hdr: "HDR10+"
+  group: "GROUP"
+"Movie.2024.2160p.BluRay.x265.DV.HDR10+-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2024
+  codec: "x265"
+  hdr: "DV HDR10+"
+  group: "GROUP"
+"Movie.2024.2160p.WEB-DL.H.265.DD+-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "WEB-DL"
+  resolution: "2160p"
+  year: 2024
+  codec: "H.265"
+  audio: "DDP"
+  group: "GROUP"
 "Movie.Title.2015.DVD-R-Pate":
   type: "movie"
   title: "Movie Title"
