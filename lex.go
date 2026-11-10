@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -693,17 +694,47 @@ func NewGroupLexer() Lexer {
 	lastRuns, lastMax, lastOK := make(map[string]struct{}), 0, true
 	// inTag reports whether the hyphen at h joins the words around it into a
 	// known tag (ie, 'WEB-DL' in 'WEB-DL HEVC'), so it does not start a group.
+	//
+	// spans holds every spelling those tags can take, in upper case, so the
+	// word is looked up before tags runs: nearly every name ends in '-GROUP',
+	// and the regexp on each of them costs a fifth of the whole parse. A row
+	// that cannot be expanded goes in patterns with the bytes it can begin
+	// with and a literal its matches must contain, and those few rows have
+	// their own regexp in rest; spansOK is false when one has no such
+	// literal, in which case tags always runs.
+	spans, spansOK := make(map[string]struct{}), true
+	var patterns []patterned
+	var rest *regexp.Regexp
 	inTag := func(src []byte, h int) bool {
 		a, b := bytes.LastIndexAny(src[:h], invalid)+1, len(src)
 		if k := bytes.IndexAny(src[h+1:], invalid); k != -1 {
 			b = h + 1 + k
+		}
+		var key [64]byte
+		if w := src[a:b]; spansOK && len(w) <= len(key) {
+			for k, c := range w {
+				// (?i) folds onto non-ASCII runes; leave those to the regexp
+				if c >= 0x80 {
+					return tags.Match(w)
+				}
+				if c >= 'a' && c <= 'z' {
+					c -= 32
+				}
+				key[k] = c
+			}
+			if _, ok := spans[string(key[:len(w)])]; ok {
+				return tags.Match(w)
+			}
+			return slices.ContainsFunc(patterns, func(row patterned) bool {
+				return row.lead[w[0]] && hasLiteral(w, row.lit, row.fold)
+			}) && rest.Match(w)
 		}
 		return tags.Match(src[a:b])
 	}
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, short map[string]bool) {
 			var v []string
-			var known []*taginfo.Taginfo
+			var known, unexpanded []*taginfo.Taginfo
 			group, other := infos["group"], infos["other"]
 			for _, info := range other {
 				if s := info.Other(); s != "" {
@@ -716,6 +747,32 @@ func NewGroupLexer() Lexer {
 					if typ != "group" && strings.Contains(info.RE(), "-") {
 						known = append(known, info)
 					}
+				}
+			}
+			for _, info := range known {
+				exp, err := expandRE(info.RE(), true)
+				if err != nil {
+					lit, fold := requiredLiteral(info.RE(), true)
+					if len(lit) == 0 {
+						spansOK = false
+						break
+					}
+					row := patterned{lit: lit, fold: fold}
+					if !firstBytes(info.RE(), &row.lead) {
+						spansOK = false
+						break
+					}
+					// the rows match case insensitively
+					for c := 'a'; c <= 'z'; c++ {
+						if row.lead[c] || row.lead[c-32] {
+							row.lead[c], row.lead[c-32] = true, true
+						}
+					}
+					patterns, unexpanded = append(patterns, row), append(unexpanded, info)
+					continue
+				}
+				for _, s := range exp {
+					spans[strings.ToUpper(s)] = struct{}{}
 				}
 			}
 			groupf, otherf = findFunc(group...), findFunc(other...)
@@ -741,6 +798,7 @@ func NewGroupLexer() Lexer {
 			}
 			re, special = regexp.MustCompile(`(?i)[\-\._ ]+`+reutil.Taginfo(`$`, group...)), regexp.MustCompile(`(?i)_(`+strings.Join(v, `|`)+`)$`)
 			tags = regexp.MustCompile(reutil.Taginfo(`i^$`, known...))
+			rest = regexp.MustCompile(reutil.Taginfo(`i^$`, unexpanded...))
 			shortTags = short
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
@@ -766,9 +824,10 @@ func NewGroupLexer() Lexer {
 			if j := bytes.LastIndexByte(buf[l:n], delim); j != -1 {
 				s := src[l+j+1 : n]
 				if grp := bytes.Trim(s, " \t_"); len(grp) != 0 &&
-					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && ((spacedGroup.Match(grp) && !inTag(src[:n], l+j)) || dottedGroup.Match(grp)))) &&
+					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && (spacedGroup.Match(grp) || dottedGroup.Match(grp)))) &&
 					!shortTags[string(grp)] && !(lowerCase(grp) && shortTags[strings.ToUpper(string(grp))]) &&
-					(len(end) == 0 || !bracket.MatchString(end[len(end)-1].Text())) {
+					(len(end) == 0 || !bracket.MatchString(end[len(end)-1].Text())) &&
+					!inTag(src[:n], l+j) {
 					return start, append(
 						end,
 						NewTag(TagTypeGroup, nil, src[l+j+1:n], grp),

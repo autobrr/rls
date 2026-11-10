@@ -1216,6 +1216,12 @@
   year: 2015
   size: "DVDR"
   group: "Pate"
+"Movie.Title.2020.1080p.Blu-Ray":
+  type: "movie"
+  title: "Movie Title"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
 "Movie.Title.2020.1080p.BluRay.DTS-hd":
   type: "movie"
   title: "Movie Title"
@@ -1223,6 +1229,14 @@
   resolution: "1080p"
   year: 2020
   audio: "DTS-HD"
+"Movie.Title.2020.1080p.BluRay.x264.Dual-Audio":
+  type: "movie"
+  title: "Movie Title"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  audio: "DUAL.AUDIO"
 "movie.title.2020.1080p.web-dl":
   type: "movie"
   title: "movie title"
