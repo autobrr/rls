@@ -3307,6 +3307,15 @@
   audio: "DDP DUAL.AUDIO"
   group: "Group"
   site: "Group"
+"Show.13-10-2024.HDTV.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "HDTV"
+  year: 2024
+  month: 10
+  day: 13
+  codec: "x264"
+  group: "GRP"
 "Show_Name_S01E01_1080p_WEB-DL_AAC2.0_H.264-GRP":
   type: "episode"
   title: "Show Name"
@@ -3779,6 +3788,18 @@
   genre: "Anime"
   group: "ShadowTX"
   ext: "mkv"
+"UEFA.Champions.League.14.04.2026.Atletico.Madrid.vs.Barcelona.SPANISH.1080p.HDTV.h264-SOMBRA":
+  type: "episode"
+  title: "UEFA Champions League"
+  subtitle: "Atletico Madrid vs Barcelona"
+  source: "HDTV"
+  resolution: "1080p"
+  year: 2026
+  month: 4
+  day: 14
+  codec: "H.264"
+  language: "SPANiSH"
+  group: "SOMBRA"
 "UFC.179.PPV.HDTV.x264-Ebi[rartv]":
   type: "episode"
   title: "UFC 179"

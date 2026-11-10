@@ -125,9 +125,9 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?P<2006>(?:19|20)\d{2})(?:[\-\._ ](?P<01>\d{2})[\-\._ ](?P<02>\d{2}))?\b`,
 			// 2006-01
 			`(?i)^(?P<2006>(?:19|20)\d{2})?:[\-\._ ](?P<01>\d{2})\b`,
-			// 13-02-2006
-			`(?i)^(?P<01>\d{2})[\-\._ ](?P<02>\d{2})[\-\._ ](?P<2006>(?:19|20)\d{2})\b`,
 			// 02-13-2006
+			`(?i)^(?P<01>\d{2})[\-\._ ](?P<02>\d{2})[\-\._ ](?P<2006>(?:19|20)\d{2})\b`,
+			// 13-02-2006
 			`(?i)^(?P<02>\d{2})[\-\._ ](?P<01>\d{2})[\-\._ ](?P<2006>(?:19|20)\d{2})\b`,
 			// 2nd Jan 2006, 13 Dec 2011, Nov 1999
 			`(?i)^(?:(?P<_2>\d{1,2})(?:th|st|nd|rd)?[\-\._ ])?(?P<Jan>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[\-\._ ](?P<2006>(?:19|20)\d{2})\b`,
@@ -135,7 +135,7 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?P<_2>\d{1,2})[\-\._ ](?P<January>January|February|March|April|May|June|July|August|September|October|November|December)[\-\._ ](?P<2006>(?:19|20)\d{2})\b`,
 			// MAY-30-1992
 			`(?i)^(?P<Jan>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[\-\._ ](?P<_2>\d{1,2})[\-\._ ](?P<2006>(?:19|20)\d{2})\b`,
-			// 17.12.15, 20-9-9
+			// 17.12.15 (a single digit month or day fails the date check)
 			`(?i)^(?P<YY>[12]\d)[\-\._ ](?P<01>\d\d?)[\-\._ ](?P<02>\d\d?)\b`,
 		),
 		NewVersionLexer(
@@ -202,10 +202,20 @@ func NewTrimWhitespaceLexer() Lexer {
 
 // NewDateLexer creates a tag lexer for a date.
 func NewDateLexer(strs ...string) Lexer {
-	lexer := NamedCaptureLexer(strs...)
+	// one lexer per pattern: a pattern can match text that is not a date in
+	// its reading ('13.10.2024' as month 13), and the patterns after it must
+	// still get their turn
+	lexers := make([]func([]byte, []byte, int, int) ([]byte, [][]byte, int, int, bool), len(strs))
+	for l, s := range strs {
+		lexers[l] = NamedCaptureLexer(s)
+	}
 	return TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
-			if s, v, i, n, ok := lexer(src, buf, i, n); ok {
+			for _, lexer := range lexers {
+				s, v, i, n, ok := lexer(src, buf, i, n)
+				if !ok {
+					continue
+				}
 				// collect year, month, day
 				var year, month, day []byte
 				matched := true
