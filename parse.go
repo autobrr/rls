@@ -102,7 +102,9 @@ func (p *TagParser) Parse(src []byte) ([]Tag, int) {
 		buf[i] = c
 	}
 	i, n := 0, len(buf)
-	var start, end []Tag
+	// a name yields roughly one tag per three bytes; sizing for one per two
+	// lets start grow once instead of doubling its way up from nothing
+	start, end := make([]Tag, 0, len(src)/2+8), []Tag(nil)
 	// once
 	for _, f := range p.once {
 		start, end, i, n, _ = f(src, buf, start, end, i, n)
@@ -113,10 +115,9 @@ func (p *TagParser) Parse(src []byte) ([]Tag, int) {
 		start, end, i, _ = p.next(src, buf, start, end, i, n, &notFirst)
 	}
 	// add end (reversed) to start
-	tags := make([]Tag, len(start)+len(end))
-	copy(tags, start)
-	for i := 0; i < len(end); i++ {
-		tags[len(start)+i] = end[len(end)-i-1]
+	tags := start
+	for i := len(end); i > 0; i-- {
+		tags = append(tags, end[i-1])
 	}
 	return tags, len(tags) - len(end)
 }
