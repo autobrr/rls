@@ -59,15 +59,24 @@ func runByte(c byte) bool {
 // newPrefilter builds the prefilter for infos, reporting false when any row
 // cannot be reduced to literal spellings.
 func newPrefilter(infos []*taginfo.Taginfo, ci bool) (*prefilter, bool) {
+	res := make([]string, len(infos))
+	for i, info := range infos {
+		res[i] = info.RE()
+	}
+	return newPrefilterRE(res, ci)
+}
+
+// newPrefilterRE is newPrefilter for bare regexps.
+func newPrefilterRE(res []string, ci bool) (*prefilter, bool) {
 	pf := &prefilter{runs: make(map[string]struct{})}
-	for _, info := range infos {
-		v, err := expandRE(info.RE(), ci)
+	for _, re := range res {
+		v, err := expandRE(re, ci)
 		if err != nil {
 			// the row cannot be reduced to literals. Fall back to bounding its
 			// first byte, which is enough for the patterned rows; if even that
 			// is unbounded the type gets no prefilter at all.
 			var lead [256]bool
-			if !firstBytes(info.RE(), &lead) {
+			if !firstBytes(re, &lead) {
 				return nil, false
 			}
 			row := patterned{}
@@ -82,7 +91,7 @@ func newPrefilter(infos []*taginfo.Taginfo, ci bool) (*prefilter, bool) {
 					}
 				}
 			}
-			row.lit, row.fold = requiredLiteral(info.RE(), ci)
+			row.lit, row.fold = requiredLiteral(re, ci)
 			pf.rows = append(pf.rows, row)
 			continue
 		}
@@ -139,6 +148,12 @@ func (pf *prefilter) maybe(buf []byte, i, n int) bool {
 	if j == 0 {
 		// not on a word character: only reachable for alternations that begin
 		// with a delimiter, which newPrefilter rejects, so let it run
+		return true
+	}
+	if i+j < n && buf[i+j] >= 0x80 {
+		// the run stops at a non-ASCII byte. (?i) folds 'k' and 's' onto
+		// U+212A and U+017F, so the run may continue through one of those as
+		// far as the regexp is concerned; let it decide
 		return true
 	}
 	if j <= pf.max {
@@ -229,6 +244,39 @@ func hasLiteral(b, lit []byte, fold bool) bool {
 			}
 		}
 		if j == len(lit) {
+			return true
+		}
+	}
+	return false
+}
+
+// maybePrefix is maybe for a lexer whose match may run on past the first run of
+// its alternation without a boundary, as the audio lexer's does into channel
+// digits ('DDP5.1') or an attached codec ('AACx264'). The run at i then only
+// has to begin with one of the type's first runs, and continue with a byte from
+// next.
+func (pf *prefilter) maybePrefix(buf []byte, i, n int, next *[256]bool) bool {
+	if pf == nil {
+		return true
+	}
+	var key [64]byte
+	j := 0
+	for i+j < n && j < len(key) && runByte(buf[i+j]) {
+		c := buf[i+j]
+		if c >= 'a' && c <= 'z' {
+			c -= 32
+		}
+		key[j] = c
+		j++
+	}
+	if j == 0 || j == len(key) || (i+j < n && buf[i+j] >= 0x80) || pf.hasLead {
+		return true
+	}
+	for l := 1; l <= j && l <= pf.max; l++ {
+		if l < j && !next[buf[i+l]] {
+			continue
+		}
+		if _, ok := pf.runs[string(key[:l])]; ok {
 			return true
 		}
 	}

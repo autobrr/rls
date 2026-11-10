@@ -175,11 +175,24 @@ func NewTrimWhitespaceLexer() Lexer {
 	suffix := regexp.MustCompile(s + `$`)
 	return TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
-			if m := prefix.FindSubmatch(src[i:n]); m != nil {
-				start, i = append(start, NewTag(TagTypeWhitespace, nil, m...)), i+len(m[0])
+			// both patterns need a whitespace byte, or the first (0xe2, 0xef)
+			// or last (0x90, 0x8f) byte of the star or its variation selector,
+			// at the edge they are anchored to
+			if i < n {
+				switch src[i] {
+				case '\t', '\n', '\f', '\r', ' ', 0xe2, 0xef:
+					if m := prefix.FindSubmatch(src[i:n]); m != nil {
+						start, i = append(start, NewTag(TagTypeWhitespace, nil, m...)), i+len(m[0])
+					}
+				}
 			}
-			if m := suffix.FindSubmatch(src[i:n]); m != nil {
-				end, n = append(end, NewTag(TagTypeWhitespace, nil, m...)), n-len(m[0])
+			if i < n {
+				switch src[n-1] {
+				case '\t', '\n', '\f', '\r', ' ', 0x90, 0x8f:
+					if m := suffix.FindSubmatch(src[i:n]); m != nil {
+						end, n = append(end, NewTag(TagTypeWhitespace, nil, m...)), n-len(m[0])
+					}
+				}
 			}
 			return start, end, i, n, true
 		},
@@ -324,7 +337,7 @@ func NewIDLexer() Lexer {
 	for _, c := range []byte(`ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_. `) {
 		idLead[c] = true
 	}
-	re, lb := regexp.MustCompile(`^([A-Z\d\-\_\. ]{2,24})\)`), regexp.MustCompile(`\([\._ ]{0,2}$`)
+	re := regexp.MustCompile(`^([A-Z\d\-\_\. ]{2,24})\)`)
 	return TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			// as in the episode lexer, rule out the position on its first byte
@@ -332,8 +345,8 @@ func NewIDLexer() Lexer {
 			if i < n && !idLead[buf[i]] {
 				return start, end, i, n, false
 			}
-			// lookbehind
-			if lb.Match(src[:i]) {
+			// lookbehind: \([\._ ]{0,2}$
+			if behind(src[:i], '(', "._ ", 0, 2) {
 				if m := re.FindSubmatch(buf[i:n]); m != nil {
 					a, d, w := alpha.FindAllSubmatch(m[1], -1), digit.FindAllSubmatch(m[1], -1), ws.FindAllSubmatch(m[1], -1)
 					switch {
@@ -351,7 +364,7 @@ func NewIDLexer() Lexer {
 
 // NewEpisodeLexer creates a tag lexer for a single episode (`- 2 -`, `- 867 (`, `- 100 [`).
 func NewEpisodeLexer() Lexer {
-	re, lb := regexp.MustCompile(`^(\d{1,4})(\b|[\._ ]?[\-\[\]\(\)\{\}])`), regexp.MustCompile(`-[\-\._ ]{1,3}$`)
+	re := regexp.MustCompile(`^(\d{1,4})(\b|[\._ ]?[\-\[\]\(\)\{\}])`)
 	return TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			// the match has to start with a digit, and that is far cheaper to
@@ -359,8 +372,8 @@ func NewEpisodeLexer() Lexer {
 			if i < n && (src[i] < '0' || src[i] > '9') {
 				return start, end, i, n, false
 			}
-			// compare against src, and match "lookbehind"
-			if lb.Match(src[:i]) {
+			// compare against src, and match "lookbehind": -[\-\._ ]{1,3}$
+			if behind(src[:i], '-', "-._ ", 1, 3) {
 				if m := re.FindSubmatch(src[i:n]); m != nil && !bytes.HasPrefix(src[i+len(m[1]):], []byte{','}) {
 					tags := []Tag{NewTag(TagTypeSeries, nil, m[1], nil, m[1])}
 					if len(m[2]) != 0 {
@@ -522,9 +535,24 @@ func NewAudioLexer() Lexer {
 	var audiof, channelsf taginfo.FindFunc
 	var lead [256]bool
 	var gated bool
+	var pf *prefilter
+	// next holds the bytes that can follow the audio tag's first run inside
+	// the same run: a channel digit or the start of an attached codec
+	var next [256]bool
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			audio, channels := infos["audio"], infos["channels"]
+			if p, ok := newPrefilter(audio, true); ok && !p.hasLead {
+				var cl [256]bool
+				if a, b := leadSet(reutil.Taginfo(``, channels...)); b {
+					if c, d := leadSet(reutil.Taginfo(``, infos["codec"]...)); d {
+						for x := 0; x < 256; x++ {
+							cl[x] = a[x] || c[x]
+						}
+						pf, next = p, cl
+					}
+				}
+			}
 			var v []string
 			for _, info := range channels {
 				v = append(v, strings.ReplaceAll(info.Tag(), `.`, `[\._ ]?`))
@@ -540,6 +568,9 @@ func NewAudioLexer() Lexer {
 			// match's first run can span audio and channel digits ('DDP5.1' ->
 			// 'DDP5'), which the audio rows alone cannot produce.
 			if gated && !lead[src[i]] {
+				return start, end, i, n, false
+			}
+			if !pf.maybePrefix(src, i, n, &next) {
 				return start, end, i, n, false
 			}
 			if m := re.FindSubmatch(src[i:n]); m != nil {
@@ -573,6 +604,7 @@ func NewAudioLexer() Lexer {
 func NewGenreLexer() Lexer {
 	var genref taginfo.FindFunc
 	var re, lb, other *regexp.Regexp
+	var pf, pfOther *prefilter
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			genre := infos["genre"]
@@ -586,16 +618,26 @@ func NewGenreLexer() Lexer {
 			}
 			s := `\(?(` + strings.Join(v, `|`) + `)\s*\)`
 			re, lb, other, genref = regexp.MustCompile(`(?i)^`+s), regexp.MustCompile(`(?i)\(\s*`+s+`$`), regexp.MustCompile(`(?i)^(`+strings.Join(tagv, `|`)+`)\b`), findFunc(genre...)
+			// re ends on a ')' and other on a word boundary, so as with the
+			// regexp lexers neither can end part way through a run
+			pf, _ = newPrefilterRE(v, true)
+			pfOther, _ = newPrefilterRE(tagv, true)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			var m [][]byte
 			// compare against src, and match "lookbehind"
-			if m = re.FindSubmatch(src[i:n]); m != nil && lb.Match(src[:i+len(m[0])]) {
-				return append(
-					start,
-					NewTag(TagTypeGenre, genref, m...),
-				), end, i + len(m[0]), n, true
-			} else if m = other.FindSubmatch(buf[i:n]); m != nil {
+			if pf.maybe(src, i, n) {
+				if m = re.FindSubmatch(src[i:n]); m != nil && lb.Match(src[:i+len(m[0])]) {
+					return append(
+						start,
+						NewTag(TagTypeGenre, genref, m...),
+					), end, i + len(m[0]), n, true
+				}
+			}
+			if !pfOther.maybe(buf, i, n) {
+				return start, end, i, n, false
+			}
+			if m = other.FindSubmatch(buf[i:n]); m != nil {
 				return append(
 					start,
 					NewTag(TagTypeGenre, genref, m...),
@@ -616,7 +658,6 @@ var dottedGroup = regexp.MustCompile(`(?i)^(?:[a-z]\.){2,}[a-z]$`)
 // NewGroupLexer creates a tag lexer for a group.
 func NewGroupLexer() Lexer {
 	const delim, invalid = '-', ` _.()[]{}+`
-	year := regexp.MustCompile(`\b(19|20)\d{2}\b`)
 	bracket := regexp.MustCompile(`^[\]\)\}]`)
 	var groupf, otherf taginfo.FindFunc
 	var re, special, tags *regexp.Regexp
@@ -694,8 +735,8 @@ func NewGroupLexer() Lexer {
 			}
 			// clamp to last year
 			l := i
-			if m := year.FindIndex(buf[l:n]); m != nil {
-				l = m[1]
+			if e := firstYearEnd(buf[l:n]); e != -1 {
+				l = e
 			}
 			// locate delimiter and check valid group
 			if j := bytes.LastIndexByte(buf[l:n], delim); j != -1 {
@@ -720,6 +761,41 @@ func NewGroupLexer() Lexer {
 // metaWindow bounds how far back from the end a meta suffix is searched for.
 // The longest value any pattern accepts is 16+32 bytes plus brackets.
 const metaWindow = 160
+
+// firstYearEnd returns the end of the first match of \b(19|20)\d{2}\b in b,
+// or -1.
+func firstYearEnd(b []byte) int {
+	word := func(c byte) bool {
+		return c == '_' || runByte(c)
+	}
+	for p := 0; p+4 <= len(b); p++ {
+		if ((b[p] == '1' && b[p+1] == '9') || (b[p] == '2' && b[p+1] == '0')) &&
+			b[p+2] >= '0' && b[p+2] <= '9' && b[p+3] >= '0' && b[p+3] <= '9' &&
+			(p == 0 || !word(b[p-1])) && (p+4 == len(b) || !word(b[p+4])) {
+			return p + 4
+		}
+	}
+	return -1
+}
+
+// behind reports whether b ends in open followed by min to max bytes of set,
+// which is what the lookbehind regexps `open[set]{min,max}$` tested by
+// scanning the whole of b.
+func behind(b []byte, open byte, set string, min, max int) bool {
+	for k := 0; k <= max; k++ {
+		j := len(b) - 1 - k
+		if j < 0 {
+			return false
+		}
+		if k >= min && b[j] == open {
+			return true
+		}
+		if strings.IndexByte(set, b[j]) == -1 {
+			return false
+		}
+	}
+	return false
+}
 
 // knownGroupTail reports whether s could end in a known group, by testing its
 // final word-run against the final runs the group rows can produce.
