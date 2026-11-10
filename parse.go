@@ -22,6 +22,9 @@ type TagParser struct {
 	once     []LexFunc
 	multi    []LexFunc
 	notFirst []bool
+	// isDelim is delim as a byte table: every delimiter is a single ASCII
+	// byte, so membership is all the regexp ever decided.
+	isDelim [256]bool
 }
 
 // NewTagParser creates a new release tag parser.
@@ -67,7 +70,7 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 	}); ok {
 		builder = b.Init(infos)
 	}
-	return &TagParser{
+	p := &TagParser{
 		builder:  builder,
 		delim:    delim,
 		ellip:    []byte("..."),
@@ -76,6 +79,10 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 		multi:    multi,
 		notFirst: notFirst,
 	}
+	for c := 0; c < 255; c++ {
+		p.isDelim[c] = isAnyDelim(rune(c))
+	}
+	return p
 }
 
 // SetBuilder sets the builder for the tag parser.
@@ -86,7 +93,14 @@ func (p *TagParser) SetBuilder(builder Builder) {
 // Parse parses tags in buf.
 func (p *TagParser) Parse(src []byte) ([]Tag, int) {
 	// working buf
-	buf := p.work.ReplaceAll(src, []byte{' '})
+	buf := make([]byte, len(src))
+	for i, c := range src {
+		switch c {
+		case '_', ',', '+':
+			c = ' '
+		}
+		buf[i] = c
+	}
 	i, n := 0, len(buf)
 	var start, end []Tag
 	// once
@@ -123,11 +137,15 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 			start,
 			NewTag(TagTypeDelim, nil, p.ellip, p.ellip),
 		), end, i + len(p.ellip), n
-	} else if m := p.delim.FindSubmatch(src[i:n]); m != nil {
+	} else if p.isDelim[src[i]] {
+		j := i + 1
+		for j < n && p.isDelim[src[j]] {
+			j++
+		}
 		return append(
 			start,
-			NewTag(TagTypeDelim, nil, m[0], m[1]),
-		), end, i + len(m[0]), n
+			NewTag(TagTypeDelim, nil, src[i:j], src[i:j]),
+		), end, j, n
 	}
 	// run all lexers
 	startn := len(start)
@@ -142,7 +160,7 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 	}
 	// text
 	j := i
-	for j < n && !p.delim.Match(src[j:]) {
+	for j < n && !p.isDelim[src[j]] {
 		j++
 	}
 	*notFirst = true
