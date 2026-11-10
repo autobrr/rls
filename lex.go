@@ -802,6 +802,14 @@ func NewGroupLexer() Lexer {
 			shortTags = short
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			// usenet repost suffixes, which follow the group
+			for {
+				k, v := repostSuffix(src[i:n])
+				if k == 0 {
+					break
+				}
+				end, n = append(end, NewTag(TagTypeOther, nil, src[n-k:n], []byte(v))), n-k
+			}
 			// special end tags on groups. the pattern opens with a literal
 			// underscore, so a name without one cannot match
 			if bytes.IndexByte(src[i:n], '_') != -1 {
@@ -839,6 +847,63 @@ func NewGroupLexer() Lexer {
 		},
 		Once: true,
 	}
+}
+
+// reposts are the suffixes usenet indexers and reposters append after the
+// release group ('-GRP-Obfuscated'), keyed in lower case. The list is the
+// unambiguous part of the one Sonarr strips before it reads a group.
+var reposts = map[string]string{
+	"4planet":                "4Planet",
+	"altezachen":             "AlteZachen",
+	"alternativetorequested": "AlternativeToRequested",
+	"asrequested":            "AsRequested",
+	"buymore":                "BUYMORE",
+	"chamele0n":              "Chamele0n",
+	"gerov":                  "GEROV",
+	"nzbgeek":                "NZBGeek",
+	"obfuscated":             "Obfuscated",
+	"postbot":                "postbot",
+	"repackpost":             "RePACKPOST",
+	"scrambled":              "Scrambled",
+	"whiterev":               "WhiteRev",
+	"xpost":                  "xpost",
+	"z0ids3n":                "Z0iDS3N",
+}
+
+// repostSuffix returns the length of a repost suffix on the end of s with its
+// leading delimiter, and the suffix as it is usually written, or 0 when s
+// does not end in one. A '.sample' counts as one.
+func repostSuffix(s []byte) (int, string) {
+	j := len(s)
+	for j > 0 && runByte(s[j-1]) {
+		j--
+	}
+	var key [24]byte
+	// the suffix follows something, so there is a byte before the delimiter
+	if j < 2 || j == len(s) || len(s)-j > len(key) {
+		return 0, ""
+	}
+	w := key[:len(s)-j]
+	for k, c := range s[j:] {
+		if c >= 'A' && c <= 'Z' {
+			c += 32
+		}
+		w[k] = c
+	}
+	switch s[j-1] {
+	case '-':
+		if v, ok := reposts[string(w)]; ok {
+			return len(w) + 1, v
+		}
+		if bytes.HasPrefix(w, []byte("rakuv")) {
+			return len(w) + 1, "Rakuv"
+		}
+	case '.':
+		if string(w) == "sample" {
+			return len(w) + 1, "Sample"
+		}
+	}
+	return 0, ""
 }
 
 // lowerCase reports whether b has no upper case ASCII letter. The short tags

@@ -3371,6 +3371,26 @@
   audio: "AAC"
   channels: "2.0"
   group: "GRP"
+"Show.Title.S01E01.720p.HDTV.x264-GRP-Obfuscated":
+  type: "episode"
+  title: "Show Title"
+  source: "HDTV"
+  resolution: "720p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  other: "Obfuscated"
+  group: "GRP"
+"Show.Title.S01E01.720p.HDTV.x264-GRP.sample":
+  type: "episode"
+  title: "Show Title"
+  source: "HDTV"
+  resolution: "720p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  other: "Sample"
+  group: "GRP"
 "Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
   type: "episode"
   title: "Silo"
