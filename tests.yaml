@@ -3329,6 +3329,14 @@
   bitdepth: "8BIT"
   audio: "DDP"
   group: "GROUP"
+"Show.S01.UHD.HDTV.x265-GRP":
+  type: "series"
+  title: "Show"
+  source: "HDTV"
+  resolution: "2160p"
+  series: 1
+  codec: "x265"
+  group: "GRP"
 "Show.S01E01.480i.DVD.MPEG2-GRP":
   type: "episode"
   title: "Show"

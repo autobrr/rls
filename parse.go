@@ -204,6 +204,8 @@ type TagBuilder struct {
 	containerf taginfo.FindFunc
 	// audiof is the audio find func.
 	audiof taginfo.FindFunc
+	// resolutionf is the resolution find func.
+	resolutionf taginfo.FindFunc
 }
 
 // NewTagBuilder creates a new release builder.
@@ -225,19 +227,20 @@ func NewTagBuilder() *TagBuilder {
 // Init creates a new builder using the provided infos.
 func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 	return &TagBuilder{
-		missing:    b.missing,
-		bad:        b.bad,
-		fix:        b.fix,
-		spaces:     b.spaces,
-		ellips:     b.ellips,
-		plus:       b.plus,
-		sum:        b.sum,
-		digits:     b.digits,
-		digpre:     b.digpre,
-		digsuf:     b.digsuf,
-		infos:      infos,
-		containerf: findFunc(infos["container"]...),
-		audiof:     findFunc(infos["audio"]...),
+		missing:     b.missing,
+		bad:         b.bad,
+		fix:         b.fix,
+		spaces:      b.spaces,
+		ellips:      b.ellips,
+		plus:        b.plus,
+		sum:         b.sum,
+		digits:      b.digits,
+		digpre:      b.digpre,
+		digsuf:      b.digsuf,
+		infos:       infos,
+		containerf:  findFunc(infos["container"]...),
+		audiof:      findFunc(infos["audio"]...),
+		resolutionf: findFunc(infos["resolution"]...),
 	}
 }
 
@@ -496,17 +499,28 @@ func (b *TagBuilder) fixSourceWeb(r *Release) {
 // resolution tags between, as the uhd marks a web source and not a bluray (ie,
 // 'Movie.2022.UHD.2160p.WEB...' or 'Movie.2022.2160p.WEB.UHD...'). The first
 // of the pair is changed, as the first source tag is collected.
+//
+// Next to a tv source the uhd is the resolution of a broadcast (ie,
+// 'Show.S01.UHD.HDTV...'), and the tv source is the one to collect.
 func (b *TagBuilder) fixSourceUHD(r *Release) {
 	for i := range r.end {
 		if !r.tags[i].Is(TagTypeSource) || !strings.EqualFold(r.tags[i].Text(), "UHD") {
 			continue
 		}
 		for _, inc := range []int{1, -1} {
-			if j, s := webSource(r.tags[:r.end], i, inc); j != -1 {
+			j, s := nextSource(r.tags[:r.end], i, inc)
+			switch {
+			case j == -1:
+				continue
+			case s == "WEB", s == "WEB-DL", s == "WEBRiP":
 				k := min(i, j)
 				r.tags[k] = NewTag(TagTypeSource, r.tags[i].f, []byte(r.tags[k].v[0]), []byte("UHD."+s))
-				break
+			case strings.Contains(s, "TV"):
+				r.tags[i] = r.tags[i].As(TagTypeResolution, b.resolutionf)
+			default:
+				continue
 			}
+			break
 		}
 	}
 }
@@ -1511,19 +1525,16 @@ func isolated(tags []Tag, i, inc int) bool {
 	return 0 <= i && i < len(tags)-1 && tags[i].Is(TagTypeText)
 }
 
-// webSource seeks a web source tag in the indicated incremental direction
-// (-1/+1) from i, skipping whitespace/delim/resolution tags, returning its
-// position and normalized source, or -1 when not found.
-func webSource(tags []Tag, i, inc int) (int, string) {
+// nextSource returns the index and value of the source tag next to i in the
+// direction of inc, when only whitespace, delimiters and resolutions are
+// between them, or -1.
+func nextSource(tags []Tag, i, inc int) (int, string) {
 	for i += inc; 0 <= i && i < len(tags); i += inc {
 		if tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeResolution) {
 			continue
 		}
 		if tags[i].Is(TagTypeSource) {
-			switch s := tags[i].Source(); s {
-			case "WEB", "WEB-DL", "WEBRiP":
-				return i, s
-			}
+			return i, tags[i].Source()
 		}
 		break
 	}
