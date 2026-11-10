@@ -2504,6 +2504,17 @@
   other: "WS"
   size: "DVD9"
   group: "NoRBiT"
+"Bundesliga.2024.05.04.VfB.Stuttgart.Vs.FC.Bayern.Munchen.720p.WEB.H264-B0UNCE":
+  type: "episode"
+  title: "Bundesliga"
+  subtitle: "VfB Stuttgart Vs FC Bayern Munchen"
+  source: "WEB"
+  resolution: "720p"
+  year: 2024
+  month: 5
+  day: 4
+  codec: "H.264"
+  group: "B0UNCE"
 "Cells.at.Work.S01.1080p.BluRay.FLAC2.0x265-Main10p-CTR":
   type: "series"
   title: "Cells at Work"
@@ -3452,6 +3463,26 @@
   series: 1
   episode: 2
   seriesEpisodes: "S01E02 S01E03 S01E04"
+  group: "GRP"
+"Show.S01E02.GERMAN.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  language: "GERMAN"
+  group: "GRP"
+"Show.S01E02.NO.WAY.OUT.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "NO WAY OUT"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
   group: "GRP"
 "Show.S01E05-02.1080p.WEB-GRP":
   type: "episode"

@@ -314,6 +314,7 @@ func (b *TagBuilder) init(r *Release) {
 			i = date
 		}
 		b.fixSpecial(r, i, series != -1)
+		b.fixEpisodeTitle(r, i)
 	}
 	// get first text prior to pivot
 	end := b.end(r, pivot)
@@ -478,6 +479,38 @@ func (b *TagBuilder) fixSpecial(r *Release, i int, series bool) {
 			series && (typ == TagTypeArch || typ == TagTypePlatform):
 			r.tags[i-1] = r.tags[i-1].As(TagTypeText, nil)
 		}
+	}
+}
+
+// fixEpisodeTitle fixes language, collection and region tags inside the title
+// of an episode, ie 'NO' in 'Show.S01E02.NO.WAY.OUT.1080p'. The title runs
+// from the series tag, or a date with a day, at i up to the first source,
+// resolution or codec tag. A tag in it is a word of the title when it stands
+// between the series tag or text and two more words of text, with nothing but
+// plain delimiters around them. That leaves alone a tag followed by other
+// tags ('Show.S01E02.GERMAN.1080p'), one that follows other tags
+// ('German.Dubbed.DL.x'), one with a single word after it ('English Dub'),
+// and one inside brackets ('[English Dub]').
+func (b *TagBuilder) fixEpisodeTitle(r *Release, i int) {
+	if r.tags[i].Is(TagTypeDate) {
+		if _, month, day := r.tags[i].Date(); month == 0 || day == 0 {
+			return
+		}
+	}
+	plain := func(k int) bool {
+		return r.tags[k].Is(TagTypeDelim) && !strings.ContainsAny(r.tags[k].v[0], "[](){}")
+	}
+	// prev is the tag before the one at k, across a delimiter
+	for k, prev := i+2, i; k+4 < r.end && !r.tags[k].Is(TagTypeSource, TagTypeResolution, TagTypeCodec); k++ {
+		if r.tags[k].Is(TagTypeDelim, TagTypeWhitespace) {
+			continue
+		}
+		if r.tags[k].Is(TagTypeLanguage, TagTypeCollection, TagTypeRegion) && prev == k-2 && plain(k-1) &&
+			(prev == i || r.tags[prev].Is(TagTypeText)) &&
+			plain(k+1) && r.tags[k+2].Is(TagTypeText) && plain(k+3) && r.tags[k+4].Is(TagTypeText) {
+			r.tags[k] = r.tags[k].As(TagTypeText, nil)
+		}
+		prev = k
 	}
 }
 
