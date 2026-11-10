@@ -344,13 +344,17 @@ func NewSeriesLexer(strs ...string) Lexer {
 					(i+2 == n || src[i+2] < '0' || src[i+2] > '9') {
 					s, i = s[:len(s)-len(dec)], i-len(dec)
 				}
+				// version and disc end the match. They were read from buf,
+				// where '_', ',' and '+' are spaces, so their text is cut
+				// from src by length
+				vtext, dtext := version, disc
+				if len(version) != 0 {
+					s, vtext = s[:len(s)-len(version)], s[len(s)-len(version):]
+				}
+				if len(disc) != 0 {
+					s, dtext = s[:len(s)-len(disc)], s[len(s)-len(disc):]
+				}
 				if len(series) != 0 || len(episode) != 0 {
-					if len(version) != 0 {
-						s = bytes.TrimSuffix(s, version)
-					}
-					if len(disc) != 0 {
-						s = bytes.TrimSuffix(s, disc)
-					}
 					l := [][]byte{s, series}
 					switch {
 					case len(many) == 0:
@@ -363,7 +367,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 					tags = append(tags, NewTag(TagTypeSeries, nil, l...))
 				}
 				if len(version) != 0 {
-					tags = append(tags, NewTag(TagTypeVersion, nil, version, version))
+					tags = append(tags, NewTag(TagTypeVersion, nil, vtext, version))
 				}
 				if len(disc) != 0 {
 					disctyp := bytes.ToUpper(disc[:len(dsc.FindSubmatch(disc)[0])])
@@ -372,11 +376,11 @@ func NewSeriesLexer(strs ...string) Lexer {
 					case "DVD":
 						tags = append(
 							tags,
-							NewTag(TagTypeSource, sourcef, disctyp, disctyp),
-							NewTag(TagTypeDisc, nil, disc[len(disctyp):], disctyp, num),
+							NewTag(TagTypeSource, sourcef, dtext[:len(disctyp)], disctyp),
+							NewTag(TagTypeDisc, nil, dtext[len(disctyp):], disctyp, num),
 						)
 					default:
-						tags = append(tags, NewTag(TagTypeDisc, nil, disc, disctyp, num))
+						tags = append(tags, NewTag(TagTypeDisc, nil, dtext, disctyp, num))
 					}
 				}
 				// S01S02S03 ...

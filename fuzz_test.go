@@ -47,6 +47,11 @@ func FuzzParseString(f *testing.F) {
 	f.Add("")
 	f.Add("5.1")
 	f.Add("x")
+	// a version or disc after an episode, written with a byte that is a
+	// space to the lexers
+	f.Add("Show.13v_2.720p")
+	f.Add("0v+0")
+	f.Add("s02dvd3")
 	f.Fuzz(func(t *testing.T, s string) {
 		r := ParseString(s)
 		if o := fmt.Sprintf("%o", r); o != s {
