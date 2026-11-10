@@ -2632,6 +2632,15 @@
   audio: "DDP"
   channels: "2.0"
   group: "NTb"
+"DOC.Martin.S01E01.720p.HDTV.x264-GRP":
+  type: "episode"
+  title: "DOC Martin"
+  source: "HDTV"
+  resolution: "720p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  group: "GRP"
 "Doctor.Who.S02E05.The.Web.Planet.1080p.WEB-DL.AAC2.0.H.264-GROUP":
   type: "episode"
   title: "Doctor Who"

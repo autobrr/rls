@@ -426,6 +426,11 @@ func (b *TagBuilder) fixFirst(r *Release) {
 	) {
 		r.tags[i] = r.tags[i].As(TagTypeText, nil)
 	}
+	// a genre written as a bare word opens the title ('DOC.Martin.S01E01'),
+	// where one in parentheses is the genre ('(Comedy) Title')
+	if i != r.end && r.tags[i].Is(TagTypeGenre) && !strings.HasSuffix(r.tags[i].v[0], ")") {
+		r.tags[i] = r.tags[i].As(TagTypeText, nil)
+	}
 }
 
 // fixBad fixes bad collection/language/other/arch/platform tags before i.
