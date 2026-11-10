@@ -767,7 +767,7 @@ func NewGroupLexer() Lexer {
 				s := src[l+j+1 : n]
 				if grp := bytes.Trim(s, " \t_"); len(grp) != 0 &&
 					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && ((spacedGroup.Match(grp) && !inTag(src[:n], l+j)) || dottedGroup.Match(grp)))) &&
-					!shortTags[string(grp)] &&
+					!shortTags[string(grp)] && !(lowerCase(grp) && shortTags[strings.ToUpper(string(grp))]) &&
 					(len(end) == 0 || !bracket.MatchString(end[len(end)-1].Text())) {
 					return start, append(
 						end,
@@ -780,6 +780,19 @@ func NewGroupLexer() Lexer {
 		},
 		Once: true,
 	}
+}
+
+// lowerCase reports whether b has no upper case ASCII letter. The short tags
+// are stored in upper case, and a group candidate in mixed case ('VFi') is a
+// name, where one written all in lower case ('web-dl', 'dts-hd') is a tag
+// from a lower-cased release.
+func lowerCase(b []byte) bool {
+	for _, c := range b {
+		if c >= 'A' && c <= 'Z' {
+			return false
+		}
+	}
+	return true
 }
 
 // metaWindow bounds how far back from the end a meta suffix is searched for.

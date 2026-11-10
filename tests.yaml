@@ -1216,6 +1216,19 @@
   year: 2015
   size: "DVDR"
   group: "Pate"
+"Movie.Title.2020.1080p.BluRay.DTS-hd":
+  type: "movie"
+  title: "Movie Title"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  audio: "DTS-HD"
+"movie.title.2020.1080p.web-dl":
+  type: "movie"
+  title: "movie title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
 "Mr..&.Mrs..Smith-2005(720p)-NOGROUP[ettv]":
   type: "movie"
   title: "Mr. & Mrs. Smith"
