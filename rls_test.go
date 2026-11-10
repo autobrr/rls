@@ -13,10 +13,12 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/autobrr/rls/taginfo"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 func TestParseRelease(t *testing.T) {
@@ -118,6 +120,58 @@ func TestCollapserLong(t *testing.T) {
 		}
 		if n := MustNormalize(test.s); n != test.n {
 			t.Errorf("normalize of %d bytes expected %d bytes, got: %d", len(test.s), len(test.n), len(n))
+		}
+	}
+}
+
+// TestCollapserChunks checks that the result does not depend on how a transform
+// chain cuts the input into calls. A chain hands a Collapser the text in pieces
+// once it is longer than its buffers, so a space at the end of one piece and the
+// word at the start of the next have to come out as they would from one call.
+func TestCollapserChunks(t *testing.T) {
+	// once runs the collapser over the whole of s in a single call
+	once := func(c Collapser, s string) string {
+		src := norm.NFD.String(s)
+		dst := make([]byte, 4*len(src)+utf8.UTFMax)
+		c.Reset()
+		n, _, err := c.Transform(dst, []byte(src), true)
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		return norm.NFC.String(string(dst[:n]))
+	}
+	for _, pattern := range []string{
+		"ab ",
+		"The  Quick Brown - Fox, $100 and LAWLE$$ ",
+		"Amélie\t\tPok\xe9mon  Mr. & Mrs. O'Neil \u2b50\ufe0f ",
+		"a  \xff\xfe  b - c ",
+	} {
+		long := strings.Repeat(pattern, 9000/len(pattern)+1)
+		for n := 1; n <= 9000; n++ {
+			// cover every length around the buffer sizes, sample the rest
+			if n > 600 && n%97 != 0 && (n < 4000 || n > 4200) && (n < 8100 || n > 8300) {
+				continue
+			}
+			s := long[:n]
+			if c, exp := MustClean(s), once(newCleanCollapser(), s); c != exp {
+				t.Fatalf("clean of %d bytes of %q differs from a single call:\n  %q\n  %q", n, pattern, c, exp)
+			}
+			if c, exp := MustNormalize(s), once(newNormalizeCollapser(), s); c != exp {
+				t.Fatalf("normalize of %d bytes of %q differs from a single call:\n  %q\n  %q", n, pattern, c, exp)
+			}
+		}
+	}
+	// a collapser used for one string after another, with and without Reset
+	c, dst := newCleanCollapser(), make([]byte, 64)
+	for range 2 {
+		n, _, err := c.Transform(dst, []byte("  a  b  "), true)
+		if s := string(dst[:n]); err != nil || s != "a b" {
+			t.Errorf("expected %q, got: %q (%v)", "a b", s, err)
+		}
+	}
+	for _, s := range []string{strings.Repeat("ab ", 200), "  cd  "} {
+		if c, exp := MustClean(s), strings.TrimSpace(strings.ReplaceAll(s, "  ", " ")); c != exp {
+			t.Errorf("expected %q, got: %q", exp, c)
 		}
 	}
 }

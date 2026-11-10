@@ -1124,14 +1124,15 @@ func Find(tags []Tag, s string, count int, verb rune, types ...TagType) ([]Tag, 
 //
 // See: https://go.dev/blog/normalization
 func NewCleaner() transform.Transformer {
-	return transform.Chain(
-		norm.NFD,
-		NewCollapser(
-			false, true,
-			`'`, " \t\r\n\f",
-			nil,
-		),
-		norm.NFC,
+	return transform.Chain(norm.NFD, newCleanCollapser(), norm.NFC)
+}
+
+// newCleanCollapser creates the collapser used by NewCleaner.
+func newCleanCollapser() Collapser {
+	return NewCollapser(
+		false, true,
+		`'`, " \t\r\n\f",
+		nil,
 	)
 }
 
@@ -1159,26 +1160,27 @@ func MustClean(s string) string {
 //
 // See: https://go.dev/blog/normalization
 func NewNormalizer() transform.Transformer {
-	return transform.Chain(
-		norm.NFD,
-		NewCollapser(
-			true, true,
-			"`"+`':;~!@#%^*=+()[]{}<>/?|\",`, " \t\r\n\f._",
-			func(r, prev, next rune) rune {
-				switch {
-				case r == '-' && unicode.IsSpace(prev):
-					return -1
-				case r == '$' && (unicode.IsLetter(prev) || unicode.IsLetter(next)):
-					return 'S'
-				case r == '£' && (unicode.IsLetter(prev) || unicode.IsLetter(next)):
-					return 'L'
-				case r == '$', r == '£':
-					return -1
-				}
-				return r
-			},
-		),
-		norm.NFC,
+	return transform.Chain(norm.NFD, newNormalizeCollapser(), norm.NFC)
+}
+
+// newNormalizeCollapser creates the collapser used by NewNormalizer.
+func newNormalizeCollapser() Collapser {
+	return NewCollapser(
+		true, true,
+		"`"+`':;~!@#%^*=+()[]{}<>/?|\",`, " \t\r\n\f._",
+		func(r, prev, next rune) rune {
+			switch {
+			case r == '-' && unicode.IsSpace(prev):
+				return -1
+			case r == '$' && (unicode.IsLetter(prev) || unicode.IsLetter(next)):
+				return 'S'
+			case r == '£' && (unicode.IsLetter(prev) || unicode.IsLetter(next)):
+				return 'L'
+			case r == '$', r == '£':
+				return -1
+			}
+			return r
+		},
 	)
 }
 
@@ -1216,6 +1218,26 @@ type Collapser struct {
 	Space map[rune]bool
 	// Transformer is a rune transformer.
 	Transformer func(rune, rune, rune) rune
+	// state is what one Transform call has to know about the calls before
+	// it. It is nil for a Collapser built as a struct literal, which then
+	// treats every call as the whole text.
+	state *collapserState
+}
+
+// collapserState is the state a Collapser carries from one Transform call to
+// the next. A transform chain passes text longer than its buffers in pieces, so
+// without it the spaces at the edge of every piece would be trimmed as if they
+// were at the edge of the text.
+type collapserState struct {
+	// prev is the last rune written, or held back in spaces.
+	prev rune
+	// started is true once the leading spaces have ended.
+	started bool
+	// spaces is the number of Spc runes held back until a rune follows them:
+	// spaces at the end of the text are never written.
+	spaces int
+	// invalid is true when the last byte read was not valid UTF-8.
+	invalid bool
 }
 
 // NewCollapser creates a text transformer that collapses spaces, removes
@@ -1225,6 +1247,9 @@ type Collapser struct {
 //
 // Clean, Normalize, and MustClean, MustNormalize are provided for utility
 // purposes.
+//
+// The returned Collapser carries state between calls to Transform, so it must
+// not be used by two transform chains, or two goroutines, at the same time.
 //
 // See: https://go.dev/blog/normalization
 func NewCollapser(lower, trim bool, remove, space string, transformer func(rune, rune, rune) rune) Collapser {
@@ -1242,6 +1267,7 @@ func NewCollapser(lower, trim bool, remove, space string, transformer func(rune,
 		Remove:      rem,
 		Space:       spc,
 		Transformer: transformer,
+		state:       new(collapserState),
 	}
 }
 
@@ -1250,68 +1276,78 @@ func NewCollapser(lower, trim bool, remove, space string, transformer func(rune,
 // A byte that is not valid UTF-8 is written as U+FFFD, one for each run of such
 // bytes, which is what strings.ToValidUTF8(s, "\uFFFD") produces.
 func (c Collapser) Transform(dst, src []byte, atEOF bool) (int, int, error) {
-	var i, l, j, n int
-	var prev, r rune
-	b, s, d := make([]byte, utf8.UTFMax), len(src), len(dst)
-	// trim leading spaces
-	if c.Trim {
-		for ; i < s; i = i + l {
-			if r, l = utf8.DecodeRune(src[i:]); r == utf8.RuneError && l == 1 {
-				// an invalid byte is kept, so it ends the leading spaces. a
-				// rune cut short by the end of src is decided below
-				break
-			}
-			if !c.Remove[r] && !c.Space[r] {
-				break
-			}
-		}
+	st := c.state
+	if st == nil {
+		st = new(collapserState)
 	}
-	// copy from src to dst
-	var last int
-	var invalid bool
+	var i, l, n int
+	var r rune
+	var spcbuf, b [utf8.UTFMax]byte
+	spc := spcbuf[:utf8.EncodeRune(spcbuf[:], c.Spc)]
+	s, d := len(src), len(dst)
 	for ; i < s; i = i + l {
 		r, l = utf8.DecodeRune(src[i:])
-		if r == utf8.RuneError && l == 1 {
-			// the rest of the rune may be in the next call
-			if !atEOF && !utf8.FullRune(src[i:]) {
-				return n, i, transform.ErrShortSrc
-			}
-			if invalid {
-				continue
-			}
+		invalid := r == utf8.RuneError && l == 1
+		// the rest of the rune may be in the next call
+		if invalid && !atEOF && !utf8.FullRune(src[i:]) {
+			return n, i, transform.ErrShortSrc
 		}
-		invalid = r == utf8.RuneError && l == 1
-		switch {
-		case c.Space[r] && prev == c.Spc, c.Remove[r], unicode.Is(unicode.Mn, r):
+		// so may the rune the transformer is shown as next
+		if c.Transformer != nil && !atEOF && !utf8.FullRune(src[i+l:]) {
+			return n, i, transform.ErrShortSrc
+		}
+		if invalid && st.invalid {
 			continue
-		case c.Space[r]:
+		}
+		space, remove := c.Space[r], c.Remove[r]
+		// leading spaces end at the first rune that is kept or is a mark
+		leading := c.Trim && !st.started
+		st.started, st.invalid = st.started || invalid || !space && !remove, invalid
+		switch {
+		case space && (st.prev == c.Spc || leading), remove, unicode.Is(unicode.Mn, r):
+			continue
+		case space:
 			r = c.Spc
 		}
 		if c.Transformer != nil {
-			if r = c.Transformer(r, prev, rpeek(src, i+l, s)); r == -1 {
+			if r = c.Transformer(r, st.prev, rpeek(src, i+l, s)); r == -1 {
 				continue
 			}
 		}
 		if c.Lower {
 			r = unicode.ToLower(r)
 		}
-		if j = utf8.EncodeRune(b, r); d < n+j {
+		// hold a space back until a rune follows it, which trims the end
+		if c.Trim && r == c.Spc {
+			st.prev, st.spaces = r, st.spaces+1
+			continue
+		}
+		j := utf8.EncodeRune(b[:], r)
+		if d < n+st.spaces*len(spc)+j {
+			// r is read again in the next call. started and invalid come
+			// out the same then, and a first invalid byte is not skipped
+			st.invalid = false
 			return n, i, transform.ErrShortDst
 		}
-		copy(dst[n:], b[:j])
-		prev, n = r, n+j
-		if r != c.Spc {
-			last = n
+		for ; st.spaces != 0; st.spaces-- {
+			n += copy(dst[n:], spc)
 		}
+		n += copy(dst[n:], b[:j])
+		st.prev = r
 	}
-	if c.Trim {
-		return last, i, nil
+	// the text has ended: start afresh for a caller that does not Reset
+	if atEOF {
+		*st = collapserState{}
 	}
 	return n, i, nil
 }
 
 // Reset satisfies the transform.Transformer interface.
-func (Collapser) Reset() {}
+func (c Collapser) Reset() {
+	if c.state != nil {
+		*c.state = collapserState{}
+	}
+}
 
 // rpeek
 func rpeek(b []byte, i, n int) rune {
