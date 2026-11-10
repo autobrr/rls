@@ -208,6 +208,12 @@ func NewTag(typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
 	}
 	v := make([]string, len(b))
 	for i := 0; i < len(b); i++ {
+		// text and delimiter tags pass the same bytes as the original and the
+		// value; share the one string rather than copying it twice
+		if i > 0 && len(b[i]) == len(b[i-1]) && len(b[i]) > 1 && &b[i][0] == &b[i-1][0] {
+			v[i] = v[i-1]
+			continue
+		}
 		v[i] = string(b[i])
 	}
 	return Tag{
