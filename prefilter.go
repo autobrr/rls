@@ -38,6 +38,13 @@ type prefilter struct {
 	// keeps a row like ([A-Zi]*)([SD])UB([A-Zi]*) -- able to begin with any
 	// letter -- from admitting every word.
 	rows []patterned
+	// fold makes maybe exact against (?i), which matches 'k' and 's' with the
+	// non-ASCII runes U+212A and U+017F: a run that stops at a non-ASCII byte
+	// may continue through one of those as far as the regexp is concerned, so
+	// it is let through. It is set where the prefilter gates something that
+	// ran unconditionally before. The older prefilters leave it off and so
+	// reject 'M\u212aV' where the container alternation would match.
+	fold bool
 }
 
 type patterned struct {
@@ -104,6 +111,7 @@ func newPrefilterRE(res []string, ci bool) (*prefilter, bool) {
 				// be its (non-run) first byte. It contributes nothing to key on
 				// and must not cost the type its prefilter ('other' lost its
 				// prefilter to the '-sign-language' spelling of Sign.Language).
+				pf.fold = true
 				continue
 			}
 			if len(run) > pf.max {
@@ -150,10 +158,7 @@ func (pf *prefilter) maybe(buf []byte, i, n int) bool {
 		// with a delimiter, which newPrefilter rejects, so let it run
 		return true
 	}
-	if i+j < n && buf[i+j] >= 0x80 {
-		// the run stops at a non-ASCII byte. (?i) folds 'k' and 's' onto
-		// U+212A and U+017F, so the run may continue through one of those as
-		// far as the regexp is concerned; let it decide
+	if pf.fold && i+j < n && buf[i+j] >= 0x80 {
 		return true
 	}
 	if j <= pf.max {

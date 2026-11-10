@@ -620,8 +620,12 @@ func NewGenreLexer() Lexer {
 			re, lb, other, genref = regexp.MustCompile(`(?i)^`+s), regexp.MustCompile(`(?i)\(\s*`+s+`$`), regexp.MustCompile(`(?i)^(`+strings.Join(tagv, `|`)+`)\b`), findFunc(genre...)
 			// re ends on a ')' and other on a word boundary, so as with the
 			// regexp lexers neither can end part way through a run
-			pf, _ = newPrefilterRE(v, true)
-			pfOther, _ = newPrefilterRE(tagv, true)
+			if pf, _ = newPrefilterRE(v, true); pf != nil {
+				pf.fold = true
+			}
+			if pfOther, _ = newPrefilterRE(tagv, true); pfOther != nil {
+				pfOther.fold = true
+			}
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			var m [][]byte
