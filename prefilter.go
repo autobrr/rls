@@ -2,6 +2,7 @@ package rls
 
 import (
 	"errors"
+	"regexp/syntax"
 	"strings"
 
 	"github.com/autobrr/rls/taginfo"
@@ -31,6 +32,18 @@ type prefilter struct {
 	// byte is not a possible lead either.
 	lead    [256]bool
 	hasLead bool
+	// rows are the unexpanded rows themselves: the bytes each can begin with,
+	// and a literal each of its matches has to contain. A position is only
+	// handed to the alternation for such a row when both are present, which
+	// keeps a row like ([A-Zi]*)([SD])UB([A-Zi]*) -- able to begin with any
+	// letter -- from admitting every word.
+	rows []patterned
+}
+
+type patterned struct {
+	lead [256]bool
+	lit  []byte
+	fold bool
 }
 
 // runByte reports whether c continues a run for prefilter purposes.
@@ -57,17 +70,20 @@ func newPrefilter(infos []*taginfo.Taginfo, ci bool) (*prefilter, bool) {
 			if !firstBytes(info.RE(), &lead) {
 				return nil, false
 			}
+			row := patterned{}
 			for c := 0; c < 256; c++ {
 				if lead[c] {
-					pf.lead[c], pf.hasLead = true, true
+					pf.lead[c], pf.hasLead, row.lead[c] = true, true, true
 					// a lead byte is only consulted for runs, so fold case
 					if c >= 'a' && c <= 'z' {
-						pf.lead[c-32] = true
+						pf.lead[c-32], row.lead[c-32] = true, true
 					} else if c >= 'A' && c <= 'Z' {
-						pf.lead[c+32] = true
+						pf.lead[c+32], row.lead[c+32] = true, true
 					}
 				}
 			}
+			row.lit, row.fold = requiredLiteral(info.RE(), ci)
+			pf.rows = append(pf.rows, row)
 			continue
 		}
 		for _, s := range v {
@@ -131,7 +147,92 @@ func (pf *prefilter) maybe(buf []byte, i, n int) bool {
 		}
 	}
 	// no literal run matched; an unexpanded row may still match here
-	return pf.hasLead && pf.lead[buf[i]]
+	if !pf.hasLead || !pf.lead[buf[i]] {
+		return false
+	}
+	for k := range pf.rows {
+		if row := &pf.rows[k]; row.lead[buf[i]] && (len(row.lit) == 0 || hasLiteral(buf[i:n], row.lit, row.fold)) {
+			return true
+		}
+	}
+	return false
+}
+
+// requiredLiteral returns the longest literal every match of re must contain,
+// lower cased when it is matched case insensitively, or nil when none can be
+// shown.
+func requiredLiteral(re string, ci bool) ([]byte, bool) {
+	flags := syntax.Perl
+	if ci {
+		flags |= syntax.FoldCase
+	}
+	r, err := syntax.Parse(re, flags)
+	if err != nil {
+		return nil, false
+	}
+	var best []rune
+	var fold bool
+	var walk func(*syntax.Regexp)
+	walk = func(r *syntax.Regexp) {
+		switch r.Op {
+		case syntax.OpLiteral:
+			if len(r.Rune) > len(best) {
+				best, fold = r.Rune, r.Flags&syntax.FoldCase != 0
+			}
+		case syntax.OpCapture, syntax.OpPlus, syntax.OpConcat:
+			for _, sub := range r.Sub {
+				walk(sub)
+			}
+		case syntax.OpRepeat:
+			if r.Min > 0 {
+				walk(r.Sub[0])
+			}
+		}
+	}
+	walk(r)
+	for _, c := range best {
+		if c >= 0x80 {
+			return nil, false
+		}
+	}
+	lit := []byte(string(best))
+	if fold {
+		lit = []byte(strings.ToLower(string(best)))
+	}
+	return lit, fold
+}
+
+// hasLiteral reports whether b contains lit, or a non-ASCII byte. The latter
+// is treated as a hit because a case insensitive literal also matches the
+// non-ASCII folds of 'k' and 's' (U+212A, U+017F).
+func hasLiteral(b, lit []byte, fold bool) bool {
+	c0 := lit[0]
+	for i := 0; i < len(b); i++ {
+		c := b[i]
+		if c >= 0x80 {
+			return true
+		}
+		if fold && c >= 'A' && c <= 'Z' {
+			c += 32
+		}
+		if c != c0 || len(b)-i < len(lit) {
+			continue
+		}
+		j := 1
+		for ; j < len(lit); j++ {
+			d := b[i+j]
+			if fold && d >= 'A' && d <= 'Z' {
+				d += 32
+			}
+			if d != lit[j] {
+				break
+			}
+		}
+		if j == len(lit) {
+			return true
+		}
+	}
+	return false
 }
 
 // firstBytes fills lead with the bytes re can begin with, reporting false when
