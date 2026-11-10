@@ -3398,6 +3398,14 @@
   seriesEpisodes: "S04E29 S04E30 S04E31"
   codec: "x264"
   group: "GRP"
+"Show.S90E01.1080p.WEB-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 90
+  episode: 1
+  group: "GRP"
 "[Group] Show (2024) - 01 (S01E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]":
   type: "episode"
   title: "Show"

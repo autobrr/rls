@@ -72,6 +72,8 @@ func DefaultLexers() []Lexer {
 		NewSeriesLexer(
 			// s02, S01E01, S01E02-04
 			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]?(?:e(?P<e>\d{1,5})(?P<r>-\d{1,3})?)?\b`,
+			// S90E01: a season from 90 up needs its episode to be read as one
+			`(?i)^s(?P<s>9\d)[\-\._ ]?e(?P<e>\d{1,5})\b`,
 			// S01E02E03, S01E02-E03, S01E03.E04.E05
 			`(?i)^s(?P<s>[0-8]?\d)(?P<m>(?:[\-\._ ]?e\d{1,5}){1,5})\b`,
 			// S01S02S03
