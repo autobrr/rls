@@ -61,6 +61,32 @@ func TestParseRelease(t *testing.T) {
 	}
 }
 
+// TestSeriesEpisodesRangeFill checks that the episodes inside a range are
+// filled in, and that ranges too wide to fill are given by their ends.
+func TestSeriesEpisodesRangeFill(t *testing.T) {
+	for _, test := range []struct {
+		s   string
+		exp int
+	}{
+		{"Show.S01E02-04.1080p.WEB-GRP", 3},
+		{"[Group] One Piece (E001-E1100) (480p)", 1100},
+		{"Show.E1-E99999.1080p.WEB-GRP", 2},
+		{"Show.S01.E1-E99999.1080p.WEB-GRP", 2},
+	} {
+		if n := len(ParseString(test.s).SeriesEpisodes()); n != test.exp {
+			t.Errorf("%q expected %d episodes, got: %d", test.s, test.exp, n)
+		}
+	}
+	// every range adds its two ends, and together they fill no more than
+	// maxRangeFill episodes
+	for _, s := range []string{"E1-999.", "E1-E9999.", "S01E1-999."} {
+		const count = 500
+		if n := len(ParseString(strings.Repeat(s, count)).SeriesEpisodes()); n > maxRangeFill+2*count {
+			t.Errorf("%q repeated expected at most %d episodes, got: %d", s, maxRangeFill+2*count, n)
+		}
+	}
+}
+
 // TestDateColon checks that a colon before two digits does not make a month.
 func TestDateColon(t *testing.T) {
 	for _, s := range []string{

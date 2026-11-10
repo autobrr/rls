@@ -124,16 +124,23 @@ func (r Release) Tags() []Tag {
 	return r.tags
 }
 
-// SeriesEpisodes returns all series and episodes.
+// maxRangeFill is how many episodes are filled in between the ends of the
+// ranges in one release ('E001-E130'). A range that does not fit in what is
+// left is given by its two ends alone, which keeps a name such as
+// 'E1-E99999.E1-E99999...' from growing into millions of episodes.
+const maxRangeFill = 10000
+
+// SeriesEpisodes returns all series and episodes. The episodes inside a range
+// are included, up to maxRangeFill of them.
 func (r Release) SeriesEpisodes() [][]int {
 	var v [][]int
-	last := -1
+	last, fill, none := -1, maxRangeFill, 0
 	for i, tag := range r.tags {
 		if !tag.Is(TagTypeSeries) {
 			continue
 		}
 		series, _ := tag.Series()
-		for k, episode := range tag.Episodes() {
+		for k, episode := range tag.episodes(&fill) {
 			s := series
 			if s == 0 && last != -1 {
 				s, _ = r.tags[last].Series()
@@ -141,9 +148,12 @@ func (r Release) SeriesEpisodes() [][]int {
 			// a hyphen between two episode tags makes a range ('E02-E04'),
 			// which runs from the last episode of the tag before the hyphen
 			if series == 0 && k == 0 && i >= 2 && r.tags[i-2].Is(TagTypeSeries) && fmt.Sprintf("%o", r.tags[i-1]) == "-" {
-				if prev := r.tags[i-2].Episodes(); len(prev) != 0 {
-					for j := prev[len(prev)-1] + 1; j < episode; j++ {
-						v = append(v, []int{s, j})
+				if prev := r.tags[i-2].episodes(&none); len(prev) != 0 {
+					if first := prev[len(prev)-1] + 1; episode-first <= fill {
+						for j := first; j < episode; j++ {
+							v = append(v, []int{s, j})
+						}
+						fill -= max(episode-first, 0)
 					}
 				}
 			}
@@ -577,6 +587,13 @@ func (tag Tag) Series() (int, int) {
 // them the ends of a range ('E05-07'), and the episodes in between are
 // included.
 func (tag Tag) Episodes() []int {
+	fill := maxRangeFill
+	return tag.episodes(&fill)
+}
+
+// episodes is Episodes with the number of episodes it may fill ranges with in
+// fill, which it counts down. A range wider than that is left as its ends.
+func (tag Tag) episodes(fill *int) []int {
 	var v []int
 	// prev is the episode before, which may be the 0 that v leaves out
 	prev, ranged := -1, false
@@ -586,8 +603,11 @@ func (tag Tag) Episodes() []int {
 			continue
 		}
 		episode := atoi(b)
-		for j := prev + 1; ranged && prev != -1 && j < episode; j++ {
-			v = append(v, j)
+		if n := episode - prev - 1; ranged && prev != -1 && 0 < n && n <= *fill {
+			for j := prev + 1; j < episode; j++ {
+				v = append(v, j)
+			}
+			*fill -= n
 		}
 		if episode != 0 {
 			v = append(v, episode)
