@@ -569,7 +569,7 @@ other,VR,,,,movie,
 other,WORKING,Working,(?-i:W[oO]RK[iI]NG),,app,
 other,WS,Widescreen,widescreen|ws,,movie,
 other,$1X,,((?:19|20)[\d|x])x,,music,1
-other,Plus.$2.Trainer,Trainer ($2),(?:plus[\-\._ ])?(\d\d?)[\-\._ ]?trainer,,game,1
+other,Plus.$1.Trainer,Trainer ($1),(?:plus[\-\._ ])?(\d\d?)[\-\._ ]?trainer,,game,1
 platform,AIX,,,,app,1
 platform,ANDROiD,Android,(?-i:ANDRO[iI]D),,app,
 platform,DOS,,(?-i:DOS),,app,1
@@ -817,4 +817,4 @@ source,WEB,Web,,,,
 source,Whitelabel,Whitelabel Promo,whitelabel|wlp,,music,1
 source,WORKPRiNT,Workprint,workprint|wp,,movie,1
 source,XBOXDVD,Xbox (DVD),,,game,1
-source,$1INCH.ViNYL,Vinyl ($i inch),(\d\d?)[\-\._ ]?inch(?:[\-\._ ]?vinyl)?,,music,1
+source,$1INCH.ViNYL,Vinyl ($1 inch),(\d\d?)[\-\._ ]?inch(?:[\-\._ ]?vinyl)?,,music,1

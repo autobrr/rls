@@ -319,18 +319,17 @@ func (tag Tag) Prev() TagType {
 // InfoTitle retrieves the tag's title.
 func (tag Tag) InfoTitle() string {
 	if info := tag.Info(); info != nil {
-		s := info.Title()
-		for i := 1; i < len(tag.v); i++ {
-			s = strings.ReplaceAll(s, "$"+strconv.Itoa(i+1), string(tag.v[i]))
-		}
+		_, s := info.Expand(tag.v[1])
 		return s
 	}
 	return ""
 }
 
-// normalize attempts to normalize s, replacing $1, $2, ... $N,  with the
-// values in v.
-func (tag Tag) normalize(s string, v ...string) string {
+// normalize attempts to normalize s, which is the captured value. A tag info
+// with $1, $2, ... $N in its tag takes them from its own match of s: the
+// tag's values hold the capture groups of every tag info of the type, so
+// their positions say nothing about the one that matched.
+func (tag Tag) normalize(s string) string {
 	if tag.f != nil {
 		// every caller passes the captured value, which is what ninfo is for
 		info := tag.ninfo
@@ -338,10 +337,7 @@ func (tag Tag) normalize(s string, v ...string) string {
 			info = tag.f(s)
 		}
 		if info != nil {
-			s = info.Tag()
-		}
-		for i := 0; i < len(v); i++ {
-			s = strings.ReplaceAll(s, "$"+strconv.Itoa(i+1), v[i])
+			s, _ = info.Expand(s)
 		}
 	}
 	return s
@@ -524,27 +520,27 @@ func (tag Tag) TextReplace(old, newstr string, n int) string {
 
 // Platform normalizes the platform value.
 func (tag Tag) Platform() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Arch normalizes the arch value.
 func (tag Tag) Arch() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Source normalizes the source value.
 func (tag Tag) Source() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Resolution normalizes the resolution value.
 func (tag Tag) Resolution() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Collection normalizes the collection value.
 func (tag Tag) Collection() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // atoi parses a decimal, reporting 0 when s is not one. Unlike strconv.Atoi it
@@ -625,22 +621,22 @@ func (tag Tag) Disc() string {
 
 // Codec normalizes a codec value.
 func (tag Tag) Codec() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // HDR normalizes a hdr value.
 func (tag Tag) HDR() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // BitDepth normalizes a bitdepth value.
 func (tag Tag) BitDepth() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Audio normalizes an audio value.
 func (tag Tag) Audio() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Channels normalizes an channels value.
@@ -657,7 +653,7 @@ func (tag Tag) Channels() string {
 
 // Other normalizes the other value.
 func (tag Tag) Other() string {
-	s := tag.normalize(tag.v[1], tag.v[2:]...)
+	s := tag.normalize(tag.v[1])
 	switch y := strings.ToUpper(s); y {
 	case "19XX", "20XX":
 		return y
@@ -667,42 +663,42 @@ func (tag Tag) Other() string {
 
 // Cut normalizes the cut value.
 func (tag Tag) Cut() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Edition normalizes the edition value.
 func (tag Tag) Edition() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Language normalizes the language value.
 func (tag Tag) Language() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Size normalizes the size value.
 func (tag Tag) Size() string {
-	return strings.ReplaceAll(strings.ToUpper(tag.normalize(tag.v[1], tag.v[2:]...)), "I", "i")
+	return strings.ReplaceAll(strings.ToUpper(tag.normalize(tag.v[1])), "I", "i")
 }
 
 // Region normalizes the region value.
 func (tag Tag) Region() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Container normalizes the container value.
 func (tag Tag) Container() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Genre normalizes the genre value.
 func (tag Tag) Genre() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // ID normalizes the id value.
 func (tag Tag) ID() string {
-	return tag.normalize(tag.v[1], tag.v[2:]...)
+	return tag.normalize(tag.v[1])
 }
 
 // Group normalizes the group value.
