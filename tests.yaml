@@ -1029,6 +1029,15 @@
   year: 2014
   audio: "DUAL.AUDIO"
   size: "1400MB"
+"Movie.2020.1080p.BluRay.DTS-ES.x264-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  audio: "DTS ES"
+  group: "GRP"
 "Movie.2020.1080p.BluRay.x264.Hi10P-GRP":
   type: "movie"
   title: "Movie"
@@ -1296,6 +1305,15 @@
   resolution: "1080p"
   year: 2007
   codec: "x264"
+  group: "GRP"
+"Pelicula.2020.MULTi.ES.EN.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Pelicula"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  language: "MULTi SPANiSH ENGLiSH"
   group: "GRP"
 "Pirates.of.the.Caribbean.On.Stranger.Tides.2011.BluRay.1080p.AVC.DTS-HDMA.7.1.REMUX-FraMeSToR":
   type: "movie"

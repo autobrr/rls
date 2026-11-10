@@ -631,6 +631,17 @@ func NewAudioLexer() Lexer {
 				return start, end, i, n, false
 			}
 			if m := re.FindSubmatch(src[i:n]); m != nil {
+				// 'ES' and 'EX' extend the audio tag before them ('DTS-ES',
+				// 'DD5.1.EX'). On their own they are a language or a word.
+				if len(m[1]) == 2 && (string(m[1]) == "ES" || string(m[1]) == "EX") {
+					k := len(start) - 1
+					for k >= 0 && start[k].Is(TagTypeDelim, TagTypeWhitespace) {
+						k--
+					}
+					if k < 0 || !start[k].Is(TagTypeAudio, TagTypeChannels) {
+						return start, end, i, n, false
+					}
+				}
 				// Leave an attached codec and its delimiter for the next lexer.
 				if len(m[3]) != 0 {
 					m[0] = bytes.TrimSuffix(m[0], m[3])
