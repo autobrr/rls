@@ -192,6 +192,13 @@
   sum: "ABCD1234"
   pass: "secret"
   ext: "m2ts"
+"3x3.Eyes.1991.DVDRip.x264-GRP":
+  type: "movie"
+  title: "3x3 Eyes"
+  source: "DVDRiP"
+  year: 1991
+  codec: "x264"
+  group: "GRP"
 "8-Bit.Christmas.(2021)(2160p.HMAX-WEBRip.DoVi HDR.x265.crf18.S97.E-AC3.5.1.Atmos)[cTurtle-4K].torrent":
   type: "movie"
   title: "8-Bit Christmas"
@@ -1226,6 +1233,14 @@
   codec: "H.265"
   audio: "DDP"
   group: "GROUP"
+"Movie.5x5.2020.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Movie 5x5"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "GRP"
 "Movie.Title.2015.DVD-R-Pate":
   type: "movie"
   title: "Movie Title"

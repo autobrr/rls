@@ -296,6 +296,18 @@ func NewSeriesLexer(strs ...string) Lexer {
 						panic(fmt.Errorf("unknown capture group %q", v[l]))
 					}
 				}
+				// '2x05' is a season and episode after a title, but not when
+				// it opens the name ('3x3.Eyes.1991') or a year follows it
+				// ('Movie.5x5.2020'), where it belongs to the title
+				if len(series) != 0 && len(s) > len(series) && (s[len(series)] == 'x' || s[len(series)] == 'X') {
+					k := len(start) - 1
+					for k >= 0 && start[k].Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) {
+						k--
+					}
+					if k < 0 || firstYearEnd(buf[i:min(n, i+6)]) != -1 {
+						return start, end, i - len(s), n, false
+					}
+				}
 				var tags []Tag
 				// a range end ('E05-07') is the last episode of the range when
 				// it is higher than the first. Only a bare hyphen or a tilde
