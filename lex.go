@@ -415,7 +415,7 @@ func NewDiscSourceYearLexer(strs ...string) Lexer {
 			sourcef = findFunc(infos["source"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
-			if s, v, i, n, ok := lexer(src, buf, i, n); ok {
+			if _, v, i, n, ok := lexer(src, buf, i, n); ok {
 				// collect series, episode, version
 				var disc, source, year []byte
 				for l := 0; l < len(v); l += 2 {
@@ -439,7 +439,7 @@ func NewDiscSourceYearLexer(strs ...string) Lexer {
 					NewTag(TagTypeSource, sourcef, source, source),
 					NewTag(TagTypeDate, nil, year, year, nil, nil),
 				)
-				return append(start, tags...), end, i + len(s), n, true
+				return append(start, tags...), end, i, n, true
 			}
 			return start, end, i, n, false
 		},

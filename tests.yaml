@@ -3992,6 +3992,14 @@
   year: 2022
   audio: "FLAC LOSSLESS"
   group: "Single"
+"Artist-Title-WEB2021-PROMO-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Title"
+  source: "WEB"
+  year: 2021
+  other: "PROMO"
+  group: "GRP"
 "B_recordings--instant-(supercheap-03)-2VLS1998-kW":
   type: "music"
   artist: "B recordings"
@@ -4379,6 +4387,15 @@
   edition: "Limited.Edition"
   group: "WEM"
   unused: "Bootleg"
+"VA-Hard_Trance_Classics-3CD2004-Retail-GRP":
+  type: "music"
+  artist: "VA"
+  title: "Hard Trance Classics"
+  source: "CD"
+  year: 2004
+  disc: "3x"
+  other: "RETAiL"
+  group: "GRP"
 "VA_-_Hellz_Army_EP_(APOC_001)-2xVinyl-2000-RSQ":
   type: "music"
   artist: "VA"
