@@ -535,7 +535,7 @@ other,REAL,Real,(?-i:REAL),,,
 other,REGiSTERED,Registered,registered|regged,,app,1
 other,REISSUE,Reissue,,,music,
 other,REMAKE,Remake,(?-i:REMAKE),,,
-other,REMASTERED,Remastered,remaster(?:ed)?,,,
+other,REMASTERED,Remastered,remaster(?:ed)?(?:[\-\._ ]edition)?,,,
 other,REMiX,Remix,(?:re[\-\._ ]?)?mix(?:e[sd])?(?:[\-\._ ]edition)?,,music,1
 other,REMUX,Remux,,,,
 other,REPACK,Repack,repack(?:ed)?,,,
