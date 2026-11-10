@@ -757,10 +757,10 @@ func NewGroupLexer() Lexer {
 					return start, append(end, NewTag(TagTypeGroup, groupf, m...)), i, n - len(m[0]), true
 				}
 			}
-			// clamp to last year
+			// clamp to the first year
 			l := i
 			if e := firstYearEnd(buf[l:n]); e != -1 {
-				l = e
+				l += e
 			}
 			// locate delimiter and check valid group
 			if j := bytes.LastIndexByte(buf[l:n], delim); j != -1 {

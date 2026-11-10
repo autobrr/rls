@@ -4101,6 +4101,13 @@
   year: 2022
   audio: "FLAC LOSSLESS"
   group: "Single"
+"[Sub] Artist-Album-2020":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  year: 2020
+  group: "Sub"
+  site: "Sub"
 "Artist-Title-WEB2021-PROMO-GRP":
   type: "music"
   artist: "Artist"
