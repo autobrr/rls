@@ -299,6 +299,7 @@ func (b *TagBuilder) init(r *Release) {
 	_ = b.reset(r, end, TagTypeLanguage, TagTypeArch, TagTypePlatform)
 	b.fixFirst(r)
 	b.fixSourceWeb(r)
+	b.fixSourceUHD(r)
 	start := b.start(r, 0)
 	b.fixBad(r, start, end)
 	b.fixNoText(r, end)
@@ -466,6 +467,25 @@ func (b *TagBuilder) fixSourceWeb(r *Release) {
 		for j := i + 1; j < r.end; j++ {
 			if r.tags[j].Is(TagTypeSource) {
 				r.tags[i] = r.tags[i].As(TagTypeText, nil)
+				break
+			}
+		}
+	}
+}
+
+// fixSourceUHD fixes a bare uhd source tag next to a web source tag with only
+// resolution tags between, as the uhd marks a web source and not a bluray (ie,
+// 'Movie.2022.UHD.2160p.WEB...' or 'Movie.2022.2160p.WEB.UHD...'). The first
+// of the pair is changed, as the first source tag is collected.
+func (b *TagBuilder) fixSourceUHD(r *Release) {
+	for i := range r.end {
+		if !r.tags[i].Is(TagTypeSource) || !strings.EqualFold(r.tags[i].Text(), "UHD") {
+			continue
+		}
+		for _, inc := range []int{1, -1} {
+			if j, s := webSource(r.tags[:r.end], i, inc); j != -1 {
+				k := min(i, j)
+				r.tags[k] = NewTag(TagTypeSource, r.tags[i].f, []byte(r.tags[k].v[0]), []byte("UHD."+s))
 				break
 			}
 		}
@@ -684,12 +704,20 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 	}
 	n := len(r.tags)
 	// inspect types
-	var app, series, movie bool
+	var app, series, movie, video bool
+	for _, tag := range r.tags {
+		series = series || tag.Is(TagTypeSeries)
+		video = video || (!tag.Is(TagTypeGroup) && tag.InfoType() == Movie)
+	}
 	for i := n; i > 0; i-- {
 		typ := r.tags[i-1].InfoType()
-		app, series, movie = app || typ == App, series || r.tags[i-1].Is(TagTypeSeries), movie || typ == Movie
+		app, movie = app || typ == App, movie || typ == Movie
 		switch typ {
 		case Book, Game:
+			if typ == Game && r.tags[i-1].Is(TagTypeGroup) &&
+				video && (series || r.Resolution != "" || (r.Year != 0 && r.Month != 0 && r.Day != 0)) {
+				continue
+			}
 			// peek for comic, education, magazine
 			for j := i - 1; j > 0; j-- {
 				if typ := r.tags[j-1].InfoType(); typ.Is(Comic, Education, Magazine) {
@@ -1240,9 +1268,59 @@ func (b *TagBuilder) unused(r *Release, i int) {
 		case r.Sum == "" && b.sum.MatchString(s) && strings.ContainsAny(s, "0123456789"):
 			r.Sum, r.unused = s, r.unused[:n-1]
 		case r.Group == "" && !b.digits.MatchString(s):
+			last := r.unused[n-1]
 			r.Group, r.unused = s, r.unused[:n-1]
+			b.widenGroup(r, last)
 		}
 	}
+}
+
+// hyphenGroup bounds a group widened from leftover words that follow a hyphen,
+// as in "(... - Kyoshi Mura)": two words of any length that each contain a
+// letter (ie, 'Kyoshi Mura', 'Ky0_Mura'). Leftover words have already failed
+// to lex as tags, so it can be looser than the group lexer's bound.
+var hyphenGroup = regexp.MustCompile(`(?i)^[a-z0-9]*[a-z][a-z0-9]*[ _][a-z0-9]*[a-z][a-z0-9]*$`)
+
+// widenGroup joins the leftover words in front of a guessed group, so
+// "(... - DarQ HONE)" yields the same group as "-DarQ HONE". Words right after
+// a hyphen may be separated by single spaces or underscores, within
+// hyphenGroup or spacedGroup. Other words join across single spaces within
+// spacedGroup only, so trailing alternate titles like "(Meitantei Conan)" are
+// not taken as a group. A run outside the bound keeps the single word.
+func (b *TagBuilder) widenGroup(r *Release, i int) {
+	if n, j := widenRun(r, i, " _"); n < len(r.unused) && j > 0 && strings.Contains(r.tags[j-1].Text(), "-") {
+		if group := joinRun(r, n); hyphenGroup.MatchString(group) || spacedGroup.MatchString(group) {
+			r.Group, r.unused = group, r.unused[:n]
+			return
+		}
+	}
+	if n, _ := widenRun(r, i, " "); n < len(r.unused) {
+		if group := joinRun(r, n); spacedGroup.MatchString(group) {
+			r.Group, r.unused = group, r.unused[:n]
+		}
+	}
+}
+
+// widenRun returns where the run of leftover words in front of the guessed
+// group at tag i starts, as an index into r.unused and into r.tags, when
+// single delimiters from seps separate the words.
+func widenRun(r *Release, i int, seps string) (int, int) {
+	n := len(r.unused)
+	for ; n > 0 && r.unused[n-1] == i-2 && len(r.tags[i-1].Text()) == 1 && strings.Contains(seps, r.tags[i-1].Text()); n-- {
+		i = r.unused[n-1]
+	}
+	return n, i
+}
+
+// joinRun joins the leftover words from n in r.unused onto the guessed group,
+// keeping their delimiters.
+func joinRun(r *Release, n int) string {
+	var sb strings.Builder
+	for _, j := range r.unused[n:] {
+		sb.WriteString(r.tags[j].Text())
+		sb.WriteString(r.tags[j+1].Text())
+	}
+	return sb.String() + r.Group
 }
 
 // delim fixes the delimiter based on surrounding tags.
@@ -1364,4 +1442,23 @@ func isolated(tags []Tag, i, inc int) bool {
 	// 'MiniMeters v0 8 4 Beta MacOS BTCR' treat the trailing group BTCR as
 	// title text and lose the MacOS platform.
 	return 0 <= i && i < len(tags)-1 && tags[i].Is(TagTypeText)
+}
+
+// webSource seeks a web source tag in the indicated incremental direction
+// (-1/+1) from i, skipping whitespace/delim/resolution tags, returning its
+// position and normalized source, or -1 when not found.
+func webSource(tags []Tag, i, inc int) (int, string) {
+	for i += inc; 0 <= i && i < len(tags); i += inc {
+		if tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeResolution) {
+			continue
+		}
+		if tags[i].Is(TagTypeSource) {
+			switch s := tags[i].Source(); s {
+			case "WEB", "WEB-DL", "WEBRiP":
+				return i, s
+			}
+		}
+		break
+	}
+	return -1, ""
 }

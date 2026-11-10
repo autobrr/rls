@@ -529,7 +529,8 @@ func NewAudioLexer() Lexer {
 			for _, info := range channels {
 				v = append(v, strings.ReplaceAll(info.Tag(), `.`, `[\._ ]?`))
 			}
-			re = regexp.MustCompile(reutil.Taginfo(`^i`, audio...) + `(?:[\-\._ ]?(` + strings.Join(v, "|") + `))?(?:\b|[\-\._ ])`)
+			codec := reutil.Taginfo(``, infos["codec"]...)
+			re = regexp.MustCompile(reutil.Taginfo(`^i`, audio...) + `(?:[\-\._ ]?(` + strings.Join(v, "|") + `))?(?:\b|[\-\._ ]|(` + codec + `(?:\b|[\-\._ ])))`)
 			audiof, channelsf = findFunc(audio...), findFunc(channels...)
 			lead, gated = leadSet(re.String())
 		},
@@ -542,6 +543,10 @@ func NewAudioLexer() Lexer {
 				return start, end, i, n, false
 			}
 			if m := re.FindSubmatch(src[i:n]); m != nil {
+				// Leave an attached codec and its delimiter for the next lexer.
+				if len(m[3]) != 0 {
+					m[0] = bytes.TrimSuffix(m[0], m[3])
+				}
 				l := len(m[0])
 				if len(m[2]) != 0 {
 					m[0] = bytes.TrimSuffix(m[0], m[2])
@@ -594,25 +599,51 @@ func NewGenreLexer() Lexer {
 	}
 }
 
+// spacedGroup bounds a group name whose words are space- or underscore-separated.
+var spacedGroup = regexp.MustCompile(`(?i)^[a-z_ ]{2,10}$`)
+
+// dottedGroup bounds a group name of three or more single letters separated by
+// periods (ie, 'E.N.D').
+var dottedGroup = regexp.MustCompile(`(?i)^(?:[a-z]\.){2,}[a-z]$`)
+
 // NewGroupLexer creates a tag lexer for a group.
 func NewGroupLexer() Lexer {
 	const delim, invalid = '-', ` _.()[]{}+`
-	year, group := regexp.MustCompile(`\b(19|20)\d{2}\b`), regexp.MustCompile(`(?i)^[a-z_ ]{2,10}$`)
+	year := regexp.MustCompile(`\b(19|20)\d{2}\b`)
 	bracket := regexp.MustCompile(`^[\]\)\}]`)
 	var groupf, otherf taginfo.FindFunc
-	var re, special *regexp.Regexp
+	var re, special, tags *regexp.Regexp
 	var shortTags map[string]bool
+	// inTag reports whether the hyphen at h joins the words around it into a
+	// known tag (ie, 'WEB-DL' in 'WEB-DL HEVC'), so it does not start a group.
+	inTag := func(src []byte, h int) bool {
+		a, b := bytes.LastIndexAny(src[:h], invalid)+1, len(src)
+		if k := bytes.IndexAny(src[h+1:], invalid); k != -1 {
+			b = h + 1 + k
+		}
+		return tags.Match(src[a:b])
+	}
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, short map[string]bool) {
 			var v []string
+			var known []*taginfo.Taginfo
 			group, other := infos["group"], infos["other"]
 			for _, info := range other {
 				if s := info.Other(); s != "" {
 					v = append(v, s)
 				}
 			}
+			// only tags that can span a hyphen
+			for typ, ti := range infos {
+				for _, info := range ti {
+					if typ != "group" && strings.Contains(info.RE(), "-") {
+						known = append(known, info)
+					}
+				}
+			}
 			groupf, otherf = findFunc(group...), findFunc(other...)
 			re, special = regexp.MustCompile(`(?i)[\-\._ ]+`+reutil.Taginfo(`$`, group...)), regexp.MustCompile(`(?i)_(`+strings.Join(v, `|`)+`)$`)
+			tags = regexp.MustCompile(reutil.Taginfo(`i^$`, known...))
 			shortTags = short
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
@@ -633,7 +664,7 @@ func NewGroupLexer() Lexer {
 			if j := bytes.LastIndexByte(buf[l:n], delim); j != -1 {
 				s := src[l+j+1 : n]
 				if grp := bytes.Trim(s, " \t_"); len(grp) != 0 &&
-					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && group.Match(grp))) &&
+					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && ((spacedGroup.Match(grp) && !inTag(src[:n], l+j)) || dottedGroup.Match(grp)))) &&
 					!shortTags[string(grp)] &&
 					(len(end) == 0 || !bracket.MatchString(end[len(end)-1].Text())) {
 					return start, append(

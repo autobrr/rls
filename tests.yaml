@@ -29,16 +29,22 @@
   group: "PETANK"
 "S H I E L D was C O O L":
   title: "S.H.I.E.L.D. was C.O.O.L."
+"S.W.A.T.":
+  title: "S.W.A.T."
 "[BBT-RMX]_Servant_x_Service":
   title: "Servant x Service"
   group: "BBT-RMX"
   site: "BBT-RMX"
+"Spider-Man Homecoming":
+  title: "Spider-Man Homecoming"
 "TEST.A.Documentary":
   title: "TEST A Documentary"
 "Vol.I.V":
   title: "Vol I.V."
 "WITHNAIL.AND.I":
   title: "WITHNAIL AND I"
+"X-Men Apocalypse":
+  title: "X-Men Apocalypse"
 "You.I.Me":
   title: "You I Me"
 "5.Headed.Shark.Attack.German.2017.MERRY.XMAS.AC3.BDRiP.x264-XF":
@@ -464,6 +470,14 @@
   audio: "DUAL.AUDIO DDP Atmos"
   channels: "5.1"
   group: "BYNDR"
+"Clockwork.Shores.2026.1080p.BluRay.x265-RUNE":
+  type: "movie"
+  title: "Clockwork Shores"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2026
+  codec: "x265"
+  group: "RUNE"
 "Coco.Avant.Chanel.2009.FRENCH.NORDiCSUBS.COMPLETE.BDR-CULTBDR":
   type: "movie"
   title: "Coco Avant Chanel"
@@ -500,6 +514,14 @@
   cut: "Extended.Cut"
   language: "MULTi"
   group: "MONUMENT"
+"D.A.R.Y.L.1985.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "D.A.R.Y.L."
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1985
+  codec: "x264"
+  group: "GRP"
 "(Comedy) Netflix Originals - Dave Chappelle - Deep in the Heart of Texas (2017) 1080p WEBRip DD5.1 x264-TrollHD.mkv":
   type: "movie"
   title: "Dave Chappelle - Deep in the Heart of Texas"
@@ -674,6 +696,17 @@
   codec: "x264"
   audio: "DUAL.AUDIO"
   container: "MKV"
+"Example.Film.2020.UHD.WEBRip.1080p.DDP.5.1.Atmos.DoVi.HDR.x265-Kyo":
+  type: "movie"
+  title: "Example Film"
+  source: "UHD.WEBRiP"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "DV HDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "Kyo"
 "Fargo.1996.SF.20th.Anniversary.Edition.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-RU4HD":
   type: "movie"
   title: "Fargo"
@@ -744,6 +777,14 @@
   language: "GERMAN"
   group: "SPORTSBAR"
   unused: "04 Spieltag Hannover 96 vs FSV Mainz 05"
+"G.I.Joe.Retaliation.2013.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "G.I. Joe Retaliation"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2013
+  codec: "x264"
+  group: "GRP"
 "Ghost.in.the.Shell.2017.UHD.BluRay.2160p.TrueHD.Atmos.7.1.HEVC.REMUX-FraMeSToR.mkv":
   type: "movie"
   title: "Ghost in the Shell"
@@ -898,6 +939,24 @@
   channels: "7.1"
   other: "REMUX"
   group: "FraMeSToR"
+"[KAIJU] Kaiju Squad (BD 720p Ma10 FLAC)":
+  type: "movie"
+  title: "Kaiju Squad"
+  source: "BluRay"
+  resolution: "720p"
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  group: "KAIJU"
+  site: "KAIJU"
+"[KAIJU] Kaiju Squad (BD 1080p Ma10p FLAC)":
+  type: "movie"
+  title: "Kaiju Squad"
+  source: "BluRay"
+  resolution: "1080p"
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  group: "KAIJU"
+  site: "KAIJU"
 "Kiss the blood off my hands - (Norman FOSTER) - 1948 - VOSTFR - Dvdrip-x264 - kerfiche":
   type: "movie"
   title: "Kiss the blood off my hands"
@@ -920,6 +979,14 @@
   other: "EXTRAS"
   group: "SAMPA"
   unused: "x265M"
+"L.A.Confidential.1997.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "L.A. Confidential"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1997
+  codec: "x264"
+  group: "GRP"
 "La.Planete.Des.Singes.L'affrontement.TRUEFRENCH.720p.x264.HDLIGHT\t":
   type: "movie"
   title: "La Planete Des Singes L'affrontement"
@@ -955,6 +1022,147 @@
   year: 2014
   audio: "DUAL.AUDIO"
   size: "1400MB"
+"Movie.2020.1080p.BluRay.x264.Hi10P-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  bitdepth: "10BIT"
+  group: "GRP"
+"Movie.2022.1080p.BluRay.x264.8bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  codec: "x264"
+  bitdepth: "8BIT"
+  group: "GRP"
+"Movie.2022.1080p.BluRay.x265.10.bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  codec: "x265"
+  bitdepth: "10BIT"
+  group: "GRP"
+"Movie.2022.UHD.1080p.WEBRip.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEBRiP"
+  resolution: "1080p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
+"Movie 2022 2160p UHD BluRay x265 12 bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  bitdepth: "12BIT"
+  group: "GRP"
+"Movie.2022.2160p.UHD.BluRay.x265.12-bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  bitdepth: "12BIT"
+  group: "GRP"
+"Movie.2022.2160p.UHD.BluRay.x265.12bit-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  bitdepth: "12BIT"
+  group: "GRP"
+"Movie.2022.2160p.UHD.WEB-RIP.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEBRiP"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
+"Movie.2022.2160p.WEB.UHD.H265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB"
+  resolution: "2160p"
+  year: 2022
+  codec: "H.265"
+  group: "GRP"
+"Movie.2022.UHD.2160p.BluRay.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
+"Movie.2022.UHD.2160p.WEB-DL.DDP.5.1.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Movie.2022.UHD.2160p.WEB.H265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB"
+  resolution: "2160p"
+  year: 2022
+  codec: "H.265"
+  group: "GRP"
+"Movie.2022.UHD.WEB-DL.2160p.DDP.5.1.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Movie.2022.UHD.WEB.2160p.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
+"Movie.2022.WEBRip.2160p.UHD.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEBRiP"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  group: "GRP"
+"Movie.2024.1080p.BluRay.x264.8-bit.EAC-3-GROUP.mkv":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP"
+  group: "GROUP"
+  ext: "mkv"
 "Movie.Title.2015.DVD-R-Pate":
   type: "movie"
   title: "Movie Title"
@@ -1000,6 +1208,14 @@
   year: 2014
   codec: "XViD"
   group: "ViCKY"
+"P.S.I.Love.You.2007.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "P.S.I. Love You"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2007
+  codec: "x264"
+  group: "GRP"
 "Pirates.of.the.Caribbean.On.Stranger.Tides.2011.BluRay.1080p.AVC.DTS-HDMA.7.1.REMUX-FraMeSToR":
   type: "movie"
   title: "Pirates of the Caribbean On Stranger Tides"
@@ -1019,6 +1235,22 @@
   size: "DVD9"
   group: "DownRev"
   unused: "IL Anonymous"
+"R.I.P.D.2013.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "R.I.P.D."
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2013
+  codec: "x264"
+  group: "GRP"
+"R.I.P.D.2.Rise.of.the.Damned.2022.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "R.I.P.D. 2 Rise of the Damned"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2022
+  codec: "H.264"
+  group: "GRP"
 "Rashômon.1950.1080p.Criterion.Collection.BluRay.FLAC.x264-decibeL.mkv":
   type: "movie"
   title: "Rashômon"
@@ -1102,6 +1334,14 @@
   audio: "DTS"
   other: "COMMENTARY"
   group: "Slappy"
+"S.W.A.T.2003.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "S.W.A.T."
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2003
+  codec: "x264"
+  group: "GRP"
 "Scouts.vs.Zombies.Handbuch.zur.Zombie.Apokalypse.2015.German.AC3.DL.1080p.BluRay.x264-EXQUiSiTE":
   type: "movie"
   title: "Scouts vs Zombies Handbuch zur Zombie Apokalypse"
@@ -1112,6 +1352,13 @@
   audio: "DD"
   language: "GERMAN DL"
   group: "EXQUiSiTE"
+"[Commie] Senki Zesshou Symphogear XV [720p] (Unofficial Batch)":
+  type: "movie"
+  title: "Senki Zesshou Symphogear XV"
+  resolution: "720p"
+  group: "Commie"
+  site: "Commie"
+  unused: "Unofficial Batch"
 "Sin.City.A.Dame.to.Kill.For.2014.1080p.BluRay.x264-SPARKS":
   type: "movie"
   title: "Sin City A Dame to Kill For"
@@ -1120,6 +1367,18 @@
   year: 2014
   codec: "x264"
   group: "SPARKS"
+"Siren.The.Voices.of.Shelley.Beattie.2026.with.ASL.1080p.AMZN.WEB-DL.DDP5.1.H.264-Kitsune":
+  type: "movie"
+  title: "Siren The Voices of Shelley Beattie"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  year: 2026
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  other: "Sign.Language"
+  group: "Kitsune"
 "Song Of The South 1946 V2 1080p 35mm DD 2.0 x264-RESTORED.mkv":
   type: "movie"
   title: "Song Of The South"
@@ -1188,6 +1447,240 @@
   version: "v1.4"
   other: "minimalNR"
   group: "4K83"
+  ext: "mkv"
+"Stillwater Ridge (2020) (1080p BluRay x265 - Kyoshi 51)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  unused: "Kyoshi 51"
+"Stillwater Ridge 2020 1080p Blu-Ray HEVC":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "HEVC"
+"Stillwater Ridge 2020 1080p BluRay DTS-HD MA":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  audio: "DTS-HD.MA"
+"Stillwater Ridge 2020 1080p BluRay DTS-X HEVC":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "HEVC"
+  audio: "DTS-X"
+"Stillwater Ridge 2020 1080p WEB-DL Atmos":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  audio: "Atmos"
+"Stillwater Ridge 2020 1080p WEB-DL HEVC":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  codec: "HEVC"
+"Stillwater Ridge 2020 1080p WEB-DL REPACK":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  other: "REPACK"
+"Stillwater Ridge 2020 1080p WEB-DL x265":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+"Stillwater Ridge 2020 WEB-DL 1080p":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+"Stillwater.Ridge.2020.1080p.BluRay.x265-Dolby Digital":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  audio: "DD"
+"Stillwater.Ridge.2020.1080p.BluRay.x265-Dolby Vision":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "DV"
+"Stillwater.Ridge.2020.1080p.BluRay.x265-Anime_Time":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  group: "Anime_Time"
+"Stillwater Ridge 2020 1080p BluRay x264 - BTN 4K":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "BTN"
+"Stillwater Ridge 2020 1080p BluRay x264-DL Group":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "DL Group"
+"Stillwater Ridge 2020 1080p WEB-DL HEVC-DarQ HONE":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+  codec: "HEVC"
+  group: "DarQ HONE"
+"Stillwater Ridge (2020) (1080p BluRay x265 - Long Words Here)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  group: "Here"
+  unused: "Long Words"
+"Stillwater Ridge (2020) (1080p BluRay x265 - Some Long Words Here)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  group: "Here"
+  unused: "Some Long Words"
+"Stillwater.Ridge.2020.1080p.BluRay.x265-RED Army":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  group: "RED Army"
+"Stillwater Ridge 2020 2160p WEB-DL HDR10":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  hdr: "HDR10"
+"Stillwater Ridge 2020 BluRay x264 - BTN 4K":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2020
+  codec: "x264"
+  group: "BTN"
+"Stillwater Ridge (2021) (1080p BluRay x265 SDR DDP 5.1 Russian - Ky0 Mura)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP"
+  channels: "5.1"
+  language: "RUSSiAN"
+  group: "Ky0 Mura"
+"Stillwater Ridge (2021) (1080p ATV WEB-DL x265 SDR DDP Atmos 5.1 English - Kyo Muramasa)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  language: "ENGLiSH"
+  group: "Kyo Muramasa"
+  unused: "ATV"
+"Stillwater Ridge (2021) (1080p ATV WEB-DL x265 SDR DDP Atmos 5.1 English - Kyoshi Mura)":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  language: "ENGLiSH"
+  group: "Kyoshi Mura"
+  unused: "ATV"
+"Stillwater.Ridge.2021.1080p.WEB-DL.DDP5.1.x265-Kyoshi_Mura":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "Kyoshi_Mura"
+"Stillwater Ridge 2021 1080p WEB-DL DDP5.1 x265-Kyoshiro Muramasa":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "Kyoshiro Muramasa"
+"Stillwater.Ridge.2021.1080p.WEB-DL.DDP5.1.x265-Kyoshiro_Muramasa":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2021
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "Kyoshiro_Muramasa"
+"Stillwater Ridge (2021) (2160p UHD BluRay x265 DV HDR DDP 7.1 English - Kyoshi Mura).mkv":
+  type: "movie"
+  title: "Stillwater Ridge"
+  source: "UHD.BluRay"
+  resolution: "2160p"
+  year: 2021
+  codec: "x265"
+  hdr: "DV HDR"
+  audio: "DDP"
+  channels: "7.1"
+  language: "ENGLiSH"
+  group: "Kyoshi Mura"
   ext: "mkv"
 "[UTW-TMD]_Summer_Wars_[BD][h264-720p][TrueHD5.1][9F311DAB].mkv":
   type: "movie"
@@ -1351,6 +1844,14 @@
   audio: "AAC"
   other: "3D SBS"
   group: "ETRG"
+"The.Man.from.U.N.C.L.E.2015.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "The Man from U.N.C.L.E."
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2015
+  codec: "x264"
+  group: "GRP"
 "The Purge: Election Year (2016) HC - 720p HDRiP - 900MB - ShAaNi":
   type: "movie"
   title: "The Purge: Election Year"
@@ -1440,6 +1941,59 @@
   audio: "DDP Atmos"
   channels: "5.1"
   group: "CMRG"
+"Title.2024.1080p.WEB-DL.x264-A.B":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "B"
+  unused: "A"
+"Title.2024.1080p.WEB-DL.x264-E.N.D":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "E.N.D"
+"Title.2024.1080p.WEB-DL.x264-E.N.D.mkv":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "E.N.D"
+  ext: "mkv"
+"Title.2024.1080p.WEB-DL.x264-A.B.C.D.E.F.G.H":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "H"
+  unused: "A B C D E F G"
+"Title.2024.1080p.WEB-DL.x264-D.0.T":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "T"
+  unused: "D 0"
+"Title.2024.1080p.WEB-DL.x264-foo.bar":
+  type: "movie"
+  title: "Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  group: "bar"
+  unused: "foo"
 "Tom_And_Jerry_The_Collection_12DVD-DUTCH_COVER-ToP":
   type: "movie"
   title: "Tom And Jerry The Collection"
@@ -1671,6 +2225,15 @@
   language: "GERMAN"
   genre: "Documentary"
   group: "GEO"
+"A.P.Bio.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "A.P. Bio"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "AEW.x.NJPW.Forbidden.Door.2022.PPV.1080p.08Mb.HDTV.x264-WH.mp4":
   type: "episode"
   title: "AEW x NJPW Forbidden Door"
@@ -1719,6 +2282,16 @@
   channels: "5.1"
   group: "NTb"
   ext: "torrent"
+"Azure.Circles.Ghost.Realm.S01.1080p.BluRay.Opus2.0.x265-RUNE":
+  type: "series"
+  title: "Azure Circles Ghost Realm"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x265"
+  audio: "OPUS"
+  channels: "2.0"
+  group: "RUNE"
 "Beverly.Hills.90210.S04DVD7.German.DVDR-ITG":
   type: "series"
   title: "Beverly Hills 90210"
@@ -1792,6 +2365,17 @@
   other: "WS"
   size: "DVD9"
   group: "NoRBiT"
+"Cells.at.Work.S01.1080p.BluRay.FLAC2.0x265-Main10p-CTR":
+  type: "series"
+  title: "Cells at Work"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x265"
+  audio: "FLAC"
+  channels: "2.0"
+  group: "CTR"
+  unused: "Main10p"
 "Clickbait.2021.S01.2160p.NF.WEBRiP.DDPA5.1.HDR.x265-182K":
   type: "series"
   title: "Clickbait"
@@ -1821,6 +2405,32 @@
   series: 2
   episode: 20
   language: "RUSSiAN ENGLiSH"
+"Copper.Skies.S00.1080p.BluRay.x265-CODEX":
+  type: "series"
+  title: "Copper Skies"
+  source: "BluRay"
+  resolution: "1080p"
+  codec: "x265"
+  group: "CODEX"
+"Copper.Skies.S02E03.1080p.BluRay.x265-CODEX":
+  type: "episode"
+  title: "Copper Skies"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 2
+  episode: 3
+  codec: "x265"
+  group: "CODEX"
+"Copper.Skies.2026.08.23.1080p.WEB.x265-CODEX":
+  type: "episode"
+  title: "Copper Skies"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  month: 8
+  day: 23
+  codec: "x265"
+  group: "CODEX"
 "Core.Kyoto.S05E16.Tatami.The.Flooring.Underlying.Japanese.Culture.HDTV.x264-DARKFLiX":
   type: "episode"
   title: "Core Kyoto"
@@ -1857,6 +2467,21 @@
   group: "HorribleSubs"
   site: "HorribleSubs"
   ext: "mkv"
+"Detective Conan S01E1207 The J League Starting Whistle 1080p CR WEB-DL AAC2.0 H 264-VARYG (Meitantei Conan, Multi-Subs)":
+  type: "episode"
+  title: "Detective Conan"
+  subtitle: "The J League Starting Whistle"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "CR"
+  series: 1
+  episode: 1207
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  language: "MULTiSUB"
+  group: "Conan"
+  unused: "VARYG Meitantei"
 "DI.Ray.S01.1080p.AMZN.WEB-DL.DDP2.0.H.264-NTb":
   type: "series"
   title: "DI Ray"
@@ -1913,6 +2538,15 @@
   episode: 12
   codec: "x264"
   group: "fov"
+"Doogie.Howser.M.D.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "Doogie Howser M.D."
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Doogie.Howser.MD.S02E05.DVDRip.XviD-FFNDVD":
   type: "episode"
   title: "Doogie Howser MD"
@@ -2274,6 +2908,15 @@
   other: "PROPER"
   language: "VOSTFR"
   group: "ARK01"
+"Mr.Robot.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "Mr Robot"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Mr Robot S02E11 German DD 51 Synced DL 1080p AmazonHD x264-TVS":
   type: "episode"
   title: "Mr Robot"
@@ -2429,6 +3072,26 @@
   channels: "2.0"
   other: "REMUX"
   ext: "mkv"
+"S.W.A.T. (2017) S07E01 1080p WEB H264-GRP":
+  type: "episode"
+  title: "S.W.A.T."
+  source: "WEB"
+  resolution: "1080p"
+  year: 2017
+  series: 7
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
+"S.W.A.T.2017.S07E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "S.W.A.T."
+  source: "WEB"
+  resolution: "1080p"
+  year: 2017
+  series: 7
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "[SubsPlease] Saikin Yatotta Maid ga Ayashii - 09 (1080p) [990FF01E].mkv":
   type: "episode"
   title: "Saikin Yatotta Maid ga Ayashii"
@@ -2438,6 +3101,15 @@
   site: "SubsPlease"
   sum: "990FF01E"
   ext: "mkv"
+"Say.Hi.10.Times.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "Say Hi 10 Times"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Schitt's Creek (2015) - S04E01 - Dead Guy in Room 4 (1080p AMZN WEB-DL x265 MONOLITH).mkv":
   type: "episode"
   title: "Schitt's Creek"
@@ -2461,6 +3133,71 @@
   site: "chibi-Doki"
   sum: "988DB090"
   ext: "mkv"
+"Severance.S01.with.Audio.Description.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-NTb":
+  type: "series"
+  title: "Severance"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 1
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  other: "Audio.Description"
+  group: "NTb"
+"Severance.S01E03.Audio.Description.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-NTb":
+  type: "episode"
+  title: "Severance"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 1
+  episode: 3
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  other: "Audio.Description"
+  group: "NTb"
+"[Group] Show - 01 (BD 1080p Hi10 FLAC)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 1
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  group: "Group"
+  site: "Group"
+"[Group] Show - 01 (BD 1080p Hi10P FLAC)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 1
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  group: "Group"
+  site: "Group"
+"[Group] Show - 01 [BD 1080p Hi-10P FLAC]":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 1
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  group: "Group"
+  site: "Group"
+"Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
+  type: "series"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP"
+  group: "GROUP"
 "Show.S01E01.1080p.IP.WEB-DL.AAC2.0.H.264-GROUP":
   type: "episode"
   title: "Show"
@@ -2473,6 +3210,69 @@
   audio: "AAC"
   channels: "2.0"
   group: "GROUP"
+"Show.S01E01.1080p.WEB-DL.x264.10-bit.E-AC-3-GROUP.mkv":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  bitdepth: "10BIT"
+  audio: "DDP"
+  group: "GROUP"
+  ext: "mkv"
+"Show.S01E01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP.mkv":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP"
+  group: "GROUP"
+  ext: "mkv"
+"Show.S01E01.1080p.WEB-DL.x264.8-bit.eac-3-GROUP.mkv":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP"
+  group: "GROUP"
+  ext: "mkv"
+"[Group] Show (2024) - 01 (S01E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2024
+  series: 1
+  episode: 1
+  seriesEpisodes: "S00E01 S01E01"
+  codec: "x264"
+  bitdepth: "8BIT"
+  audio: "DDP DUAL.AUDIO"
+  group: "Group"
+  site: "Group"
+"Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
+  type: "episode"
+  title: "Silo"
+  subtitle: "A Dark Web"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ATVP"
+  series: 3
+  episode: 3
+  codec: "H.264"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "Kronos"
 "Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB.DDP5.1.Atmos.x265.10bit-Kronos":
   type: "episode"
   title: "Silo"
@@ -2484,19 +3284,6 @@
   episode: 3
   codec: "x265"
   bitdepth: "10BIT"
-  audio: "DDP Atmos"
-  channels: "5.1"
-  group: "Kronos"
-"Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
-  type: "episode"
-  title: "Silo"
-  subtitle: "A Dark Web"
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "ATVP"
-  series: 3
-  episode: 3
-  codec: "H.264"
   audio: "DDP Atmos"
   channels: "5.1"
   group: "Kronos"
@@ -2639,6 +3426,57 @@
   other: "HR"
   container: "WMV"
   group: "KTR"
+"Stillwater Ridge S01E01 WEB-DL x264":
+  type: "episode"
+  title: "Stillwater Ridge"
+  source: "WEB-DL"
+  series: 1
+  episode: 1
+  codec: "x264"
+"Stillwater Ridge S01E01 Spider-Man Returns":
+  type: "episode"
+  title: "Stillwater Ridge"
+  subtitle: "Spider-Man Returns"
+  series: 1
+  episode: 1
+"Stillwater Ridge (2022) S01 (1080p BluRay x265 SDR DDP 5.1 English - Kelp NOVA)":
+  type: "series"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP"
+  channels: "5.1"
+  language: "ENGLiSH"
+  group: "Kelp NOVA"
+"Stillwater Ridge 2022 S01 1080p BluRay DD+ 5.1 x265-Kelp NOVA":
+  type: "series"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  codec: "x265"
+  audio: "DDP"
+  channels: "5.1"
+  group: "Kelp NOVA"
+"Stillwater Ridge (2022) S01 (1080p BluRay x265 SDR DDP 5.1 English - Kelp-NOVA)":
+  type: "series"
+  title: "Stillwater Ridge"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DDP"
+  channels: "5.1"
+  language: "ENGLiSH"
+  group: "NOVA"
+  unused: "Kelp"
 "Superstore S02 1080p Amazon WEB-DL DD+ 5.1 x264-TrollHD":
   type: "series"
   title: "Superstore"
@@ -2650,6 +3488,15 @@
   audio: "DDP"
   channels: "5.1"
   group: "TrollHD"
+"T.J.Hooker.S01E01.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "T.J. Hooker"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "The Big Bang Theory S08E06 HDTV XviD-LOL [eztv]":
   type: "episode"
   title: "The Big Bang Theory"
@@ -3687,6 +4534,41 @@
   disc: "CD2"
   other: "PROPER Incl.Patchtool READNFO"
   group: "MiRROR"
+"Clockwork.Gardens.v1.0-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  version: "v1.0"
+  group: "CODEX"
+"Clockwork.Gardens.1080p.PS5-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  platform: "PS5"
+  resolution: "1080p"
+  group: "CODEX"
+"Clockwork.Gardens.4K.Texture.Pack-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  resolution: "2160p"
+  group: "CODEX"
+  unused: "Texture Pack"
+"Clockwork.Gardens.S01.PS5-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  platform: "PS5"
+  series: 1
+  group: "CODEX"
+"Clockwork.Gardens.Season.1-CODEX":
+  type: "game"
+  title: "Clockwork Gardens"
+  series: 1
+  group: "CODEX"
+"Clockwork.Gardens.2026.08.23-CODEX":
+  type: "game"
+  title: "Clockwork Gardens 2026"
+  year: 2026
+  month: 8
+  day: 23
+  group: "CODEX"
 "Command_And_Conquer_Generals_v1.05.NoCD.Proper-Alpha_Team":
   type: "game"
   title: "Command And Conquer Generals"
