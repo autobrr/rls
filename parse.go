@@ -1249,24 +1249,34 @@ loop:
 			break loop
 		}
 	}
+	// each rewrite below is skipped when a scan shows its pattern cannot
+	// match, which is the usual case: a regexp replace copies the string twice
+	// even when it changes nothing.
+	s := strings.Join(v, "")
 	// acronyms missing periods
-	s := b.missing.ReplaceAllStringFunc(strings.Join(v, ""), func(a string) string {
-		return strings.TrimLeft(strings.ReplaceAll(strings.TrimSpace(a), " ", "."), ". ") + ". "
-	})
+	if hasAcronym(s) {
+		s = b.missing.ReplaceAllStringFunc(s, func(a string) string {
+			return strings.TrimLeft(strings.ReplaceAll(strings.TrimSpace(a), " ", "."), ". ") + ". "
+		})
+	}
 	// fix oopsie
 	s = strings.ReplaceAll(s, ". .", ". ")
 	// acronymns on single letters
-	s = b.bad.ReplaceAllStringFunc(s, func(a string) string {
-		return b.fix.ReplaceAllString(a, "$1")
-	})
+	if hasBadAcronym(s) {
+		s = b.bad.ReplaceAllStringFunc(s, func(a string) string {
+			return b.fix.ReplaceAllString(a, "$1")
+		})
+	}
 	// collapse spaces
-	s = b.spaces.ReplaceAllString(s, " ")
+	s = b.collapse(s)
 	// collapse ellipsis
-	s = b.ellips.ReplaceAllString(s, "...")
+	if strings.Contains(s, "....") {
+		s = b.ellips.ReplaceAllString(s, "...")
+	}
 	// unescape entities
 	s = html.UnescapeString(s)
-	if m := b.plus.FindAllStringIndex(s, -1); len(m) > 1 {
-		s = b.plus.ReplaceAllString(s, " ")
+	if strings.Count(s, "+") > 1 {
+		s = strings.ReplaceAll(s, "+", " ")
 	}
 	// trim
 	return strings.TrimFunc(s, isTitleTrimDelim), i
@@ -1353,7 +1363,7 @@ func (b *TagBuilder) delim(delim string, tags []Tag, i int, types ...TagType) st
 		return " "
 	}
 	// convert to spaces, collapse
-	s := b.spaces.ReplaceAllString(strings.Map(func(r rune) rune {
+	s := b.collapse(strings.Map(func(r rune) rune {
 		switch r {
 		case '-', '+', ',', '.', '~':
 			return r
@@ -1361,15 +1371,15 @@ func (b *TagBuilder) delim(delim string, tags []Tag, i int, types ...TagType) st
 			return ' '
 		}
 		return -1
-	}, delim), " ")
+	}, delim))
 	// bail if last tag or not a period
 	if s != "." || i == len(tags)-1 {
-		return b.spaces.ReplaceAllString(strings.Map(func(r rune) rune {
+		return b.collapse(strings.Map(func(r rune) rune {
 			if r == '.' {
 				return ' '
 			}
 			return r
-		}, s), " ")
+		}, s))
 	}
 	// get ante, prev, next
 	var ante, prev, next string
@@ -1391,6 +1401,44 @@ func (b *TagBuilder) delim(delim string, tags []Tag, i int, types ...TagType) st
 		return "."
 	}
 	return " "
+}
+
+// collapse replaces each run of whitespace in s with a single space.
+func (b *TagBuilder) collapse(s string) string {
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case '\t', '\n', '\f', '\r':
+			return b.spaces.ReplaceAllString(s, " ")
+		case ' ':
+			if i+1 < len(s) && s[i+1] == ' ' {
+				return b.spaces.ReplaceAllString(s, " ")
+			}
+		}
+	}
+	return s
+}
+
+// hasAcronym reports whether s holds an upper case letter, a period or space,
+// and another upper case letter in a row, which every match of missing starts
+// with.
+func hasAcronym(s string) bool {
+	for i := 0; i+2 < len(s); i++ {
+		if (s[i+1] == '.' || s[i+1] == ' ') && s[i] >= 'A' && s[i] <= 'Z' && s[i+2] >= 'A' && s[i+2] <= 'Z' {
+			return true
+		}
+	}
+	return false
+}
+
+// hasBadAcronym reports whether s holds a hyphen, period or space, an upper
+// case letter and a period in a row, which every match of bad contains.
+func hasBadAcronym(s string) bool {
+	for i := 1; i+2 < len(s); i++ {
+		if s[i+2] == '.' && s[i+1] >= 'A' && s[i+1] <= 'Z' && (s[i] == '-' || s[i] == '.' || s[i] == ' ') {
+			return true
+		}
+	}
+	return false
 }
 
 // isUpperLetter determines if s is all upper case.
