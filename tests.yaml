@@ -3260,6 +3260,17 @@
   audio: "DDP DUAL.AUDIO"
   group: "Group"
   site: "Group"
+"Show_Name_S01E01_1080p_WEB-DL_AAC2.0_H.264-GRP":
+  type: "episode"
+  title: "Show Name"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "GRP"
 "Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
   type: "episode"
   title: "Silo"

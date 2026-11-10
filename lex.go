@@ -549,6 +549,13 @@ func NewAudioLexer() Lexer {
 				}
 				l := len(m[0])
 				if len(m[2]) != 0 {
+					// The terminator consumes a delimiter that \b does not see
+					// as a boundary ('AAC2.0_'). Leave it for the delimiter
+					// lexer, or the audio tag keeps the channels as well.
+					if !bytes.HasSuffix(m[0], m[2]) {
+						l--
+						m[0] = m[0][:l]
+					}
 					m[0] = bytes.TrimSuffix(m[0], m[2])
 				}
 				start = append(start, NewTag(TagTypeAudio, audiof, m[0], m[1]))
