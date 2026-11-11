@@ -4917,6 +4917,15 @@
   codec: "x264"
   group: "Ebi"
   site: "rartv"
+"[Vivid-Asenshi + Multi Subs] Violet Evergarden - 13 [1080p].mkv":
+  type: "episode"
+  title: "Violet Evergarden"
+  resolution: "1080p"
+  episode: 13
+  absolute: 13
+  group: "Vivid-Asenshi"
+  site: "Vivid-Asenshi"
+  ext: "mkv"
 "VTC.S01E01.FRENCH.1080p.WEB.H264-PROPJOE":
   type: "episode"
   title: "VTC"

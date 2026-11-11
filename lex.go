@@ -1366,7 +1366,15 @@ func NewMetaLexer(strs ...string) Lexer {
 					// a plus is what distinguishes a group from a padded
 					// single token ('[ www.Speed.cd ]'), which the site
 					// pattern handles.
-					if t := bytes.TrimSpace(g[1]); bytes.ContainsAny(t, " +") && !leadTags.Match(t) {
+					// tags after a plus are a note on the release, and the
+					// group is the name in front of it ('[Group + Multi
+					// Subs]')
+					t := bytes.TrimSpace(g[1])
+					if name, _, ok := bytes.Cut(t, []byte(" + ")); ok && leadTags.Match(t) && !leadTags.Match(name) && !notSite(name) {
+						start = append(start, NewTag(TagTypeMeta, nil, g[0], []byte(`site`), name))
+						i += len(g[0])
+						seen(`site`)
+					} else if bytes.ContainsAny(t, " +") && !leadTags.Match(t) {
 						start = append(start, NewTag(TagTypeMeta, nil, g[0], []byte(`site`), t))
 						i += len(g[0])
 						seen(`site`)
