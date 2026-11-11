@@ -3775,6 +3775,14 @@
   site: "Group"
   sum: "D2861769"
   ext: "mkv"
+"[Group] Show Name - 05 (JA) [720p]":
+  type: "episode"
+  title: "Show Name"
+  resolution: "720p"
+  episode: 5
+  group: "Group"
+  site: "Group"
+  unused: "JA"
 "[Group] Show Name - 24 (JA) [720p WEB-DL AVC AAC]":
   type: "episode"
   title: "Show Name"
