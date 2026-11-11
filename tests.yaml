@@ -1627,14 +1627,23 @@
   group: "Commie"
   site: "Commie"
   unused: "Unofficial Batch"
+"Show.2023.02.29.1080p.HDTV.x264-GRP":
+  type: "movie"
+  title: "Show"
+  source: "HDTV"
+  resolution: "1080p"
+  year: 2023
+  codec: "x264"
+  group: "GRP"
+  unused: "02 29"
 "Show.2023.02.29.HDTV.x264-GRP":
   type: "movie"
   title: "Show"
-  subtitle: "02 29"
   source: "HDTV"
   year: 2023
   codec: "x264"
   group: "GRP"
+  unused: "02 29"
 "[Group][Show_Name][BDRip][1080p]":
   type: "movie"
   title: "Show Name"
