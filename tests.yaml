@@ -996,6 +996,15 @@
   audio: "AAC"
   language: "ENGLiSH"
   group: "CPG"
+"[GHOST][1080p] Inuyasha - Movie 4 Fire on the Mystic Island [BD HEVC Dual Audio AC3]":
+  type: "movie"
+  title: "Inuyasha - Movie 4 Fire on the Mystic Island"
+  source: "BluRay"
+  resolution: "1080p"
+  codec: "HEVC"
+  audio: "DUAL.AUDIO DD"
+  group: "GHOST"
+  site: "GHOST"
 "Jack.And.The.Cuckoo-Clock.Heart.2013.BRRip XViD":
   type: "movie"
   title: "Jack And The Cuckoo-Clock Heart"
@@ -2736,6 +2745,13 @@
   channels: "5.1"
   group: "NTb"
   ext: "torrent"
+"[1080p HEVC] Anime - 04":
+  type: "episode"
+  title: "Anime"
+  resolution: "1080p"
+  episode: 4
+  absolute: 4
+  codec: "HEVC"
 "Azure.Circles.Ghost.Realm.S01.1080p.BluRay.Opus2.0.x265-RUNE":
   type: "series"
   title: "Azure Circles Ghost Realm"
@@ -2801,6 +2817,17 @@
   audio: "DD"
   channels: "2.0"
   size: "DVD9"
+"[Diogo4D] [BD][1080p] Boku no Kokoro no Yabai Yatsu - 07 [68A22760].mkv":
+  type: "episode"
+  title: "Boku no Kokoro no Yabai Yatsu"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 7
+  absolute: 7
+  group: "Diogo4D"
+  site: "Diogo4D"
+  sum: "68A22760"
+  ext: "mkv"
 "breaking.bad.s01e01.720p.bluray.x264-reward":
   type: "episode"
   title: "breaking bad"
@@ -2871,6 +2898,14 @@
   series: 2
   episode: 20
   language: "RUSSiAN ENGLiSH"
+"[Group] [Complete Manual] - 04 [1080p]":
+  type: "episode"
+  title: "Complete Manual"
+  resolution: "1080p"
+  episode: 4
+  absolute: 4
+  group: "Group"
+  site: "Group"
 "Copper.Skies.S00.1080p.BluRay.x265-CODEX":
   type: "series"
   title: "Copper Skies"
@@ -3143,6 +3178,15 @@
   other: "BOXSET"
   language: "NORDiC"
   group: "TWASERiES"
+"[WEB] Fantasy X Hunter - Season 1 [1080P][HEVC][x265][10-bit][HFR][AAC]":
+  type: "series"
+  title: "Fantasy X Hunter"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "AAC"
 "Formula1.2024x05.Miami.Grand.Prix.Race.1080p.WEB.h264-GRP":
   type: "episode"
   title: "Formula1"

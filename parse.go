@@ -628,7 +628,28 @@ func (b *TagBuilder) fixFirst(r *Release) {
 	// '[Group] Complete Manual - 04' kept COMPLETE as an other tag).
 	for ; i < r.end && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeMeta); i++ {
 	}
-	if i != r.end && r.tags[i].Is(
+	// a tag that opens a bracket of tags is a tag of the release, and the
+	// title comes after the bracket ('[Group][1080p] Title', '[BD 1080p] Title
+	// [Group]'). with nothing but words after it the bracket holds the title
+	// ('[Group] [Complete Manual] - 04')
+	var bracket bool
+	if i != r.end && i != 0 && r.tags[i-1].Is(TagTypeDelim) {
+		d := r.tags[i-1].v[0]
+		bracket = d != "" && strings.IndexByte("[({", d[len(d)-1]) != -1
+	}
+	if bracket {
+		var words, tags int
+		for j := i + 1; j < r.end && !(r.tags[j].Is(TagTypeDelim) && strings.ContainsAny(r.tags[j].v[0], "])}")); j++ {
+			switch {
+			case r.tags[j].Is(TagTypeText):
+				words++
+			case !r.tags[j].Is(TagTypeDelim, TagTypeWhitespace):
+				tags++
+			}
+		}
+		bracket = words == 0 || tags != 0
+	}
+	if !bracket && i != r.end && r.tags[i].Is(
 		TagTypePlatform,
 		TagTypeArch,
 		TagTypeSource,
