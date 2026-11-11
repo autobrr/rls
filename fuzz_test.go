@@ -2,6 +2,7 @@ package rls
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -33,13 +34,56 @@ func exercise(r Release) {
 	_ = Compare(r, r)
 }
 
+// checkTags lexes s and checks that the tags reproduce it as they come out of
+// Parse, before Build has touched them. The lexer contract lets a lexer skip
+// input without tagging it, and the round trip on the built release does not
+// say which step lost the bytes.
+//
+// The report gives the byte at which the tags leave the input and the tags
+// around it. The lexer at fault made the last of them or one before it: bytes
+// that were skipped go unnoticed for as long as the text after them repeats
+// them ('-Retail-GRP' with '-Retail' skipped still matches at the '-').
+//
+// A tag may have no text. The series lexer adds a Date tag for a year written
+// as a season ('S2024E05'), and the Series tag before it holds the bytes.
+func checkTags(tb testing.TB, s string) {
+	tb.Helper()
+	tags, _ := ParseTagsString(s)
+	var b strings.Builder
+	at := -1
+	for i, tag := range tags {
+		fmt.Fprintf(&b, "%o", tag)
+		if at < 0 && !strings.HasPrefix(s, b.String()) {
+			at = i
+		}
+	}
+	out := b.String()
+	if out == s {
+		return
+	}
+	// every tag matched, so the tags stop short of the input
+	if at < 0 {
+		at = len(tags) - 1
+	}
+	n := 0
+	for n < len(s) && n < len(out) && s[n] == out[n] {
+		n++
+	}
+	tb.Errorf("tags leave the input at byte %d:\n in: %q\nout: %q\ntags %d to %d: %q",
+		n, s, out, max(at-2, 0), at, tags[max(at-2, 0):at+1])
+}
+
 // FuzzParseString checks that no release name can panic the parser. autobrr and
 // friends feed this attacker-influencable strings from IRC announces and RSS
 // feeds, so this is the property that matters most.
 //
 // It also checks that the tags reproduce the input: a lexer that skips bytes
 // without tagging them loses part of the name silently, and nothing else would
-// notice.
+// notice. checkTags makes the same comparison on the tags straight out of
+// Parse, with no Build in between, so a failure names the lexing step.
+//
+// Plain go test runs the seeds, which are every name in tests.yaml and the
+// inputs below, so both checks run without -fuzz.
 func FuzzParseString(f *testing.F) {
 	for _, test := range rlsTests(f) {
 		f.Add(test.s)
@@ -52,7 +96,16 @@ func FuzzParseString(f *testing.F) {
 	f.Add("Show.13v_2.720p")
 	f.Add("0v+0")
 	f.Add("s02dvd3")
+	// the edges of the lexers that read the start and the end of a name
+	for _, s := range []string{
+		" ", "...", "-", "[]", "[[", "\x00", "\xff\xfe", "-GROUP", ".mkv",
+		"[ABCD1234]", "a.S01E01.\xff\xff.1080p-g",
+		"Show.S01E02.1080p.WEB.h264-GRP  ", "  Show.S01E02",
+	} {
+		f.Add(s)
+	}
 	f.Fuzz(func(t *testing.T, s string) {
+		checkTags(t, s)
 		r := ParseString(s)
 		if o := fmt.Sprintf("%o", r); o != s {
 			t.Errorf("round trip failed:\n in: %q\nout: %q", s, o)
