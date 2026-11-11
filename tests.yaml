@@ -3872,6 +3872,15 @@
   group: "Group"
   site: "Group"
   unused: "JA"
+"[Group] Show Name - S00E28 (WEB 1080p) (Show Name 2nd Season OVA)":
+  type: "episode"
+  title: "Show Name"
+  source: "WEB"
+  resolution: "1080p"
+  episode: 28
+  group: "Group"
+  site: "Group"
+  unused: "Show Name 2nd Season OVA"
 "Show Name - 471 [720p] [ES-EN-DE-PT] [A05B966C].mkv":
   type: "episode"
   title: "Show Name"
@@ -3924,6 +3933,22 @@
   group: "Group"
   site: "Group"
   unused: "EP : 402"
+"[Group] Show Name 2nd Season - 08 [1080p]":
+  type: "episode"
+  title: "Show Name"
+  resolution: "1080p"
+  series: 2
+  episode: 8
+  group: "Group"
+  site: "Group"
+"Show Name 3rd Season (BD 1080p HEVC Opus)":
+  type: "series"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 3
+  codec: "HEVC"
+  audio: "OPUS"
 "Show Name - S03 [BD 1080p HEVC Opus Dual-Audio] [ThanksBB]":
   type: "series"
   title: "Show Name"

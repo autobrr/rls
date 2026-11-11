@@ -84,6 +84,8 @@ func DefaultLexers() []Lexer {
 			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]{1,3}(?P<e>\d{1,5})(?:[\-\._ ]{1,3}(?P<v>v\d+(?:\.\d+){0,2}))?\b`,
 			// Season.01.Episode.02, Series.01.Ep.02, Series.01, Season.01
 			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
+			// 2nd Season, 3rd.Season
+			`(?i)^(?P<s>[1-9]\d?)(?:st|nd|rd|th)[\-\._ ]season\b`,
 			// Vol.1.No.2, vol1no2
 			`(?i)^vol(?:ume)?[\-\._ ]?(?P<s>\d{1,3})(?:[\-\._ ]?(?:number|no)[\-\._ ]?(?P<e>\d{1,5}))\b`,
 			// Episode 15, E009, Ep. 007, EP07, Ep07v2, Ep.05-07, Ep 05 ~ 07, Ep 5.5
@@ -307,6 +309,12 @@ func NewSeriesLexer(strs ...string) Lexer {
 					if k < 0 || firstYearEnd(buf[i:min(n, i+6)]) != -1 {
 						return start, end, i - len(s), n, false
 					}
+				}
+				// '2nd Season' after a season or an episode is the show's
+				// other name repeating it ('S00E28 (Show 2nd Season OVA)')
+				if len(series) != 0 && len(episode) == 0 && s[0] >= '1' && s[0] <= '9' && (s[len(s)-1] == 'n' || s[len(s)-1] == 'N') &&
+					slices.ContainsFunc(start, func(tag Tag) bool { return tag.Is(TagTypeSeries) }) {
+					return start, end, i - len(s), n, false
 				}
 				// 'EP1168' is an episode, but 'EP2004' is a music release and
 				// its year, which the disc source year lexer reads
