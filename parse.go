@@ -270,6 +270,7 @@ func (b *TagBuilder) Build(tags []Tag, end int) Release {
 	b.leadingGroup(r)
 	// demarcate unused
 	b.unused(r, i)
+	b.trailingGroup(r)
 	return *r
 }
 
@@ -287,6 +288,33 @@ func (b *TagBuilder) leadingGroup(r *Release) {
 			if k, v := r.tags[i].Meta(); k == "site" && v == r.Site {
 				r.Group = v
 			}
+		}
+		return
+	}
+}
+
+// trailingGroup sets the group from a site in a bracket that closes the name
+// (ie, 'Show - 04 [1080p][Group].mkv'), when nothing else gave a group. It
+// runs last, so that a group named in the tags is preferred ('(BD 1080p -
+// Encoder)[Uploader]').
+func (b *TagBuilder) trailingGroup(r *Release) {
+	if r.Group != "" || r.Site == "" {
+		return
+	}
+	for i := len(r.tags) - 1; i >= 0; i-- {
+		switch {
+		case r.tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeExt):
+			continue
+		case r.tags[i].Is(TagTypeMeta):
+			// a site given by name ('[[site:name]]', '-={name}=-') is not
+			// a group
+			if k, v := r.tags[i].Meta(); k == "site" && v == r.Site {
+				if s := strings.TrimSpace(r.tags[i].v[0]); strings.HasPrefix(s, "[") && !strings.HasPrefix(s, "[[") {
+					r.Group = v
+				}
+				return
+			}
+			continue
 		}
 		return
 	}

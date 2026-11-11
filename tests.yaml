@@ -4,6 +4,7 @@
 "   ":
 "  -  -[[ foo:bar ]]-__-{{ secret }}-.-([ABCD1234]).0.([ mountain ][[ key:value ]])  ":
   title: "0"
+  group: "mountain"
   meta: "foo:bar key:value"
   site: "mountain"
   sum: "ABCD1234"
@@ -212,6 +213,7 @@
   hdr: "DV HDR"
   audio: "DDP Atmos"
   channels: "5.1"
+  group: "cTurtle-4K"
   site: "cTurtle-4K"
   ext: "torrent"
   unused: "crf18 S97"
@@ -1547,6 +1549,16 @@
   year: 1994
   codec: "x264"
   other: "REMASTERED"
+"Show.Name.2010.BDRip.720p.x264.FLAC[Coalgirls]":
+  type: "movie"
+  title: "Show Name"
+  source: "BDRiP"
+  resolution: "720p"
+  year: 2010
+  codec: "x264"
+  audio: "FLAC"
+  group: "Coalgirls"
+  site: "Coalgirls"
 "Show Name (2014) [BDRip] [1080p] [HEVC] [v2]":
   type: "movie"
   title: "Show Name"
@@ -3859,6 +3871,16 @@
   group: "Group"
   site: "Group"
   unused: "EP : 402"
+"Show Name - S03 [BD 1080p HEVC Opus Dual-Audio] [ThanksBB]":
+  type: "series"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 3
+  codec: "HEVC"
+  audio: "OPUS DUAL.AUDIO"
+  group: "ThanksBB"
+  site: "ThanksBB"
 "Show Title - 05 [1080p][ABCDEFAB].mkv":
   type: "episode"
   title: "Show Title"
@@ -4808,6 +4830,7 @@
   title: "When It's All Said And Done... Take Time"
   year: 2021
   audio: "MP3 320Kbps"
+  group: "PMEDIA"
   site: "PMEDIA"
 "Hawk-H.A.W.K-2002-SUT_INT":
   type: "music"
@@ -4955,6 +4978,7 @@
   year: 2020
   audio: "MP3 320Kbps"
   other: "REMiX"
+  group: "PMEDIA"
   site: "PMEDIA"
 "Tales From Europe - 40 [2023] [Album] - FLAC / Lossless / WEB":
   type: "music"
@@ -5502,6 +5526,7 @@
   series: 1
   episode: 22
   container: "CBR"
+  group: "thesite"
   site: "thesite"
 "L.Elephant.N26.2019.FRENCH.RETAiL.MAGAZiNE.eBook-PRiNTER":
   type: "magazine"
