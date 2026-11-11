@@ -943,7 +943,8 @@ func (b *TagBuilder) unset(r *Release) {
 			case typ == TagTypeArch && r.Arch == s:
 				r.Arch, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeSource && r.Source == s:
-				r.Source, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
+				// the source is then the next one in the name
+				r.Source, r.tags[i], grabSource = "", r.tags[i].As(TagTypeText, nil), true
 			case typ == TagTypeResolution && r.Resolution == s:
 				r.Resolution, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeCollection && r.Collection == s:

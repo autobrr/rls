@@ -3771,6 +3771,18 @@
   group: "Group"
   site: "Group"
   unused: "EP : 402"
+"[Group] Show Name S01E36 [EP: 402] [1080p] [HEVC WEBRip DDP]":
+  type: "episode"
+  title: "Show Name"
+  source: "WEBRiP"
+  resolution: "1080p"
+  series: 1
+  episode: 36
+  codec: "HEVC"
+  audio: "DDP"
+  group: "Group"
+  site: "Group"
+  unused: "EP : 402"
 "Show.Title.S01E01.720p.HDTV.x264-GRP-Obfuscated":
   type: "episode"
   title: "Show Title"
