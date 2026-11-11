@@ -1581,6 +1581,12 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	if pos == len(r.tags) || !r.tags[pos].Is(TagTypeText) {
 		return pos
 	}
+	// the first text after a '+' lists what else the release holds ('S01-04 +
+	// OVAs', 'Season 01-25+Movies+Specials', 'S01 1080p + Specials'), and is
+	// not a title
+	if r.tags[pos-1].Is(TagTypeDelim) && strings.Contains(r.tags[pos-1].Delim(), "+") {
+		return pos
+	}
 	// text inside a bracket that opened after the episode is a block of tags
 	// or another name for the show ('S02E06 [English Dub]', '- 05 (BS11
 	// 1080p)'), not the episode title, unless it has the scene layout of one
