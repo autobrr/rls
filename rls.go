@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"unicode"
 	"unicode/utf8"
 
@@ -95,7 +96,7 @@ func ParseString(src string) Release {
 // Format Options:
 //
 //	o - original release
-//	v - tag type followed by colon and quoted capture value (Date:["2009", "", ""])
+//	v - original release, same as o; this is what fmt.Println, %v and %+v print
 //	s - normalized capture value (2009)
 //	e - tag type and normal value (as in s) surrounded by angle brackets (<Date:2009>)
 //	q - original captured value, quoted
@@ -109,6 +110,11 @@ func (r Release) Format(f fmt.State, verb rune) {
 			}
 		}
 		fmt.Fprintf(f, "%q", buf.Bytes())
+	case 'v':
+		// Tag.Format uses v for the per-tag form, so print each tag as o
+		for _, tag := range r.tags {
+			tag.Format(f, 'o')
+		}
 	case 's', 'o', 'e':
 		for _, tag := range r.tags {
 			tag.Format(f, verb)
@@ -210,11 +216,30 @@ type Tag struct {
 	info  *taginfo.Taginfo
 }
 
+// val returns the i'th value of the tag, or "" when the tag has fewer. A zero
+// Tag, or one made by NewTag from too few values for its type, has no value
+// for the accessors to read, and they must not panic on it.
+func (tag Tag) val(i int) string {
+	if uint(i) < uint(len(tag.v)) {
+		return tag.v[i]
+	}
+	return ""
+}
+
+// rest returns the values of the tag from the i'th on, or nil when the tag
+// has fewer.
+func (tag Tag) rest(i int) []string {
+	if i < len(tag.v) {
+		return tag.v[i:]
+	}
+	return nil
+}
+
 // resolve looks up the tag's rows.
 func (tag Tag) resolve() Tag {
 	tag.ninfo, tag.info = nil, nil
 	if tag.f != nil {
-		tag.ninfo = tag.f(tag.v[1])
+		tag.ninfo = tag.f(tag.val(1))
 		tag.info = tag.f(tag.Normalize())
 	}
 	return tag
@@ -301,7 +326,7 @@ func (tag Tag) Info() *taginfo.Taginfo {
 func (tag Tag) SingleEp() bool {
 	if tag.typ.Is(TagTypeSeries) {
 		s, e := tag.Series()
-		return s == 0 && e != 0 && tag.v[1] == "" && tag.v[0] == tag.v[2]
+		return s == 0 && e != 0 && tag.val(1) == "" && tag.val(0) == tag.val(2)
 	}
 	return false
 }
@@ -335,7 +360,7 @@ func (tag Tag) Prev() TagType {
 // InfoTitle retrieves the tag's title.
 func (tag Tag) InfoTitle() string {
 	if info := tag.Info(); info != nil {
-		_, s := info.Expand(tag.v[1])
+		_, s := info.Expand(tag.val(1))
 		return s
 	}
 	return ""
@@ -349,7 +374,7 @@ func (tag Tag) normalize(s string) string {
 	if tag.f != nil {
 		// every caller passes the captured value, which is what ninfo is for
 		info := tag.ninfo
-		if len(tag.v) < 2 || s != tag.v[1] {
+		if len(tag.v) < 2 || s != tag.val(1) {
 			info = tag.f(s)
 		}
 		if info != nil {
@@ -461,23 +486,42 @@ func (tag Tag) Match(s string, verb rune, types ...TagType) bool {
 		}
 	}
 	if verb == 'r' {
-		return matchRE(s).MatchString(v)
+		re := matchRE(s)
+		return re != nil && re.MatchString(v)
 	}
 	return s == v
 }
 
+// reCacheMax is how many patterns reCache holds. The pattern comes from the
+// caller, so without a limit every distinct one would stay in memory forever.
+const reCacheMax = 128
+
 // reCache caches the regexps compiled for Match's 'r' verb, which would
-// otherwise recompile the caller's pattern on every call.
+// otherwise recompile the caller's pattern on every call. A pattern that does
+// not compile is cached as a nil *regexp.Regexp, so it is not compiled again.
 var reCache sync.Map // string -> *regexp.Regexp
 
-// matchRE returns the compiled regexp for s. As with regexp.MustCompile, an
-// invalid pattern panics.
+// reCacheLen is how many patterns reCache holds, or is about to hold.
+var reCacheLen atomic.Int64
+
+// matchRE returns the compiled regexp for s, or nil when s is not a valid
+// pattern ('(' does not compile, so nothing matches it). Once reCache is full a
+// new pattern is compiled for the call alone and not stored.
 func matchRE(s string) *regexp.Regexp {
 	if v, ok := reCache.Load(s); ok {
 		return v.(*regexp.Regexp)
 	}
-	re := regexp.MustCompile(s)
-	reCache.Store(s, re)
+	// re is nil when s does not compile
+	re, _ := regexp.Compile(s)
+	if reCacheLen.Add(1) > reCacheMax {
+		reCacheLen.Add(-1)
+		return re
+	}
+	if v, loaded := reCache.LoadOrStore(s, re); loaded {
+		// another call stored it first
+		reCacheLen.Add(-1)
+		return v.(*regexp.Regexp)
+	}
 	return re
 }
 
@@ -497,9 +541,9 @@ func (tag Tag) Format(f fmt.State, verb rune) {
 	case 'q':
 		buf = append(buf, fmt.Sprintf("%q", tag.v)...)
 	case 'o':
-		buf = append(buf, tag.v[0]...)
+		buf = append(buf, tag.val(0)...)
 	case 'v':
-		buf = append(buf, fmt.Sprintf("%s:%q", tag.typ, tag.v[1:])...)
+		buf = append(buf, fmt.Sprintf("%s:%q", tag.typ, tag.rest(1))...)
 	case 'e':
 		s := strconv.Quote(tag.Normalize())
 		buf = append(buf, "<"+tag.typ.String()+":"+s[1:len(s)-1]+">"...)
@@ -511,23 +555,28 @@ func (tag Tag) Format(f fmt.State, verb rune) {
 
 // Whitespace normalizes the whitespace value.
 func (tag Tag) Whitespace() string {
-	return tag.v[1]
+	return tag.val(1)
 }
 
 // Delim normalizes the delimiter value.
 func (tag Tag) Delim() string {
-	return tag.v[1]
+	return tag.val(1)
 }
 
 // Text normalizes the text value.
 func (tag Tag) Text() string {
+	// what was a date or a series reads as it was written
+	i := 1
 	switch tag.prev {
 	case TagTypeDate, TagTypeSeries:
-		return tag.v[0]
+		i = 0
 	case TagTypeChannels:
 		return tag.Channels()
 	}
-	return tag.v[1]
+	if i < len(tag.v) {
+		return tag.v[i]
+	}
+	return ""
 }
 
 // TextReplace normalizes the text value and replaces the supplied string.
@@ -541,27 +590,27 @@ func (tag Tag) TextReplace(old, newstr string, n int) string {
 
 // Platform normalizes the platform value.
 func (tag Tag) Platform() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Arch normalizes the arch value.
 func (tag Tag) Arch() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Source normalizes the source value.
 func (tag Tag) Source() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Resolution normalizes the resolution value.
 func (tag Tag) Resolution() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Collection normalizes the collection value.
 func (tag Tag) Collection() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // atoi parses a decimal, reporting 0 when s is not one. Unlike strconv.Atoi it
@@ -584,7 +633,7 @@ func atoi(s string) int {
 
 // Date normalizes the date value.
 func (tag Tag) Date() (int, int, int) {
-	year, month, day := atoi(tag.v[1]), atoi(tag.v[2]), atoi(tag.v[3])
+	year, month, day := atoi(tag.val(1)), atoi(tag.val(2)), atoi(tag.val(3))
 	return year, month, day
 }
 
@@ -599,7 +648,7 @@ func (tag Tag) yearEnd() int {
 
 // Series normalizes the series value.
 func (tag Tag) Series() (int, int) {
-	series, episode := atoi(tag.v[1]), atoi(tag.v[2])
+	series, episode := atoi(tag.val(1)), atoi(tag.val(2))
 	return series, episode
 }
 
@@ -617,7 +666,7 @@ func (tag Tag) episodes(fill *int) []int {
 	var v []int
 	// prev is the episode before, which may be the 0 that v leaves out
 	prev, ranged := -1, false
-	for _, b := range tag.v[2:] {
+	for _, b := range tag.rest(2) {
 		if b == "-" {
 			ranged = true
 			continue
@@ -642,15 +691,18 @@ func (tag Tag) episodes(fill *int) []int {
 
 // Version normalizes the version value.
 func (tag Tag) Version() string {
-	return tag.v[1]
+	return tag.val(1)
 }
 
 // Disc normmalizes the disc value.
 func (tag Tag) Disc() string {
-	disc := atoi(tag.v[2])
-	switch tag.v[1] {
+	if len(tag.v) < 3 {
+		return ""
+	}
+	disc := atoi(tag.val(2))
+	switch tag.val(1) {
 	case "CD", "DVD":
-		return fmt.Sprintf("%s%d", tag.v[1], disc)
+		return fmt.Sprintf("%s%d", tag.val(1), disc)
 	case "S":
 		return fmt.Sprintf("%dDiSCS", disc)
 	case "X":
@@ -661,22 +713,22 @@ func (tag Tag) Disc() string {
 
 // Codec normalizes a codec value.
 func (tag Tag) Codec() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // HDR normalizes a hdr value.
 func (tag Tag) HDR() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // BitDepth normalizes a bitdepth value.
 func (tag Tag) BitDepth() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Audio normalizes an audio value.
 func (tag Tag) Audio() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Channels normalizes an channels value.
@@ -687,13 +739,16 @@ func (tag Tag) Channels() string {
 			return r
 		}
 		return -1
-	}, tag.normalize(tag.v[1]))
+	}, tag.normalize(tag.val(1)))
+	if s == "" {
+		return ""
+	}
 	return s[:1] + "." + s[1:]
 }
 
 // Other normalizes the other value.
 func (tag Tag) Other() string {
-	s := tag.normalize(tag.v[1])
+	s := tag.normalize(tag.val(1))
 	switch y := strings.ToUpper(s); y {
 	case "19XX", "20XX":
 		return y
@@ -703,61 +758,64 @@ func (tag Tag) Other() string {
 
 // Cut normalizes the cut value.
 func (tag Tag) Cut() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Edition normalizes the edition value.
 func (tag Tag) Edition() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Language normalizes the language value.
 func (tag Tag) Language() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Size normalizes the size value.
 func (tag Tag) Size() string {
-	return strings.ReplaceAll(strings.ToUpper(tag.normalize(tag.v[1])), "I", "i")
+	return strings.ReplaceAll(strings.ToUpper(tag.normalize(tag.val(1))), "I", "i")
 }
 
 // Region normalizes the region value.
 func (tag Tag) Region() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Container normalizes the container value.
 func (tag Tag) Container() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Genre normalizes the genre value.
 func (tag Tag) Genre() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // ID normalizes the id value.
 func (tag Tag) ID() string {
-	return tag.normalize(tag.v[1])
+	return tag.normalize(tag.val(1))
 }
 
 // Group normalizes the group value.
 func (tag Tag) Group() string {
-	return tag.v[1]
+	return tag.val(1)
 }
 
 // Meta normalizes a file meta value.
 func (tag Tag) Meta() (string, string) {
-	return tag.v[1], tag.v[2]
+	return tag.val(1), tag.val(2)
 }
 
 // Ext normalizes a file ext value.
 func (tag Tag) Ext() string {
-	return strings.ToLower(tag.v[1])
+	return strings.ToLower(tag.val(1))
 }
 
 // FrameRate normalizes a frame rate value.
 func (tag Tag) FrameRate() string {
+	if len(tag.v) < 2 {
+		return ""
+	}
 	return tag.v[1] + "fps"
 }
 
@@ -1181,7 +1239,8 @@ func roman(c byte) int {
 
 // Find finds a tag.
 func Find(tags []Tag, s string, count int, verb rune, types ...TagType) ([]Tag, int) {
-	if count == -1 {
+	// a count below 0 or past the tags means all of them
+	if count < 0 || count > len(tags) {
 		count = len(tags)
 	}
 	// copy
