@@ -659,7 +659,12 @@ func (b *TagBuilder) fixNoText(r *Release, end int) {
 func (b *TagBuilder) fixIsolated(r *Release) {
 	// if tag is isolated with text on both sides, change to text
 	for i := r.end - 1; i > 1; i-- {
-		if r.tags[i-1].Is(
+		// a bare 'dual' is the audio tag next to other tags or a bracket, and
+		// a word between two words ('Freestyle.Dual.Moguls')
+		dual := r.tags[i-1].Is(TagTypeAudio) && strings.EqualFold(r.tags[i-1].v[0], "dual") &&
+			r.tags[i-2].Is(TagTypeDelim) && strings.Trim(r.tags[i-2].Delim(), "._ ") == "" &&
+			r.tags[i].Is(TagTypeDelim) && strings.Trim(r.tags[i].Delim(), "._ ") == ""
+		if (dual || r.tags[i-1].Is(
 			TagTypeCollection,
 			TagTypeLanguage,
 			TagTypeOther,
@@ -670,7 +675,7 @@ func (b *TagBuilder) fixIsolated(r *Release) {
 			// structurally identical and genuinely regions. A region between two
 			// words is not separable from a title containing a region name
 			// without knowing where the title ends.
-		) &&
+		)) &&
 			isolated(r.tags[:r.end], i-1, -1) &&
 			isolated(r.tags[:r.end], i-1, +1) &&
 			r.tags[i-1].Other() != "REMiX" {

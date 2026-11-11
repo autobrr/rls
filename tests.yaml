@@ -2499,6 +2499,15 @@
   cut: "Uncut"
   language: "GERMAN DL DUBBED"
   group: "PsO"
+"Winter.Olympics.Milano.Cortina.2026.Freestyle.Dual.Moguls.Mens.Final.1080p.WEB.h264-EPOWORKS":
+  type: "movie"
+  title: "Winter Olympics Milano Cortina"
+  subtitle: "Freestyle Dual Moguls Mens Final"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  codec: "H.264"
+  group: "EPOWORKS"
 "Winter.Olympics.Milano.Cortina.2026.Ice.Hockey.Mens.Final.Canada.Vs.USA.1080p.WEB.h264-EPOWORKS":
   type: "movie"
   title: "Winter Olympics Milano Cortina"
