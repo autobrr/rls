@@ -674,16 +674,22 @@ func NewEpisodeRangeLexer() Lexer {
 			if m == nil || year(m[1]) || year(m[3]) || atoi(string(m[1])) >= atoi(string(m[3])) {
 				return start, end, i, n, false
 			}
-			// what follows the range, and whether the hyphen is a bare one
-			var next byte
+			// what follows the range, and whether the hyphen is a bare one.
+			// closer is the byte after it in the whole name, which is the
+			// bracket when the lexers that read the end of the name have
+			// cut it off ('[Grp] Show [01-12]', 'Show (01-12).mkv')
+			var next, closer byte
 			if j := i + len(m[0]); j < n {
 				next = src[j]
+			}
+			if j := i + len(m[0]); j < len(src) {
+				closer = src[j]
 			}
 			tight, free := len(m[2]) == 1 && m[2][0] == '-', next == 0 || next == ' ' || next == '_' || next == '[' || next == '('
 			var ok bool
 			switch prev := src[i-1]; {
 			// (01-12), [01-12]
-			case prev == '(' && next == ')', prev == '[' && next == ']':
+			case prev == '(' && closer == ')', prev == '[' && closer == ']':
 				ok = true
 			// - 01 ~ 12, - 01-12, and not '- 1 - 12', where a title that
 			// ends in a number is followed by an episode

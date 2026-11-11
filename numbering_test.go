@@ -479,6 +479,34 @@ func TestHalfEpisode(t *testing.T) {
 	}
 }
 
+// TestBracketedRange checks a range of episodes in a bracket of its own that
+// stands at the end of the name, where the lexers that read the end have cut
+// the closing bracket off before the range is read.
+func TestBracketedRange(t *testing.T) {
+	tests := []struct {
+		name  string
+		spans []EpisodeSpan
+	}{
+		{"[Grp] Show Title [1-13]", []EpisodeSpan{{"", "1", "13"}}},
+		{"[Grp] Show Title (01-13)", []EpisodeSpan{{"", "01", "13"}}},
+		{"Show Title (01-12).mkv", []EpisodeSpan{{"", "01", "12"}}},
+		{"Show_Title [1-13] [.srt]", []EpisodeSpan{{"", "1", "13"}}},
+		// in the middle of the name, as before
+		{"[Grp] Show Title [01-13] [1080p]", []EpisodeSpan{{"", "01", "13"}}},
+		// a range of years is not one of episodes
+		{"[Grp] Show Title (2019-2020)", nil},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
+			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		}
+		if s := fmt.Sprintf("%o", r); s != test.name {
+			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
+	}
+}
+
 // TestHalfEpisodeTags checks that joining the half onto its episode leaves
 // the tags the caller gave to Build as they were.
 func TestHalfEpisodeTags(t *testing.T) {
