@@ -835,6 +835,11 @@ func (e *expander) escape() ([]string, error) {
 		}
 		lit := e.src[e.pos : e.pos+j]
 		e.pos += j + 2
+		// a quantifier after the quote applies to its last character alone,
+		// which a list of whole literals cannot say
+		if !e.eof() && strings.IndexByte("?*+{", e.src[e.pos]) != -1 {
+			return nil, errUnsupported
+		}
 		return []string{lit}, nil
 	}
 	if !literalEscape(c) {
