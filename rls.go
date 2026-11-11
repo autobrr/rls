@@ -353,6 +353,83 @@ func (r Release) EpisodeRange() (first, last int, ok bool) {
 	return first, last, true
 }
 
+// EpisodeSpan is one episode, or one range of episodes, as a name writes it.
+// Season is the season the name gives for it, and empty when it gives none.
+// First is the episode. Last is the end of a range, and empty for one episode.
+// The numbers are the digits of the name, so a leading zero and half an
+// episode are kept: '21.5', '06.5', '00'.
+type EpisodeSpan struct {
+	Season string
+	First  string
+	Last   string
+}
+
+// EpisodeSpans returns the episodes the name gives, in the order it gives
+// them, with a range as its two ends. It tells half an episode from the whole
+// one ('21.5' and '21' are both Episode 21) and an episode 0 from none. A
+// season pack gives no span.
+//
+// An episode written with no season is in the season written before it, as in
+// SeriesEpisodes: the '04' of 'S2 - 04', and also a second numbering of the
+// same episode ('S23E19.Episode.1174' gives 1174 in season 23). An episode
+// written twice is listed twice. A hyphen or a tilde inside a tag makes a
+// range ('S01E02-04', '01 ~ 12'), and so does a bare hyphen between two tags
+// of one season when the end is the higher number ('E02-E04'). A Release built
+// by hand with an Episode and no episode in its tags gives that episode.
+func (r Release) EpisodeSpans() []EpisodeSpan {
+	var v []EpisodeSpan
+	var season string
+	// open is whether the tag before wrote the last span, which a hyphen may
+	// then extend
+	var open bool
+	for i, tag := range r.tags {
+		if tag.typ != TagTypeSeries {
+			continue
+		}
+		bare := tag.val(1) == ""
+		if !bare {
+			season = tag.val(1)
+		}
+		eps := tag.rest(2)
+		ranged := open && i >= 2 && r.tags[i-2].typ == TagTypeSeries && r.tags[i-1].val(0) == "-" &&
+			(bare || tag.val(1) == r.tags[i-2].val(1))
+		open = false
+		for k, b := range eps {
+			switch b {
+			case "":
+				continue
+			case "-":
+				ranged = open
+				continue
+			}
+			// the fraction follows the last number of the tag
+			if k == len(eps)-1 {
+				b += tag.fraction()
+			}
+			if last := len(v) - 1; ranged && wholeEpisode(b) > wholeEpisode(cmp.Or(v[last].Last, v[last].First)) {
+				v[last].Last = b
+			} else {
+				v = append(v, EpisodeSpan{Season: season, First: b})
+			}
+			ranged, open = false, true
+		}
+	}
+	if len(v) == 0 && r.Episode != 0 {
+		v = append(v, EpisodeSpan{First: strconv.Itoa(r.Episode)})
+		if r.Series != 0 {
+			v[0].Season = strconv.Itoa(r.Series)
+		}
+	}
+	return v
+}
+
+// wholeEpisode returns the whole number of an episode as EpisodeSpans gives
+// it, ie 21 for '21.5'.
+func wholeEpisode(s string) int {
+	s, _, _ = strings.Cut(s, ".")
+	return atoi(s)
+}
+
 // wroteEpisode reports whether a series tag writes an episode, which a season
 // pack ('S01') does not.
 func (tag Tag) wroteEpisode() bool {

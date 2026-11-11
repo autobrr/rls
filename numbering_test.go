@@ -280,3 +280,83 @@ func TestHalfEpisode(t *testing.T) {
 		t.Errorf("expected absolute 7 true, got: %d %t", episode, ok)
 	}
 }
+
+func TestEpisodeSpans(t *testing.T) {
+	tests := []struct {
+		name string
+		exp  []EpisodeSpan
+	}{
+		// one episode, with its leading zero
+		{"Show.S01E02.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", ""}}},
+		{"[Group] Show - 04 [720p]", []EpisodeSpan{{"", "04", ""}}},
+		{"[Group] Show - 1169 [720p]", []EpisodeSpan{{"", "1169", ""}}},
+		// half an episode
+		{"[Group] Show - 21.5 [720p]", []EpisodeSpan{{"", "21.5", ""}}},
+		{"[Group] Show - 12.10 [720p]", []EpisodeSpan{{"", "12.10", ""}}},
+		{"[Group] Show - 13.5v2 [720p]", []EpisodeSpan{{"", "13.5", ""}}},
+		{"Show.S01E06.5.720p.WEB.x264-GRP", []EpisodeSpan{{"01", "06.5", ""}}},
+		{"[Group] Show Ep 5.5 [720p]", []EpisodeSpan{{"", "5.5", ""}}},
+		// an episode 0
+		{"[Group] Show - 00 [720p]", []EpisodeSpan{{"", "00", ""}}},
+		{"Show.S01E00.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "00", ""}}},
+		{"Show.S00E05.1080p.WEB.h264-GRP", []EpisodeSpan{{"00", "05", ""}}},
+		// ranges, inside a tag and between two tags
+		{"Show.S01E02-04.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", "04"}}},
+		{"Show.S01E02-E04.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", "04"}}},
+		{"Show.S00E02-S00E04.1080p.WEB.h264-GRP", []EpisodeSpan{{"00", "02", "04"}}},
+		{"[Group] Show - 00 ~ 12 [720p]", []EpisodeSpan{{"", "00", "12"}}},
+		{"[Group] Show (01-12) [720p]", []EpisodeSpan{{"", "01", "12"}}},
+		{"Show.S01E1-E99999.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "1", "99999"}}},
+		// episodes that are not a range
+		{"Show.S01E05E06.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "05", ""}, {"01", "06", ""}}},
+		{"Show.S01E01.S02E01.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "01", ""}, {"02", "01", ""}}},
+		{"Show.S01E02-S02E04.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", ""}, {"02", "04", ""}}},
+		// the season written before the episode, and a season 0 after another
+		{"[Group] Show S2 - 04 [720p]", []EpisodeSpan{{"2", "04", ""}}},
+		{"[Group] Show 2nd Season - 08 [720p]", []EpisodeSpan{{"2", "08", ""}}},
+		{"[Group] Show - S04E29 (WEB 1080p) | Other Name - E88 - S00E36", []EpisodeSpan{{"04", "29", ""}, {"04", "88", ""}, {"00", "36", ""}}},
+		// a range goes on over a second hyphen
+		{"Show.S01E02-E03-E04.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", "04"}}},
+		{"Show.S01E02-E04-06.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", "06"}}},
+		{"Show.S01E01-E02.E04-E05.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "01", "02"}, {"01", "04", "05"}}},
+		{"Show.Ep.05-07.1080p.WEB.h264-GRP", []EpisodeSpan{{"", "05", "07"}}},
+		{"[Group] Show S2 - 04 ~ 06 [720p]", []EpisodeSpan{{"2", "04", "06"}}},
+		{"Show.S01E05-E06.5.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "05", "06.5"}}},
+		// an end that is not higher, a hyphen with spaces and a tilde between
+		// two tags make no range
+		{"Show.S01E02-E01.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", ""}, {"01", "01", ""}}},
+		{"Show.S01E05-E05.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "05", ""}, {"01", "05", ""}}},
+		{"Show S01E02 - E04 1080p WEB h264-GRP", []EpisodeSpan{{"01", "02", ""}, {"01", "04", ""}}},
+		{"Show.S04E29~E31.1080p.WEB.h264-GRP", []EpisodeSpan{{"04", "29", ""}, {"04", "31", ""}}},
+		// the season carried over a tag with no episode, and none carried back
+		{"Show.S01.1080p.E05.WEB.h264-GRP", []EpisodeSpan{{"01", "05", ""}}},
+		{"Show.E05.S01.1080p.WEB.h264-GRP", []EpisodeSpan{{"", "05", ""}}},
+		// the channels are not a fraction
+		{"Show.S01E06.5.1.AAC.720p.WEB-GRP", []EpisodeSpan{{"01", "06", ""}}},
+		// one episode under two numberings, in the order written
+		{"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP", []EpisodeSpan{{"23", "19", ""}, {"23", "1174", ""}}},
+		// no episode
+		{"Show.S01.1080p.WEB.h264-GRP", nil},
+		{"Show.S01-S03.1080p.WEB.h264-GRP", nil},
+		{"Show.2024.10.13.1080p.WEB.h264-GRP", nil},
+		{"Movie.2020.1080p.BluRay.x264-GRP", nil},
+	}
+	for _, test := range tests {
+		if v := ParseString(test.name).EpisodeSpans(); !slices.Equal(v, test.exp) {
+			t.Errorf("%q: expected spans %q, got: %q", test.name, test.exp, v)
+		}
+	}
+	// by hand
+	if v := (Release{Series: 2, Episode: 5}).EpisodeSpans(); !slices.Equal(v, []EpisodeSpan{{"2", "5", ""}}) {
+		t.Errorf("expected the episode set by hand, got: %q", v)
+	}
+	if v := (Release{Series: 2}).EpisodeSpans(); v != nil {
+		t.Errorf("expected no span, got: %q", v)
+	}
+	// by hand over a parsed season pack, which HasEpisode counts too
+	r := ParseString("Show.S01.1080p.WEB.h264-GRP")
+	r.Episode = 4
+	if v := r.EpisodeSpans(); !slices.Equal(v, []EpisodeSpan{{"1", "4", ""}}) || !r.HasEpisode() {
+		t.Errorf("expected the episode set by hand, got: %q", v)
+	}
+}

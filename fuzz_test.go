@@ -12,6 +12,7 @@ func exercise(r Release) {
 	_ = r.String()
 	_ = fmt.Sprintf("%o|%s|%e|%q", r, r, r, r)
 	_ = r.SeriesEpisodes()
+	_ = r.EpisodeSpans()
 	_, _ = r.Event()
 	for _, tag := range r.Tags() {
 		_ = tag.Normalize()
