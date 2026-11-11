@@ -4476,6 +4476,17 @@
   day: 29
   codec: "x264"
   group: "GRP"
+"Show.2024.05.06.[The.Title].720p.HDTV.x264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "The Title"
+  source: "HDTV"
+  resolution: "720p"
+  year: 2024
+  month: 5
+  day: 6
+  codec: "x264"
+  group: "GRP"
 "Show.13-10-2024.HDTV.x264-GRP":
   type: "episode"
   title: "Show"

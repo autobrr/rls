@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -121,6 +122,33 @@ func TestOpeningResolution(t *testing.T) {
 		r := ParseString(test.name)
 		if r.Title != test.title || r.Resolution != test.resolution || r.Group != test.group {
 			t.Errorf("%q: expected title %q, resolution %q, group %q, got: %q, %q, %q", test.name, test.title, test.resolution, test.group, r.Title, r.Resolution, r.Group)
+		}
+	}
+}
+
+// TestSubtitleNotUnused checks that the words of the subtitle are not also in
+// the unused text, and that the words a later subtitle replaced are.
+func TestSubtitleNotUnused(t *testing.T) {
+	tests := []struct {
+		name, subtitle string
+		unused         []string
+	}{
+		{"Show.2024.05.06.[The.Title].720p.HDTV.x264-GRP", "The Title", nil},
+		{"Show.2024.05.06.(The.Title).720p.HDTV.x264-GRP", "The Title", nil},
+		{"Show.2024.05.06.The.Title.720p.HDTV.x264-GRP", "The Title", nil},
+		{"Show S01E08 (2022 Airing) 1080i HDTV AAC 2.0-ZR", "Airing", nil},
+		// the episode's own title replaces the one read after the year
+		{"Show.2024.The.Title.720p.S01E05.Name.WEB.x264-GRP", "Name", []string{"The", "Title"}},
+		{"Show.2024.[The.Title].720p.S01E05.Name.WEB-GRP", "Name", []string{"The", "Title"}},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		var unused []string
+		for _, tag := range r.Unused() {
+			unused = append(unused, tag.Text())
+		}
+		if r.Subtitle != test.subtitle || !slices.Equal(unused, test.unused) {
+			t.Errorf("%q: expected subtitle %q and unused %q, got: %q and %q", test.name, test.subtitle, test.unused, r.Subtitle, unused)
 		}
 	}
 }

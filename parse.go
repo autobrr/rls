@@ -1573,7 +1573,7 @@ func (b *TagBuilder) boxTitle(r *Release, start, offset int) int {
 // episodeTitles sets the titles for episodes.
 func (b *TagBuilder) episodeTitles(r *Release) int {
 	// scan title
-	pos, _, _ := b.yearTitles(r)
+	pos, from, to := b.yearTitles(r)
 	typ := TagTypeSeries
 	if r.Month != 0 && r.Day != 0 {
 		typ = TagTypeDate
@@ -1584,8 +1584,27 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 			r.unused = append(r.unused, pos)
 		}
 	}
+	// kept is for when the subtitle stays the one yearTitles read. Its words
+	// are used: they come off the unused text collected so far, and the
+	// position returned is where the rest of the unused text begins, with
+	// the text in front of the subtitle collected
+	kept := func(pos int) int {
+		if from == to {
+			return pos
+		}
+		r.unused = slices.DeleteFunc(r.unused, func(i int) bool { return from <= i && i < to })
+		if to <= pos {
+			return pos
+		}
+		for ; pos < from; pos++ {
+			if r.tags[pos].Is(TagTypeText) {
+				r.unused = append(r.unused, pos)
+			}
+		}
+		return to
+	}
 	if pos == len(r.tags) {
-		return pos
+		return kept(pos)
 	}
 	// episode title must follow source, resolution, collection, date, series,
 	// version, disc, other, cut, edition, language or container tags. it must
@@ -1612,20 +1631,20 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	}
 	// check at text tag
 	if pos == len(r.tags) || !r.tags[pos].Is(TagTypeText) {
-		return pos
+		return kept(pos)
 	}
 	// the first text after a '+' lists what else the release holds ('S01-04 +
 	// OVAs', 'Season 01-25+Movies+Specials', 'S01 1080p + Specials'), and is
 	// not a title
 	if r.tags[pos-1].Is(TagTypeDelim) && strings.Contains(r.tags[pos-1].Delim(), "+") {
-		return pos
+		return kept(pos)
 	}
 	// text inside a bracket that opened after the episode is a block of tags
 	// or another name for the show ('S02E06 [English Dub]', '- 05 (BS11
 	// 1080p)'), not the episode title, unless it has the scene layout of one
 	// ('S01E02.(The.Title).1080p')
 	if depth > 0 && !(depth == 1 && parenTitle(r.tags, pos)) {
-		return pos
+		return kept(pos)
 	}
 	var offset int
 	r.Subtitle, offset = b.title(r.tags[pos:], TagTypeText)
