@@ -1539,6 +1539,22 @@
   codec: "x264"
   group: "GRP"
   unused: "02 29"
+"Show.Name.1994.1080p.BluRay.x264 [REMASTERED]":
+  type: "movie"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1994
+  codec: "x264"
+  other: "REMASTERED"
+"Show Name (2014) [BDRip] [1080p] [HEVC] [v2]":
+  type: "movie"
+  title: "Show Name"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 2014
+  version: "v2"
+  codec: "HEVC"
 "[Group] Show Name - Special v3 (DVD)":
   type: "movie"
   title: "Show Name - Special"
@@ -3801,6 +3817,14 @@
   group: "Group"
   site: "Group"
   unused: "JA"
+"Show Name - 471 [720p] [ES-EN-DE-PT] [A05B966C].mkv":
+  type: "episode"
+  title: "Show Name"
+  resolution: "720p"
+  episode: 471
+  language: "SPANiSH ENGLiSH GERMAN PORTUGUESE"
+  sum: "A05B966C"
+  ext: "mkv"
 "Show_Name_S01E01_1080p_WEB-DL_AAC2.0_H.264-GRP":
   type: "episode"
   title: "Show Name"

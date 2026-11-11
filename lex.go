@@ -1103,6 +1103,30 @@ func NewMetaLexer(strs ...string) Lexer {
 	lead := regexp.MustCompile(`^\[([^\]\t\r\n\f]{1,40})\]`)
 	// leadTags rejects a bracket that is really a block of tags.
 	leadTags := regexp.MustCompile(`(?i)(^|[\-\._ ])(\d{3,4}[ip]|\d{3,4}x\d{3,4}|[xh][\-\. ]?26[45]|hevc|avc|aac|flac|opus|blu[\-\. ]?ray|web[\-\. ]?dl|bd(?:rip)?|dvd|\d{1,2}[\-\. ]?bit|hi10p?|dual[\-\. ]?audio|multi[\-\. ]?subs?)($|[\-\._ ])`)
+	// words holds the words of the tag names, in upper case. A bracket further
+	// into the name that holds one of them, a version or a list of two-letter
+	// codes is not the site ('[REMASTERED]', '[v2]', '[MX-EN-PT]')
+	words := make(map[string]struct{})
+	notSite := func(v []byte) bool {
+		if leadTags.Match(v) {
+			return true
+		}
+		var key [32]byte
+		if len(v) > len(key) {
+			return false
+		}
+		version, codes := len(v) > 1 && (v[0] == 'v' || v[0] == 'V'), len(v) > 7 && len(v)%3 == 2
+		for k, c := range v {
+			version = version && (k == 0 || c >= '0' && c <= '9')
+			codes = codes && (k%3 == 2 && c == '-' || k%3 != 2 && c >= 'A' && c <= 'Z')
+			if c >= 'a' && c <= 'z' {
+				c -= 32
+			}
+			key[k] = c
+		}
+		_, ok := words[string(key[:len(v)])]
+		return ok || version || codes
+	}
 	// plus holds the spellings, in upper case, of the tags that end in '+'
 	// ('HDR10+', 'DD+', 'ATV+'). A '+' is a delimiter, and one on the end of
 	// the name is stripped below with the rest, unless it closes one of these.
@@ -1129,8 +1153,16 @@ func NewMetaLexer(strs ...string) Lexer {
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, re *regexp.Regexp, short map[string]bool) {
 			delim, shortTags = re, short
-			for _, v := range infos {
+			for typ, v := range infos {
 				for _, info := range v {
+					// a group's name is what the site may well be
+					if typ != "group" {
+						for field := range strings.FieldsFuncSeq(info.Tag(), isAnyDelim) {
+							if !strings.Contains(field, "$") {
+								words[strings.ToUpper(field)] = struct{}{}
+							}
+						}
+					}
 					if !strings.Contains(info.RE(), "+") {
 						continue
 					}
@@ -1199,7 +1231,7 @@ func NewMetaLexer(strs ...string) Lexer {
 						// '[HEVC-10bit]'), and does not use up its slot. The
 						// bracket that opens the name is the group even
 						// then ('[Anime-HEVC] Show')
-						if k == "site" && len(start) != 0 && leadTags.Match(v) {
+						if k == "site" && len(start) != 0 && notSite(v) {
 							continue
 						}
 						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]
@@ -1240,7 +1272,7 @@ func NewMetaLexer(strs ...string) Lexer {
 						}
 						// a bracket of tags is not the site ('[1080p]',
 						// '[HEVC-10bit]'), and does not use up its slot
-						if k == "site" && leadTags.Match(v) {
+						if k == "site" && notSite(v) {
 							continue
 						}
 						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]

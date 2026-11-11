@@ -836,8 +836,9 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			return typ
 		}
 	}
-	// check music style tag delimiters
-	for count, i := 0, n-1; i > 1; i-- {
+	// check music style tag delimiters, which an episode with a resolution
+	// has only by chance ('- 05 [720p] [ES-EN-DE]')
+	for count, i := 0, n-1; i > 1 && !(series && r.Resolution != ""); i-- {
 		if r.tags[i-1].Is(
 			TagTypeDate,
 			TagTypeCodec,
