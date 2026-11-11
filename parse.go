@@ -1490,8 +1490,11 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 		// ('(2019) | Other Name (BD 1080p)')
 		if pos < end-1 && !((noResolution || end != resolution) && depth > 0) && r.tags[pos].v[0] != "|" {
 			// numbers alone are not a subtitle, ie the rest of a date that
-			// does not exist ('Show.2023.02.29.HDTV')
-			if s, n := b.title(r.tags[pos:end-1], TagTypeText, TagTypeCut, TagTypeEdition); strings.ContainsFunc(s, unicode.IsLetter) {
+			// does not exist ('Show.2023.02.29.HDTV'), and neither are cut
+			// and edition tags with no text beside them, which are in Cut
+			// and Edition ('Movie.2013.Extended.Cut.1080p')
+			if s, n := b.title(r.tags[pos:end-1], TagTypeText, TagTypeCut, TagTypeEdition); strings.ContainsFunc(s, unicode.IsLetter) &&
+				slices.ContainsFunc(r.tags[pos:pos+n], func(tag Tag) bool { return tag.Is(TagTypeText) }) {
 				r.Subtitle, from, to = s, pos, pos+n
 			}
 		}

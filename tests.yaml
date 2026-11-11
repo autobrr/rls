@@ -558,7 +558,6 @@
 "Crank.2006.EXTENDED.DIRFIX.MULTI.COMPLETE.UHD.BLURAY-MONUMENT":
   type: "movie"
   title: "Crank"
-  subtitle: "EXTENDED"
   source: "UHD.BluRay"
   year: 2006
   other: "DIRFIX COMPLETE"
@@ -954,7 +953,6 @@
 "Hercules.2014.Extended.Cut.HDRip.XViD-juggs[ETRG]":
   type: "movie"
   title: "Hercules"
-  subtitle: "Extended Cut"
   source: "HDRiP"
   year: 2014
   codec: "XViD"
@@ -972,7 +970,6 @@
 "Hercules.2014.EXTENDED.1080p.WEB-DL.DD5.1.H264-RARBG":
   type: "movie"
   title: "Hercules"
-  subtitle: "EXTENDED"
   source: "WEB-DL"
   resolution: "1080p"
   year: 2014
@@ -1475,7 +1472,6 @@
 "Mr. Nobody 2009 Theatrical Cut 1080p BluRay Remux AVC DTS-HD MA 5.1 -236@BHD    ":
   type: "movie"
   title: "Mr. Nobody"
-  subtitle: "Theatrical Cut"
   source: "BluRay"
   resolution: "1080p"
   year: 2009
@@ -2184,7 +2180,6 @@
 "The.Boss.2016.UNRATED.720p.BRRip.x264.AAC-ETRG":
   type: "movie"
   title: "The Boss"
-  subtitle: "UNRATED"
   source: "BDRiP"
   resolution: "720p"
   year: 2016
@@ -2325,7 +2320,6 @@
 "The.Wizard.of.Oz.1939.70th.Anniversary.Ultimate.Collectors.Edition.1080p.BluRay.REMUX.VC-1.TrueHD.5.1-TL":
   type: "movie"
   title: "The Wizard of Oz"
-  subtitle: "70th Anniversary Ultimate Collectors Edition"
   source: "BluRay"
   resolution: "1080p"
   year: 1939
@@ -2528,7 +2522,6 @@
 "We're.the.Millers.2013.Extended.Cut.1080p.BluRay.DTS.x264-DON.mkv":
   type: "movie"
   title: "We're the Millers"
-  subtitle: "Extended Cut"
   source: "BluRay"
   resolution: "1080p"
   year: 2013
