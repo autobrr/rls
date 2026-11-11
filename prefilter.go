@@ -77,8 +77,15 @@ func newPrefilter(infos []*taginfo.Taginfo, ci bool) (*prefilter, bool) {
 	return newPrefilterRE(res, ci)
 }
 
+// noPrefilter makes every type go without a prefilter, for a test to compare
+// a parser built that way with one that has them.
+var noPrefilter bool
+
 // newPrefilterRE is newPrefilter for bare regexps.
 func newPrefilterRE(res []string, ci bool) (*prefilter, bool) {
+	if noPrefilter {
+		return nil, false
+	}
 	pf := &prefilter{runs: make(map[string]struct{})}
 	for _, re := range res {
 		v, err := expandRE(re, ci)

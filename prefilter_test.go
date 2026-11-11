@@ -1,6 +1,9 @@
 package rls
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/autobrr/rls/taginfo"
@@ -14,8 +17,10 @@ func TestPrefilterSound(t *testing.T) {
 	infos := taginfo.All()
 	for typ, info := range infos {
 		pf, ok := newPrefilter(info, true)
+		// every type has one today. A row that takes it away costs a regexp
+		// run on every token of every name
 		if !ok {
-			t.Logf("%s: no prefilter (a row could not be reduced)", typ)
+			t.Errorf("%s: no prefilter (a row could not be reduced)", typ)
 			continue
 		}
 		for _, i := range info {
@@ -35,6 +40,45 @@ func TestPrefilterSound(t *testing.T) {
 			}
 		}
 	}
+}
+
+// TestPrefilterSameParse checks that the prefilters only save work: a parser
+// built without them gives the same tags for every name of tests.yaml, for
+// every spelling a row can be expanded to, and for the corpora when they are
+// present.
+func TestPrefilterSameParse(t *testing.T) {
+	noPrefilter = true
+	slow := NewParser()
+	noPrefilter = false
+	fast := NewParser()
+	var names []string
+	for _, test := range rlsTests(t) {
+		names = append(names, test.s)
+	}
+	for _, info := range taginfo.All() {
+		for _, i := range info {
+			v, err := expandRE(i.RE(), true)
+			if err != nil {
+				continue
+			}
+			for _, s := range v {
+				names = append(names, "Title."+s+".1080p-GRP")
+			}
+		}
+	}
+	for _, name := range []string{"nyaa.txt", "sports.txt"} {
+		if buf, err := os.ReadFile("testdata/corpus/" + name); err == nil && !testing.Short() {
+			names = append(names, strings.Split(string(buf), "\n")...)
+		}
+	}
+	for _, name := range names {
+		a, an := fast.Parse([]byte(name))
+		b, bn := slow.Parse([]byte(name))
+		if s, exp := fmt.Sprintf("%q", a), fmt.Sprintf("%q", b); s != exp || an != bn {
+			t.Fatalf("%q: expected the tags without prefilters\n%s (%d)\ngot:\n%s (%d)", name, exp, bn, s, an)
+		}
+	}
+	t.Logf("%d names", len(names))
 }
 
 func TestPrefilterRejects(t *testing.T) {
