@@ -1314,6 +1314,15 @@
   source: "WEB-DL"
   resolution: "1080p"
   year: 2020
+"Movie.Title.2020.1080p.BluRay.10bits.x265-GRP":
+  type: "movie"
+  title: "Movie Title"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  bitdepth: "10BIT"
+  group: "GRP"
 "Mr..&.Mrs..Smith-2005(720p)-NOGROUP[ettv]":
   type: "movie"
   title: "Mr. & Mrs. Smith"
@@ -3397,6 +3406,16 @@
   audio: "AAC"
   channels: "5.1"
   group: "GRP"
+"[Group] Show - 05 (BDRip 1080p HEVC 10 bits)":
+  type: "episode"
+  title: "Show"
+  source: "BDRiP"
+  resolution: "1080p"
+  episode: 5
+  codec: "HEVC"
+  bitdepth: "10BIT"
+  group: "Group"
+  site: "Group"
 "[Group] Show - Episode 05.5 [1080p]":
   type: "episode"
   title: "Show"
