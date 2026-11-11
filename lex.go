@@ -81,8 +81,10 @@ func DefaultLexers() []Lexer {
 		NewRegexpLexer(TagTypeArch, true),
 		NewRegexpLexer(TagTypeSource, true),
 		NewFrameRateLexer(
-			// 1080p50, 720p60fps, 1080i25
-			`(?i)^(?P<r>\d{3,4}[pi])(?P<f>\d{2,3})(?:fps)?\b`,
+			// 1080p@59.94fps
+			`(?i)^(?P<r>\d{3,4}[pi])@(?P<f>\d{2,3}\.\d{1,3})fps\b`,
+			// 1080p50, 720p60fps, 1080i25, 1080p@60fps
+			`(?i)^(?P<r>\d{3,4}[pi])@?(?P<f>\d{2,3})(?:fps)?\b`,
 			// 60fps, 23.976fps
 			`(?i)^(?P<f>\d{2,3}(?:\.\d{1,3})?)fps\b`,
 		),
@@ -761,10 +763,10 @@ func NewFrameRateLexer(strs ...string) Lexer {
 			resolutionf = findFunc(infos["resolution"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
-			// both patterns are digits and then 'fps', or a 'p' or 'i' with
-			// a digit after it, which few of the numbers in a name have. The
-			// longest number in them is 7 bytes ('119.880'), and looking
-			// no further keeps a long run of digits linear
+			// the patterns are digits and then 'fps', or a 'p' or 'i' with a
+			// digit after it or after an '@', which few of the numbers in a
+			// name have. The longest number in them is 7 bytes ('119.880'),
+			// and looking no further keeps a long run of digits linear
 			k := i
 			for k < n && k-i < 8 && (buf[k] >= '0' && buf[k] <= '9' || buf[k] == '.') {
 				k++
@@ -775,6 +777,9 @@ func NewFrameRateLexer(strs ...string) Lexer {
 			switch buf[k] | 0x20 {
 			case 'f':
 			case 'p', 'i':
+				if l := k + 1; buf[l] == '@' && l+1 < n {
+					k = l
+				}
 				if buf[k+1] < '0' || buf[k+1] > '9' {
 					return start, end, i, n, false
 				}
@@ -1387,8 +1392,10 @@ func NewMetaLexer(strs ...string) Lexer {
 	// HEVC]', '[DVD+Web-Dl]'), not a group. restricting this to offset 0
 	// keeps those apart.
 	lead := regexp.MustCompile(`^\[([^\]\t\r\n\f]{1,40})\]`)
-	// leadTags rejects a bracket that is really a block of tags.
-	leadTags := regexp.MustCompile(`(?i)(^|[\-\._ ])(\d{3,4}[ip]|\d{3,4}x\d{3,4}|[xh][\-\. ]?26[45]|hevc|avc|aac|flac|opus|blu[\-\. ]?ray|web[\-\. ]?dl|bd(?:rip)?|dvd|\d{1,2}[\-\. ]?bit|hi10p?|dual[\-\. ]?audio|multi[\-\. ]?subs?)($|[\-\._ ])`)
+	// leadTags rejects a bracket that is really a block of tags. A word of it
+	// may have an '@' after it, as a resolution has in front of a frame rate
+	// ('[1080p@60fps]').
+	leadTags := regexp.MustCompile(`(?i)(^|[\-\._ ])(\d{3,4}[ip]|\d{3,4}x\d{3,4}|[xh][\-\. ]?26[45]|hevc|avc|aac|flac|opus|blu[\-\. ]?ray|web[\-\. ]?dl|bd(?:rip)?|dvd|\d{1,2}[\-\. ]?bit|hi10p?|dual[\-\. ]?audio|multi[\-\. ]?subs?)($|[\-\._ @])`)
 	// onlyResolution matches a bracket that is a resolution and nothing else.
 	// The bracket that opens a name is its group even when a tag is part of
 	// it ('[Anime-HEVC] Show'), but not when it is this and the title follows

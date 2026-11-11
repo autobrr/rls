@@ -3950,6 +3950,20 @@
   channels: "5.1"
   other: "Audio.Description"
   group: "NTb"
+"Show - 01 (1080p@59.94fps)":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  framerate: "59.94fps"
+  episode: 1
+  absolute: 1
+"Show - 01 [1080p@60fps]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  framerate: "60fps"
+  episode: 1
+  absolute: 1
 "[1080p] Show - 01":
   type: "episode"
   title: "Show"
