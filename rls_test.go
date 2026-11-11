@@ -923,6 +923,7 @@ type rls struct {
 
 	Source     string
 	Resolution string
+	Framerate  string
 	Collection string
 
 	Year  int
@@ -985,6 +986,7 @@ func buildRls(r Release) rls {
 
 		Source:     r.Source,
 		Resolution: r.Resolution,
+		Framerate:  r.FrameRate,
 		Collection: r.Collection,
 
 		Year:  r.Year,

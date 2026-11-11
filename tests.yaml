@@ -566,6 +566,7 @@
   subtitle: "India vs New Zealand"
   source: "WEB"
   resolution: "1080p"
+  framerate: "50fps"
   year: 2025
   codec: "H.264"
   group: "GRP"
@@ -3384,6 +3385,19 @@
   subtitle: "Lakers vs Celtics"
   source: "WEB"
   resolution: "720p"
+  framerate: "60fps"
+  year: 2026
+  month: 3
+  day: 30
+  codec: "H.264"
+  group: "GRP"
+"NBA.2026.03.30.Lakers.vs.Celtics.1080p.60fps.WEB.h264-GRP":
+  type: "episode"
+  title: "NBA"
+  subtitle: "Lakers vs Celtics"
+  source: "WEB"
+  resolution: "1080p"
+  framerate: "60fps"
   year: 2026
   month: 3
   day: 30
@@ -3660,6 +3674,17 @@
   audio: "FLAC"
   group: "Group"
   site: "Group"
+"[Group] Show - 01 (BD 1920x1080 23.976fps HEVC FLAC)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  framerate: "23.976fps"
+  episode: 1
+  codec: "HEVC"
+  audio: "FLAC"
+  group: "Group"
+  site: "Group"
 "[Group] Show - 01 [BD 1080p Hi-10P FLAC]":
   type: "episode"
   title: "Show"
@@ -3791,6 +3816,7 @@
   title: "Show"
   source: "HDTV"
   resolution: "1080i"
+  framerate: "50fps"
   series: 1
   episode: 1
   codec: "H.264"

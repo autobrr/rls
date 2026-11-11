@@ -835,6 +835,10 @@ func (b *TagBuilder) collect(r *Release) {
 			if r.BitDepth == "" {
 				r.BitDepth = r.tags[i].BitDepth()
 			}
+		case TagTypeFrameRate:
+			if r.FrameRate == "" {
+				r.FrameRate = r.tags[i].FrameRate()
+			}
 		case TagTypeAudio:
 			r.Audio = append(r.Audio, r.tags[i].Audio())
 		case TagTypeChannels:
@@ -1621,6 +1625,7 @@ func (b *TagBuilder) bracketedGroup(r *Release) {
 		if d := r.tags[i-1].Delim(); !strings.HasSuffix(d, "-") || strings.ContainsAny(d, "()[]{}") || !r.tags[i-2].Is(
 			TagTypeSource,
 			TagTypeResolution,
+			TagTypeFrameRate,
 			TagTypeCollection,
 			TagTypeCodec,
 			TagTypeHDR,

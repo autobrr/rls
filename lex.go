@@ -67,6 +67,12 @@ func DefaultLexers() []Lexer {
 		NewRegexpLexer(TagTypePlatform, true),
 		NewRegexpLexer(TagTypeArch, true),
 		NewRegexpLexer(TagTypeSource, true),
+		NewFrameRateLexer(
+			// 1080p50, 720p60fps, 1080i25
+			`(?i)^(?P<r>\d{3,4}[pi])(?P<f>\d{2,3})(?:fps)?\b`,
+			// 60fps, 23.976fps
+			`(?i)^(?P<f>\d{2,3}(?:\.\d{1,3})?)fps\b`,
+		),
 		NewRegexpLexer(TagTypeResolution, true),
 		NewRegexpSourceLexer(TagTypeCollection, true),
 		NewSeriesLexer(
@@ -610,6 +616,60 @@ func NewDiscSourceYearLexer(strs ...string) Lexer {
 				return append(start, tags...), end, i, n, true
 			}
 			return start, end, i, n, false
+		},
+	}
+}
+
+// NewFrameRateLexer creates a tag lexer for a frame rate, written on its own
+// ('60fps', '23.976fps') or onto a resolution ('1080p50', '720p60fps'), which
+// gives the two tags.
+//
+//	r - resolution
+//	f - frames per second
+func NewFrameRateLexer(strs ...string) Lexer {
+	var resolutionf taginfo.FindFunc
+	lexer := NamedCaptureLexer(strs...)
+	return TagLexer{
+		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
+			resolutionf = findFunc(infos["resolution"]...)
+		},
+		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			s, v, j, m, ok := lexer(src, buf, i, n)
+			if !ok {
+				return start, end, i, n, false
+			}
+			var resolution, rate []byte
+			for l := 0; l < len(v); l += 2 {
+				switch string(v[l]) {
+				case "r":
+					resolution = v[l+1]
+				case "f":
+					rate = v[l+1]
+				default:
+					panic(fmt.Errorf("unknown capture group %q", v[l]))
+				}
+			}
+			// a rate is 23.976 and up: the 10 in '1080p10' is a bit depth.
+			// With no 'fps' after it only a common rate is one
+			fps, err := strconv.ParseFloat(string(rate), 64)
+			if err != nil || fps < 23 || fps > 240 {
+				return start, end, i, n, false
+			}
+			if c := s[len(s)-1]; c != 's' && c != 'S' {
+				switch fps {
+				case 24, 25, 30, 48, 50, 60, 90, 100, 120, 144, 240:
+				default:
+					return start, end, i, n, false
+				}
+			}
+			if len(resolution) != 0 {
+				if resolutionf(string(resolution)) == nil {
+					return start, end, i, n, false
+				}
+				text := s[:len(resolution)]
+				start, s = append(start, NewTag(TagTypeResolution, resolutionf, text, text)), s[len(resolution):]
+			}
+			return append(start, NewTag(TagTypeFrameRate, nil, s, rate)), end, j, m, true
 		},
 	}
 }

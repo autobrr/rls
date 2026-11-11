@@ -34,6 +34,9 @@ type Release struct {
 
 	Source     string
 	Resolution string
+	// FrameRate is the frames per second as written ('60fps', '23.976fps'),
+	// on its own or after the resolution ('1080p60').
+	FrameRate  string
 	Collection string
 
 	Year  int
@@ -431,6 +434,8 @@ func (tag Tag) Normalize() string {
 		return "[[" + typ + ":" + s + "]]"
 	case TagTypeExt:
 		return tag.Ext()
+	case TagTypeFrameRate:
+		return tag.FrameRate()
 	}
 	return ""
 }
@@ -736,6 +741,11 @@ func (tag Tag) Ext() string {
 	return strings.ToLower(tag.v[1])
 }
 
+// FrameRate normalizes a frame rate value.
+func (tag Tag) FrameRate() string {
+	return tag.v[1] + "fps"
+}
+
 // TagType is a tag type.
 type TagType int
 
@@ -770,6 +780,7 @@ const (
 	TagTypeGroup
 	TagTypeMeta
 	TagTypeExt
+	TagTypeFrameRate
 )
 
 // Is returns true when tag type is in types.

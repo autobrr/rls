@@ -37,11 +37,12 @@ func _() {
 	_ = x[TagTypeGroup-26]
 	_ = x[TagTypeMeta-27]
 	_ = x[TagTypeExt-28]
+	_ = x[TagTypeFrameRate-29]
 }
 
-const _TagType_name = "WhitespaceDelimTextPlatformArchSourceResolutionCollectionDateSeriesVersionDiscCodecHDRBitDepthAudioChannelsOtherCutEditionLanguageSizeRegionContainerGenreIDGroupMetaExt"
+const _TagType_name = "WhitespaceDelimTextPlatformArchSourceResolutionCollectionDateSeriesVersionDiscCodecHDRBitDepthAudioChannelsOtherCutEditionLanguageSizeRegionContainerGenreIDGroupMetaExtFrameRate"
 
-var _TagType_index = [...]uint8{0, 10, 15, 19, 27, 31, 37, 47, 57, 61, 67, 74, 78, 83, 86, 94, 99, 107, 112, 115, 122, 130, 134, 140, 149, 154, 156, 161, 165, 168}
+var _TagType_index = [...]uint8{0, 10, 15, 19, 27, 31, 37, 47, 57, 61, 67, 74, 78, 83, 86, 94, 99, 107, 112, 115, 122, 130, 134, 140, 149, 154, 156, 161, 165, 168, 177}
 
 func (i TagType) String() string {
 	idx := int(i) - 0
