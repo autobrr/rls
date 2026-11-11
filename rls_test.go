@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"maps"
 	"math/rand"
 	"os"
 	"reflect"
@@ -772,8 +773,12 @@ func exportTaginfo(file string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// the types in a fixed order: the comparison below is not a strict order
+	// for every pair of rows, so the result depends on where a type's rows
+	// start, which the order of a map would change from run to run
 	var all [][]string
-	for k, v := range infos {
+	for _, k := range slices.Sorted(maps.Keys(infos)) {
+		v := infos[k]
 		for _, info := range v {
 			title := info.Title()
 			if info.Tag() == title {
