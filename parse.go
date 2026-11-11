@@ -193,8 +193,6 @@ type TagBuilder struct {
 	plus *regexp.Regexp
 	// sum matches a file checksum.
 	sum *regexp.Regexp
-	// digits matches all digits.
-	digits *regexp.Regexp
 	// digpre matches digit prefixes.
 	digpre *regexp.Regexp
 	// digsuf matches digit suffixes.
@@ -219,7 +217,6 @@ func NewTagBuilder() *TagBuilder {
 		ellips:  regexp.MustCompile(`\.{3,}`),
 		plus:    regexp.MustCompile(`(\+)`),
 		sum:     regexp.MustCompile(`(?i)^[a-f0-9]{8}$`),
-		digits:  regexp.MustCompile(`^\d+$`),
 		digpre:  regexp.MustCompile(`^\d+`),
 		digsuf:  regexp.MustCompile(`\d+$`),
 	}
@@ -235,7 +232,6 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		ellips:      b.ellips,
 		plus:        b.plus,
 		sum:         b.sum,
-		digits:      b.digits,
 		digpre:      b.digpre,
 		digsuf:      b.digsuf,
 		infos:       infos,
@@ -1583,7 +1579,7 @@ func (b *TagBuilder) unused(r *Release, i int) {
 		switch s := r.tags[r.unused[n-1]].Text(); {
 		case r.Sum == "" && b.sum.MatchString(s) && strings.ContainsAny(s, "0123456789"):
 			r.Sum, r.unused = s, r.unused[:n-1]
-		case r.Group == "" && !b.digits.MatchString(s) && !beforeTag(r.tags, r.unused[n-1]):
+		case r.Group == "" && strings.ContainsFunc(s, unicode.IsLetter) && !beforeTag(r.tags, r.unused[n-1]):
 			last := r.unused[n-1]
 			r.Group, r.unused = s, r.unused[:n-1]
 			b.widenGroup(r, last)
