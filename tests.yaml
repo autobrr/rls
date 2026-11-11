@@ -1539,6 +1539,13 @@
   codec: "x264"
   group: "GRP"
   unused: "02 29"
+"[Group] Show Name - Special v3 (DVD)":
+  type: "movie"
+  title: "Show Name - Special"
+  source: "DVD"
+  version: "v3"
+  group: "Group"
+  site: "Group"
 "Show Title (1994) (BDRip 1080p HEVC) [Dual-Audio]":
   type: "movie"
   title: "Show Title"

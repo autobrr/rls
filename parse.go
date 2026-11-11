@@ -862,7 +862,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 		return Episode
 	case r.Series != 0 || series:
 		return Series
-	case app || (r.Version != "" && r.Resolution == ""):
+	case app || (r.Version != "" && r.Resolution == "" && !movie):
 		return App
 	case movie || r.Resolution != "":
 		return Movie
