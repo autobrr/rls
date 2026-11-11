@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -230,4 +231,158 @@ func TestScanner_cancel(t *testing.T) {
 	cancel()
 	// draining must terminate rather than hang
 	collect(t, ch, 10*time.Second)
+}
+
+// scanIDs drains ch, returning the scans in the order they arrived, or fails
+// when the scanner has not finished within the timeout.
+func scanIDs(t *testing.T, ch <-chan *Scan, timeout time.Duration) []*Scan {
+	t.Helper()
+	done := make(chan []*Scan, 1)
+	go func() {
+		var v []*Scan
+		for scan := range ch {
+			v = append(v, scan)
+		}
+		done <- v
+	}()
+	select {
+	case v := <-done:
+		return v
+	case <-time.After(timeout):
+		t.Fatalf("scanner did not close its output channel within %s", timeout)
+		return nil
+	}
+}
+
+// numberedLines returns n lines, each unique and carrying its 1-based position.
+func numberedLines(n int) []string {
+	lines := make([]string, n)
+	for i := range n {
+		lines[i] = "The.Matrix." + strconv.Itoa(1000+i) + ".1080p.BluRay.x264-GRP"
+	}
+	return lines
+}
+
+// TestScanner_reuse checks that every Scan call numbers its lines from 1.
+func TestScanner_reuse(t *testing.T) {
+	lines := numberedLines(5)
+	input := strings.Join(lines, "\n") + "\n"
+	s := NewScanner(WithWorkers(1))
+	for run := range 2 {
+		v := scanIDs(t, s.ScanReader(t.Context(), strings.NewReader(input)), 10*time.Second)
+		if len(v) != len(lines) {
+			t.Fatalf("run %d: expected %d results, got: %d", run, len(lines), len(v))
+		}
+		sort.Slice(v, func(i, j int) bool { return v[i].ID < v[j].ID })
+		for i, scan := range v {
+			if want := int64(i + 1); scan.ID != want {
+				t.Errorf("run %d: expected ID %d, got: %d", run, want, scan.ID)
+				continue
+			}
+			if scan.Line != lines[scan.ID-1] {
+				t.Errorf("run %d: ID %d: expected line %q, got: %q", run, scan.ID, lines[scan.ID-1], scan.Line)
+			}
+		}
+	}
+}
+
+// TestScanner_order checks that one worker keeps the input order and that with
+// many workers the IDs restore it.
+func TestScanner_order(t *testing.T) {
+	const n = 300
+	lines := numberedLines(n)
+	input := strings.Join(lines, "\n") + "\n"
+
+	t.Run("one worker", func(t *testing.T) {
+		s := NewScanner(WithWorkers(1))
+		v := scanIDs(t, s.ScanReader(t.Context(), strings.NewReader(input)), 10*time.Second)
+		if len(v) != n {
+			t.Fatalf("expected %d results, got: %d", n, len(v))
+		}
+		for i, scan := range v {
+			if scan.ID != int64(i+1) || scan.Line != lines[i] {
+				t.Fatalf("position %d: expected ID %d and line %q, got: %d %q", i, i+1, lines[i], scan.ID, scan.Line)
+			}
+		}
+	})
+
+	t.Run("eight workers", func(t *testing.T) {
+		s := NewScanner(WithWorkers(8))
+		v := scanIDs(t, s.ScanReader(t.Context(), strings.NewReader(input)), 10*time.Second)
+		if len(v) != n {
+			t.Fatalf("expected %d results, got: %d", n, len(v))
+		}
+		seen := make(map[int64]bool, n)
+		for _, scan := range v {
+			if seen[scan.ID] {
+				t.Fatalf("ID %d arrived twice", scan.ID)
+			}
+			seen[scan.ID] = true
+		}
+		sort.Slice(v, func(i, j int) bool { return v[i].ID < v[j].ID })
+		for i, scan := range v {
+			if scan.ID != int64(i+1) || scan.Line != lines[i] {
+				t.Fatalf("sorted position %d: expected ID %d and line %q, got: %d %q", i, i+1, lines[i], scan.ID, scan.Line)
+			}
+		}
+	})
+}
+
+// TestScanner_errReset checks that Err reports the current scan only, and that
+// a panicked line leaves a gap in the IDs.
+func TestScanner_errReset(t *testing.T) {
+	s := NewReleaseScanner(panicParser{DefaultParser}, WithWorkers(2))
+
+	bad := "The.Matrix.1999.1080p.BluRay.x264-GRP\nBOOM.line\nThe.Matrix.2000.1080p.BluRay.x264-GRP\n"
+	v := scanIDs(t, s.ScanReader(t.Context(), strings.NewReader(bad)), 10*time.Second)
+	if len(v) != 2 {
+		t.Fatalf("expected 2 results, got: %d", len(v))
+	}
+	for _, scan := range v {
+		if scan.ID == 2 {
+			t.Errorf("expected ID 2 to be skipped, got: %q", scan.Line)
+		}
+	}
+	if rerr, ok := errors.AsType[*ScanRecoverError](s.Err()); !ok {
+		t.Fatalf("expected a *ScanRecoverError, got: %v", s.Err())
+	} else if rerr.ID != 2 {
+		t.Errorf("expected the error for ID 2, got: %d", rerr.ID)
+	}
+
+	good := "The.Matrix.1999.1080p.BluRay.x264-GRP\nThe.Matrix.2000.1080p.BluRay.x264-GRP\n"
+	v = scanIDs(t, s.ScanReader(t.Context(), strings.NewReader(good)), 10*time.Second)
+	if len(v) != 2 {
+		t.Fatalf("expected 2 results, got: %d", len(v))
+	}
+	if err := s.Err(); err != nil {
+		t.Errorf("expected no error after a clean scan, got: %v", err)
+	}
+}
+
+// TestScanner_errConcurrent calls Err from another goroutine while a scan
+// runs, for the race detector. No line panics, so that Err goes on to read the
+// error the scan stores when it ends.
+func TestScanner_errConcurrent(t *testing.T) {
+	input := strings.Join(numberedLines(200), "\n") + "\n"
+	s := NewScanner(WithWorkers(4))
+	ch := s.ScanReader(t.Context(), strings.NewReader(input))
+
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				_ = s.Err()
+			}
+		}
+	})
+	scanIDs(t, ch, 10*time.Second)
+	close(stop)
+	wg.Wait()
+	if err := s.Err(); err != nil {
+		t.Errorf("expected no error, got: %v", err)
+	}
 }

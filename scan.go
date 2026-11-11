@@ -10,7 +10,6 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
-	"sync/atomic"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -22,14 +21,28 @@ type Scanner interface {
 	Err() error
 }
 
-// ReleaseScanner is a release scanner.
+// ReleaseScanner is a release scanner that parses lines with a pool of
+// workers.
+//
+// Results arrive on the channel in the order the workers finish, which is the
+// input order only with one worker (WithWorkers(1)). Each Scan carries an ID,
+// the 1-based position of its line in the input, so a consumer can restore the
+// input order by it. A line that panicked the parser is skipped, which leaves a
+// gap in the IDs, and Err reports the first such panic. NewReleaseScanner
+// starts runtime.NumCPU() workers unless WithWorkers says otherwise.
+//
+// A scanner runs one Scan at a time: a second Scan may start once the channel
+// of the first is closed. Each Scan starts its IDs at 1 and Err reports the
+// current scan only.
 type ReleaseScanner struct {
 	parser  Parser
 	workers int
-	next    int64
-	err     error
-	mu      sync.Mutex
-	errs    []error
+
+	// mu guards err and errs, which the goroutines of a scan write and Err
+	// reads.
+	mu   sync.Mutex
+	err  error
+	errs []error
 }
 
 // NewReleaseScanner creates a new release scanner.
@@ -49,20 +62,34 @@ func NewScanner(opts ...ReleaseScannerOption) *ReleaseScanner {
 	return NewReleaseScanner(DefaultParser, opts...)
 }
 
-// Scan scans until the context is closed, or the scanner is exhausted.
+// Scan scans until the context is closed, or the scanner is exhausted, and
+// then closes the returned channel.
+//
+// Results arrive in the order the workers finish, which is the input order
+// only with one worker (WithWorkers(1)). Scan.ID is the 1-based position of
+// the line in the input of this call, so a consumer can restore the order by
+// it. A line that panicked the parser is skipped, which leaves a gap in the
+// IDs, and Err reports the first such panic.
 func (s *ReleaseScanner) Scan(ctx context.Context, scanner Scanner) <-chan *Scan {
+	s.mu.Lock()
+	s.err, s.errs = nil, nil
+	s.mu.Unlock()
+
 	eg, ctx := errgroup.WithContext(ctx)
 	in, out := make(chan *Scan), make(chan *Scan)
 	eg.Go(func() error {
 		defer close(in)
+		// the IDs belong to this call, so every Scan numbers its lines from 1
+		var next int64
 		for scanner.Scan() {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
+				next++
 				v := Scan{
 					Line: strings.TrimSuffix(scanner.Text(), "\n"),
-					ID:   atomic.AddInt64(&s.next, 1),
+					ID:   next,
 				}
 				select {
 				case <-ctx.Done():
@@ -82,13 +109,16 @@ func (s *ReleaseScanner) Scan(ctx context.Context, scanner Scanner) <-chan *Scan
 	}
 	go func() {
 		defer close(out)
-		s.err = eg.Wait()
+		err := eg.Wait()
+		s.mu.Lock()
+		s.err = err
+		s.mu.Unlock()
 	}()
 	return out
 }
 
 // ScanReader scans a reader until the context is closed, or the reader is
-// exhausted.
+// exhausted. See Scan for the order of the results.
 func (s *ReleaseScanner) ScanReader(ctx context.Context, r io.Reader) <-chan *Scan {
 	return s.Scan(ctx, bufio.NewScanner(r))
 }
@@ -100,7 +130,7 @@ func (s *ReleaseScanner) run(ctx context.Context, worker int, in, out chan *Scan
 		case <-ctx.Done():
 			return ctx.Err()
 		case scan := <-in:
-			if scan == nil || scan.ID == 0 {
+			if scan == nil {
 				return nil
 			}
 			// a release that panics the parser must not take the worker with
@@ -136,17 +166,15 @@ func (s *ReleaseScanner) parse(worker int, scan *Scan) (ok bool) {
 	return true
 }
 
-// Err returns the last encountered error.
+// Err returns the first recovered parser panic of the current scan if there
+// is one, otherwise the error of the scanner or the context, and nil when the
+// context was cancelled. It is safe to call at any time, but it is complete
+// only once the channel of the scan is closed.
 func (s *ReleaseScanner) Err() error {
 	s.mu.Lock()
-	errs := len(s.errs)
-	var first error
-	if errs != 0 {
-		first = s.errs[0]
-	}
-	s.mu.Unlock()
-	if errs != 0 {
-		return first
+	defer s.mu.Unlock()
+	if len(s.errs) != 0 {
+		return s.errs[0]
 	}
 	if !errors.Is(s.err, context.Canceled) {
 		return s.err
@@ -158,7 +186,11 @@ func (s *ReleaseScanner) Err() error {
 type Scan struct {
 	Release Release
 	Line    string
-	ID      int64
+	// ID is the 1-based position of the line in the input of the Scan call.
+	// Results arrive in the order the workers finish, so a consumer restores
+	// the input order by ID. A line that panicked the parser is skipped, which
+	// leaves a gap in the IDs.
+	ID int64
 }
 
 // ScanRecoverError is a scan recover error.
@@ -167,7 +199,7 @@ type ScanRecoverError struct {
 	ID     int64
 	S      string
 	Stack  []byte
-	Err    interface{}
+	Err    any
 }
 
 // Error satisfies the error interface.
