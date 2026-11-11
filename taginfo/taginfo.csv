@@ -571,6 +571,7 @@ other,WORKING,Working,(?-i:W[oO]RK[iI]NG),,app,
 other,WS,Widescreen,widescreen|ws,,movie,
 other,$1X,,((?:19|20)[\d|x])x,,music,1
 other,Plus.$1.Trainer,Trainer ($1),(?:plus[\-\._ ])?(\d\d?)[\-\._ ]?trainer,,game,1
+other,REPACK$1,Repack ($1),repack([3-9]),,,
 platform,AIX,,,,app,1
 platform,ANDROiD,Android,(?-i:ANDRO[iI]D),,app,
 platform,DOS,,(?-i:DOS),,app,1

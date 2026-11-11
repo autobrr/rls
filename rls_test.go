@@ -516,6 +516,7 @@ func TestTagInfo_placeholders(t *testing.T) {
 		"language/MULTi$1":               {"multi5", "MULTi5", "Multi (5)"},
 		"other/$1X":                      {"19XX", "19XX", "19XX"},
 		"other/Plus.$1.Trainer":          {"plus 10 trainer", "Plus.10.Trainer", "Trainer (10)"},
+		"other/REPACK$1":                 {"repack3", "REPACK3", "Repack (3)"},
 		"resolution/$1p":                 {"1600p", "1600p", "Other (1600p)"},
 		"size/$1$2":                      {"4.7GB", "4.7GB", "4.7 GB"},
 		"source/$1INCH.ViNYL":            {"12 inch vinyl", "12INCH.ViNYL", "Vinyl (12 inch)"},

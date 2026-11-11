@@ -4105,6 +4105,16 @@
   codec: "H.264"
   language: "GERMAN"
   group: "GRP"
+"Show.S01E02.REPACK3.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  other: "REPACK3"
+  group: "GRP"
 "Show.S01E02.NO.WAY.OUT.1080p.WEB.h264-GRP":
   type: "episode"
   title: "Show"
