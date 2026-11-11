@@ -85,6 +85,10 @@ type Release struct {
 	dates  []int
 	unused []int
 	end    int
+	// absolute is the episode Absolute returns, and isAbsolute whether there
+	// is one.
+	absolute   int
+	isAbsolute bool
 }
 
 // Parse creates a release from src.
@@ -208,6 +212,17 @@ func (r Release) SeriesEpisodes() [][]int {
 		return v[i][0] < v[j][0]
 	})
 	return v
+}
+
+// Absolute returns the episode when the name numbers its episodes absolutely
+// and not within a season, ie '[Group] One Piece - 1169'. Episode carries the
+// same number. What Absolute adds is that no season qualifies it, so it is not
+// comparable against a season's episode without an external mapping (AniDB,
+// anime-relations, TheTVDB). ok is false for a season relative number ('Hell
+// Mode S2 - 04') and for a special ('Show.S00E05'), both of which are already
+// qualified.
+func (r Release) Absolute() (episode int, ok bool) {
+	return r.absolute, r.isAbsolute
 }
 
 // HasSeason reports whether the name gives a season, which season 0 is

@@ -933,6 +933,7 @@ type rls struct {
 
 	Series         int
 	Episode        int
+	Absolute       int
 	SeriesEpisodes string
 	Version        string
 	Disc           string
@@ -964,6 +965,7 @@ type rls struct {
 }
 
 func buildRls(r Release) rls {
+	absolute, _ := r.Absolute()
 	req := 0
 	if r.Req {
 		req = 1
@@ -997,6 +999,7 @@ func buildRls(r Release) rls {
 
 		Series:         r.Series,
 		Episode:        r.Episode,
+		Absolute:       absolute,
 		SeriesEpisodes: strings.Join(seriesEpisodes, " "),
 		Version:        r.Version,
 		Disc:           r.Disc,
