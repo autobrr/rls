@@ -173,7 +173,9 @@ func (r Release) Tags() []Tag {
 const maxRangeFill = 10000
 
 // SeriesEpisodes returns all series and episodes. The episodes inside a range
-// are included, up to maxRangeFill of them.
+// are included, up to maxRangeFill of them. A written episode 0 is an episode
+// ('S01E00', '[Grp] Show - 00-12'), and a season with no episode gives no
+// pair ('S01').
 func (r Release) SeriesEpisodes() [][]int {
 	var v [][]int
 	last, fill, none := -1, maxRangeFill, 0
@@ -220,7 +222,8 @@ func (r Release) SeriesEpisodes() [][]int {
 // comparable against a season's episode without an external mapping (AniDB,
 // anime-relations, TheTVDB). ok is false for a season relative number ('Hell
 // Mode S2 - 04') and for a special ('Show.S00E05'), both of which are already
-// qualified.
+// qualified. A written episode 0 is absolute like any other: '[Group] Show -
+// 00' gives 0 and true, and a name with no episode 0 and false.
 func (r Release) Absolute() (episode int, ok bool) {
 	return r.absolute, r.isAbsolute
 }
@@ -904,7 +907,8 @@ func (tag Tag) Series() (int, int) {
 
 // Episodes normalizes the episodes value. A "-" between two episodes makes
 // them the ends of a range ('E05-07'), and the episodes in between are
-// included.
+// included. A written episode 0 is included ('E00'), and a tag that writes no
+// episode gives none ('S01').
 func (tag Tag) Episodes() []int {
 	fill := maxRangeFill
 	return tag.episodes(&fill)
@@ -914,7 +918,6 @@ func (tag Tag) Episodes() []int {
 // fill, which it counts down. A range wider than that is left as its ends.
 func (tag Tag) episodes(fill *int) []int {
 	var v []int
-	// prev is the episode before, which may be the 0 that v leaves out
 	prev, ranged := -1, false
 	for _, b := range tag.rest(2) {
 		if b == "-" {
@@ -928,11 +931,10 @@ func (tag Tag) episodes(fill *int) []int {
 			}
 			*fill -= n
 		}
-		if episode != 0 {
-			v = append(v, episode)
-		}
+		// an episode that was not written is the empty string, and a written
+		// 0 is an episode ('S01E00')
 		if b != "" {
-			prev = episode
+			v, prev = append(v, episode), episode
 		}
 		ranged = false
 	}

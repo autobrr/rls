@@ -973,12 +973,12 @@ func (b *TagBuilder) fixMusic(r *Release) {
 }
 
 // bareEpisode reports whether the tag at i is one episode written with no
-// season: '04', 'E04', 'EP04' or 'Episode 04'. A range ('01-12', 'E01E02') is
+// season: '04', '00', 'E04', 'EP04' or 'Episode 04'. A range ('01-12', 'E01E02') is
 // not one episode, and half an episode ('21.5', 'Ep 5.5') has no absolute
 // number.
 func bareEpisode(tags []Tag, i int) bool {
 	tag := tags[i]
-	if !tag.Is(TagTypeSeries) || len(tag.v) != 3 || tag.v[1] != "" || atoi(tag.v[2]) == 0 || strings.Contains(tag.v[0], ".") {
+	if !tag.Is(TagTypeSeries) || len(tag.v) != 3 || tag.v[1] != "" || tag.v[2] == "" || strings.Contains(tag.v[0], ".") {
 		return false
 	}
 	return !(peek(tags, i+1, TagTypeDelim) && tags[i+1].v[0] == "." &&
@@ -988,12 +988,17 @@ func bareEpisode(tags []Tag, i int) bool {
 // collect collects tags into the release.
 func (b *TagBuilder) collect(r *Release) {
 	// bareEp is whether an episode was written with no season, ie the '04' in
-	// 'Show - 04 (1080p)', 'Show E04' or 'Show Episode 04'. season is whether
-	// a season was written anywhere in the name, as a number ('S02E04', '2nd
-	// Season') or as the specials ('S00E04')
+	// 'Show - 04 (1080p)', 'Show E04' or 'Show Episode 04', and bare the first
+	// such episode. season is whether a season was written anywhere in the
+	// name, as a number ('S02E04', '2nd Season') or as the specials ('S00E04')
 	var bareEp, season bool
+	var bare int
 	for i := 0; i < len(r.tags); i++ {
-		bareEp, season = bareEp || bareEpisode(r.tags, i), season || r.tags[i].Is(TagTypeSeries) && r.tags[i].v[1] != ""
+		// the first one that is not 0, as Episode is
+		if (!bareEp || bare == 0) && bareEpisode(r.tags, i) {
+			bareEp, bare = true, atoi(r.tags[i].v[2])
+		}
+		season = season || r.tags[i].Is(TagTypeSeries) && r.tags[i].v[1] != ""
 		switch r.tags[i].typ {
 		case TagTypeText:
 		case TagTypePlatform:
@@ -1105,7 +1110,7 @@ func (b *TagBuilder) collect(r *Release) {
 	// season marker anywhere makes it season relative by fansub convention
 	// ('Hell Mode S2 - 04' is episode 4 of season 2, not absolute 4).
 	if bareEp && !season {
-		r.absolute, r.isAbsolute = r.Episode, true
+		r.absolute, r.isAbsolute = bare, true
 	}
 	// collect year, month, day from unset date tags
 	for i := len(r.dates); i > 0; i-- {

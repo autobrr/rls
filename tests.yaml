@@ -3187,6 +3187,16 @@
   codec: "HEVC x265"
   bitdepth: "10BIT"
   audio: "AAC"
+"[UTW]_Fate_stay_night_Unlimited_Blade_Works_-_00-12_[BD][h264-1080p][FLAC]":
+  type: "series"
+  title: "Fate stay night Unlimited Blade Works"
+  source: "BluRay"
+  resolution: "1080p"
+  seriesEpisodes: "S00E00 S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
+  codec: "H.264"
+  audio: "FLAC"
+  group: "UTW"
+  site: "UTW"
 "Formula1.2024x05.Miami.Grand.Prix.Race.1080p.WEB.h264-GRP":
   type: "episode"
   title: "Formula1"

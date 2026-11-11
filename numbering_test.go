@@ -151,3 +151,59 @@ func equalNumbering(a, b numbering) bool {
 	return a.season == b.season && a.episode == b.episode && slices.Equal(a.seasons, b.seasons) &&
 		a.first == b.first && a.last == b.last && a.ok == b.ok
 }
+
+// TestEpisodeZero checks that a written episode 0 is an episode: SeriesEpisodes
+// lists it, a range starts at it, and with no season it is absolute.
+func TestEpisodeZero(t *testing.T) {
+	tests := []struct {
+		name     string
+		exp      [][]int
+		absolute bool
+	}{
+		{"[Group] Show - 00 [720p]", [][]int{{0, 0}}, true},
+		{"[Group] Show - 00v2 [720p]", [][]int{{0, 0}}, true},
+		{"[Group] Show - Episode 0 [720p]", [][]int{{0, 0}}, true},
+		{"Show.E00.1080p.WEB.h264-GRP", [][]int{{0, 0}}, true},
+		// a season qualifies it
+		{"Show.S01E00.1080p.WEB.h264-GRP", [][]int{{1, 0}}, false},
+		{"Show.1x00.HDTV.x264-GRP", [][]int{{1, 0}}, false},
+		{"[Group] Show S2 - 00 [1080p]", [][]int{{2, 0}}, false},
+		{"Show.S00E00.1080p.WEB.h264-GRP", [][]int{{0, 0}}, false},
+		// ranges that start at 0
+		{"Show.S01E00E01.1080p.WEB.h264-GRP", [][]int{{1, 0}, {1, 1}}, false},
+		{"Show.S01E00-E02.1080p.WEB.h264-GRP", [][]int{{1, 0}, {1, 1}, {1, 2}}, false},
+		{"[Group] Show - 00-03 [720p]", [][]int{{0, 0}, {0, 1}, {0, 2}, {0, 3}}, false},
+		{"[Group] Show - 00 ~ 02 [720p]", [][]int{{0, 0}, {0, 1}, {0, 2}}, false},
+		// a range that ends at 0 is its two ends
+		{"Show.S01E03-E00.1080p.WEB.h264-GRP", [][]int{{1, 0}, {1, 3}}, false},
+		// half an episode and a range after the 0 are not its number
+		{"[Group] Show - 00 (Ep 5.5) [720p]", [][]int{{0, 0}, {0, 5}}, true},
+		{"[Group] Show - 00 - E05-07 [720p]", [][]int{{0, 0}, {0, 5}, {0, 6}, {0, 7}}, true},
+		// half an episode has no absolute number
+		{"[Group] Show - 00.5 [720p]", [][]int{{0, 0}}, false},
+		// no episode written
+		{"Show.S01.1080p.WEB.h264-GRP", nil, false},
+		{"Show.2024.1080p.WEB.h264-GRP", nil, false},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if v := r.SeriesEpisodes(); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
+			t.Errorf("%q: expected series episodes %v, got: %v", test.name, test.exp, v)
+		}
+		if episode, ok := r.Absolute(); episode != 0 || ok != test.absolute {
+			t.Errorf("%q: expected absolute 0 %t, got: %d %t", test.name, test.absolute, episode, ok)
+		}
+		if ok := r.HasEpisode(); ok != (test.exp != nil) {
+			t.Errorf("%q: expected has episode %t, got: %t", test.name, test.exp != nil, ok)
+		}
+	}
+	for _, tag := range ParseString("Show.S01E00.1080p.WEB.h264-GRP").Tags() {
+		if v := tag.Episodes(); tag.Is(TagTypeSeries) && !slices.Equal(v, []int{0}) {
+			t.Errorf("expected episodes [0], got: %v", v)
+		}
+	}
+	// the first episode that is not 0 is the absolute one, as it is Episode
+	if episode, ok := ParseString("[Group] Show - 00 - 05 [720p]").Absolute(); episode != 5 || !ok {
+		t.Errorf("expected absolute 5 true, got: %d %t", episode, ok)
+	}
+}
