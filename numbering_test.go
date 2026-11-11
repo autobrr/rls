@@ -72,6 +72,13 @@ func TestNumbering(t *testing.T) {
 		{"[Grp] Show S2 - 01-12 [1080p]", numbering{season: true, episode: true, seasons: []int{2}, first: 1, last: 12, ok: true}},
 		// a season, then one episode in it
 		{"[Grp] Show 2nd Season - 04 [1080p].mkv", numbering{season: true, episode: true, seasons: []int{2}}},
+		{"[Grp] Show Second Season - 04 [1080p].mkv", numbering{season: true, episode: true, seasons: []int{2}}},
+		{"[Grp]_Show_Second_Season_03-06_(1280x720_Blu-ray_FLAC)", numbering{season: true, episode: true, seasons: []int{2}, first: 3, last: 6, ok: true}},
+		{"[Grp] Show Third Season [BD 1080p]", numbering{season: true, seasons: []int{3}}},
+		// the show's other name after its season and episode repeats the
+		// season, and a name that opens with the words is a title
+		{"[Grp] Show S01E28 (Show Second Season OVA) [1080p]", numbering{season: true, episode: true, seasons: []int{1}}},
+		{"Second.Season.Blues.2005.DVDRip.x264-GRP", numbering{}},
 		// several seasons, no episode
 		{"Show.S01S02S03.1080p.BluRay.x264-GRP", numbering{season: true, seasons: []int{1, 2, 3}}},
 		{"Show.S01-S03.1080p.BluRay.x264-GRP", numbering{season: true, seasons: []int{1, 2, 3}}},

@@ -108,6 +108,8 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?:series|seasons?|staffel|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
 			// 2nd Season, 3rd.Season
 			`(?i)^(?P<s>[1-9]\d?)(?:st|nd|rd|th)[\-\._ ]season\b`,
+			// Second Season, Third.Season
+			`(?i)^(?P<o>first|second|third|fourth|fifth|sixth)[\-\._ ]season\b`,
 			// Vol.1.No.2, vol1no2
 			`(?i)^vol(?:ume)?[\-\._ ]?(?P<s>\d{1,3})(?:[\-\._ ]?(?:number|no)[\-\._ ]?(?P<e>\d{1,5}))\b`,
 			// Episode 15, E009, Ep. 007, EP07, Ep07v2, Ep.05-07, Ep 05 ~ 07, Ep 5.5, EP1156-1170, Folge 15
@@ -326,6 +328,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 			if s, v, i, n, ok := lexer(src, buf, i, n); ok {
 				// collect series, episode, version
 				var series, episode, version, disc, multi, many, rng, dec []byte
+				var ordinal bool
 				for l := 0; l < len(v); l += 2 {
 					switch string(v[l]) {
 					case "s":
@@ -344,6 +347,9 @@ func NewSeriesLexer(strs ...string) Lexer {
 						rng = v[l+1]
 					case "x":
 						dec = v[l+1]
+					case "o":
+						// the season as a word
+						series, ordinal = ordinalSeason(v[l+1]), true
 					default:
 						panic(fmt.Errorf("unknown capture group %q", v[l]))
 					}
@@ -360,9 +366,22 @@ func NewSeriesLexer(strs ...string) Lexer {
 						return start, end, i - len(s), n, false
 					}
 				}
-				// '2nd Season' after a season or an episode is the show's
-				// other name repeating it ('S00E28 (Show 2nd Season OVA)')
-				if len(series) != 0 && len(episode) == 0 && s[0] >= '1' && s[0] <= '9' && (s[len(s)-1] == 'n' || s[len(s)-1] == 'N') &&
+				// 'Second Season' is a season after a title. It is a title
+				// itself when it opens the name ('Second.Season.Blues.2005')
+				// or goes on as a word ("Second Season's End")
+				if ordinal {
+					k := len(start) - 1
+					for k >= 0 && start[k].Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) {
+						k--
+					}
+					if k < 0 || i < n && src[i] == '\'' {
+						return start, end, i - len(s), n, false
+					}
+				}
+				// '2nd Season' or 'Second Season' after a season or an episode
+				// is the show's other name repeating it ('S00E28 (Show 2nd
+				// Season OVA)')
+				if len(series) != 0 && len(episode) == 0 && (ordinal || s[0] >= '1' && s[0] <= '9') && (s[len(s)-1] == 'n' || s[len(s)-1] == 'N') &&
 					slices.ContainsFunc(start, func(tag Tag) bool { return tag.Is(TagTypeSeries) }) {
 					return start, end, i - len(s), n, false
 				}
@@ -515,6 +534,17 @@ func NewSeriesLexer(strs ...string) Lexer {
 			return start, end, i, n, false
 		},
 	}
+}
+
+// ordinalSeason returns the number of a season written as a word, ie '2' for
+// 'Second'.
+func ordinalSeason(word []byte) []byte {
+	for i, s := range [...]string{"first", "second", "third", "fourth", "fifth", "sixth"} {
+		if strings.EqualFold(string(word), s) {
+			return []byte{'1' + byte(i)}
+		}
+	}
+	return nil
 }
 
 // seasonRangeEnd looks for the last season of a range after a season that

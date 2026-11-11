@@ -3365,6 +3365,15 @@
   other: "FS REAL INTERNAL READNFO"
   language: "GERMAN"
   group: "TVARCHiV"
+"[Commie] Haikyuu!! Second Season [BD 720p AAC]":
+  type: "series"
+  title: "Haikyuu!!"
+  source: "BluRay"
+  resolution: "720p"
+  series: 2
+  audio: "AAC"
+  group: "Commie"
+  site: "Commie"
 "[SubsPlease]_Higurashi_no_Naku_Koro_ni_Sotsu_-_09_(1080p)_[C00D6C68]":
   type: "episode"
   title: "Higurashi no Naku Koro ni Sotsu"
@@ -3692,6 +3701,16 @@
   day: 6
   codec: "HEVC x265"
   group: "MeGusta"
+"[Coalgirls]_Nisekoi_Second_Season_05-06_(1920x1080_Blu-ray_FLAC)":
+  type: "series"
+  title: "Nisekoi"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 2
+  seriesEpisodes: "S02E05 S02E06"
+  audio: "FLAC"
+  group: "Coalgirls"
+  site: "Coalgirls"
 "No Game No Life Season 1 [Complete][720p] + Special [1080p] English Subbed":
   type: "series"
   title: "No Game No Life"

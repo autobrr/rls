@@ -289,6 +289,7 @@ func TestAbsoluteEpisode(t *testing.T) {
 		{"[Group] One Piece EP1168 1080p WEB-DL AAC2.0 H.264", 0, 1168, 1168, "written with EP"},
 		{"[Group] Show Title Episode 909 [1080p]", 0, 909, 909, "written out"},
 		{"[Group] Show Title 2nd Season - 08 [1080p]", 2, 8, 0, "ordinal season qualifies it"},
+		{"[Group] Show Title Second Season - 08 [1080p]", 2, 8, 0, "so does one written as a word"},
 		{"[Group] Show Title E05-E07 [1080p]", 0, 5, 0, "the ends of a range between two tags are not one episode"},
 		{"[Group] Show Title (E001-E130) (480p)", 0, 1, 0, "the same in a bracket"},
 		{"[Group] Show Title E05~E07 [1080p]", 0, 5, 0, "and with a tilde"},
