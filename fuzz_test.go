@@ -116,6 +116,24 @@ func FuzzParseString(f *testing.F) {
 	})
 }
 
+// FuzzParseMatcher checks that the matchers of the vocabulary lexers give
+// the tags their alternations give.
+func FuzzParseMatcher(f *testing.F) {
+	for _, test := range rlsTests(f) {
+		f.Add(test.s)
+	}
+	for _, s := range []string{
+		"", "x", "HDR10+", "HDR10+.x", "DD+5.1", "WEB-DL_x", "xvid_iso", "Remaſter", "M\u212aV", "MULTi9", "1600p",
+		"Dual Audio", "DTS-HD.MA.7.1", "Blu-ray", "BLU RAY", "h.264", "H 265", "10bit", "REPACK3", "re-packed",
+	} {
+		f.Add(s)
+	}
+	fast, slow := parsers()
+	f.Fuzz(func(t *testing.T, s string) {
+		sameTags(t, fast, slow, s)
+	})
+}
+
 // FuzzParseHint checks that no name and no hint can panic the parser, a wrong
 // type for the name least of all: the steps after the type is known index the
 // tags they expect a release of that type to have. The tags still reproduce

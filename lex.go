@@ -1559,6 +1559,7 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 	var f, otherf taginfo.FindFunc
 	var re *regexp.Regexp
 	var pf *prefilter
+	var mt *matcher
 	bdremux := []byte("bdremux")
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
@@ -1569,6 +1570,7 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			}
 			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)), findFunc(info...)
 			pf, _ = newPrefilter(info, ignoreCase)
+			mt = newMatcher(info, ignoreCase, false)
 			// the split below needs the two rows it stands for
 			if typ == TagTypeSource && ignoreCase && f("BD") != nil {
 				if o := findFunc(infos["other"]...); o("Remux") != nil {
@@ -1590,6 +1592,15 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			}
 			if !pf.maybe(buf, i, n) {
 				return start, end, i, n, false
+			}
+			// the row by its spellings, and the alternation when the matcher
+			// cannot tell
+			if row, _, e, sub, ok := mt.match(buf, i, n); ok {
+				if row == -1 {
+					return start, end, i, n, false
+				}
+				var v [20][]byte
+				return append(start, NewTag(typ, f, mt.values(v[:], src[i:e], buf[i:e], row, sub)...)), end, e, n, true
 			}
 			if m := re.FindSubmatch(buf[i:n]); m != nil {
 				return append(start, NewTag(typ, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
@@ -1617,6 +1628,7 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 	var f taginfo.FindFunc
 	var re *regexp.Regexp
 	var pf *prefilter
+	var mt *matcher
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			info := infos[strings.ToLower(typ.String())]
@@ -1626,10 +1638,31 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 			}
 			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)+`(?:\b|[\-\._ ]`+plusEnd+`)`), findFunc(info...)
 			pf, _ = newPrefilter(info, ignoreCase)
+			mt = newMatcher(info, ignoreCase, true)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if !pf.maybe(src, i, n) {
 				return start, end, i, n, false
+			}
+			// the row by its spellings, and the alternation when the matcher
+			// cannot tell
+			if row, value, e, sub, ok := mt.match(src, i, n); ok {
+				switch {
+				case row == -1:
+					return start, end, i, n, false
+				case e != value && !tagDelim(src[value]):
+					// See plusEnd.
+					e = value
+				}
+				if e != value {
+					return append(
+						start,
+						NewTag(typ, f, src[i:value], src[i:value]),
+						NewTag(TagTypeDelim, nil, src[value:e], src[value:e]),
+					), end, e, n, true
+				}
+				var v [20][]byte
+				return append(start, NewTag(typ, f, mt.values(v[:], src[i:e], src[i:e], row, sub)...)), end, e, n, true
 			}
 			if m := re.FindSubmatch(src[i:n]); m != nil {
 				if len(m[0]) != len(m[1]) && !tagDelim(m[0][len(m[1])]) {
