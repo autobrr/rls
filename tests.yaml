@@ -2882,6 +2882,18 @@
   audio: "DD"
   channels: "2.0"
   size: "DVD9"
+"[Suki Desu] Boku no Hero Academia (Season 1 - 3) [BD 1080p x265 HEVC 10bit][Eng-Sub][Judas] (My Hero Academia)":
+  type: "series"
+  title: "Boku no Hero Academia"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x265 HEVC"
+  bitdepth: "10BIT"
+  language: "ENGLiSH"
+  group: "Suki Desu"
+  site: "Suki Desu"
+  unused: "Sub Judas My Hero Academia"
 "[Diogo4D] [BD][1080p] Boku no Kokoro no Yabai Yatsu - 07 [68A22760].mkv":
   type: "episode"
   title: "Boku no Kokoro no Yabai Yatsu"
@@ -3162,6 +3174,19 @@
   channels: "2.0"
   region: "UK"
   group: "Cinefeel"
+"[Judas] Durarara!! (Seasons 01-02) [BD 1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs] (Batch)":
+  type: "series"
+  title: "Durarara!!"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "DUAL.AUDIO"
+  language: "MULTiSUB"
+  group: "Judas"
+  site: "Judas"
+  unused: "Batch"
 "Dynasties.2018.S02E04.Hyena.2160p.iP.WEB-DL.AAC2.0.HLG.HEVC-WELP.mkv":
   type: "episode"
   title: "Dynasties"
@@ -3391,6 +3416,19 @@
   other: "AI.Upscale"
   group: "JBENT"
   site: "TAoE"
+"[R-Archive] Inuyasha Seasons 1~7 R1 DVD Remux 480p Eng Sub Dub Dual Audio":
+  type: "series"
+  title: "Inuyasha"
+  source: "DVD"
+  resolution: "480p"
+  series: 1
+  audio: "DUAL.AUDIO"
+  other: "REMUX"
+  language: "ENGLiSH"
+  region: "R1"
+  group: "R-Archive"
+  site: "R-Archive"
+  unused: "Sub Dub"
 "Invincible.2021.S02E01.A.LESSON.FOR.YOUR.NEXT.LIFE.1080p.AMZN.WEB-DL.DDP5.1.H.264-FLUX.mkv":
   type: "episode"
   title: "Invincible"
@@ -3753,6 +3791,19 @@
   group: "JBENT"
   site: "TAoE"
   ext: "mkv"
+"[Anime Time] Pokemon Complete Series (Season 01-25+Movies+Specials+Shorts+OST) [Eng Dub] [DVD+Web-Dl][1080p][HEVC 10bit x265][AAC] [Batch]":
+  type: "series"
+  title: "Pokemon Complete Series"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "AAC"
+  language: "ENGLiSH"
+  group: "Anime Time"
+  site: "Anime Time"
+  unused: "Movies Specials Shorts OST Dub Batch"
 "Power.On.The.Story.Of.Xbox.S01.1080p.AMZN.WEB-DL.DDP2.0.H.264-WELP":
   type: "series"
   title: "Power On The Story Of Xbox"
@@ -4049,6 +4100,14 @@
   bitdepth: "8BIT"
   audio: "DDP"
   group: "GROUP"
+"Show.S01-03.1080p.BluRay.x264-GRP":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x264"
+  group: "GRP"
 "Show.S01.1080p.BluRay.Opus.2.0.x265-GRP (Alt Title)":
   type: "series"
   title: "Show"
@@ -4060,6 +4119,14 @@
   channels: "2.0"
   group: "GRP"
   unused: "Alt Title"
+"Show.Season.1-3.1080p.BluRay.x264-GRP":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x264"
+  group: "GRP"
 "Show.S01.UHD.HDTV.x265-GRP":
   type: "series"
   title: "Show"

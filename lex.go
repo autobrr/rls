@@ -101,8 +101,9 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?P<s>[0-8]?\d)x(?P<e>\d{1,3})\b`,
 			// S01 - 02v3, S07-06, s03-5v.9
 			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]{1,3}(?P<e>\d{1,5})(?:[\-\._ ]{1,3}(?P<v>v\d+(?:\.\d+){0,2}))?\b`,
-			// Season.01.Episode.02, Series.01.Ep.02, Series.01, Season.01
-			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
+			// Season.01.Episode.02, Series.01.Ep.02, Series.01, Season.01, and
+			// Seasons.01 in front of the end of a range
+			`(?i)^(?:series|seasons?|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
 			// 2nd Season, 3rd.Season
 			`(?i)^(?P<s>[1-9]\d?)(?:st|nd|rd|th)[\-\._ ]season\b`,
 			// Vol.1.No.2, vol1no2
@@ -370,6 +371,25 @@ func NewSeriesLexer(strs ...string) Lexer {
 					return start, end, i - len(s), n, false
 				}
 				var tags []Tag
+				// a season with no episode and a higher number after a hyphen
+				// or a tilde are the ends of a range of seasons ('S01-03',
+				// 'Season 1-3', 'Seasons 1~7', '(Season 1 - 3)'), written as
+				// two tags the way 'S01-S03' is, for Release.Seasons to fill
+				// in. The plural is read in front of a range and nowhere else
+				if len(series) != 0 && len(episode) == 0 && len(version) == 0 && len(disc) == 0 && len(multi) == 0 {
+					sep, last := seasonRangeEnd(src, s, series, i, n)
+					switch {
+					case last != 0:
+						tags = append(
+							tags,
+							newTag(src, buf, TagTypeSeries, nil, src[i-len(s):i+sep], series, nil),
+							newTag(src, buf, TagTypeSeries, nil, src[i+sep:i+sep+last], src[i+sep:i+sep+last], nil),
+						)
+						return append(start, tags...), end, i + sep + last, n, true
+					case len(s) > 7 && (s[6] == 's' || s[6] == 'S') && (s[1] == 'e' || s[1] == 'E'):
+						return start, end, i - len(s), n, false
+					}
+				}
 				// a range end ('E05-07') is the last episode of the range when
 				// it is higher than the first. Only a bare hyphen or a tilde
 				// is sure to mean a range, which the tag records as a '-'
@@ -467,6 +487,83 @@ func NewSeriesLexer(strs ...string) Lexer {
 			return start, end, i, n, false
 		},
 	}
+}
+
+// seasonRangeEnd looks for the last season of a range after a season that
+// was read up to i as s, and returns the length of what separates the two and
+// of the number, or 0 and 0 when no range follows.
+//
+// The two are set apart by a hyphen or a tilde, and the last season is the
+// higher number. What looks the same and is a season and its episode is left
+// to the other patterns:
+//
+//   - a number padded with a zero after a season that is not ('S2-04')
+//   - spaces around the hyphen ('Season 3 - 03', 'S01 - 04'), unless the
+//     season is a word in a bracket and a ')' or a '+' ends the pair
+//     ('(Season 1 - 3)', '(Season 01 - 04 + OVAs)')
+//   - a number word in front of the season, which makes it a season of its
+//     own or a title ('Second Season 03-06', 'The Four Seasons 1-4')
+func seasonRangeEnd(src, s, series []byte, i, n int) (int, int) {
+	space := func(j int) bool { return j < n && (src[j] == ' ' || src[j] == '_') }
+	digit := func(j int) bool { return j < n && src[j] >= '0' && src[j] <= '9' }
+	j, spaced := i, false
+	switch c := s[len(s)-1]; {
+	// the series pattern took the hyphen
+	case c == '-':
+	case c >= '0' && c <= '9':
+		if space(j) {
+			j, spaced = j+1, true
+		}
+		if j == n || src[j] != '-' && src[j] != '~' {
+			return 0, 0
+		}
+		if j++; space(j) {
+			j, spaced = j+1, true
+		}
+	default:
+		return 0, 0
+	}
+	k := j
+	for digit(k) {
+		k++
+	}
+	// as a season is, the number is below 90
+	if k == j || k-j > 2 || k-j == 2 && src[j] == '9' || atoi(string(src[j:k])) <= atoi(string(series)) || src[j] == '0' && series[0] != '0' {
+		return 0, 0
+	}
+	// the number ends at a delimiter, and is not the start of a range of
+	// episodes ('S1-01-12')
+	if k < n {
+		switch c := src[k]; {
+		case c|0x20 >= 'a' && c|0x20 <= 'z', c >= 0x80, (c == '-' || c == '~') && digit(k+1):
+			return 0, 0
+		}
+	}
+	// the start of the season, less the spaces in front of it
+	l := i - len(s)
+	for l > 0 && (src[l-1] == ' ' || src[l-1] == '_' || src[l-1] == '.') {
+		l--
+	}
+	if spaced {
+		m := k
+		for space(m) {
+			m++
+		}
+		if m == n || src[m] != ')' && src[m] != '+' || s[1]|0x20 != 'e' || l == 0 || src[l-1] != '(' && src[l-1] != '[' {
+			return 0, 0
+		}
+	}
+	// the word in front of the season
+	m := l
+	for m > 0 && src[m-1]|0x20 >= 'a' && src[m-1]|0x20 <= 'z' {
+		m--
+	}
+	switch strings.ToLower(string(src[m:l])) {
+	case "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "final",
+		"two", "three", "four", "five", "six", "seven", "eight", "nine", "ten":
+		return 0, 0
+	}
+	return j - i, k - j
 }
 
 // NewIDLexer creates a tag lexer for a music id.

@@ -216,7 +216,10 @@ func (r Release) SeriesEpisodes() [][]int {
 			v = append(v, []int{s, episode})
 		}
 		if !bare {
-			last = i
+			// an episode after a range of seasons is in none of them
+			if last = i; r.seasonRange(i) != -1 {
+				last = -1
+			}
 		}
 	}
 	sort.Slice(v, func(i, j int) bool {
@@ -273,9 +276,10 @@ func (r Release) HasEpisode() bool {
 }
 
 // Seasons returns the seasons the name gives, each once and in order. Two
-// seasons written with no episode and a bare hyphen between them are a range
-// ('S01-S03'), and the seasons in between are included, up to maxRangeFill of
-// them. A Release built by hand with a Series and no tags gives that season.
+// seasons written with no episode and a hyphen or a tilde between them are a
+// range ('S01-S03', 'S01-03', 'Seasons 1~7', '(Season 1 - 3)'), and the
+// seasons in between are included, up to maxRangeFill of them. A Release
+// built by hand with a Series and no tags gives that season.
 func (r Release) Seasons() []int {
 	var v []int
 	fill := maxRangeFill
@@ -284,18 +288,8 @@ func (r Release) Seasons() []int {
 			continue
 		}
 		season := atoi(tag.val(1))
-		// the season before starts a range when its text ends in the hyphen
-		// ('S01-' of 'S01-S03'), or when a hyphen alone stands between the two
-		// ('S01 - S03')
-		var start Tag
-		switch {
-		case i >= 2 && r.tags[i-1].typ == TagTypeDelim && strings.Trim(r.tags[i-1].val(0), "._ ") == "-":
-			start = r.tags[i-2]
-		case i >= 1 && strings.HasSuffix(r.tags[i-1].val(0), "-"):
-			start = r.tags[i-1]
-		}
-		if start.typ == TagTypeSeries && start.val(1) != "" && !start.wroteEpisode() && !tag.wroteEpisode() {
-			if prev := atoi(start.val(1)); prev < season-1 && season-prev-1 <= fill {
+		if start := r.seasonRange(i); start != -1 {
+			if prev := atoi(r.tags[start].val(1)); season-prev-1 <= fill {
 				for j := prev + 1; j < season; j++ {
 					v = append(v, j)
 				}
@@ -309,6 +303,36 @@ func (r Release) Seasons() []int {
 	}
 	slices.Sort(v)
 	return slices.Compact(v)
+}
+
+// seasonRange returns the index of the series tag that starts a range of
+// seasons which the series tag at i ends, or -1. Both tags write a season and
+// no episode, the second season is the higher one, and the first tag's text
+// ends in the hyphen or tilde ('S01-' of 'S01-S03' and 'S01-03', 'Seasons 1~'
+// of 'Seasons 1~7', 'Season 1 - ' of '(Season 1 - 3)') or a hyphen alone
+// stands between the two ('S01 - S03').
+//
+// An episode written after the range with no season of its own is in none of
+// them, as SeriesEpisodes, EpisodeSpans and EpisodeRange have it ('Season 1-4
+// (1-76)').
+func (r Release) seasonRange(i int) int {
+	tag, start := r.tags[i], -1
+	if tag.typ != TagTypeSeries || tag.val(1) == "" || tag.wroteEpisode() {
+		return -1
+	}
+	switch {
+	case i >= 2 && r.tags[i-1].typ == TagTypeDelim && strings.Trim(r.tags[i-1].val(0), "._ ") == "-":
+		start = i - 2
+	case i >= 1:
+		if s := strings.TrimRight(r.tags[i-1].val(0), " _"); strings.HasSuffix(s, "-") || strings.HasSuffix(s, "~") {
+			start = i - 1
+		}
+	}
+	if start == -1 || r.tags[start].typ != TagTypeSeries || r.tags[start].val(1) == "" || r.tags[start].wroteEpisode() ||
+		atoi(r.tags[start].val(1)) >= atoi(tag.val(1)) {
+		return -1
+	}
+	return start
 }
 
 // EpisodeRange returns the first and last episode when the name gives more
@@ -330,7 +354,7 @@ func (r Release) EpisodeRange() (first, last int, ok bool) {
 	// cur is the season the nearest earlier tag wrote, which an episode
 	// written without one is in
 	cur, season, found := 0, 0, false
-	for _, tag := range r.tags {
+	for i, tag := range r.tags {
 		if tag.typ != TagTypeSeries {
 			continue
 		}
@@ -338,7 +362,9 @@ func (r Release) EpisodeRange() (first, last int, ok bool) {
 		switch {
 		case tag.val(1) != "":
 			s = atoi(tag.val(1))
-			cur = s
+			if cur = s; r.seasonRange(i) != -1 {
+				cur = 0
+			}
 		case scheme && !tag.continuation():
 			continue
 		}
@@ -396,7 +422,9 @@ func (r Release) EpisodeSpans() []EpisodeSpan {
 		}
 		bare := tag.val(1) == ""
 		if !bare {
-			season = tag.val(1)
+			if season = tag.val(1); r.seasonRange(i) != -1 {
+				season = ""
+			}
 		}
 		eps := tag.rest(2)
 		ranged := open && i >= 2 && r.tags[i-2].typ == TagTypeSeries && r.tags[i-1].val(0) == "-" &&

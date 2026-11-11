@@ -1,7 +1,9 @@
 package rls
 
 import (
+	"fmt"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -228,6 +230,123 @@ func TestSeriesEpisodesSeasonZero(t *testing.T) {
 	for _, test := range tests {
 		if v := ParseString(test.name).SeriesEpisodes(); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
 			t.Errorf("%q: expected series episodes %v, got: %v", test.name, test.exp, v)
+		}
+	}
+}
+
+// TestSeasonRange checks a range of seasons written with one season word:
+// Series is the first season, Seasons gives every season of the range, the
+// release is a pack, and the last season is neither the subtitle nor a
+// leftover word. An episode written beside the range is in no season.
+func TestSeasonRange(t *testing.T) {
+	tests := []struct {
+		name    string
+		seasons []int
+		spans   []EpisodeSpan
+	}{
+		// a bare hyphen or a tilde
+		{"Show.S01-03.1080p.BluRay.x264-GRP", []int{1, 2, 3}, nil},
+		{"Show.S1-3.1080p.BluRay.x264-GRP", []int{1, 2, 3}, nil},
+		{"Show.S01~03.1080p.BluRay.x264-GRP", []int{1, 2, 3}, nil},
+		{"Show.Season.1-3.1080p.BluRay.x264-GRP", []int{1, 2, 3}, nil},
+		{"Show.Season.01-03.1080p.BluRay.x264-GRP", []int{1, 2, 3}, nil},
+		{"Show Series 1-6 1080p BluRay x264-GRP", []int{1, 2, 3, 4, 5, 6}, nil},
+		{"[Grp] Show (Seasons 01-02) [BD 1080p] (Batch)", []int{1, 2}, nil},
+		{"[Grp] Show (Seasons 1-10) [BD 1080p]", []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, nil},
+		{"[Grp] Show Seasons 1~7 R1 DVD Remux 480p", []int{1, 2, 3, 4, 5, 6, 7}, nil},
+		{"[Grp]_Show_(Season_1-3)_[BD_1080p]", []int{1, 2, 3}, nil},
+		{"[Grp] Show (Season 01-25+Movies+Specials) [1080p]", []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25}, nil},
+		// spaces around the hyphen: a season word in a bracket, closed by ')'
+		// or '+'
+		{"[Grp] Show (Season 1 - 3) [BD 1080p]", []int{1, 2, 3}, nil},
+		{"[Grp] Show (Season 01 - 04 + OVAs + Specials) [BD] [1080p]", []int{1, 2, 3, 4}, nil},
+		{"[Grp] Show (Season 01 - 04+OVAs) [BD] [1080p]", []int{1, 2, 3, 4}, nil},
+		// episodes beside the range are in no season, whichever way the range
+		// is written
+		{"[Grp] Show Season 1-4 (1-76) [1080p]", []int{1, 2, 3, 4}, []EpisodeSpan{{"", "1", "76"}}},
+		{"[Grp] Show 001-367 (Seasons 1-10) [BD 1080p]", []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, []EpisodeSpan{{"", "001", "367"}}},
+		{"[Grp] Show S01-04 (1-76) [1080p]", []int{1, 2, 3, 4}, []EpisodeSpan{{"", "1", "76"}}},
+		{"[Grp] Show S01-S04 (1-76) [1080p]", []int{1, 2, 3, 4}, []EpisodeSpan{{"", "1", "76"}}},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
+		}
+		if r.Type != Series {
+			t.Errorf("%q: expected type series, got: %s", test.name, r.Type)
+		}
+		if r.Series != test.seasons[0] {
+			t.Errorf("%q: expected series %d, got: %d", test.name, test.seasons[0], r.Series)
+		}
+		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
+			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		}
+		if exp := len(test.spans) != 0; r.HasEpisode() != exp {
+			t.Errorf("%q: expected HasEpisode %t", test.name, exp)
+		}
+		for _, pair := range r.SeriesEpisodes() {
+			if pair[0] != 0 {
+				t.Errorf("%q: expected the episodes in no season, got: %v", test.name, pair)
+				break
+			}
+		}
+		if r.Subtitle != "" {
+			t.Errorf("%q: expected no subtitle, got: %q", test.name, r.Subtitle)
+		}
+		for _, tag := range r.Unused() {
+			if strings.Trim(tag.Text(), "0123456789") == "" {
+				t.Errorf("%q: expected no number left over, got: %q", test.name, tag.Text())
+			}
+		}
+		if s := fmt.Sprintf("%o", r); s != test.name {
+			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
+	}
+	// what looks like a range and is not one. The first season is all that
+	// Seasons gives, and where the second number is an episode it is read
+	notRanges := []struct {
+		name   string
+		season int
+		spans  []EpisodeSpan
+	}{
+		// a season and its episode
+		{"[Grp] Show Season 3 - 03 [1080p]", 3, []EpisodeSpan{{"3", "03", ""}}},
+		{"[Grp] Show Season 1 - 12 [1080p]", 1, []EpisodeSpan{{"1", "12", ""}}},
+		{"[Grp] Show Season 2 - 8 [1080p]", 2, []EpisodeSpan{{"2", "8", ""}}},
+		{"[Grp] Show S2 - 04 [1080p]", 2, []EpisodeSpan{{"2", "04", ""}}},
+		{"[Grp] Show S01 - 04 [1080p]", 1, []EpisodeSpan{{"01", "04", ""}}},
+		{"[Grp] Show S01 - 04 (1080p)", 1, []EpisodeSpan{{"01", "04", ""}}},
+		{"[Grp] Show S01 - 12 + OVA [1080p]", 1, []EpisodeSpan{{"01", "12", ""}}},
+		{"[Grp] Show Season 1 - 12 + OVA [1080p]", 1, []EpisodeSpan{{"1", "12", ""}}},
+		{"[Grp] Show (S01 - 12) [1080p]", 1, []EpisodeSpan{{"01", "12", ""}}},
+	}
+	for _, test := range notRanges {
+		r := ParseString(test.name)
+		if v := r.Seasons(); !slices.Equal(v, []int{test.season}) {
+			t.Errorf("%q: expected season %d alone, got: %v", test.name, test.season, v)
+		}
+		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
+			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		}
+	}
+	// the second number is not a season: it is not the higher one, it is
+	// padded where the season is not, it is 90 or more, or it begins another
+	// tag. And a number word in front makes the season word part of a title
+	for _, test := range []struct {
+		name    string
+		seasons []int
+	}{
+		{"Show.S07-06.720p.HDTV.x264-GRP", []int{7}},
+		{"Show.S03-03.720p.HDTV.x264-GRP", []int{3}},
+		{"Show.S2-04.720p.WEB.x264-GRP", []int{2}},
+		{"Show.S01-99.720p.WEB.x264-GRP", []int{1}},
+		{"Show.S01-10bit.720p.WEB.x264-GRP", []int{1}},
+		{"Show.S01-720p.WEB.x264-GRP", []int{1}},
+		{"The.Four.Seasons.1-2.1080p.BluRay.x264-GRP", nil},
+	} {
+		if v := ParseString(test.name).Seasons(); !slices.Equal(v, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
 		}
 	}
 }
