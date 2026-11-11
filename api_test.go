@@ -111,3 +111,71 @@ func TestMatchRECacheLimit(t *testing.T) {
 		t.Error("pattern past the limit was stored")
 	}
 }
+
+func TestReleasePredicates(t *testing.T) {
+	parsed := func(s string) Release { return ParseString(s) }
+
+	repackCleared := parsed("Show.S01E02.1080p.WEB.REPACK.h264-GRP")
+	repackCleared.Other = nil
+	// Other is what the predicates follow, not the tags of the name
+	repackSet := parsed("Show.S01E02.1080p.WEB.h264-GRP")
+	repackSet.Other = []string{"REPACK"}
+
+	tests := []struct {
+		name                          string
+		r                             Release
+		proper, repack, remux, hybrid bool
+	}{
+		{"plain", parsed("Show.S01E02.1080p.WEB.h264-GRP"), false, false, false, false},
+		{"proper", parsed("Show.S01E02.PROPER.1080p.WEB.h264-GRP"), true, false, false, false},
+		{"real proper", parsed("Show.S01E02.REAL.PROPER.1080p.WEB.h264-GRP"), true, false, false, false},
+		{"repack", parsed("Show.S01E02.REPACK.1080p.WEB.h264-GRP"), false, true, false, false},
+		{"repacked", parsed("Show.S01E02.Repacked.1080p.WEB.h264-GRP"), false, true, false, false},
+		{"rerepack", parsed("Show.S01E02.REREPACK.1080p.WEB.h264-GRP"), false, true, false, false},
+		{"repack2", parsed("Show.S01E02.REPACK2.1080p.WEB.h264-GRP"), false, true, false, false},
+		{"rerip", parsed("Show.S01E02.RERIP.1080p.WEB.h264-GRP"), false, false, false, false},
+		{"hybrid remux", parsed("Movie.2020.Hybrid.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GRP"), false, false, true, true},
+		{"proper and repack", parsed("Show.S01E02.PROPER.REPACK.1080p.WEB.h264-GRP"), true, true, false, false},
+		{"lower case proper", parsed("Show.S01E02.proper.1080p.WEB.h264-GRP"), true, false, false, false},
+
+		{"proper as a title word", parsed("Proper.Show.S01E02.1080p.WEB.h264-GRP"), false, false, false, false},
+		{"proper as the group", parsed("Show.S01E02.1080p.WEB.h264-PROPER"), false, false, false, false},
+		{"hybrid as the group", parsed("Movie.2020.1080p.BluRay.x264-HYBRiD"), false, false, false, false},
+		{"real proper with a hyphen", parsed("Show.S01E02.Real-Proper.1080p.WEB.h264-GRP"), true, false, false, false},
+		{"remux before the group", parsed("Movie.2020.2160p.UHD.BluRay.HEVC.TrueHD.7.1.Remux-GRP"), false, false, true, false},
+
+		{"zero", Release{}, false, false, false, false},
+		{"hand proper", Release{Other: []string{"proper"}}, true, false, false, false},
+		{"hand hybrid", Release{Other: []string{"HYBRID"}}, false, false, false, true},
+		{"hand remux repack", Release{Other: []string{"REMUX", "REPACK"}}, false, true, true, false},
+		{"hand rerip", Release{Other: []string{"RERiP"}}, false, false, false, false},
+		{"other cleared after parse", repackCleared, false, false, false, false},
+		{"hand real proper", Release{Other: []string{"real.proper"}}, true, false, false, false},
+		{"hand rerepack", Release{Other: []string{"ReRePack"}}, false, true, false, false},
+		{"other set after parse", repackSet, false, true, false, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := [4]bool{tt.r.IsProper(), tt.r.IsRepack(), tt.r.IsRemux(), tt.r.IsHybrid()}
+			want := [4]bool{tt.proper, tt.repack, tt.remux, tt.hybrid}
+			if got != want {
+				t.Errorf("proper/repack/remux/hybrid = %v, want %v (Other=%q)", got, want, tt.r.Other)
+			}
+		})
+	}
+}
+
+func TestReleasePredicatesAllocs(t *testing.T) {
+	r := ParseString("Movie.2020.Hybrid.PROPER.REPACK.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GRP")
+	preds := map[string]func() bool{
+		"IsProper": r.IsProper,
+		"IsRepack": r.IsRepack,
+		"IsRemux":  r.IsRemux,
+		"IsHybrid": r.IsHybrid,
+	}
+	for name, f := range preds {
+		if n := testing.AllocsPerRun(100, func() { f() }); n != 0 {
+			t.Errorf("%s allocates %v times, want 0", name, n)
+		}
+	}
+}

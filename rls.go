@@ -202,6 +202,45 @@ func (r Release) Dates() []Tag {
 	return dates
 }
 
+// IsProper reports whether the release is a proper, written PROPER or
+// REAL.PROPER. It reads Other, where the parser puts those two values, and
+// compares without regard to case.
+func (r Release) IsProper() bool {
+	return r.hasOther("PROPER", "REAL.PROPER")
+}
+
+// IsRepack reports whether the release is a repack, written REPACK, REPACKED,
+// REREPACK or REPACK2. It reads Other, where the parser puts them as REPACK and
+// REREPACK, and compares without regard to case. A re-rip (RERiP) is not a
+// repack.
+func (r Release) IsRepack() bool {
+	return r.hasOther("REPACK", "REREPACK")
+}
+
+// IsRemux reports whether the release is a remux. It reads Other and compares
+// with REMUX without regard to case.
+func (r Release) IsRemux() bool {
+	return r.hasOther("REMUX")
+}
+
+// IsHybrid reports whether the release is a hybrid of several sources. It
+// reads Other and compares with HYBRiD without regard to case.
+func (r Release) IsHybrid() bool {
+	return r.hasOther("HYBRiD")
+}
+
+// hasOther reports whether Other holds any of the given values, ignoring case.
+func (r Release) hasOther(values ...string) bool {
+	for _, o := range r.Other {
+		for _, v := range values {
+			if strings.EqualFold(o, v) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // Tag is a release tag.
 type Tag struct {
 	typ   TagType
