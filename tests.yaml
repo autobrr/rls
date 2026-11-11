@@ -560,6 +560,15 @@
   cut: "Extended.Cut"
   language: "MULTi"
   group: "MONUMENT"
+"Cricket.2025.India.vs.New.Zealand.1080p50fps.WEB.h264-GRP":
+  type: "movie"
+  title: "Cricket"
+  subtitle: "India vs New Zealand"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2025
+  codec: "H.264"
+  group: "GRP"
 "D.A.R.Y.L.1985.1080p.BluRay.x264-GRP":
   type: "movie"
   title: "D.A.R.Y.L."
@@ -3330,6 +3339,17 @@
   day: 10
   codec: "H.264"
   group: "GRP"
+"NBA.2026.03.30.Lakers.vs.Celtics.720p60.WEB.h264-GRP":
+  type: "episode"
+  title: "NBA"
+  subtitle: "Lakers vs Celtics"
+  source: "WEB"
+  resolution: "720p"
+  year: 2026
+  month: 3
+  day: 30
+  codec: "H.264"
+  group: "GRP"
 "NFL 2019 10 06 Chicago Bears vs Oakland Raiders Highlights 720p HEVC x265-MeGusta":
   type: "episode"
   title: "NFL"
@@ -3715,6 +3735,15 @@
   series: 1
   episode: 1
   codec: "MPEG-2"
+  group: "GRP"
+"Show.S01E01.1080i50.HDTV.h264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "HDTV"
+  resolution: "1080i"
+  series: 1
+  episode: 1
+  codec: "H.264"
   group: "GRP"
 "Show.S01E01.1080p.IP.WEB-DL.AAC2.0.H.264-GROUP":
   type: "episode"
