@@ -1570,8 +1570,10 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)), findFunc(info...)
 			pf, _ = newPrefilter(info, ignoreCase)
 			// the split below needs the two rows it stands for
-			if o := findFunc(infos["other"]...); typ == TagTypeSource && ignoreCase && f("BD") != nil && o("Remux") != nil {
-				otherf = o
+			if typ == TagTypeSource && ignoreCase && f("BD") != nil {
+				if o := findFunc(infos["other"]...); o("Remux") != nil {
+					otherf = o
+				}
 			}
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
