@@ -1958,6 +1958,13 @@ var hyphenGroup = regexp.MustCompile(`(?i)^[a-z0-9]*[a-z][a-z0-9]*[ _][a-z0-9]*[
 // spacedGroup only, so trailing alternate titles like "(Meitantei Conan)" are
 // not taken as a group. A run outside the bound keeps the single word.
 func (b *TagBuilder) widenGroup(r *Release, i int) {
+	// a comic names its scan group in the parentheses that close the name,
+	// and the hyphen is part of it ('(Scan-Team).cbr')
+	if n, j := widenRun(r, i, "-"); r.Type == Comic && n < len(r.unused) && j > 0 &&
+		strings.HasSuffix(r.tags[j-1].Text(), "(") && peek(r.tags, i+1, TagTypeDelim) && strings.HasPrefix(r.tags[i+1].Text(), ")") {
+		r.Group, r.unused = joinRun(r, n), r.unused[:n]
+		return
+	}
 	if n, j := widenRun(r, i, " _"); n < len(r.unused) && j > 0 && strings.Contains(r.tags[j-1].Text(), "-") {
 		if group := joinRun(r, n); hyphenGroup.MatchString(group) || spacedGroup.MatchString(group) {
 			r.Group, r.unused = group, r.unused[:n]
