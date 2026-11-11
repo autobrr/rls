@@ -3629,6 +3629,17 @@
   channels: "5.1"
   other: "Audio.Description"
   group: "NTb"
+"[Group] Show - 01 (1080p BD x264) (with the UK dub track)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 1
+  codec: "x264"
+  region: "UK"
+  group: "Group"
+  site: "Group"
+  unused: "with the dub track"
 "[Group] Show - 01 (BD 1080p Hi10 FLAC)":
   type: "episode"
   title: "Show"

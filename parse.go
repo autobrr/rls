@@ -679,8 +679,9 @@ func (b *TagBuilder) fixIsolated(r *Release) {
 
 // fixRegion fixes a region tag that is a word of a name, ie the 'US' in
 // 'Tennis.US.Open.2025'. It is one when it stands between two words with plain
-// delimiters around it. The words must have been read as text, and not be a
-// tag that was reset to text, which keeps the region in 'Videogame EUR NSW'.
+// delimiters around it, outside any bracket. The words must have been read as
+// text, and not be a tag that was reset to text, which keeps the region in
+// 'Videogame EUR NSW'.
 func (b *TagBuilder) fixRegion(r *Release) {
 	plain := func(i int) bool {
 		return r.tags[i].Is(TagTypeDelim) && strings.Trim(r.tags[i].Delim(), "._ ") == ""
@@ -688,8 +689,13 @@ func (b *TagBuilder) fixRegion(r *Release) {
 	word := func(i int) bool {
 		return r.tags[i].Is(TagTypeText) && r.tags[i].prev == TagTypeWhitespace
 	}
-	for i := 2; i < r.end-2; i++ {
-		if r.tags[i].Is(TagTypeRegion) && plain(i-1) && plain(i+1) && word(i-2) && word(i+2) {
+	// a note in brackets names the region it means ('(Contains the UK dub)')
+	var depth int
+	for i := 0; i < r.end-2; i++ {
+		if r.tags[i].Is(TagTypeDelim) {
+			depth = bracketDepth(r.tags[i].Delim(), depth)
+		}
+		if i >= 2 && depth == 0 && r.tags[i].Is(TagTypeRegion) && plain(i-1) && plain(i+1) && word(i-2) && word(i+2) {
 			r.tags[i] = r.tags[i].As(TagTypeText, nil)
 		}
 	}
