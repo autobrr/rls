@@ -22,6 +22,10 @@
   title: "A DOCUMENTARY"
 "foo\nbar":
   title: "foo bar"
+"[Commie] Hataraku Maou-sama!":
+  title: "Hataraku Maou-sama!"
+  group: "Commie"
+  site: "Commie"
 "I.AND.THE.KING":
   title: "I AND THE KING"
 "LA.GUERRE.DE.100.ANS.FRENCH-PETANK":
@@ -36,6 +40,10 @@
   title: "Servant x Service"
   group: "BBT-RMX"
   site: "BBT-RMX"
+"[Group] Show Name - Prologue":
+  title: "Show Name - Prologue"
+  group: "Group"
+  site: "Group"
 "Spider-Man Homecoming":
   title: "Spider-Man Homecoming"
 "TEST.A.Documentary":
@@ -1076,6 +1084,15 @@
   codec: "x264"
   other: "REMASTERED"
   group: "GRP"
+"[TGx] Movie.2020.1080p.WEB.x264-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "GRP"
+  site: "TGx"
 "Movie (2020) [2160p HDR10+]":
   type: "movie"
   title: "Movie"

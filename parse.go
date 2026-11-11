@@ -253,6 +253,7 @@ func (b *TagBuilder) Build(tags []Tag, end int) Release {
 	}
 	// initialize / fix tags
 	b.init(r)
+	b.fixTailGroup(r)
 	// collect tags into release
 	b.collect(r)
 	// guess type
@@ -317,6 +318,43 @@ func (b *TagBuilder) trailingGroup(r *Release) {
 			continue
 		}
 		return
+	}
+}
+
+// fixTailGroup hands a guessed group back to the title when the name opens
+// with its group in a bracket and plain text stands in front of the hyphen
+// (ie, '[Commie] Hataraku Maou-sama!'). The group lexer takes whatever follows
+// the last hyphen, which is a group after a tag ('[TGx] Movie.1080p.x264-GRP')
+// and the end of the title after a word.
+func (b *TagBuilder) fixTailGroup(r *Release) {
+	i := 0
+	for ; i < len(r.tags) && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim); i++ {
+	}
+	if i == len(r.tags) || !r.tags[i].Is(TagTypeMeta) {
+		return
+	}
+	if k, _ := r.tags[i].Meta(); k != "site" {
+		return
+	}
+	for g := i + 2; g < len(r.tags); g++ {
+		if !r.tags[g].Is(TagTypeGroup) || r.tags[g].f != nil || !r.tags[g-1].Is(TagTypeDelim) || r.tags[g-1].v[0] != "-" {
+			continue
+		}
+		p := g - 2
+		for ; p > i && r.tags[p].Is(TagTypeWhitespace, TagTypeDelim); p-- {
+		}
+		if !r.tags[p].Is(TagTypeText) {
+			continue
+		}
+		// the group tag holds the spaces after the hyphen, which go to the
+		// delimiter for the title to read 'Chaos - Prologue'
+		s, grp := r.tags[g].v[0], r.tags[g].v[1]
+		d := "-" + s[:len(s)-len(strings.TrimLeft(s, " \t_"))]
+		r.tags[g-1] = NewTag(TagTypeDelim, nil, []byte(d), []byte(d))
+		r.tags[g] = NewTag(TagTypeText, nil, []byte(s[len(d)-1:]), []byte(grp))
+		if r.end == g-1 {
+			r.end = g + 1
+		}
 	}
 }
 
