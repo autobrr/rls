@@ -98,6 +98,11 @@ func FuzzParseString(f *testing.F) {
 	f.Add("Show.13v_2.720p")
 	f.Add("0v+0")
 	f.Add("s02dvd3")
+	// half an episode that the builder joins onto its tag, once, twice and
+	// with more digits after it
+	f.Add("Show.S01E06.5.WEB.x264-GRP")
+	f.Add("Show.S01E06.5.S01E07.5.WEB")
+	f.Add("S01E06.5.5.5.5.WEB")
 	// the edges of the lexers that read the start and the end of a name
 	for _, s := range []string{
 		" ", "...", "-", "[]", "[[", "\x00", "\xff\xfe", "-GROUP", ".mkv",
