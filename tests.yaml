@@ -812,6 +812,16 @@
   other: "REMUX"
   group: "FraMeSToR"
   ext: "mkv"
+"[Group] Given The Movie - Hiiragi Mix (2024) (BD 1080p x264 Opus)":
+  type: "movie"
+  title: "Given The Movie - Hiiragi Mix"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  audio: "OPUS"
+  group: "Group"
+  site: "Group"
 "Guardians of the Galaxy (2014) Dual Audio DVDRip AVI":
   type: "movie"
   title: "Guardians of the Galaxy"

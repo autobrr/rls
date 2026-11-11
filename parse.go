@@ -808,8 +808,11 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			}
 		case Music:
 			// a music tag in a name with an episode and video tags is a
-			// word that happens to match ('(JA)', '[EP: 403]', 'SP')
-			if series && video {
+			// word that happens to match ('(JA)', '[EP: 403]', 'SP'). With
+			// a resolution in place of the episode, only the disc or
+			// broadcast it came on still makes it music ('1080p.MBluRay'),
+			// not a word ('Mixed.Team.Final.1080p')
+			if video && (series || r.Resolution != "" && !r.tags[i-1].Is(TagTypeSource, TagTypeSize)) {
 				continue
 			}
 			// peek for audiobook
