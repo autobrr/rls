@@ -1163,6 +1163,14 @@
   year: 2024
   codec: "H.264"
   group: "GRP"
+"Movie 2020 1080p BluRay x264 + Bonus":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  unused: "Bonus"
 "Movie.2020.1080p.BDRemux.AVC.DTS-HD.MA.5.1-GRP":
   type: "movie"
   title: "Movie"
@@ -4006,6 +4014,14 @@
   site: "Group"
   ext: "ts"
   unused: "BS11"
+"Show S01 1080p BluRay x264 + Specials":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x264"
+  unused: "Specials"
 "Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
   type: "series"
   title: "Show"

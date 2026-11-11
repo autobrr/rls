@@ -1885,6 +1885,35 @@ func beforeTag(tags []Tag, i int) bool {
 	return false
 }
 
+// plusList reports whether the text at i is in a list that a '+' joins on,
+// ie the 'Specials' in 'S01 + Specials' and in 'S01 + Movies & Specials', or
+// the 'Movie' in '[720p] + Movie'. Such a word is not the group. A '+' with no
+// space beside it counts only in a name that separates its words some other
+// way, which 'Artist+-+Album+(ripper)' does not.
+func plusList(tags []Tag, i int) bool {
+	for i--; i >= 0 && tags[i].Is(TagTypeText, TagTypeDelim); i-- {
+		if !tags[i].Is(TagTypeDelim) {
+			continue
+		}
+		// what follows the last bracket
+		d := tags[i].Delim()
+		k := strings.LastIndexAny(d, "()[]{}")
+		switch s := d[k+1:]; {
+		case strings.TrimSpace(s) != "+":
+		case s != "+":
+			return true
+		default:
+			return slices.ContainsFunc(tags, func(tag Tag) bool {
+				return tag.Is(TagTypeDelim) && (tag.Delim() == " " || tag.Delim() == ".")
+			})
+		}
+		if k != -1 {
+			return false
+		}
+	}
+	return false
+}
+
 // unused sets the unused text on the release.
 func (b *TagBuilder) unused(r *Release, i int) {
 	// collect
@@ -1899,7 +1928,7 @@ func (b *TagBuilder) unused(r *Release, i int) {
 		switch s := r.tags[r.unused[n-1]].Text(); {
 		case r.Sum == "" && b.sum.MatchString(s) && strings.ContainsAny(s, "0123456789"):
 			r.Sum, r.unused = s, r.unused[:n-1]
-		case r.Group == "" && strings.ContainsFunc(s, unicode.IsLetter) && !beforeTag(r.tags, r.unused[n-1]):
+		case r.Group == "" && strings.ContainsFunc(s, unicode.IsLetter) && !beforeTag(r.tags, r.unused[n-1]) && !plusList(r.tags, r.unused[n-1]):
 			last := r.unused[n-1]
 			r.Group, r.unused = s, r.unused[:n-1]
 			b.widenGroup(r, last)
