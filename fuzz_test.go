@@ -12,6 +12,7 @@ func exercise(r Release) {
 	_ = r.String()
 	_ = fmt.Sprintf("%o|%s|%e|%q", r, r, r, r)
 	_ = r.SeriesEpisodes()
+	_, _ = r.Event()
 	for _, tag := range r.Tags() {
 		_ = tag.Normalize()
 		_ = fmt.Sprintf("%o|%s|%v|%q|%e", tag, tag, tag, tag, tag)
@@ -126,7 +127,7 @@ func FuzzParseHint(f *testing.F) {
 	f.Add("05.06.2024", uint8(Magazine), true)
 	f.Add("Mag.S2024E05.2024", uint8(Magazine), true)
 	f.Fuzz(func(t *testing.T, s string, typ uint8, dayFirst bool) {
-		r := ParseStringHint(s, Hint{Type: Type(typ % uint8(Series+1)), DayFirst: dayFirst})
+		r := ParseStringHint(s, Hint{Type: Type(typ % uint8(Series+1)), DayFirst: dayFirst, Sports: typ&0x80 != 0})
 		if o := fmt.Sprintf("%o", r); o != s {
 			t.Errorf("round trip failed:\n in: %q\nout: %q", s, o)
 		}

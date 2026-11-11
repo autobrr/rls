@@ -77,6 +77,10 @@ type Release struct {
 	Req       bool
 	Ext       string
 
+	// sports is whether the caller said the name is a sports broadcast, which
+	// Event reads.
+	sports bool
+
 	tags   []Tag
 	dates  []int
 	unused []int

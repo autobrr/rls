@@ -159,6 +159,12 @@ type Hint struct {
 	// date is read day first only when its first number cannot be a month
 	// ('13.06.2024').
 	DayFirst bool
+	// Sports says the name is a sports broadcast. It changes what Event
+	// returns and nothing else: Event then reports the round, the session
+	// and the rest of what it reads for any name of any type, where it
+	// otherwise wants a competition it knows and signs of an event. Type,
+	// Title and Subtitle are what they are without it.
+	Sports bool
 }
 
 // ParseHint parses a release from src with what the caller knows about it.
@@ -168,16 +174,20 @@ type Hint struct {
 // kept follow it. It is set when the parser's builder is a *TagBuilder; with
 // any other Builder the release is what its Build returns, and the type in h
 // has no effect. DayFirst applies to the date tags before any builder sees
-// them.
+// them, and Sports is kept for Event with any builder.
 func (p *TagParser) ParseHint(src []byte, h Hint) Release {
 	tags, end := p.Parse(src)
 	if h.DayFirst {
 		dayFirst(tags)
 	}
+	var r Release
 	if b, ok := p.builder.(*TagBuilder); ok {
-		return b.build(tags, end, h)
+		r = b.build(tags, end, h)
+	} else {
+		r = p.builder.Build(tags, end)
 	}
-	return p.builder.Build(tags, end)
+	r.sports = h.Sports
+	return r
 }
 
 // dayFirst swaps the month and day of each date tag that was written as two
