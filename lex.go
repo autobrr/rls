@@ -645,9 +645,11 @@ func NewFrameRateLexer(strs ...string) Lexer {
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			// both patterns are digits and then 'fps', or a 'p' or 'i' with
-			// a digit after it, which few of the numbers in a name have
+			// a digit after it, which few of the numbers in a name have. The
+			// longest number in them is 7 bytes ('119.880'), and looking
+			// no further keeps a long run of digits linear
 			k := i
-			for k < n && (buf[k] >= '0' && buf[k] <= '9' || buf[k] == '.') {
+			for k < n && k-i < 8 && (buf[k] >= '0' && buf[k] <= '9' || buf[k] == '.') {
 				k++
 			}
 			if k == i || k+1 >= n {
