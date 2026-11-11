@@ -392,6 +392,7 @@ func (b *TagBuilder) init(r *Release) {
 	b.fixIsolated(r)
 	b.fixRegion(r)
 	b.fixVersus(r)
+	b.fixHighlights(r)
 	b.fixMusic(r)
 }
 
@@ -736,6 +737,19 @@ func (b *TagBuilder) fixVersus(r *Release) {
 			if !r.tags[k].Is(TagTypeText) {
 				r.tags[k] = r.tags[k].As(TagTypeText, nil)
 			}
+		}
+	}
+}
+
+// fixHighlights fixes a bare 'extended' in front of 'highlights', where it
+// names the programme and not a cut of it (ie,
+// 'Arsenal.vs.Liverpool.Extended.Highlights.1080p').
+func (b *TagBuilder) fixHighlights(r *Release) {
+	for i := 0; i < r.end-2; i++ {
+		if r.tags[i].Is(TagTypeCut) && strings.EqualFold(r.tags[i].v[0], "extended") &&
+			r.tags[i+1].Is(TagTypeDelim) && strings.Trim(r.tags[i+1].Delim(), "._ ") == "" &&
+			r.tags[i+2].Is(TagTypeText, TagTypeOther) && strings.EqualFold(r.tags[i+2].v[0], "highlights") {
+			r.tags[i] = r.tags[i].As(TagTypeText, nil)
 		}
 	}
 }

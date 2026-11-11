@@ -3023,6 +3023,29 @@
   channels: "2.0"
   group: "WELP"
   ext: "mkv"
+"EPL.2026.10.26.Arsenal.vs.Liverpool.EXTENDED.HIGHLIGHTS.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "EPL"
+  subtitle: "Arsenal vs Liverpool EXTENDED"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  month: 10
+  day: 26
+  codec: "H.264"
+  other: "HiGHLiGHTS"
+  group: "GRP"
+"EPL.2026.10.26.Arsenal.vs.Liverpool.Extended.Highlights.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "EPL"
+  subtitle: "Arsenal vs Liverpool Extended Highlights"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  month: 10
+  day: 26
+  codec: "H.264"
+  group: "GRP"
 "Eredivisie.2024.03.10.Ajax.vs.PSV.720p.WEB.h264-ULTRAS":
   type: "episode"
   title: "Eredivisie"
