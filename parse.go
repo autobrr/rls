@@ -1262,8 +1262,9 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 		}
 		// a bracket that opens in front of the source or the other tags
 		// holds tags ('(1999) [R2JP DVD-Remux]', '(2024) [English Dub] [CR
-		// WEB-DL 1080p]')
-		if pos < end-1 && !((noResolution || end != resolution) && depth > 0) {
+		// WEB-DL 1080p]'), and a bar opens another name for the title
+		// ('(2019) | Other Name (BD 1080p)')
+		if pos < end-1 && !((noResolution || end != resolution) && depth > 0) && r.tags[pos].v[0] != "|" {
 			// numbers alone are not a subtitle, ie the rest of a date that
 			// does not exist ('Show.2023.02.29.HDTV')
 			if s, n := b.title(r.tags[pos:end-1], TagTypeText, TagTypeCut, TagTypeEdition); strings.ContainsFunc(s, unicode.IsLetter) {

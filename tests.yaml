@@ -1706,6 +1706,17 @@
   version: "v3"
   group: "Group"
   site: "Group"
+"[Group] Show: The Movie (2019) | Other Name (BD 1080p HEVC FLAC)":
+  type: "movie"
+  title: "Show: The Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2019
+  codec: "HEVC"
+  audio: "FLAC"
+  group: "Group"
+  site: "Group"
+  unused: "| Other Name"
 "Show Title (1994) (BDRip 1080p HEVC) [Dual-Audio]":
   type: "movie"
   title: "Show Title"
