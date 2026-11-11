@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 	"unicode/utf8"
@@ -466,6 +467,30 @@ func TestTagInfo_newType(t *testing.T) {
 	if _, err := taginfo.New("X", "", "", "", "game", ""); err != nil {
 		t.Errorf("expected no error, got: %v", err)
 	}
+}
+
+// TestTagInfo_newRegexp checks that a regexp that does not compile is refused
+// when the tag info is made, though it is compiled when first used, and that
+// a tag info matches from several goroutines at once.
+func TestTagInfo_newRegexp(t *testing.T) {
+	for _, re := range []string{"(", "a{2,1}", `\p{Nope}`, "[z-a]"} {
+		if info, err := taginfo.New("X", "", re, "", "", ""); err == nil {
+			t.Errorf("%q: expected an error, got: %v", re, info)
+		}
+	}
+	info, err := taginfo.New("MULTi$1", "Multi ($1)", `multi[\-\._ ]?(\d+)`, "", "", "")
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Go(func() {
+			if tag, _ := info.Expand("multi5"); !info.Match("MULTI5") || info.Match("multi") || tag != "MULTi5" {
+				t.Errorf("expected multi5 to match and expand to MULTi5, got: %q", tag)
+			}
+		})
+	}
+	wg.Wait()
 }
 
 func TestParseRoman(t *testing.T) {

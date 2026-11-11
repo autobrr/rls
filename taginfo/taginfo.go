@@ -11,7 +11,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"regexp/syntax"
 	"strings"
+	"sync"
 )
 
 // columns is the columns count.
@@ -37,7 +39,11 @@ type Taginfo struct {
 	other  string
 	typ    int
 	excl   bool
-	re     *regexp.Regexp
+	// re compiles the regexp of the tag info when it is first asked for. A
+	// set of tag infos has hundreds of rows and a parse matches against few
+	// of them one by one, so compiling them all when they are loaded was
+	// most of the load.
+	re func() *regexp.Regexp
 	// vars is true when the tag or title holds a $1 to $9 placeholder.
 	vars bool
 }
@@ -66,10 +72,15 @@ func New(strs ...string) (*Taginfo, error) {
 		typ:    typ,
 		vars:   strings.Contains(tag, "$") || strings.Contains(title, "$"),
 	}
-	var err error
-	if info.re, err = regexp.Compile(`(?i)^(?:` + info.RE() + `)$`); err != nil {
+	// the regexp is checked here, where the error can be given, and compiled
+	// later
+	expr := `(?i)^(?:` + info.RE() + `)$`
+	if _, err := syntax.Parse(expr, syntax.Perl); err != nil {
 		return nil, fmt.Errorf("tag %q has invalid regexp %q", tag, re)
 	}
+	info.re = sync.OnceValue(func() *regexp.Regexp {
+		return regexp.MustCompile(expr)
+	})
 	return info, nil
 }
 
@@ -223,7 +234,7 @@ func (info *Taginfo) Expand(s string) (string, string) {
 	if !info.vars {
 		return info.tag, info.title
 	}
-	m := info.re.FindStringSubmatch(s)
+	m := info.re().FindStringSubmatch(s)
 	if m == nil {
 		return info.tag, info.title
 	}
@@ -241,7 +252,7 @@ func (info *Taginfo) Expand(s string) (string, string) {
 
 // Match matches the tag info to s.
 func (info *Taginfo) Match(s string) bool {
-	return info.re.MatchString(s)
+	return info.re().MatchString(s)
 }
 
 // FindFunc is the find signature..
