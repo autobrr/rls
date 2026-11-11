@@ -92,7 +92,7 @@ func DefaultLexers() []Lexer {
 		NewRegexpSourceLexer(TagTypeCollection, true),
 		NewSeriesLexer(
 			// s02, S01E01, S01E02-04, S01E02~04, S01E02v2, S01E06.5, S01E06.5v2
-			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]?(?:e(?P<e>\d{1,5})(?:(?P<r>[\-~]\d{1,3})|(?P<x>\.\d)?(?P<v>v\d+)?)?)?\b`,
+			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]?(?:e(?P<e>\d{1,5})(?:(?P<r>[\-~]\d{1,4})|(?P<x>\.\d)?(?P<v>v\d+)?)?)?\b`,
 			// S90E01: a season from 90 up needs its episode to be read as one
 			`(?i)^s(?P<s>9\d)[\-\._ ]?e(?P<e>\d{1,5})(?P<v>v\d+)?\b`,
 			// S01E02E03, S01E02-E03, S01E03.E04.E05
@@ -110,8 +110,8 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?P<s>[1-9]\d?)(?:st|nd|rd|th)[\-\._ ]season\b`,
 			// Vol.1.No.2, vol1no2
 			`(?i)^vol(?:ume)?[\-\._ ]?(?P<s>\d{1,3})(?:[\-\._ ]?(?:number|no)[\-\._ ]?(?P<e>\d{1,5}))\b`,
-			// Episode 15, E009, Ep. 007, EP07, Ep07v2, Ep.05-07, Ep 05 ~ 07, Ep 5.5
-			`(?i)^e(?:p(?:isode)?[\-\._ ]{0,3})?(?P<e>\d{1,5})(?:(?P<v>v\d+)|(?P<x>\.\d)|(?P<r>[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3}))?\b`,
+			// Episode 15, E009, Ep. 007, EP07, Ep07v2, Ep.05-07, Ep 05 ~ 07, Ep 5.5, EP1156-1170
+			`(?i)^e(?:p(?:isode)?[\-\._ ]{0,3})?(?P<e>\d{1,5})(?:(?P<v>v\d+)|(?P<x>\.\d)|(?P<r>[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3}|[\-~]\d{4}))?\b`,
 			// 10v1.7, 13v2, 24.5v2
 			`(?i)^(?P<e>\d{1,5})(?P<x>\.\d)?(?P<v>v[\-\._ ]?\d+(?:\.\d){0,2})\b`,
 			// S01.Disc02, s01D3, Series.01.Disc.02, S02DVD3
@@ -411,7 +411,13 @@ func NewSeriesLexer(strs ...string) Lexer {
 					}
 					first, last := atoi(string(episode)), atoi(string(tail[k:]))
 					decimal := bytes.IndexByte(tail[:k], ' ') != -1 && i+1 < n && src[i] == '.' && src[i+1] >= '0' && src[i+1] <= '9'
+					// four digits end a range of episodes that are numbered
+					// that high ('EP1156-1170', 'E998-1002'). After a lower
+					// episode they are a year or another number
+					// ('E05-2020', 'E05-1080'), and are handed back
 					switch {
+					case len(tail)-k == 4 && (len(episode) < 3 || last-first >= 1000):
+						s, i = s[:len(s)-len(tail)], i-len(tail)
 					case !decimal && last > first:
 						if k == 1 && tail[0] == '-' || bytes.IndexByte(tail[:k], '~') != -1 {
 							more = append(more, []byte{'-'})

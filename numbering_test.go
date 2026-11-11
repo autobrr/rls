@@ -551,6 +551,16 @@ func TestEpisodeSpans(t *testing.T) {
 		// a tilde makes a range as a hyphen does, inside a tag and between two
 		{"[Grp] Show S04E29~E31 1080p WEB H.264", []EpisodeSpan{{"04", "29", "31"}}},
 		{"Show.S01E01~03.1080p.WEB.x264-GRP", []EpisodeSpan{{"01", "01", "03"}}},
+		// a range end of four digits after an episode of three or more
+		{"[Grp] Show EP1156-1170 [1080p]", []EpisodeSpan{{"", "1156", "1170"}}},
+		{"Show.S01E1001-1004.1080p.WEB.x264-GRP", []EpisodeSpan{{"01", "1001", "1004"}}},
+		{"[Grp] Show E998-1002 [1080p]", []EpisodeSpan{{"", "998", "1002"}}},
+		// four digits after a lower episode are a year or another number, as
+		// are those a thousand episodes on
+		{"Show.S01E05-2020.1080p.WEB.x264-GRP", []EpisodeSpan{{"01", "05", ""}}},
+		{"[Grp] Show E05-2020 [1080p]", []EpisodeSpan{{"", "05", ""}}},
+		{"Show.S01E05-1080.WEB.x264-GRP", []EpisodeSpan{{"01", "05", ""}}},
+		{"Show.S01E100-9999.WEB.x264-GRP", []EpisodeSpan{{"01", "100", ""}}},
 		// half an episode with a tag or a version right after it
 		{"Show.S01E06.5.WEB.x264-GRP", []EpisodeSpan{{"01", "06.5", ""}}},
 		{"Show.S01E02.5v2.720p.WEB.x264-GRP", []EpisodeSpan{{"01", "02.5", ""}}},

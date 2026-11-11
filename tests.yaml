@@ -3704,6 +3704,14 @@
   site: "SubsPlease"
   sum: "7E631F90"
   ext: "mkv"
+"[Group] One Piece EP1156-1170 [1080p]":
+  type: "episode"
+  title: "One Piece"
+  resolution: "1080p"
+  episode: 1156
+  seriesEpisodes: "S00E1156 S00E1157 S00E1158 S00E1159 S00E1160 S00E1161 S00E1162 S00E1163 S00E1164 S00E1165 S00E1166 S00E1167 S00E1168 S00E1169 S00E1170"
+  group: "Group"
+  site: "Group"
 "[Group] One Piece EP1168 2160p WEB-DL AAC2.0 H.264":
   type: "episode"
   title: "One Piece"
@@ -4414,6 +4422,16 @@
   bitdepth: "10BIT"
   audio: "OPUS"
   channels: "2.0"
+  group: "GRP"
+"Show.S01E05-2020.1080p.WEB.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  series: 1
+  episode: 5
+  codec: "x264"
   group: "GRP"
 "[Group] Show (2024) - 01 (S01E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]":
   type: "episode"
