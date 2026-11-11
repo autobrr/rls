@@ -1101,6 +1101,7 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	// episode title must follow source, resolution, collection, date, series,
 	// version, disc, other, cut, edition, language or container tags. it must
 	// be before any codec, audio tag
+	var depth int
 	for pos++; pos < len(r.tags) && r.tags[pos].Is(
 		TagTypeDelim,
 		TagTypeSource,
@@ -1116,9 +1117,18 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 		TagTypeLanguage,
 		TagTypeContainer,
 	); pos++ {
+		if r.tags[pos].Is(TagTypeDelim) {
+			depth = bracketDepth(r.tags[pos].Delim(), depth)
+		}
 	}
 	// check at text tag
 	if pos == len(r.tags) || !r.tags[pos].Is(TagTypeText) {
+		return pos
+	}
+	// text inside a bracket that opened after the episode is a block of tags
+	// or another name for the show ('S02E06 [English Dub]', '- 05 (BS11
+	// 1080p)'), not the episode title
+	if depth > 0 {
 		return pos
 	}
 	var offset int
@@ -1334,6 +1344,20 @@ loop:
 	}
 	// trim
 	return strings.TrimFunc(s, isTitleTrimDelim), i
+}
+
+// bracketDepth returns how many brackets are open after delim, when depth were
+// open before it. A closing bracket with none open is ignored.
+func bracketDepth(delim string, depth int) int {
+	for i := 0; i < len(delim); i++ {
+		switch delim[i] {
+		case '(', '[', '{':
+			depth++
+		case ')', ']', '}':
+			depth = max(depth-1, 0)
+		}
+	}
+	return depth
 }
 
 // unused sets the unused text on the release.

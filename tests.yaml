@@ -3450,6 +3450,17 @@
   version: "v2"
   group: "Group"
   site: "Group"
+"[Group] Show - 075 (BS11 1440x1080 MPEG2 AAC).ts":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 75
+  codec: "MPEG-2"
+  audio: "AAC"
+  group: "Group"
+  site: "Group"
+  ext: "ts"
+  unused: "BS11"
 "Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
   type: "series"
   title: "Show"
@@ -3623,6 +3634,18 @@
   version: "v2"
   codec: "H.264"
   group: "GRP"
+"[Group] Show - S02E06 [English Dub] [WEB-DL 1080p] [30E46A21]":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 2
+  episode: 6
+  language: "ENGLiSH"
+  group: "Group"
+  site: "Group"
+  sum: "30E46A21"
+  unused: "Dub"
 "Show.S04.1080p.BluRay.x264-GRP (E29-E31)":
   type: "episode"
   title: "Show"
@@ -4229,7 +4252,6 @@
 "World's End Harem (Shuumatsu no Harem) S01E08 (2022 Airing) AT-X 2021 1080i HDTV AAC 2.0 English Subbed -ZR-.mkv":
   type: "episode"
   title: "World's End Harem"
-  subtitle: "2022 Airing"
   source: "HDTV"
   resolution: "1080i"
   collection: "AT-X"
@@ -4241,7 +4263,7 @@
   language: "ENGLiSH SUBBED"
   group: "ZR"
   ext: "mkv"
-  unused: "Shuumatsu no Harem"
+  unused: "Shuumatsu no Harem 2022 Airing"
 "WWE.Clash.at.the.Castle.2022.PPV.1080p.PCOK.WEB-DL.AAC2.0.H.264-ShiNobi":
   type: "episode"
   title: "WWE Clash at the Castle"
