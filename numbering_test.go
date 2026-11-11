@@ -210,6 +210,32 @@ func TestEpisodeZero(t *testing.T) {
 	}
 }
 
+// TestEpisodeRangeTilde checks that a tilde between two episode tags of one
+// season makes a range, as a hyphen does.
+func TestEpisodeRangeTilde(t *testing.T) {
+	tests := []struct {
+		name string
+		exp  [][]int
+	}{
+		{"[Grp] Show S04E29~E31 1080p WEB H.264", [][]int{{4, 29}, {4, 30}, {4, 31}}},
+		{"Show.S01E02~S01E04.1080p.WEB.h264-GRP", [][]int{{1, 2}, {1, 3}, {1, 4}}},
+		{"Show.S01E01~03.1080p.WEB.x264-GRP", [][]int{{1, 1}, {1, 2}, {1, 3}}},
+		{"[Grp] Show E05~E07 [1080p]", [][]int{{0, 5}, {0, 6}, {0, 7}}},
+		// two seasons are not a range
+		{"Show.S01E02~S02E04.1080p.WEB.h264-GRP", [][]int{{1, 2}, {2, 4}}},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if v := r.SeriesEpisodes(); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
+			t.Errorf("%q: expected series episodes %v, got: %v", test.name, test.exp, v)
+		}
+		first, last, ok := r.EpisodeRange()
+		if exp := test.exp[0][0] == test.exp[len(test.exp)-1][0]; ok != exp || ok && (first != test.exp[0][1] || last != test.exp[len(test.exp)-1][1]) {
+			t.Errorf("%q: expected the range of %v, got: %d to %d, %t", test.name, test.exp, first, last, ok)
+		}
+	}
+}
+
 // TestSeriesEpisodesSeasonZero checks that an episode written with season 0
 // stays in it when another season was written before it, and that an episode
 // with no season after it is in season 0 too.
@@ -255,6 +281,9 @@ func TestSeasonRange(t *testing.T) {
 		{"[Grp] Show (Seasons 1-10) [BD 1080p]", []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, nil},
 		{"[Grp] Show Seasons 1~7 R1 DVD Remux 480p", []int{1, 2, 3, 4, 5, 6, 7}, nil},
 		{"[Grp]_Show_(Season_1-3)_[BD_1080p]", []int{1, 2, 3}, nil},
+		// a tilde between two season tags, bare or spaced
+		{"Show.S01~S03.1080p.BluRay.x264-GRP", []int{1, 2, 3}, nil},
+		{"[Grp] Show S01 ~ S03 [1080p]", []int{1, 2, 3}, nil},
 		{"[Grp] Show (Season 01-25+Movies+Specials) [1080p]", []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25}, nil},
 		// spaces around the hyphen: a season word in a bracket, closed by ')'
 		// or '+'
@@ -514,12 +543,14 @@ func TestEpisodeSpans(t *testing.T) {
 		{"Show.S01E02-E01.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", ""}, {"01", "01", ""}}},
 		{"Show.S01E05-E05.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "05", ""}, {"01", "05", ""}}},
 		{"Show S01E02 - E04 1080p WEB h264-GRP", []EpisodeSpan{{"01", "02", ""}, {"01", "04", ""}}},
-		{"Show.S04E29~E31.1080p.WEB.h264-GRP", []EpisodeSpan{{"04", "29", ""}, {"04", "31", ""}}},
 		// the season carried over a tag with no episode, and none carried back
 		{"Show.S01.1080p.E05.WEB.h264-GRP", []EpisodeSpan{{"01", "05", ""}}},
 		{"Show.E05.S01.1080p.WEB.h264-GRP", []EpisodeSpan{{"", "05", ""}}},
 		// the channels are not a fraction
 		{"Show.S01E06.5.1.AAC.720p.WEB-GRP", []EpisodeSpan{{"01", "06", ""}}},
+		// a tilde makes a range as a hyphen does, inside a tag and between two
+		{"[Grp] Show S04E29~E31 1080p WEB H.264", []EpisodeSpan{{"04", "29", "31"}}},
+		{"Show.S01E01~03.1080p.WEB.x264-GRP", []EpisodeSpan{{"01", "01", "03"}}},
 		// half an episode with a tag or a version right after it
 		{"Show.S01E06.5.WEB.x264-GRP", []EpisodeSpan{{"01", "06.5", ""}}},
 		{"Show.S01E02.5v2.720p.WEB.x264-GRP", []EpisodeSpan{{"01", "02.5", ""}}},

@@ -4384,6 +4384,17 @@
   seriesEpisodes: "S04E29 S04E30 S04E31"
   codec: "x264"
   group: "GRP"
+"[ToonsHub] Show S04E29~E31 1080p WEB H.264":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 4
+  episode: 29
+  seriesEpisodes: "S04E29 S04E30 S04E31"
+  codec: "H.264"
+  group: "ToonsHub"
+  site: "ToonsHub"
 "Show.S90E01.1080p.WEB-GRP":
   type: "episode"
   title: "Show"

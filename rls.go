@@ -200,10 +200,10 @@ func (r Release) SeriesEpisodes() [][]int {
 			if bare && last != -1 {
 				s, _ = r.tags[last].Series()
 			}
-			// a hyphen between two episode tags of one season makes a range
-			// ('E02-E04', 'S00E02-S00E04'), which runs from the last episode
-			// of the tag before the hyphen
-			if k == 0 && i >= 2 && r.tags[i-2].Is(TagTypeSeries) && (bare || tag.val(1) == r.tags[i-2].val(1)) && fmt.Sprintf("%o", r.tags[i-1]) == "-" {
+			// a hyphen or a tilde between two episode tags of one season
+			// makes a range ('E02-E04', 'S00E02-S00E04', 'E29~E31'), which
+			// runs from the last episode of the tag before it
+			if k == 0 && i >= 2 && r.tags[i-2].Is(TagTypeSeries) && (bare || tag.val(1) == r.tags[i-2].val(1)) && r.tags[i-1].rangeDelim() {
 				if prev := r.tags[i-2].episodes(&none); len(prev) != 0 {
 					if first := prev[len(prev)-1] + 1; episode-first <= fill {
 						for j := first; j < episode; j++ {
@@ -309,8 +309,9 @@ func (r Release) Seasons() []int {
 // seasons which the series tag at i ends, or -1. Both tags write a season and
 // no episode, the second season is the higher one, and the first tag's text
 // ends in the hyphen or tilde ('S01-' of 'S01-S03' and 'S01-03', 'Seasons 1~'
-// of 'Seasons 1~7', 'Season 1 - ' of '(Season 1 - 3)') or a hyphen alone
-// stands between the two ('S01 - S03').
+// of 'Seasons 1~7', 'Season 1 - ' of '(Season 1 - 3)') or a hyphen or tilde
+// stands between the two with at most dots and spaces beside it ('S01 - S03',
+// 'S01~S03', 'S01 ~ S03').
 //
 // An episode written after the range with no season of its own is in none of
 // them, as SeriesEpisodes, EpisodeSpans and EpisodeRange have it ('Season 1-4
@@ -321,7 +322,7 @@ func (r Release) seasonRange(i int) int {
 		return -1
 	}
 	switch {
-	case i >= 2 && r.tags[i-1].typ == TagTypeDelim && strings.Trim(r.tags[i-1].val(0), "._ ") == "-":
+	case i >= 2 && r.tags[i-1].typ == TagTypeDelim && strings.ContainsAny(r.tags[i-1].val(0), "-~") && len(strings.Trim(r.tags[i-1].val(0), "._ ")) == 1:
 		start = i - 2
 	case i >= 1:
 		if s := strings.TrimRight(r.tags[i-1].val(0), " _"); strings.HasSuffix(s, "-") || strings.HasSuffix(s, "~") {
@@ -407,9 +408,10 @@ type EpisodeSpan struct {
 // SeriesEpisodes: the '04' of 'S2 - 04', and also a second numbering of the
 // same episode ('S23E19.Episode.1174' gives 1174 in season 23). An episode
 // written twice is listed twice. A hyphen or a tilde inside a tag makes a
-// range ('S01E02-04', '01 ~ 12'), and so does a bare hyphen between two tags
-// of one season when the end is the higher number ('E02-E04'). A Release built
-// by hand with an Episode and no episode in its tags gives that episode.
+// range ('S01E02-04', '01 ~ 12'), and so does a bare hyphen or tilde between
+// two tags of one season when the end is the higher number ('E02-E04',
+// 'E29~E31'). A Release built by hand with an Episode and no episode in its
+// tags gives that episode.
 func (r Release) EpisodeSpans() []EpisodeSpan {
 	var v []EpisodeSpan
 	var season string
@@ -427,7 +429,7 @@ func (r Release) EpisodeSpans() []EpisodeSpan {
 			}
 		}
 		eps := tag.rest(2)
-		ranged := open && i >= 2 && r.tags[i-2].typ == TagTypeSeries && r.tags[i-1].val(0) == "-" &&
+		ranged := open && i >= 2 && r.tags[i-2].typ == TagTypeSeries && r.tags[i-1].rangeDelim() &&
 			(bare || tag.val(1) == r.tags[i-2].val(1))
 		open = false
 		for k, b := range eps {
@@ -464,6 +466,12 @@ func (r Release) EpisodeSpans() []EpisodeSpan {
 func wholeEpisode(s string) int {
 	s, _, _ = strings.Cut(s, ".")
 	return atoi(s)
+}
+
+// rangeDelim reports whether the tag is the bare hyphen or tilde that makes a
+// range of the episode tags on its two sides ('E02-E04', 'E29~E31').
+func (tag Tag) rangeDelim() bool {
+	return tag.typ == TagTypeDelim && len(tag.v) != 0 && (tag.v[0] == "-" || tag.v[0] == "~")
 }
 
 // wroteEpisode reports whether a series tag writes an episode, which a season
