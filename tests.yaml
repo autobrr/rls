@@ -822,6 +822,15 @@
   title: "foo bar"
   source: "BluRay"
   resolution: "1080p"
+"Formula1.2024.Round19.USA.Austin.Race.1080p.WEB.h264-GRP":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round19 USA Austin Race"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2024
+  codec: "H.264"
+  group: "GRP"
 "Fussball.1.Bundesliga.2011-2012.04.Spieltag.Hannover.96.vs.FSV.Mainz.05.GERMAN.WS.HDTV.720p.x264-SPORTSBAR":
   type: "movie"
   title: "Fussball 1 Bundesliga 2011"
@@ -2038,6 +2047,15 @@
   audio: "DD"
   channels: "5.1"
   group: "RARBG"
+"Tennis.US.Open.2025.Mens.Final.Jannik.Sinner.vs.Carlos.Alcaraz.1080p.WEB.h264-EPOWORKS":
+  type: "movie"
+  title: "Tennis US Open"
+  subtitle: "Mens Final Jannik Sinner vs Carlos Alcaraz"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2025
+  codec: "H.264"
+  group: "EPOWORKS"
 "The.Boss.2016.UNRATED.720p.BRRip.x264.AAC-ETRG":
   type: "movie"
   title: "The Boss"
