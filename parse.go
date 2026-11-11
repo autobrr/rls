@@ -560,11 +560,16 @@ func (b *TagBuilder) fixSpecial(r *Release, i int, series bool) {
 // tags ('Show.S01E02.GERMAN.1080p'), one that follows other tags
 // ('German.Dubbed.DL.x'), one with a single word after it ('English Dub'),
 // and one inside brackets ('[English Dub]').
+//
+// After a year alone the text is the name of an event, and only the tag right
+// after the year is fixed, ie 'Hungarian' in 'Formula1.2026.Hungarian.Grand.
+// Prix.1080p'. Words further in have text on both sides, which fixIsolated
+// handles. A 'MULTi' is left alone ('2024.MULTI.Audio.Sub').
 func (b *TagBuilder) fixEpisodeTitle(r *Release, i int) {
+	var year bool
 	if r.tags[i].Is(TagTypeDate) {
-		if _, month, day := r.tags[i].Date(); month == 0 || day == 0 {
-			return
-		}
+		_, month, day := r.tags[i].Date()
+		year = month == 0 || day == 0
 	}
 	plain := func(k int) bool {
 		return r.tags[k].Is(TagTypeDelim) && !strings.ContainsAny(r.tags[k].v[0], "[](){}")
@@ -573,6 +578,9 @@ func (b *TagBuilder) fixEpisodeTitle(r *Release, i int) {
 	for k, prev := i+2, i; k+4 < r.end && !r.tags[k].Is(TagTypeSource, TagTypeResolution, TagTypeCodec); k++ {
 		if r.tags[k].Is(TagTypeDelim, TagTypeWhitespace) {
 			continue
+		}
+		if year && (prev != i || strings.HasPrefix(r.tags[k].Language(), "MULTi")) {
+			break
 		}
 		if r.tags[k].Is(TagTypeLanguage, TagTypeCollection, TagTypeRegion) && prev == k-2 && plain(k-1) &&
 			(prev == i || r.tags[prev].Is(TagTypeText)) &&

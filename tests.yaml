@@ -831,6 +831,15 @@
   year: 2024
   codec: "H.264"
   group: "GRP"
+"Formula1.2026.Hungarian.Grand.Prix.Practice.One.1080p.AHDTV.x264-DARKSPORT":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Hungarian Grand Prix Practice One"
+  source: "AHDTV"
+  resolution: "1080p"
+  year: 2026
+  codec: "x264"
+  group: "DARKSPORT"
 "Fussball.1.Bundesliga.2011-2012.04.Spieltag.Hannover.96.vs.FSV.Mainz.05.GERMAN.WS.HDTV.720p.x264-SPORTSBAR":
   type: "movie"
   title: "Fussball 1 Bundesliga 2011"
@@ -1676,6 +1685,15 @@
   channels: "5.1"
   other: "Sign.Language"
   group: "Kitsune"
+"Snooker.World.Championship.2026.SF.Session.2.1080p.WEB.h264-GRP":
+  type: "movie"
+  title: "Snooker World Championship"
+  subtitle: "SF Session 2"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  codec: "H.264"
+  group: "GRP"
 "Song Of The South 1946 V2 1080p 35mm DD 2.0 x264-RESTORED.mkv":
   type: "movie"
   title: "Song Of The South"
