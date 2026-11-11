@@ -299,6 +299,7 @@
 "Almost.Famous.2000.Bootleg.Cut.UHD.BluRay.2160p.DTS-HD.MA.5.1.DV.HEVC.HYBRID.REMUX-FraMeSToR":
   type: "movie"
   title: "Almost Famous"
+  subtitle: "Bootleg Cut"
   source: "UHD.BluRay"
   resolution: "2160p"
   year: 2000
@@ -308,7 +309,6 @@
   channels: "5.1"
   other: "HYBRiD REMUX"
   group: "FraMeSToR"
-  unused: "Bootleg Cut"
 "Amazon.1990.DVD.720p":
   type: "movie"
   title: "Amazon"
@@ -368,6 +368,18 @@
   year: 2020
   codec: "x264"
   group: "PLUTONiUM"
+"[Yameii] Attack on Titan - The Last Attack (2024) [English Dub] [CR WEB-DL 1080p] [5433BCE3] (Shingeki no Kyojin: The Last Attack)":
+  type: "movie"
+  title: "Attack on Titan - The Last Attack"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "CR"
+  year: 2024
+  language: "ENGLiSH"
+  group: "Yameii"
+  site: "Yameii"
+  sum: "5433BCE3"
+  unused: "Dub Shingeki no Kyojin: The Last Attack"
 "Austin.Powers.The.Spy.Who.Shagged.Me.1999.BluRay.1080p.TrueHD.5.1.VC-1.REMUX-FraMeSToR.mkv":
   type: "movie"
   title: "Austin Powers The Spy Who Shagged Me"
@@ -541,6 +553,7 @@
 "Crank.2006.EXTENDED.DIRFIX.MULTI.COMPLETE.UHD.BLURAY-MONUMENT":
   type: "movie"
   title: "Crank"
+  subtitle: "EXTENDED"
   source: "UHD.BluRay"
   year: 2006
   other: "DIRFIX COMPLETE"
@@ -784,6 +797,16 @@
   codec: "x264"
   audio: "DTS"
   group: "HiFi"
+"FIFA.World.Cup.2026.Semi.Final.England.vs.Argentina.HLG.2160p.WEB.h265-VERUM":
+  type: "movie"
+  title: "FIFA World Cup"
+  subtitle: "Semi Final England vs Argentina"
+  source: "WEB"
+  resolution: "2160p"
+  year: 2026
+  codec: "H.265"
+  hdr: "HLG"
+  group: "VERUM"
 "[ValdikSS]_First_Squad_The_Morment_Of_Truth_[720x576_h264_dvdscr_eng_hardsub].mkv":
   type: "movie"
   title: "First Squad The Morment Of Truth"
@@ -802,6 +825,7 @@
 "Fussball.1.Bundesliga.2011-2012.04.Spieltag.Hannover.96.vs.FSV.Mainz.05.GERMAN.WS.HDTV.720p.x264-SPORTSBAR":
   type: "movie"
   title: "Fussball 1 Bundesliga 2011"
+  subtitle: "04 Spieltag Hannover 96 vs FSV Mainz 05"
   source: "HDTV"
   resolution: "720p"
   year: 2012
@@ -809,7 +833,6 @@
   other: "WS"
   language: "GERMAN"
   group: "SPORTSBAR"
-  unused: "04 Spieltag Hannover 96 vs FSV Mainz 05"
 "G.I.Joe.Retaliation.2013.1080p.BluRay.x264-GRP":
   type: "movie"
   title: "G.I. Joe Retaliation"
@@ -1693,6 +1716,7 @@
 "Star.Wars.Episode.VI.Return.of.the.Jedi.1983.4K83.minimalNR.v1.6.2160p.35mm.DD2.0.x265-TN1":
   type: "movie"
   title: "Star Wars Episode VI Return of the Jedi"
+  subtitle: "4K83"
   source: "35mm"
   resolution: "2160p"
   year: 1983
@@ -1702,16 +1726,15 @@
   channels: "2.0"
   other: "minimalNR"
   group: "TN1"
-  unused: "4K83"
 "Star Wars - Return of the Jedi (1983).4K83.35mm.minimalNR.v1.4.UHD.2160p.mkv":
   type: "movie"
   title: "Star Wars - Return of the Jedi"
+  subtitle: "4K83"
   source: "35mm"
   resolution: "2160p"
   year: 1983
   version: "v1.4"
   other: "minimalNR"
-  group: "4K83"
   ext: "mkv"
 "Stillwater Ridge (2020) (1080p BluRay x265 - Kyoshi 51)":
   type: "movie"

@@ -1146,7 +1146,17 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 	if !hasSubtitle {
 		return b.boxTitle(r, start, offset), 0, 0
 	}
-	for pos = date + 1; pos < len(r.tags) && hasSubtitle && pos < resolution; pos++ {
+	// tags in front of the resolution end the subtitle, where tags inside it
+	// rule it out ('Semi.Final.England.vs.Argentina.HLG.2160p'). not past an
+	// episode, as the text in front of that is not its title
+	end := resolution
+	for ; end > date+1 && !r.tags[end-1].Is(TagTypeText, TagTypeCut, TagTypeEdition, TagTypeSeries); end-- {
+	}
+	if end == date+1 || r.tags[end-1].Is(TagTypeSeries) {
+		end = resolution - 1
+	}
+	end++
+	for pos = date + 1; pos < len(r.tags) && hasSubtitle && pos < end; pos++ {
 		hasSubtitle = hasSubtitle && r.tags[pos].Is(TagTypeDelim, TagTypeText, TagTypeCut, TagTypeEdition, TagTypeLanguage)
 	}
 	// capture subtitle
@@ -1158,11 +1168,12 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 				depth = bracketDepth(r.tags[pos].Delim(), depth)
 			}
 		}
-		// a bracket that opens in front of the source holds tags ('(1999)
-		// [R2JP DVD-Remux]')
-		if pos < resolution-1 && !(noResolution && depth > 0) {
+		// a bracket that opens in front of the source or the other tags
+		// holds tags ('(1999) [R2JP DVD-Remux]', '(2024) [English Dub] [CR
+		// WEB-DL 1080p]')
+		if pos < end-1 && !((noResolution || end != resolution) && depth > 0) {
 			var n int
-			r.Subtitle, n = b.title(r.tags[pos:resolution-1], TagTypeText, TagTypeCut, TagTypeEdition)
+			r.Subtitle, n = b.title(r.tags[pos:end-1], TagTypeText, TagTypeCut, TagTypeEdition)
 			from, to = pos, pos+n
 		}
 	}
