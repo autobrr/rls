@@ -455,6 +455,19 @@ func TestTagInfo_find(t *testing.T) {
 	}
 }
 
+// TestTagInfo_newType checks that a tag info with a type that does not exist
+// is refused whether or not it has a title.
+func TestTagInfo_newType(t *testing.T) {
+	for _, title := range []string{"", "Title"} {
+		if info, err := taginfo.New("X", title, "", "", "gaem", ""); err == nil {
+			t.Errorf("title %q: expected an error, got: %v", title, info)
+		}
+	}
+	if _, err := taginfo.New("X", "", "", "", "game", ""); err != nil {
+		t.Errorf("expected no error, got: %v", err)
+	}
+}
+
 func TestParseRoman(t *testing.T) {
 	for i, test := range []struct {
 		s   string

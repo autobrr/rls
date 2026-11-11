@@ -52,10 +52,10 @@ func New(strs ...string) (*Taginfo, error) {
 	switch {
 	case tag == "":
 		return nil, errors.New("must define tag")
-	case title == "":
-		title = tag
 	case !ok:
 		return nil, fmt.Errorf("invalid type %q", typstr)
+	case title == "":
+		title = tag
 	}
 	info := &Taginfo{
 		tag:    tag,
