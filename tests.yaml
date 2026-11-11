@@ -124,6 +124,11 @@
   type: "movie"
   title: "2001: A Space Odyssey"
   ext: "mkv"
+"(2001) A Space Odyssey (1968).mkv":
+  type: "movie"
+  title: "2001 A Space Odyssey"
+  year: 1968
+  ext: "mkv"
 "2001.A.Space.Odyssey.1968.2160p.UHD.BluRay.DD+5.1.DoVi.x265-c0kE":
   type: "movie"
   title: "2001 A Space Odyssey"

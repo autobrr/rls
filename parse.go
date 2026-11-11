@@ -1475,10 +1475,11 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 	start := pos
 	var offset int
 	r.Title, offset = b.title(r.tags[start:], TagTypeText)
-	// a year in parentheses with the title right after it is a word of the
-	// title ('(2001)A Space Odyssey(1961)')
+	// a year in parentheses with the title after it is a word of the title
+	// ('(2001)A Space Odyssey(1961)', '(2001) A Space Odyssey (1968)',
+	// '(2001).A.Space.Odyssey.(1968)')
 	if offset == 1 && start+2 < len(r.tags) && r.tags[start].Retyped() && r.tags[start].Prev() == TagTypeDate &&
-		r.tags[start+1].Is(TagTypeDelim) && r.tags[start+1].Delim() == ")" && r.tags[start+2].Is(TagTypeText) {
+		r.tags[start+1].Is(TagTypeDelim) && strings.TrimRight(r.tags[start+1].Delim(), "._ ") == ")" && r.tags[start+2].Is(TagTypeText) {
 		s, n := b.title(r.tags[start+2:], TagTypeText)
 		r.Title, offset = r.Title+" "+s, offset+1+n
 	}
