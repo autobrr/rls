@@ -86,8 +86,8 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
 			// Vol.1.No.2, vol1no2
 			`(?i)^vol(?:ume)?[\-\._ ]?(?P<s>\d{1,3})(?:[\-\._ ]?(?:number|no)[\-\._ ]?(?P<e>\d{1,5}))\b`,
-			// Episode 15, E009, Ep. 007, Ep.05-07, Ep 05 ~ 07, Ep 5.5
-			`(?i)^e(?:p(?:isode)?[\-\._ ]{1,3})?(?P<e>\d{1,5})(?:(?P<x>\.\d)|(?P<r>[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3}))?\b`,
+			// Episode 15, E009, Ep. 007, EP07, Ep07v2, Ep.05-07, Ep 05 ~ 07, Ep 5.5
+			`(?i)^e(?:p(?:isode)?[\-\._ ]{0,3})?(?P<e>\d{1,5})(?:(?P<v>v\d+)|(?P<x>\.\d)|(?P<r>[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3}))?\b`,
 			// 10v1.7, 13v2
 			`(?i)^(?P<e>\d{1,5})(?P<v>v[\-\._ ]?\d+(?:\.\d){0,2})\b`,
 			// S01.Disc02, s01D3, Series.01.Disc.02, S02DVD3
@@ -307,6 +307,12 @@ func NewSeriesLexer(strs ...string) Lexer {
 					if k < 0 || firstYearEnd(buf[i:min(n, i+6)]) != -1 {
 						return start, end, i - len(s), n, false
 					}
+				}
+				// 'EP1168' is an episode, but 'EP2004' is a music release and
+				// its year, which the disc source year lexer reads
+				if len(series) == 0 && len(episode) == 4 && len(s) > 5 && (s[1] == 'p' || s[1] == 'P') && s[2] == episode[0] &&
+					(episode[0] == '1' && episode[1] == '9' || episode[0] == '2' && episode[1] == '0') {
+					return start, end, i - len(s), n, false
 				}
 				var tags []Tag
 				// a range end ('E05-07') is the last episode of the range when

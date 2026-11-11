@@ -3149,6 +3149,17 @@
   site: "SubsPlease"
   sum: "7E631F90"
   ext: "mkv"
+"[Group] One Piece EP1168 2160p WEB-DL AAC2.0 H.264":
+  type: "episode"
+  title: "One Piece"
+  source: "WEB-DL"
+  resolution: "2160p"
+  episode: 1168
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "Group"
+  site: "Group"
 "Party.Planner.with.David.Tutera.S01E46.Dr..Zhivago-A-Go-Go.720p":
   type: "episode"
   title: "Party Planner with David Tutera"
@@ -3397,6 +3408,14 @@
   seriesEpisodes: "S00E01 S00E02 S00E03"
   group: "Group"
   site: "Group"
+"[GRP]_Show_Ep03_The_Title_[720p]":
+  type: "episode"
+  title: "Show"
+  subtitle: "The Title"
+  resolution: "720p"
+  episode: 3
+  group: "GRP"
+  site: "GRP"
 "Show.E05.5.1.AAC.1080p.WEB-GRP":
   type: "episode"
   title: "Show"
@@ -3421,6 +3440,14 @@
   title: "Show"
   resolution: "1080p"
   episode: 5
+  group: "Group"
+  site: "Group"
+"[Group] Show - Ep05v2 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 5
+  version: "v2"
   group: "Group"
   site: "Group"
 "Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
@@ -4417,6 +4444,13 @@
   year: 2020
   group: "Sub"
   site: "Sub"
+"Artist-Title-EP2004-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Title"
+  source: "EP"
+  year: 2004
+  group: "GRP"
 "Artist-Title-WEB2021-PROMO-GRP":
   type: "music"
   artist: "Artist"
