@@ -2913,7 +2913,7 @@
   site: "SubsPlease"
   sum: "C00D6C68"
 "Hold.The.Sunset.S01E00.Christmas.Special.720p.HDTV.X264-MTB":
-  type: "series"
+  type: "episode"
   title: "Hold The Sunset"
   subtitle: "Christmas Special"
   source: "HDTV"
@@ -3759,6 +3759,14 @@
   day: 13
   codec: "x264"
   group: "GRP"
+"[Group] Show Name - 00 [720p][D2861769].mkv":
+  type: "episode"
+  title: "Show Name"
+  resolution: "720p"
+  group: "Group"
+  site: "Group"
+  sum: "D2861769"
+  ext: "mkv"
 "[Group] Show Name - 24 (JA) [720p WEB-DL AVC AAC]":
   type: "episode"
   title: "Show Name"

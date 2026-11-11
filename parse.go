@@ -776,9 +776,12 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 	}
 	n := len(r.tags)
 	// inspect types
-	var app, series, movie, video bool
+	// episode is whether an episode was written, which r.Episode cannot say
+	// for episode 0 ('Show - 00', 'S01E00')
+	var app, series, episode, movie, video bool
 	for _, tag := range r.tags {
 		series = series || tag.Is(TagTypeSeries)
+		episode = episode || tag.Is(TagTypeSeries) && len(tag.v) > 2 && tag.v[2] != ""
 		video = video || (!tag.Is(TagTypeGroup) && tag.InfoType() == Movie)
 	}
 	for i := n; i > 0; i-- {
@@ -798,7 +801,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			}
 			return typ
 		case Series, Episode:
-			if r.Episode != 0 || (r.Series == 0 && r.Episode == 0) && !contains(r.Other, "BOXSET") {
+			if r.Episode != 0 || episode || (r.Series == 0 && r.Episode == 0) && !contains(r.Other, "BOXSET") {
 				return Episode
 			}
 			return Series
@@ -855,7 +858,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 	}
 	// defaults
 	switch {
-	case r.Episode != 0 || (r.Year != 0 && r.Month != 0 && r.Day != 0):
+	case r.Episode != 0 || episode || (r.Year != 0 && r.Month != 0 && r.Day != 0):
 		return Episode
 	case r.Series != 0 || series:
 		return Series
