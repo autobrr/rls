@@ -1360,6 +1360,25 @@ func bracketDepth(delim string, depth int) int {
 	return depth
 }
 
+// beforeTag reports whether a tag follows the text at i inside the bracket
+// that holds it, ie the 'HEVC2' in '(1280x720 HEVC2 AAC)' or the 'Conan' in
+// '(Meitantei Conan, Multi-Subs)'. Such a word is not the group, which a block
+// of tags names last ('(1080p x265 AAC Group)').
+func beforeTag(tags []Tag, i int) bool {
+	var tagged bool
+	for i++; i < len(tags); i++ {
+		switch {
+		case !tags[i].Is(TagTypeDelim):
+			tagged = tagged || !tags[i].Is(TagTypeText, TagTypeWhitespace)
+		case strings.ContainsAny(tags[i].Delim(), "([{"):
+			return false
+		case strings.ContainsAny(tags[i].Delim(), ")]}"):
+			return tagged
+		}
+	}
+	return false
+}
+
 // unused sets the unused text on the release.
 func (b *TagBuilder) unused(r *Release, i int) {
 	// collect
@@ -1374,7 +1393,7 @@ func (b *TagBuilder) unused(r *Release, i int) {
 		switch s := r.tags[r.unused[n-1]].Text(); {
 		case r.Sum == "" && b.sum.MatchString(s) && strings.ContainsAny(s, "0123456789"):
 			r.Sum, r.unused = s, r.unused[:n-1]
-		case r.Group == "" && !b.digits.MatchString(s):
+		case r.Group == "" && !b.digits.MatchString(s) && !beforeTag(r.tags, r.unused[n-1]):
 			last := r.unused[n-1]
 			r.Group, r.unused = s, r.unused[:n-1]
 			b.widenGroup(r, last)

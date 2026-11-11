@@ -212,10 +212,9 @@
   hdr: "DV HDR"
   audio: "DDP Atmos"
   channels: "5.1"
-  group: "S97"
   site: "cTurtle-4K"
   ext: "torrent"
-  unused: "crf18"
+  unused: "crf18 S97"
 "a file.mkv":
   type: "movie"
   title: "a file"
@@ -3450,6 +3449,14 @@
   version: "v2"
   group: "Group"
   site: "Group"
+"Show - 38 (1280x720 HEVC2 AAC).mkv":
+  type: "episode"
+  title: "Show"
+  resolution: "720p"
+  episode: 38
+  audio: "AAC"
+  ext: "mkv"
+  unused: "HEVC2"
 "[Group] Show - 075 (BS11 1440x1080 MPEG2 AAC).ts":
   type: "episode"
   title: "Show"
@@ -3686,6 +3693,18 @@
   resolution: "1080p"
   series: 90
   episode: 1
+  group: "GRP"
+"Show (2014) S01 (1080p BluRay AV1 10bit Opus 2.0 GRP)":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2014
+  series: 1
+  codec: "AV1"
+  bitdepth: "10BIT"
+  audio: "OPUS"
+  channels: "2.0"
   group: "GRP"
 "[Group] Show (2024) - 01 (S01E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]":
   type: "episode"
