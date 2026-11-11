@@ -96,6 +96,9 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)[\-\._ ]?(?P<d>(?:disc|disk|dvd|d)[\-\._ ]?(?:\d{1,3}))\b`,
 			// s1957e01
 			`(?i)^s(?P<s>(?:19|20)\d\d)e(?P<e>\d{2,4})\b`,
+			// 2024x05: the year and round of an event. 1920 is the width of
+			// a resolution
+			`(?i)^(?P<s>19[5-9]\d|20[0-3]\d)x(?P<e>\d\d)\b`,
 		),
 		NewDiscSourceYearLexer(
 			// VLS2004, 2DVD1999, 4CD2003

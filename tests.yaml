@@ -3024,6 +3024,17 @@
   other: "BOXSET"
   language: "NORDiC"
   group: "TWASERiES"
+"Formula1.2024x05.Miami.Grand.Prix.Race.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Formula1"
+  subtitle: "Miami Grand Prix Race"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2024
+  series: 2024
+  episode: 5
+  codec: "H.264"
+  group: "GRP"
 "Game of Thrones - 4x03 - Breaker of Chains":
   type: "episode"
   title: "Game of Thrones"
