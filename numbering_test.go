@@ -351,6 +351,40 @@ func TestSeasonRange(t *testing.T) {
 	}
 }
 
+// TestSeasonZeroFirst checks that Series is the first season the name writes
+// when that season is 0, and not the season of a second numbering after it.
+func TestSeasonZeroFirst(t *testing.T) {
+	tests := []struct {
+		name            string
+		series, episode int
+		typ             Type
+	}{
+		{"Show.S00E05.S01E02.1080p.WEB.x264-GRP", 0, 5, Episode},
+		{"[Grp] Show - S00E02 (BD 1080p) | Other Name (S02E00) (OVA 2)", 0, 2, Episode},
+		{"Show.S00-S03.1080p.BluRay.x264-GRP", 0, 0, Series},
+		{"Show.S00-03.1080p.BluRay.x264-GRP", 0, 0, Series},
+		// the type is the one the later seasons give: a word of a course
+		// does not make it one
+		{"Lynda.Course.S00-S02.1080p-GRP", 0, 0, Series},
+		{"Lynda.Course.S01-S02.1080p-GRP", 1, 0, Series},
+		// a season after an episode that has none is the season
+		{"[Grp] Show - 05 (S01E05) [1080p]", 1, 5, Episode},
+		{"Show.S01E02.S00E05.1080p.WEB.x264-GRP", 1, 2, Episode},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if r.Series != test.series || r.Episode != test.episode {
+			t.Errorf("%q: expected series %d episode %d, got: %d and %d", test.name, test.series, test.episode, r.Series, r.Episode)
+		}
+		if r.Type != test.typ {
+			t.Errorf("%q: expected type %s, got: %s", test.name, test.typ, r.Type)
+		}
+		if !r.HasSeason() {
+			t.Errorf("%q: expected a season", test.name)
+		}
+	}
+}
+
 // TestHalfEpisode checks that half an episode keeps its fraction in the tag:
 // Episode is the whole number, the fraction is not a word of the name, and the
 // number is not an absolute one.

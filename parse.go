@@ -1018,7 +1018,8 @@ func (b *TagBuilder) collect(r *Release) {
 	// 'Show - 04 (1080p)', 'Show E04' or 'Show Episode 04', and bare the first
 	// such episode. season is whether a season was written anywhere in the
 	// name, as a number ('S02E04', '2nd Season') or as the specials ('S00E04')
-	var bareEp, season bool
+	// seasoned is whether a tag before the one at hand wrote a season
+	var bareEp, season, seasoned bool
 	var bare int
 	for i := 0; i < len(r.tags); i++ {
 		// the first one that is not 0, as Episode is
@@ -1053,9 +1054,10 @@ func (b *TagBuilder) collect(r *Release) {
 			r.Year, r.Month, r.Day = r.tags[i].Date()
 			r.YearEnd = r.tags[i].yearEnd()
 		case TagTypeSeries:
+			// the first season the name writes, which season 0 is
 			series, episode := r.tags[i].Series()
-			if r.Series == 0 {
-				r.Series = series
+			if !seasoned {
+				r.Series, seasoned = series, r.tags[i].v[1] != ""
 			}
 			if r.Episode == 0 {
 				r.Episode = episode
@@ -1163,9 +1165,12 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 	// inspect types
 	// episode is whether an episode was written, which r.Episode cannot say
 	// for episode 0 ('Show - 00', 'S01E00')
-	var app, series, episode, movie, video bool
+	// season is whether a season other than 0 was written, which r.Series
+	// cannot say when season 0 is written first ('S00E02 (S02E00)')
+	var app, series, season, episode, movie, video bool
 	for _, tag := range r.tags {
 		series = series || tag.Is(TagTypeSeries)
+		season = season || tag.Is(TagTypeSeries) && len(tag.v) > 1 && atoi(tag.v[1]) != 0
 		episode = episode || tag.Is(TagTypeSeries) && len(tag.v) > 2 && tag.v[2] != ""
 		video = video || (!tag.Is(TagTypeGroup) && tag.InfoType() == Movie)
 	}
@@ -1191,7 +1196,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			}
 			return Series
 		case Education:
-			if r.Series == 0 && r.Episode == 0 {
+			if !season && r.Episode == 0 {
 				return Education
 			}
 		case Music:
@@ -1216,7 +1221,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 		// exclusive tag not superseded by version/episode/date
 		if r.tags[i-1].InfoExcl() &&
 			r.Version == "" &&
-			r.Series == 0 && r.Episode == 0 &&
+			!season && r.Episode == 0 &&
 			r.Day == 0 && r.Month == 0 {
 			return typ
 		}
