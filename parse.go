@@ -710,9 +710,14 @@ func (b *TagBuilder) fixVersus(r *Release) {
 		if !r.tags[i].Is(TagTypeText) || r.tags[i].prev != TagTypeWhitespace {
 			return false
 		}
-		switch strings.ToLower(r.tags[i].Text()) {
-		case "vs", "v", "gegen", "contre", "at", "@":
-			return true
+		s := r.tags[i].Text()
+		if len(s) > len("contre") {
+			return false
+		}
+		for _, v := range [...]string{"vs", "v", "gegen", "contre", "at", "@"} {
+			if strings.EqualFold(s, v) {
+				return true
+			}
 		}
 		return false
 	}
@@ -720,10 +725,12 @@ func (b *TagBuilder) fixVersus(r *Release) {
 		if !versus(i) || !plain(i-1) || !plain(i+1) {
 			continue
 		}
-		side := r.tags[i-2].Is(TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform) &&
-			r.tags[i+2].Is(TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform)
-		for _, k := range []int{i - 2, i + 2} {
-			if side && !r.tags[k].Is(TagTypeText) {
+		if !r.tags[i-2].Is(TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform) ||
+			!r.tags[i+2].Is(TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform) {
+			continue
+		}
+		for _, k := range [...]int{i - 2, i + 2} {
+			if !r.tags[k].Is(TagTypeText) {
 				r.tags[k] = r.tags[k].As(TagTypeText, nil)
 			}
 		}
