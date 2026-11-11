@@ -412,6 +412,8 @@ func TestHalfEpisode(t *testing.T) {
 		{"Show.S01E06.5.WEB.x264-GRP", 6, ".5", ""},
 		{"Show.S01E06.5.HDTV.x264-GRP", 6, ".5", ""},
 		{"Show.S01E06.5.x264-GRP", 6, ".5", ""},
+		// and a version after it
+		{"Show.S01E02.5v2.720p.WEB.x264-GRP", 2, ".5", ""},
 		// a number that begins the title of the episode or the channels
 		{"Show.S02E09.4.Days.Out.720p.WEB.x264-GRP", 9, "", "4 Days Out"},
 		// and the same before a word that is a tag elsewhere
@@ -520,6 +522,7 @@ func TestEpisodeSpans(t *testing.T) {
 		{"Show.S01E06.5.1.AAC.720p.WEB-GRP", []EpisodeSpan{{"01", "06", ""}}},
 		// half an episode with a tag or a version right after it
 		{"Show.S01E06.5.WEB.x264-GRP", []EpisodeSpan{{"01", "06.5", ""}}},
+		{"Show.S01E02.5v2.720p.WEB.x264-GRP", []EpisodeSpan{{"01", "02.5", ""}}},
 		// one episode under two numberings, in the order written
 		{"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP", []EpisodeSpan{{"23", "19", ""}, {"23", "1174", ""}}},
 		// no episode
