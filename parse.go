@@ -1368,6 +1368,7 @@ func (b *TagBuilder) unused(r *Release, i int) {
 			r.unused = append(r.unused, i)
 		}
 	}
+	b.bracketedGroup(r)
 	// final conversions
 	if n := len(r.unused); n != 0 {
 		switch s := r.tags[r.unused[n-1]].Text(); {
@@ -1388,6 +1389,53 @@ func (b *TagBuilder) unused(r *Release, i int) {
 			peek(r.tags, j+1, TagTypeDelim) && strings.HasPrefix(r.tags[j+1].Delim(), "]") {
 			r.Sum, r.unused = s, slices.Delete(r.unused, k, k+1)
 		}
+	}
+}
+
+// bracketedGroup sets the group from a leftover word that a hyphen joins to the
+// tags and a bracket follows, ie 'H 264-VARYG (Alt Title, Multi-Subs)'. The
+// group lexer does not read a name that ends in a bracket, and the last
+// leftover word of such a name is inside the bracket.
+func (b *TagBuilder) bracketedGroup(r *Release) {
+	if r.Group != "" {
+		return
+	}
+	for k := len(r.unused) - 1; k >= 0; k-- {
+		i := r.unused[k]
+		if i < 2 || !r.tags[i-1].Is(TagTypeDelim) {
+			continue
+		}
+		if d := r.tags[i-1].Delim(); !strings.HasSuffix(d, "-") || strings.ContainsAny(d, "()[]{}") || !r.tags[i-2].Is(
+			TagTypeSource,
+			TagTypeResolution,
+			TagTypeCollection,
+			TagTypeCodec,
+			TagTypeHDR,
+			TagTypeBitDepth,
+			TagTypeAudio,
+			TagTypeChannels,
+			TagTypeOther,
+			TagTypeCut,
+			TagTypeEdition,
+			TagTypeLanguage,
+			TagTypeContainer,
+		) {
+			continue
+		}
+		// a group may itself hold hyphens ('-Tsundere-Raws')
+		last, n := i, k+1
+		for ; n < len(r.unused) && r.unused[n] == last+2 && r.tags[last+1].Is(TagTypeDelim) && r.tags[last+1].Delim() == "-"; n++ {
+			last += 2
+		}
+		if !peek(r.tags, last+1, TagTypeDelim) || !strings.ContainsAny(r.tags[last+1].Delim(), "([{") {
+			continue
+		}
+		var sb strings.Builder
+		for j := i; j <= last; j++ {
+			sb.WriteString(r.tags[j].Text())
+		}
+		r.Group, r.unused = sb.String(), slices.Delete(r.unused, k, n)
+		return
 	}
 }
 

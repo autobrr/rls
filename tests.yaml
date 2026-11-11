@@ -2672,8 +2672,8 @@
   audio: "AAC"
   channels: "2.0"
   language: "MULTiSUB"
-  group: "Conan"
-  unused: "VARYG Meitantei"
+  group: "VARYG"
+  unused: "Meitantei Conan"
 "DI.Ray.S01.1080p.AMZN.WEB-DL.DDP2.0.H.264-NTb":
   type: "series"
   title: "DI Ray"
@@ -3471,6 +3471,17 @@
   bitdepth: "8BIT"
   audio: "DDP"
   group: "GROUP"
+"Show.S01.1080p.BluRay.Opus.2.0.x265-GRP (Alt Title)":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x265"
+  audio: "OPUS"
+  channels: "2.0"
+  group: "GRP"
+  unused: "Alt Title"
 "Show.S01.UHD.HDTV.x265-GRP":
   type: "series"
   title: "Show"
@@ -3574,6 +3585,18 @@
   episode: 2
   codec: "H.264"
   group: "GRP"
+"Show S01E04 VOSTFR 1080p WEB x264 AAC -Tsundere-Raws (Alt Title)":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 4
+  codec: "x264"
+  audio: "AAC"
+  language: "VOSTFR"
+  group: "Tsundere-Raws"
+  unused: "Alt Title"
 "[Group] Show - S01E04 - The Title [WEB-DL 1080p] [5D5E8524] (Alt Title)":
   type: "episode"
   title: "Show"
