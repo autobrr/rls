@@ -4050,6 +4050,16 @@
   episode: 2
   codec: "H.264"
   group: "GRP"
+"Show.S01E02.(The.Title).1080p.WEB.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "The Title"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  group: "GRP"
 "Show S01E04 VOSTFR 1080p WEB x264 AAC -Tsundere-Raws (Alt Title)":
   type: "episode"
   title: "Show"

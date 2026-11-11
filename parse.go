@@ -1541,8 +1541,9 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	}
 	// text inside a bracket that opened after the episode is a block of tags
 	// or another name for the show ('S02E06 [English Dub]', '- 05 (BS11
-	// 1080p)'), not the episode title
-	if depth > 0 {
+	// 1080p)'), not the episode title, unless it has the scene layout of one
+	// ('S01E02.(The.Title).1080p')
+	if depth > 0 && !(depth == 1 && parenTitle(r.tags, pos)) {
 		return pos
 	}
 	var offset int
@@ -1763,6 +1764,50 @@ loop:
 	}
 	// trim
 	return strings.TrimFunc(s, isTitleTrimDelim), i
+}
+
+// parenTitle reports whether the text at i is an episode title written in
+// parentheses in front of the tags, ie 'Show.S01E02.(The.Title).1080p.WEB'.
+// The episode is written with its season or as a date, the parentheses hold
+// nothing that was read as a tag, and a tag follows them outside any bracket.
+// A name that opens with a bracket or numbers its episode with no season is
+// not read that way, as there the parentheses hold another name for the show
+// ('[Group] Show - 09 (Other Name) 1080p').
+func parenTitle(tags []Tag, i int) bool {
+	var first int
+	for ; first < i && tags[first].Is(TagTypeWhitespace); first++ {
+	}
+	if tags[first].Is(TagTypeMeta) || tags[first].Is(TagTypeDelim) && strings.ContainsAny(tags[first].v[0], "[({") {
+		return false
+	}
+	if !strings.HasSuffix(tags[i-1].v[0], "(") {
+		return false
+	}
+	// the episode in front
+	ep := i - 1
+	for ; ep > 0 && !tags[ep].Is(TagTypeSeries, TagTypeDate); ep-- {
+	}
+	if tags[ep].Is(TagTypeSeries) && (tags[ep].v[1] == "" || !tags[ep].wroteEpisode()) {
+		return false
+	}
+	// seek the closing parenthesis
+	var letter bool
+	for ; i < len(tags) && !(tags[i].Is(TagTypeDelim) && strings.ContainsAny(tags[i].v[0], "()[]{}")); i++ {
+		// a word that was read as a tag is not a word of a title, which the
+		// year of '(2022 Airing)' is when another year follows
+		if !tags[i].Is(TagTypeDelim) && (!tags[i].Is(TagTypeText) || tags[i].Retyped()) {
+			return false
+		}
+		letter = letter || tags[i].Is(TagTypeText) && strings.ContainsFunc(tags[i].v[0], unicode.IsLetter)
+	}
+	// a tag follows, set off from the parenthesis
+	if !letter || i >= len(tags)-1 {
+		return false
+	}
+	if d := tags[i].v[0]; len(d) < 2 || d[0] != ')' || strings.ContainsAny(d[1:], "()[]{}") {
+		return false
+	}
+	return !tags[i+1].Is(TagTypeText, TagTypeDelim, TagTypeWhitespace, TagTypeMeta, TagTypeGroup, TagTypeExt)
 }
 
 // bracketDepth returns how many brackets are open after delim, when depth were
