@@ -1028,12 +1028,17 @@ func (b *TagBuilder) fixMusic(r *Release) {
 }
 
 // bareEpisode reports whether the tag at i is one episode written with no
-// season: '04', '00', 'E04', 'EP04' or 'Episode 04'. A range ('01-12', 'E01E02') is
-// not one episode, and half an episode ('21.5', 'Ep 5.5') has no absolute
-// number.
+// season: '04', '00', 'E04', 'EP04' or 'Episode 04'. A range ('01-12',
+// 'E01E02', 'E05-E07') is not one episode, and half an episode ('21.5', 'Ep
+// 5.5') has no absolute number.
 func bareEpisode(tags []Tag, i int) bool {
 	tag := tags[i]
 	if !tag.Is(TagTypeSeries) || len(tag.v) != 3 || tag.v[1] != "" || tag.v[2] == "" || tag.fraction() != "" {
+		return false
+	}
+	// one end of a range between two tags, the higher number last
+	if peek(tags, i+1, TagTypeDelim) && tags[i+1].rangeDelim() && peek(tags, i+2, TagTypeSeries) && tags[i+2].v[1] == "" && atoi(tags[i+2].val(2)) > atoi(tag.v[2]) ||
+		i >= 2 && tags[i-1].rangeDelim() && tags[i-2].Is(TagTypeSeries) && tags[i-2].v[1] == "" && atoi(tags[i-2].val(2)) < atoi(tag.v[2]) {
 		return false
 	}
 	return !(peek(tags, i+1, TagTypeDelim) && tags[i+1].v[0] == "." &&
