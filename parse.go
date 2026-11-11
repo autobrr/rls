@@ -1092,8 +1092,25 @@ func (b *TagBuilder) titles(r *Release) int {
 	return i
 }
 
-// movieTitles sets the titles for movies and series.
+// movieTitles sets the titles for movies.
 func (b *TagBuilder) movieTitles(r *Release) int {
+	i, from, to := b.yearTitles(r)
+	if from == to {
+		return i
+	}
+	// the subtitle is used. any text passed over in front of it is not
+	for ; i < from; i++ {
+		if r.tags[i].Is(TagTypeText) {
+			r.unused = append(r.unused, i)
+		}
+	}
+	return to
+}
+
+// yearTitles sets the title, and the subtitle from the text between a date
+// and the resolution. Returns the position after the title, and the start and
+// end of the subtitle, which are the same when there is none.
+func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 	var pos int
 	// seek to text
 	for ; pos < len(r.tags) && !r.tags[pos].Is(TagTypeText); pos++ {
@@ -1107,36 +1124,39 @@ func (b *TagBuilder) movieTitles(r *Release) int {
 	// check date position
 	date := pos
 	if date == len(r.tags) {
-		return b.boxTitle(r, start, offset)
+		return b.boxTitle(r, start, offset), 0, 0
 	}
 	// seek resolution
 	for pos = 0; pos < len(r.tags) && !r.tags[pos].Is(TagTypeResolution); pos++ {
 	}
 	resolution := pos
 	if resolution == len(r.tags) {
-		return b.boxTitle(r, start, offset)
+		return b.boxTitle(r, start, offset), 0, 0
 	}
 	// determine if all tags between date and resolution are either text, delimiter, cut, edition
 	hasSubtitle := date+1 < resolution-1
 	if !hasSubtitle {
-		return b.boxTitle(r, start, offset)
+		return b.boxTitle(r, start, offset), 0, 0
 	}
 	for pos = date + 1; pos < len(r.tags) && hasSubtitle && pos < resolution; pos++ {
 		hasSubtitle = hasSubtitle && r.tags[pos].Is(TagTypeDelim, TagTypeText, TagTypeCut, TagTypeEdition, TagTypeLanguage)
 	}
 	// capture subtitle
+	var from, to int
 	if hasSubtitle {
 		for pos = date + 1; pos < len(r.tags) && !r.tags[pos].Is(TagTypeText, TagTypeCut, TagTypeEdition); pos++ {
 		}
 		if pos < resolution-1 {
-			r.Subtitle, _ = b.title(r.tags[pos:resolution-1], TagTypeText, TagTypeCut, TagTypeEdition)
+			var n int
+			r.Subtitle, n = b.title(r.tags[pos:resolution-1], TagTypeText, TagTypeCut, TagTypeEdition)
+			from, to = pos, pos+n
 		}
 	}
 	// alternate subtitle delimiter
 	if i := strings.LastIndexByte(r.Title, '~'); i != -1 && r.Subtitle == "" {
 		r.Title, r.Subtitle = strings.TrimRightFunc(r.Title[:i], isTitleTrimDelim), strings.TrimLeftFunc(r.Title[i+1:], isTitleTrimDelim)
 	}
-	return min(start+offset, resolution)
+	return min(start+offset, resolution), from, to
 }
 
 // boxTitle sets the titles for boxes.
@@ -1163,7 +1183,7 @@ func (b *TagBuilder) boxTitle(r *Release, start, offset int) int {
 // episodeTitles sets the titles for episodes.
 func (b *TagBuilder) episodeTitles(r *Release) int {
 	// scan title
-	pos := b.movieTitles(r)
+	pos, _, _ := b.yearTitles(r)
 	typ := TagTypeSeries
 	if r.Month != 0 && r.Day != 0 {
 		typ = TagTypeDate
