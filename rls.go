@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"cmp"
 	"fmt"
+	"math"
 	"regexp"
 	"sort"
 	"strconv"
@@ -243,10 +244,13 @@ func (r Release) hasOther(values ...string) bool {
 
 // Tag is a release tag.
 type Tag struct {
-	typ   TagType
-	v     []string
-	f     taginfo.FindFunc
-	prev  TagType
+	typ TagType
+	v   []string
+	f   taginfo.FindFunc
+	// was is the type before the last As with wasBit set, and 0 for a tag
+	// that was never retyped. Keeping both in one field keeps the Tag the
+	// size it was.
+	was   TagType
 	prevf taginfo.FindFunc
 	// ninfo and info are the rows f finds for the captured value and for the
 	// normalized value. Both are fixed by typ, v and f, so they are resolved
@@ -322,15 +326,18 @@ func (tag Tag) As(typ TagType, f taginfo.FindFunc) Tag {
 		typ:   typ,
 		f:     f,
 		v:     tag.v,
-		prev:  tag.typ,
+		was:   tag.typ ^ wasBit,
 		prevf: tag.f,
 	}.resolve()
 }
 
-// Revert returns a copy of tag as the tag's previous type.
+// Revert returns a copy of tag as the tag's previous type. The copy does not
+// remember the type it had, so it is not Retyped. A tag that was never
+// retyped reverts to a whitespace tag, since that is what Prev reports for
+// it.
 func (tag Tag) Revert() Tag {
 	return Tag{
-		typ: tag.prev,
+		typ: tag.Prev(),
 		f:   tag.prevf,
 		v:   tag.v,
 	}.resolve()
@@ -346,10 +353,13 @@ func (tag Tag) Is(types ...TagType) bool {
 	return false
 }
 
-// Was returns true when tag's prev is of a type.
+// Was returns true when the tag's previous type is one of types. A tag that
+// was never retyped reports TagTypeWhitespace, as Prev does. Retyped tells
+// the two apart.
 func (tag Tag) Was(types ...TagType) bool {
+	prev := tag.Prev()
 	for _, typ := range types {
-		if tag.prev == typ {
+		if prev == typ {
 			return true
 		}
 	}
@@ -391,10 +401,31 @@ func (tag Tag) TagType() TagType {
 	return tag.typ
 }
 
-// Prev returns the tag's previous tag type.
+// Prev returns the tag's previous tag type. A tag that was never retyped
+// reports TagTypeWhitespace, which is the zero value, and so does a tag that
+// Revert returned. Prev cannot tell either from a tag that was whitespace
+// before. Retyped can.
 func (tag Tag) Prev() TagType {
-	return tag.prev
+	if tag.was == 0 {
+		return TagTypeWhitespace
+	}
+	return tag.was ^ wasBit
 }
+
+// Retyped reports whether the tag was given another type after it was read.
+// It is true for a tag that As returned, whatever type As gave it, and false
+// for a tag as the lexer made it, for the zero Tag and for a tag that Revert
+// returned. It answers what Prev() == TagTypeWhitespace cannot, because a tag
+// that was never retyped and a tag that was whitespace before give the same
+// Prev.
+func (tag Tag) Retyped() bool {
+	return tag.was != 0
+}
+
+// wasBit is set in Tag.was beside the previous type. It is the sign bit, so
+// that the one type a retyped tag cannot be told to have had is the lowest
+// int, where the plain "type plus one" would lose TagType(-1).
+const wasBit TagType = math.MinInt
 
 // InfoTitle retrieves the tag's title.
 func (tag Tag) InfoTitle() string {
@@ -606,10 +637,10 @@ func (tag Tag) Delim() string {
 func (tag Tag) Text() string {
 	// what was a date or a series reads as it was written
 	i := 1
-	switch tag.prev {
-	case TagTypeDate, TagTypeSeries:
+	switch tag.was {
+	case TagTypeDate ^ wasBit, TagTypeSeries ^ wasBit:
 		i = 0
-	case TagTypeChannels:
+	case TagTypeChannels ^ wasBit:
 		return tag.Channels()
 	}
 	if i < len(tag.v) {
@@ -621,7 +652,7 @@ func (tag Tag) Text() string {
 // TextReplace normalizes the text value and replaces the supplied string.
 func (tag Tag) TextReplace(old, newstr string, n int) string {
 	s := tag.Text()
-	if tag.prev == TagTypeChannels {
+	if tag.was == TagTypeChannels^wasBit {
 		return s
 	}
 	return strings.Replace(s, old, newstr, n)

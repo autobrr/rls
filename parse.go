@@ -701,7 +701,7 @@ func (b *TagBuilder) fixWords(r *Release) {
 		return r.tags[i].typ == TagTypeDelim && strings.Trim(r.tags[i].v[0], "._ ") == ""
 	}
 	word := func(i int) bool {
-		return r.tags[i].typ == TagTypeText && r.tags[i].prev == TagTypeWhitespace
+		return r.tags[i].typ == TagTypeText && !r.tags[i].Retyped()
 	}
 	side := func(i int) bool {
 		switch r.tags[i].typ {
