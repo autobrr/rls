@@ -207,3 +207,27 @@ func TestEpisodeZero(t *testing.T) {
 		t.Errorf("expected absolute 5 true, got: %d %t", episode, ok)
 	}
 }
+
+// TestSeriesEpisodesSeasonZero checks that an episode written with season 0
+// stays in it when another season was written before it, and that an episode
+// with no season after it is in season 0 too.
+func TestSeriesEpisodesSeasonZero(t *testing.T) {
+	tests := []struct {
+		name string
+		exp  [][]int
+	}{
+		{"[Group] Show - S04E29 (WEB 1080p) | Other Name - E88 - S00E36", [][]int{{0, 36}, {4, 29}, {4, 88}}},
+		{"Show.S04E29.S00E36.E37.1080p.WEB.h264-GRP", [][]int{{0, 36}, {0, 37}, {4, 29}}},
+		{"Show.S04E29.S00E36-E38.1080p.WEB.h264-GRP", [][]int{{0, 36}, {0, 37}, {0, 38}, {4, 29}}},
+		{"Show.S04E01-E03.1080p.WEB.h264-GRP", [][]int{{4, 1}, {4, 2}, {4, 3}}},
+		{"Show.S00E02-E04.1080p.WEB.h264-GRP", [][]int{{0, 2}, {0, 3}, {0, 4}}},
+		{"Show.S00E02-S00E04.1080p.WEB.h264-GRP", [][]int{{0, 2}, {0, 3}, {0, 4}}},
+		{"Show.S01E02-S01E04.1080p.WEB.h264-GRP", [][]int{{1, 2}, {1, 3}, {1, 4}}},
+		{"Show.S01E02-S02E04.1080p.WEB.h264-GRP", [][]int{{1, 2}, {2, 4}}},
+	}
+	for _, test := range tests {
+		if v := ParseString(test.name).SeriesEpisodes(); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
+			t.Errorf("%q: expected series episodes %v, got: %v", test.name, test.exp, v)
+		}
+	}
+}

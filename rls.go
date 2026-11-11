@@ -184,14 +184,18 @@ func (r Release) SeriesEpisodes() [][]int {
 			continue
 		}
 		series, _ := tag.Series()
+		// a tag that writes no season is in the season written before it,
+		// which a written season 0 is not ('S04E29 ... S00E36')
+		bare := tag.val(1) == ""
 		for k, episode := range tag.episodes(&fill) {
 			s := series
-			if s == 0 && last != -1 {
+			if bare && last != -1 {
 				s, _ = r.tags[last].Series()
 			}
-			// a hyphen between two episode tags makes a range ('E02-E04'),
-			// which runs from the last episode of the tag before the hyphen
-			if series == 0 && k == 0 && i >= 2 && r.tags[i-2].Is(TagTypeSeries) && fmt.Sprintf("%o", r.tags[i-1]) == "-" {
+			// a hyphen between two episode tags of one season makes a range
+			// ('E02-E04', 'S00E02-S00E04'), which runs from the last episode
+			// of the tag before the hyphen
+			if k == 0 && i >= 2 && r.tags[i-2].Is(TagTypeSeries) && (bare || tag.val(1) == r.tags[i-2].val(1)) && fmt.Sprintf("%o", r.tags[i-1]) == "-" {
 				if prev := r.tags[i-2].episodes(&none); len(prev) != 0 {
 					if first := prev[len(prev)-1] + 1; episode-first <= fill {
 						for j := first; j < episode; j++ {
@@ -203,7 +207,7 @@ func (r Release) SeriesEpisodes() [][]int {
 			}
 			v = append(v, []int{s, episode})
 		}
-		if series != 0 {
+		if !bare {
 			last = i
 		}
 	}
