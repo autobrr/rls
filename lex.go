@@ -301,7 +301,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 	lexer := NamedCaptureLexer(strs...)
 	mlt := regexp.MustCompile(`(?i)s(\d?\d)`)
 	mny := regexp.MustCompile(`(?i)[\-\._ ]?e(\d{1,5})`)
-	dsc := regexp.MustCompile(`(?i)^disc|disk|dvd|d`)
+	dsc := regexp.MustCompile(`(?i)^(?:disc|disk|dvd|d)`)
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			sourcef = findFunc(infos["source"]...)
@@ -711,7 +711,7 @@ func NewFrameRateLexer(strs ...string) Lexer {
 //	x - xXtype
 func NewDiscLexer(strs ...string) Lexer {
 	var sourcef, sizef taginfo.FindFunc
-	lexer, re := NamedCaptureLexer(strs...), regexp.MustCompile(`(?i)^dvd|cd|d|s|x`)
+	lexer, re := NamedCaptureLexer(strs...), regexp.MustCompile(`(?i)^(?:dvd|cd|d|s|x)`)
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			sourcef, sizef = findFunc(infos["source"]...), findFunc(infos["size"]...)
@@ -733,8 +733,10 @@ func NewDiscLexer(strs ...string) Lexer {
 						panic(fmt.Errorf("unknown capture group %q", v[l]))
 					}
 				}
-				if len(typ) != 0 {
-					typ = bytes.ToUpper(typ[:len(re.FindSubmatch(s)[0])])
+				// the type is the keyword its capture begins with ('x' of
+				// 'xdvd9')
+				if m := re.Find(typ); m != nil {
+					typ = typ[:len(m)]
 				}
 				switch string(typ) {
 				case "D", "S":
