@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -1352,6 +1353,16 @@ func (b *TagBuilder) unused(r *Release, i int) {
 			last := r.unused[n-1]
 			r.Group, r.unused = s, r.unused[:n-1]
 			b.widenGroup(r, last)
+		}
+	}
+	// a checksum in its own bracket with more of the name after it, ie
+	// '[Group] Show - 01 [1080p] [ABCD1234] (Alt Title)'
+	for k := len(r.unused) - 1; r.Sum == "" && k >= 0; k-- {
+		j := r.unused[k]
+		if s := r.tags[j].Text(); b.sum.MatchString(s) && strings.ContainsAny(s, "0123456789") &&
+			peek(r.tags, j-1, TagTypeDelim) && strings.HasSuffix(r.tags[j-1].Delim(), "[") &&
+			peek(r.tags, j+1, TagTypeDelim) && strings.HasPrefix(r.tags[j+1].Delim(), "]") {
+			r.Sum, r.unused = s, slices.Delete(r.unused, k, k+1)
 		}
 	}
 }

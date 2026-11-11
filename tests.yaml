@@ -3563,6 +3563,18 @@
   episode: 2
   codec: "H.264"
   group: "GRP"
+"[Group] Show - S01E04 - The Title [WEB-DL 1080p] [5D5E8524] (Alt Title)":
+  type: "episode"
+  title: "Show"
+  subtitle: "The Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 4
+  group: "Group"
+  site: "Group"
+  sum: "5D5E8524"
+  unused: "Alt Title"
 "Show.S01E05-02.1080p.WEB-GRP":
   type: "episode"
   title: "Show"
