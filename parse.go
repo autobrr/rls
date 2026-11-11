@@ -172,7 +172,12 @@ type Hint struct {
 // has no effect. DayFirst applies to the date tags before any builder sees
 // them, and Sports is kept for Event with any builder.
 func (p *TagParser) ParseHint(src []byte, h Hint) Release {
-	tags, end := p.Parse(src)
+	return p.parseHint(bytes.Clone(src), h)
+}
+
+// parseHint is ParseHint for a name that is the parser's to keep.
+func (p *TagParser) parseHint(src []byte, h Hint) Release {
+	tags, end := p.parse(src)
 	if h.DayFirst {
 		dayFirst(tags)
 	}
@@ -229,6 +234,15 @@ func (p *TagParser) SetBuilder(builder Builder) {
 
 // Parse parses tags in buf.
 func (p *TagParser) Parse(src []byte) ([]Tag, int) {
+	return p.parse(bytes.Clone(src))
+}
+
+// parse parses the tags of src, which is the parser's to keep: the tags hold
+// pieces of it and not copies. So it has to be bytes that nothing else holds
+// and nothing writes to from here on, which a copy of what the caller gave
+// is. The lexers of this package only read it. The tags keep it and the
+// working copy alive, and nothing of the caller's.
+func (p *TagParser) parse(src []byte) ([]Tag, int) {
 	// working buf
 	buf := make([]byte, len(src))
 	for i, c := range src {
@@ -273,7 +287,7 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 	if bytes.HasPrefix(src[i:n], p.ellip) {
 		return append(
 			start,
-			NewTag(TagTypeDelim, nil, p.ellip, p.ellip),
+			newTag(src, buf, TagTypeDelim, nil, p.ellip, p.ellip),
 		), end, i + len(p.ellip), n
 	} else if p.isDelim[src[i]] {
 		j := i + 1
@@ -282,7 +296,7 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 		}
 		return append(
 			start,
-			NewTag(TagTypeDelim, nil, src[i:j], src[i:j]),
+			newTag(src, buf, TagTypeDelim, nil, src[i:j], src[i:j]),
 		), end, j, n
 	}
 	// run all lexers
@@ -307,7 +321,7 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 	*notFirst = true
 	return append(
 		start,
-		NewTag(TagTypeText, nil, src[i:j], src[i:j]),
+		newTag(src, buf, TagTypeText, nil, src[i:j], src[i:j]),
 	), end, j, n
 }
 

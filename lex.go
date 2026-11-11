@@ -14,6 +14,19 @@ import (
 )
 
 // LexFunc is the signature for lexer funcs.
+//
+// The first two arguments are the name and its working copy. The lexers of
+// this package make tags whose values point into those two slices where the
+// value is a piece of one of them, and copy a value only when it is not. So
+// the slices must not change while the tags are in use:
+//
+//   - A TagParser gives its lexers slices of its own, copied from what the
+//     caller gave. A lexer of a caller's that runs in one must not write to
+//     either slice, since that would change tags made before it.
+//   - A Parser of another kind that calls the lexers of this package must
+//     give them slices it does not reuse or change afterwards.
+//
+// A lexer of a caller's that makes its tags with NewTag gets copies, as before.
 type LexFunc func([]byte, []byte, []Tag, []Tag, int, int) ([]Tag, []Tag, int, int, bool)
 
 // Lexer is the interface for lexers.
@@ -199,7 +212,7 @@ func NewTrimWhitespaceLexer() Lexer {
 				switch src[i] {
 				case '\t', '\n', '\f', '\r', ' ', 0xe2, 0xef:
 					if m := prefix.FindSubmatch(src[i:n]); m != nil {
-						start, i = append(start, NewTag(TagTypeWhitespace, nil, m...)), i+len(m[0])
+						start, i = append(start, newTag(src, buf, TagTypeWhitespace, nil, m...)), i+len(m[0])
 					}
 				}
 			}
@@ -207,7 +220,7 @@ func NewTrimWhitespaceLexer() Lexer {
 				switch src[n-1] {
 				case '\t', '\n', '\f', '\r', ' ', 0x90, 0x8f:
 					if m := suffix.FindSubmatch(src[i:n]); m != nil {
-						end, n = append(end, NewTag(TagTypeWhitespace, nil, m...)), n-len(m[0])
+						end, n = append(end, newTag(src, buf, TagTypeWhitespace, nil, m...)), n-len(m[0])
 					}
 				}
 			}
@@ -280,13 +293,13 @@ func NewDateLexer(strs ...string) Lexer {
 				if matched && last != nil {
 					return append(
 						start,
-						NewTag(TagTypeDate, nil, s, year, month, day, last),
+						newTag(src, buf, TagTypeDate, nil, s, year, month, day, last),
 					), end, i, n, true
 				}
 				if matched {
 					return append(
 						start,
-						NewTag(TagTypeDate, nil, s, year, month, day),
+						newTag(src, buf, TagTypeDate, nil, s, year, month, day),
 					), end, i, n, true
 				}
 			}
@@ -418,10 +431,10 @@ func NewSeriesLexer(strs ...string) Lexer {
 							l = append(l, m[1])
 						}
 					}
-					tags = append(tags, NewTag(TagTypeSeries, nil, l...))
+					tags = append(tags, newTag(src, buf, TagTypeSeries, nil, l...))
 				}
 				if len(version) != 0 {
-					tags = append(tags, NewTag(TagTypeVersion, nil, vtext, version))
+					tags = append(tags, newTag(src, buf, TagTypeVersion, nil, vtext, version))
 				}
 				if len(disc) != 0 {
 					disctyp := bytes.ToUpper(disc[:len(dsc.FindSubmatch(disc)[0])])
@@ -430,21 +443,21 @@ func NewSeriesLexer(strs ...string) Lexer {
 					case "DVD":
 						tags = append(
 							tags,
-							NewTag(TagTypeSource, sourcef, dtext[:len(disctyp)], disctyp),
-							NewTag(TagTypeDisc, nil, dtext[len(disctyp):], disctyp, num),
+							newTag(src, buf, TagTypeSource, sourcef, dtext[:len(disctyp)], disctyp),
+							newTag(src, buf, TagTypeDisc, nil, dtext[len(disctyp):], disctyp, num),
 						)
 					default:
-						tags = append(tags, NewTag(TagTypeDisc, nil, dtext, disctyp, num))
+						tags = append(tags, newTag(src, buf, TagTypeDisc, nil, dtext, disctyp, num))
 					}
 				}
 				// S01S02S03 ...
 				if m := mlt.FindAllSubmatch(multi, -1); m != nil {
 					for j := 0; j < len(m); j++ {
-						tags = append(tags, NewTag(TagTypeSeries, nil, append(m[j], nil)...))
+						tags = append(tags, newTag(src, buf, TagTypeSeries, nil, append(m[j], nil)...))
 					}
 				}
 				if len(series) == 4 && (bytes.HasPrefix(series, []byte{'1', '9'}) || bytes.HasPrefix(series, []byte{'2', '0'})) {
-					tags = append(tags, NewTag(TagTypeDate, nil, nil, series, nil, nil))
+					tags = append(tags, newTag(src, buf, TagTypeDate, nil, nil, series, nil, nil))
 				}
 				return append(
 					start,
@@ -480,7 +493,7 @@ func NewIDLexer() Lexer {
 					// ensure enough at least # of alphanumerics
 					case a == nil && len(d) > 4 && len(w) < 4,
 						len(a) > 1 && len(d) > 1 && (len(a)+len(d) > 4) && len(w) < 4:
-						return append(start, NewTag(TagTypeID, nil, src[i:i+len(m[0])], m[1])), end, i + len(m[0]), n, true
+						return append(start, newTag(src, buf, TagTypeID, nil, src[i:i+len(m[0])], m[1])), end, i + len(m[0]), n, true
 					}
 				}
 			}
@@ -503,9 +516,9 @@ func NewEpisodeLexer() Lexer {
 			// compare against src, and match "lookbehind": -[\-\._ ]{1,3}$
 			if behind(src[:i], '-', "-._ ", 1, 3) {
 				if m := re.FindSubmatch(src[i:n]); m != nil && !bytes.HasPrefix(src[i+len(m[1]):], []byte{','}) {
-					tags := []Tag{NewTag(TagTypeSeries, nil, src[i:i+len(m[1])+len(m[2])], nil, m[1])}
+					tags := []Tag{newTag(src, buf, TagTypeSeries, nil, src[i:i+len(m[1])+len(m[2])], nil, m[1])}
 					if len(m[3]) != 0 {
-						tags = append(tags, NewTag(TagTypeDelim, nil, m[3], m[3]))
+						tags = append(tags, newTag(src, buf, TagTypeDelim, nil, m[3], m[3]))
 					}
 					return append(start, tags...), end, i + len(m[0]), n, true
 				}
@@ -560,7 +573,7 @@ func NewEpisodeRangeLexer() Lexer {
 			if !ok {
 				return start, end, i, n, false
 			}
-			return append(start, NewTag(TagTypeSeries, nil, m[0], nil, nil, m[1], []byte{'-'}, m[3])), end, i + len(m[0]), n, true
+			return append(start, newTag(src, buf, TagTypeSeries, nil, m[0], nil, nil, m[1], []byte{'-'}, m[3])), end, i + len(m[0]), n, true
 		},
 	}
 }
@@ -588,7 +601,7 @@ func NewVersionLexer(strs ...string) Lexer {
 						panic(fmt.Errorf("unknown capture group %q", v[l]))
 					}
 				}
-				return append(start, NewTag(TagTypeVersion, nil, s, version)), end, i, n, true
+				return append(start, newTag(src, buf, TagTypeVersion, nil, s, version)), end, i, n, true
 			}
 			return start, end, i, n, false
 		},
@@ -623,12 +636,12 @@ func NewDiscSourceYearLexer(strs ...string) Lexer {
 				}
 				var tags []Tag
 				if len(disc) != 0 {
-					tags = append(tags, NewTag(TagTypeDisc, nil, disc, []byte{'X'}, disc))
+					tags = append(tags, newTag(src, buf, TagTypeDisc, nil, disc, []byte{'X'}, disc))
 				}
 				tags = append(
 					tags,
-					NewTag(TagTypeSource, sourcef, source, source),
-					NewTag(TagTypeDate, nil, year, year, nil, nil),
+					newTag(src, buf, TagTypeSource, sourcef, source, source),
+					newTag(src, buf, TagTypeDate, nil, year, year, nil, nil),
 				)
 				return append(start, tags...), end, i, n, true
 			}
@@ -704,9 +717,9 @@ func NewFrameRateLexer(strs ...string) Lexer {
 					return start, end, i, n, false
 				}
 				text := s[:len(resolution)]
-				start, s = append(start, NewTag(TagTypeResolution, resolutionf, text, text)), s[len(resolution):]
+				start, s = append(start, newTag(src, buf, TagTypeResolution, resolutionf, text, text)), s[len(resolution):]
 			}
-			return append(start, NewTag(TagTypeFrameRate, nil, s, rate)), end, j, m, true
+			return append(start, newTag(src, buf, TagTypeFrameRate, nil, s, rate)), end, j, m, true
 		},
 	}
 }
@@ -747,32 +760,32 @@ func NewDiscLexer(strs ...string) Lexer {
 				}
 				switch string(typ) {
 				case "D", "S":
-					return append(start, NewTag(TagTypeDisc, nil, s, typ, c)), end, j, k, true
+					return append(start, newTag(src, buf, TagTypeDisc, nil, s, typ, c)), end, j, k, true
 				case "DVDA", "DVD", "CD":
 					return append(start,
-						NewTag(TagTypeSource, sourcef, s[:len(typ)], typ, typ),
-						NewTag(TagTypeDisc, nil, s[len(typ):], typ, c),
+						newTag(src, buf, TagTypeSource, sourcef, s[:len(typ)], typ, typ),
+						newTag(src, buf, TagTypeDisc, nil, s[len(typ):], typ, c),
 					), end, j, k, true
 				case "X":
 					if sz := strings.ToUpper(string(s[len(c)+1:])); sz == "DVD9" {
 						return append(start,
-							NewTag(TagTypeDisc, nil, s[:len(c)+1], typ, c),
-							NewTag(TagTypeSize, sizef, s[len(c)+1:], s[len(c)+1:]),
+							newTag(src, buf, TagTypeDisc, nil, s[:len(c)+1], typ, c),
+							newTag(src, buf, TagTypeSize, sizef, s[len(c)+1:], s[len(c)+1:]),
 						), end, j, k, true
 					}
 					return append(start,
-						NewTag(TagTypeDisc, nil, s[:len(c)+1], typ, c),
-						NewTag(TagTypeSource, sourcef, s[len(c)+1:], s[len(c)+1:]),
+						newTag(src, buf, TagTypeDisc, nil, s[:len(c)+1], typ, c),
+						newTag(src, buf, TagTypeSource, sourcef, s[len(c)+1:], s[len(c)+1:]),
 					), end, j, k, true
 				case "Z":
 					return append(start,
-						NewTag(TagTypeDisc, nil, s[:len(c)+1], []byte{'X'}, c),
-						NewTag(TagTypeSize, sizef, s[len(c)+1:], z),
+						newTag(src, buf, TagTypeDisc, nil, s[:len(c)+1], []byte{'X'}, c),
+						newTag(src, buf, TagTypeSize, sizef, s[len(c)+1:], z),
 					), end, j, k, true
 				case "":
 					return append(start,
-						NewTag(TagTypeDisc, nil, s[:len(c)+1], []byte{'X'}, c),
-						NewTag(TagTypeSource, sourcef, s[len(c)+1:], x),
+						newTag(src, buf, TagTypeDisc, nil, s[:len(c)+1], []byte{'X'}, c),
+						newTag(src, buf, TagTypeSource, sourcef, s[len(c)+1:], x),
 					), end, j, k, true
 				default:
 					panic(fmt.Errorf("unknown type %q", typ))
@@ -859,9 +872,9 @@ func NewAudioLexer() Lexer {
 					}
 					m[0] = bytes.TrimSuffix(m[0], m[2])
 				}
-				start = append(start, NewTag(TagTypeAudio, audiof, m[0], m[1]))
+				start = append(start, newTag(src, buf, TagTypeAudio, audiof, m[0], m[1]))
 				if len(m[2]) != 0 {
-					start = append(start, NewTag(TagTypeChannels, channelsf, m[2], m[2]))
+					start = append(start, newTag(src, buf, TagTypeChannels, channelsf, m[2], m[2]))
 				}
 				return start, end, i + l, n, true
 			}
@@ -904,7 +917,7 @@ func NewGenreLexer() Lexer {
 				if m = re.FindSubmatch(src[i:n]); m != nil && lb.Match(src[:i+len(m[0])]) {
 					return append(
 						start,
-						NewTag(TagTypeGenre, genref, m...),
+						newTag(src, buf, TagTypeGenre, genref, m...),
 					), end, i + len(m[0]), n, true
 				}
 			}
@@ -914,7 +927,7 @@ func NewGenreLexer() Lexer {
 			if m = other.FindSubmatch(buf[i:n]); m != nil {
 				return append(
 					start,
-					NewTag(TagTypeGenre, genref, m...),
+					newTag(src, buf, TagTypeGenre, genref, m...),
 				), end, i + len(m[0]), n, true
 			}
 			return start, end, i, n, false
@@ -1057,19 +1070,19 @@ func NewGroupLexer() Lexer {
 				if k == 0 {
 					break
 				}
-				end, n = append(end, NewTag(TagTypeOther, nil, src[n-k:n], []byte(v))), n-k
+				end, n = append(end, newTag(src, buf, TagTypeOther, nil, src[n-k:n], []byte(v))), n-k
 			}
 			// special end tags on groups. the pattern opens with a literal
 			// underscore, so a name without one cannot match
 			if bytes.IndexByte(src[i:n], '_') != -1 {
 				if m := special.FindSubmatch(src[i:n]); m != nil {
-					end, n = append(end, NewTag(TagTypeOther, otherf, m...)), n-len(m[0])
+					end, n = append(end, newTag(src, buf, TagTypeOther, otherf, m...)), n-len(m[0])
 				}
 			}
 			// known groups
 			if knownGroupTail(src[i:n], lastRuns, lastMax, lastOK) {
 				if m := re.FindSubmatch(src[i:n]); m != nil {
-					return start, append(end, NewTag(TagTypeGroup, groupf, m...)), i, n - len(m[0]), true
+					return start, append(end, newTag(src, buf, TagTypeGroup, groupf, m...)), i, n - len(m[0]), true
 				}
 			}
 			// clamp to the first year
@@ -1087,8 +1100,8 @@ func NewGroupLexer() Lexer {
 					!inTag(src[:n], l+j) {
 					return start, append(
 						end,
-						NewTag(TagTypeGroup, nil, src[l+j+1:n], grp),
-						NewTag(TagTypeDelim, nil, src[l+j:l+j+1], []byte{delim}),
+						newTag(src, buf, TagTypeGroup, nil, src[l+j+1:n], grp),
+						newTag(src, buf, TagTypeDelim, nil, src[l+j:l+j+1], []byte{delim}),
 					), i, l + j, false
 				}
 			}
@@ -1380,11 +1393,11 @@ func NewMetaLexer(strs ...string) Lexer {
 					// Subs]')
 					t := bytes.TrimSpace(g[1])
 					if name, _, ok := bytes.Cut(t, []byte(" + ")); ok && leadTags.Match(t) && !leadTags.Match(name) && !notSite(name) {
-						start = append(start, NewTag(TagTypeMeta, nil, g[0], []byte(`site`), name))
+						start = append(start, newTag(src, buf, TagTypeMeta, nil, g[0], []byte(`site`), name))
 						i += len(g[0])
 						seen(`site`)
 					} else if bytes.ContainsAny(t, " +") && !leadTags.Match(t) {
-						start = append(start, NewTag(TagTypeMeta, nil, g[0], []byte(`site`), t))
+						start = append(start, newTag(src, buf, TagTypeMeta, nil, g[0], []byte(`site`), t))
 						i += len(g[0])
 						seen(`site`)
 					}
@@ -1432,9 +1445,9 @@ func NewMetaLexer(strs ...string) Lexer {
 				}
 				if matched {
 					if len(d) != 0 {
-						start, d = append(start, NewTag(TagTypeDelim, nil, d, d)), d[:0]
+						start, d = append(start, newTag(src, buf, TagTypeDelim, nil, d, d)), d[:0]
 					}
-					start = append(start, NewTag(TagTypeMeta, nil, m[0], []byte(k), v))
+					start = append(start, newTag(src, buf, TagTypeMeta, nil, m[0], []byte(k), v))
 					i = i + len(m[0]) - 1
 				} else if !delim.Match(src[i : i+1]) {
 					break
@@ -1473,9 +1486,9 @@ func NewMetaLexer(strs ...string) Lexer {
 				}
 				if matched {
 					if len(d) != 0 {
-						end, d = append(end, NewTag(TagTypeDelim, nil, d, d)), d[:0]
+						end, d = append(end, newTag(src, buf, TagTypeDelim, nil, d, d)), d[:0]
 					}
-					end = append(end, NewTag(TagTypeMeta, nil, m[0], []byte(k), v))
+					end = append(end, newTag(src, buf, TagTypeMeta, nil, m[0], []byte(k), v))
 					n = n - len(m[0]) + 1
 				} else if !delim.Match(src[n-1:n]) || src[n-1] == '+' && plusTag(src[i:n]) {
 					break
@@ -1487,7 +1500,7 @@ func NewMetaLexer(strs ...string) Lexer {
 			}
 			// backtrack remaining
 			if len(d) != 0 {
-				end = append(end, NewTag(TagTypeDelim, nil, d, d))
+				end = append(end, newTag(src, buf, TagTypeDelim, nil, d, d))
 			}
 			return start, end, i, n, true
 		},
@@ -1541,12 +1554,12 @@ func NewExtLexer() Lexer {
 					return start, end, i, n, false
 				}
 				if m := re.FindSubmatch(src[i0:n]); m != nil {
-					return start, append(end, NewTag(TagTypeExt, extf, m...)), i, n - len(m[0]), true
+					return start, append(end, newTag(src, buf, TagTypeExt, extf, m...)), i, n - len(m[0]), true
 				}
 				return start, end, i, n, false
 			}
 			if m := re.FindSubmatch(src[i:n]); m != nil {
-				return start, append(end, NewTag(TagTypeExt, extf, m...)), i, n - len(m[0]), true
+				return start, append(end, newTag(src, buf, TagTypeExt, extf, m...)), i, n - len(m[0]), true
 			}
 			return start, end, i, n, false
 		},
@@ -1586,8 +1599,8 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 				slices.ContainsFunc(start, func(tag Tag) bool { return !tag.Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) }) {
 				return append(
 					start,
-					NewTag(TagTypeSource, f, src[i:i+2], src[i:i+2]),
-					NewTag(TagTypeOther, otherf, src[i+2:k], src[i+2:k]),
+					newTag(src, buf, TagTypeSource, f, src[i:i+2], src[i:i+2]),
+					newTag(src, buf, TagTypeOther, otherf, src[i+2:k], src[i+2:k]),
 				), end, k, n, true
 			}
 			if !pf.maybe(buf, i, n) {
@@ -1600,10 +1613,10 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 					return start, end, i, n, false
 				}
 				var v [20][]byte
-				return append(start, NewTag(typ, f, mt.values(v[:], src[i:e], buf[i:e], row, sub)...)), end, e, n, true
+				return append(start, newTag(src, buf, typ, f, mt.values(v[:], src[i:e], buf[i:e], row, sub)...)), end, e, n, true
 			}
 			if m := re.FindSubmatch(buf[i:n]); m != nil {
-				return append(start, NewTag(typ, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
+				return append(start, newTag(src, buf, typ, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
 			}
 			return start, end, i, n, false
 		},
@@ -1657,12 +1670,12 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 				if e != value {
 					return append(
 						start,
-						NewTag(typ, f, src[i:value], src[i:value]),
-						NewTag(TagTypeDelim, nil, src[value:e], src[value:e]),
+						newTag(src, buf, typ, f, src[i:value], src[i:value]),
+						newTag(src, buf, TagTypeDelim, nil, src[value:e], src[value:e]),
 					), end, e, n, true
 				}
 				var v [20][]byte
-				return append(start, NewTag(typ, f, mt.values(v[:], src[i:e], src[i:e], row, sub)...)), end, e, n, true
+				return append(start, newTag(src, buf, typ, f, mt.values(v[:], src[i:e], src[i:e], row, sub)...)), end, e, n, true
 			}
 			if m := re.FindSubmatch(src[i:n]); m != nil {
 				if len(m[0]) != len(m[1]) && !tagDelim(m[0][len(m[1])]) {
@@ -1673,11 +1686,11 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 					v, delim := src[i:i+len(m[1])], src[i+len(m[1]):i+len(m[0])]
 					return append(
 						start,
-						NewTag(typ, f, [][]byte{v, v}...),
-						NewTag(TagTypeDelim, nil, [][]byte{delim, delim}...),
+						newTag(src, buf, typ, f, [][]byte{v, v}...),
+						newTag(src, buf, TagTypeDelim, nil, [][]byte{delim, delim}...),
 					), end, i + len(m[0]), n, true
 				}
-				return append(start, NewTag(typ, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
+				return append(start, newTag(src, buf, typ, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
 			}
 			return start, end, i, n, false
 		},

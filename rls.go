@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"unicode"
 	"unicode/utf8"
+	"unsafe"
 
 	"github.com/autobrr/rls/taginfo"
 	"golang.org/x/text/transform"
@@ -98,6 +99,10 @@ func Parse(src []byte) Release {
 
 // ParseString creates a release from src
 func ParseString(src string) Release {
+	// the one copy of the name that the tags of the release share
+	if p, ok := DefaultParser.(*TagParser); ok {
+		return p.builder.Build(p.parse([]byte(src)))
+	}
 	return DefaultParser.ParseRelease([]byte(src))
 }
 
@@ -118,6 +123,9 @@ func ParseHint(src []byte, h Hint) Release {
 // it. As with ParseHint, the hint is ignored when DefaultParser has no
 // ParseHint method.
 func ParseStringHint(src string, h Hint) Release {
+	if p, ok := DefaultParser.(*TagParser); ok {
+		return p.parseHint([]byte(src), h)
+	}
 	return ParseHint([]byte(src), h)
 }
 
@@ -603,6 +611,44 @@ func NewTag(typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
 	}.resolve()
 }
 
+// newTag is NewTag for the lexers of this package. A value whose bytes lie in
+// src or in buf becomes a string that shares their memory, where NewTag copies
+// it, and a value from anywhere else is copied. A TagParser hands its lexers a
+// src and a buf of its own, so the tags of a parse hold one copy of the name
+// between them. Nothing may write to either once a tag points into it, which
+// the lexers of this package do not, and a lexer of a caller's must not.
+func newTag(src, buf []byte, typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
+	if len(b) < 2 {
+		panic("must provide at least 2 values to NewTag")
+	}
+	v := make([]string, len(b))
+	for i := range b {
+		switch {
+		case len(b[i]) == 0:
+		case i > 0 && len(b[i]) == len(b[i-1]) && &b[i][0] == &b[i-1][0]:
+			v[i] = v[i-1]
+		case within(src, b[i]), within(buf, b[i]):
+			v[i] = unsafe.String(&b[i][0], len(b[i]))
+		default:
+			v[i] = string(b[i])
+		}
+	}
+	return Tag{
+		typ: typ,
+		v:   v,
+		f:   f,
+	}.resolve()
+}
+
+// within reports whether the bytes of b, which is not empty, are bytes of a.
+func within(a, b []byte) bool {
+	if len(a) == 0 {
+		return false
+	}
+	p, base := uintptr(unsafe.Pointer(&b[0])), uintptr(unsafe.Pointer(&a[0]))
+	return base <= p && p-base+uintptr(len(b)) <= uintptr(len(a))
+}
+
 // ParseTags parses tags from src.
 func ParseTags(src []byte) ([]Tag, int) {
 	return DefaultParser.Parse(src)
@@ -610,6 +656,9 @@ func ParseTags(src []byte) ([]Tag, int) {
 
 // ParseTagsString parses tags from src.
 func ParseTagsString(src string) ([]Tag, int) {
+	if p, ok := DefaultParser.(*TagParser); ok {
+		return p.parse([]byte(src))
+	}
 	return DefaultParser.Parse([]byte(src))
 }
 
