@@ -100,7 +100,7 @@ func (s *ReleaseScanner) Scan(ctx context.Context, scanner Scanner) <-chan *Scan
 		}
 		return scanner.Err()
 	})
-	for i := 0; i < s.workers; i++ {
+	for i := range max(s.workers, 1) {
 		eg.Go(func(worker int) func() error {
 			return func() error {
 				return s.run(ctx, worker, in, out)
@@ -210,7 +210,8 @@ func (err *ScanRecoverError) Error() string {
 // ReleaseScannerOption is a release scanner option.
 type ReleaseScannerOption func(*ReleaseScanner)
 
-// WithWorkers is a release scanner option to set the number of workers.
+// WithWorkers is a release scanner option to set the number of workers. A
+// number below 1 gives one worker.
 func WithWorkers(workers int) ReleaseScannerOption {
 	return func(scn *ReleaseScanner) {
 		scn.workers = workers

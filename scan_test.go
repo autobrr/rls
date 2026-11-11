@@ -188,6 +188,25 @@ func TestScanner(t *testing.T) {
 	}
 }
 
+// TestScanner_noWorkers checks that a scanner given no workers still scans,
+// with one. Before, nothing read the lines and the output channel stayed open
+// until the context ended.
+func TestScanner_noWorkers(t *testing.T) {
+	const n = 20
+	lines := strings.Repeat("The.Matrix.1999.1080p.BluRay.x264-GRP\n", n)
+	for _, workers := range []int{0, -1} {
+		s := NewScanner(WithWorkers(workers))
+		if v := collect(t, s.ScanReader(t.Context(), strings.NewReader(lines)), 10*time.Second); len(v) != n {
+			t.Errorf("workers %d: expected %d results, got: %d", workers, n, len(v))
+		}
+	}
+	var s ReleaseScanner
+	s.parser = DefaultParser
+	if v := collect(t, s.ScanReader(t.Context(), strings.NewReader(lines)), 10*time.Second); len(v) != n {
+		t.Errorf("zero value: expected %d results, got: %d", n, len(v))
+	}
+}
+
 // TestScanner_panic checks that a release which panics the parser does not
 // retire the worker that hit it. Before this was fixed, `workers` panicking
 // lines retired every worker, the producer then blocked forever, and the out
