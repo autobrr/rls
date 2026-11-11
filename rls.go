@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -183,6 +184,146 @@ func (r Release) SeriesEpisodes() [][]int {
 		return v[i][0] < v[j][0]
 	})
 	return v
+}
+
+// HasSeason reports whether the name gives a season, which season 0 is
+// ('S00E05'). The Series field cannot tell a season 0 from none, and
+// HasSeason answers from the tags. A Release built by hand with a Series has
+// a season too.
+func (r Release) HasSeason() bool {
+	if r.Series != 0 {
+		return true
+	}
+	for _, tag := range r.tags {
+		if tag.typ == TagTypeSeries && tag.val(1) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+// HasEpisode reports whether the name gives an episode, which episode 0 and
+// the episodes of a range are. So 'S01E00', '[Grp] Show - 00' and the batch
+// '[Grp] Show - 01-12' have an episode though Episode is 0, and the season
+// pack 'Show.S01' has none.
+func (r Release) HasEpisode() bool {
+	if r.Episode != 0 {
+		return true
+	}
+	for _, tag := range r.tags {
+		if tag.typ == TagTypeSeries && tag.wroteEpisode() {
+			return true
+		}
+	}
+	return false
+}
+
+// Seasons returns the seasons the name gives, each once and in order. Two
+// seasons written with no episode and a bare hyphen between them are a range
+// ('S01-S03'), and the seasons in between are included, up to maxRangeFill of
+// them. A Release built by hand with a Series and no tags gives that season.
+func (r Release) Seasons() []int {
+	var v []int
+	fill := maxRangeFill
+	for i, tag := range r.tags {
+		if tag.typ != TagTypeSeries || tag.val(1) == "" {
+			continue
+		}
+		season := atoi(tag.val(1))
+		// the season before starts a range when its text ends in the hyphen
+		// ('S01-' of 'S01-S03'), or when a hyphen alone stands between the two
+		// ('S01 - S03')
+		var start Tag
+		switch {
+		case i >= 2 && r.tags[i-1].typ == TagTypeDelim && strings.Trim(r.tags[i-1].val(0), "._ ") == "-":
+			start = r.tags[i-2]
+		case i >= 1 && strings.HasSuffix(r.tags[i-1].val(0), "-"):
+			start = r.tags[i-1]
+		}
+		if start.typ == TagTypeSeries && start.val(1) != "" && !start.wroteEpisode() && !tag.wroteEpisode() {
+			if prev := atoi(start.val(1)); prev < season-1 && season-prev-1 <= fill {
+				for j := prev + 1; j < season; j++ {
+					v = append(v, j)
+				}
+				fill -= season - prev - 1
+			}
+		}
+		v = append(v, season)
+	}
+	if v == nil && r.Series != 0 {
+		return []int{r.Series}
+	}
+	slices.Sort(v)
+	return slices.Compact(v)
+}
+
+// EpisodeRange returns the first and last episode when the name gives more
+// than one ('S01E05E06', 'S01E02-04', '01-12'). The episodes are those of the
+// first season the name gives, the one in Series: 'S01E01.S02E01' is not a
+// range. When a tag writes a season and an episode together ('S23E19'), an
+// episode written without a season counts only as an 'E06' continuation, so
+// 'S23E19.Episode.1174' is one episode under two numberings. The same episode
+// written twice is one episode. The ends of a range come back however wide it
+// is.
+func (r Release) EpisodeRange() (first, last int, ok bool) {
+	scheme := false
+	for _, tag := range r.tags {
+		if tag.typ == TagTypeSeries && tag.val(1) != "" && tag.wroteEpisode() {
+			scheme = true
+			break
+		}
+	}
+	// cur is the season the nearest earlier tag wrote, which an episode
+	// written without one is in
+	cur, season, found := 0, 0, false
+	for _, tag := range r.tags {
+		if tag.typ != TagTypeSeries {
+			continue
+		}
+		s := cur
+		switch {
+		case tag.val(1) != "":
+			s = atoi(tag.val(1))
+			cur = s
+		case scheme && !tag.continuation():
+			continue
+		}
+		for _, b := range tag.rest(2) {
+			if b == "" || b == "-" {
+				continue
+			}
+			episode := atoi(b)
+			switch {
+			case !found:
+				season, first, last, found = s, episode, episode, true
+			case s == season:
+				first, last = min(first, episode), max(last, episode)
+			}
+		}
+	}
+	if !found || first == last {
+		return 0, 0, false
+	}
+	return first, last, true
+}
+
+// wroteEpisode reports whether a series tag writes an episode, which a season
+// pack ('S01') does not.
+func (tag Tag) wroteEpisode() bool {
+	for _, b := range tag.rest(2) {
+		if b != "" && b != "-" {
+			return true
+		}
+	}
+	return false
+}
+
+// continuation reports whether a series tag is written as 'E' and digits
+// ('E06' of 'S01E05-E06'), which continues the season and episode before it
+// rather than numbering the episode a second way ('Episode.1174').
+func (tag Tag) continuation() bool {
+	s := tag.val(0)
+	return len(s) >= 2 && (s[0] == 'E' || s[0] == 'e') && '0' <= s[1] && s[1] <= '9'
 }
 
 // Unused returns text tags not used in titles.

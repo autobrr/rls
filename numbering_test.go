@@ -1,0 +1,153 @@
+package rls
+
+import (
+	"slices"
+	"testing"
+)
+
+// numbering is what HasSeason, HasEpisode, Seasons and EpisodeRange give for
+// a release.
+type numbering struct {
+	season, episode bool
+	seasons         []int
+	first, last     int
+	ok              bool
+}
+
+func numberingOf(r Release) numbering {
+	first, last, ok := r.EpisodeRange()
+	return numbering{
+		season:  r.HasSeason(),
+		episode: r.HasEpisode(),
+		seasons: r.Seasons(),
+		first:   first,
+		last:    last,
+		ok:      ok,
+	}
+}
+
+func TestNumbering(t *testing.T) {
+	tests := []struct {
+		name string
+		exp  numbering
+	}{
+		// one season, one episode
+		{"Show.S01E02.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}}},
+		// a season 0 written
+		{"Show.S00E05.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{0}}},
+		// an episode 0 written
+		{"Show.S01E00.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}}},
+		// episodes 0 and 1
+		{"Show.S01E00E01.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}, first: 0, last: 1, ok: true}},
+		// a season pack
+		{"Show.S01.1080p.WEB.h264-GRP", numbering{season: true, seasons: []int{1}}},
+		// ranges
+		{"Show.S01E05E06.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}, first: 5, last: 6, ok: true}},
+		{"Show.S01E02-04.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}, first: 2, last: 4, ok: true}},
+		{"Show.S01E02-E04.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}, first: 2, last: 4, ok: true}},
+		{"Show.S00E02-E05.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{0}, first: 2, last: 5, ok: true}},
+		// the two ends of a range that is too wide for SeriesEpisodes to fill
+		{"Show.S01E1-E99999.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}, first: 1, last: 99999, ok: true}},
+		// one episode under two numberings
+		{"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{23}}},
+		// one episode in two seasons is not a range
+		{"Show.S01E01.S02E01.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1, 2}}},
+		// the episodes are those of the season written first, the one in Series
+		{"Show.S02E01.S01E05-E06.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1, 2}}},
+		{"Show.S02E01E02.S01E05.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1, 2}, first: 1, last: 2, ok: true}},
+		// the same episode twice in a path
+		{"Show.S11E11-GRP/Show.S11E11-GRP.mkv", numbering{season: true, episode: true, seasons: []int{11}}},
+		// no season, one episode
+		{"[Grp] Show - 05 [1080p].mkv", numbering{episode: true}},
+		{"[Grp] Show - 00 [1080p].mkv", numbering{episode: true}},
+		{"Show.E05.1080p.WEB.h264-GRP", numbering{episode: true}},
+		{"Show.Ep.07.1080p.WEB.h264-GRP", numbering{episode: true}},
+		{"Show.Episode.15.1080p.WEB.h264-GRP", numbering{episode: true}},
+		// no season, a batch
+		{"[Grp] Show - 01-12 [1080p]", numbering{episode: true, first: 1, last: 12, ok: true}},
+		{"[Grp] Show (01-12) [1080p]", numbering{episode: true, first: 1, last: 12, ok: true}},
+		// a season, then a batch in it
+		{"[Grp] Show S2 - 01-12 [1080p]", numbering{season: true, episode: true, seasons: []int{2}, first: 1, last: 12, ok: true}},
+		// a season, then one episode in it
+		{"[Grp] Show 2nd Season - 04 [1080p].mkv", numbering{season: true, episode: true, seasons: []int{2}}},
+		// several seasons, no episode
+		{"Show.S01S02S03.1080p.BluRay.x264-GRP", numbering{season: true, seasons: []int{1, 2, 3}}},
+		{"Show.S01-S03.1080p.BluRay.x264-GRP", numbering{season: true, seasons: []int{1, 2, 3}}},
+		{"Show.S01-S10.1080p.BluRay.x264-GRP", numbering{season: true, seasons: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}}},
+		{"Show.S00-S02.1080p.BluRay.x264-GRP", numbering{season: true, seasons: []int{0, 1, 2}}},
+		{"Show.Season.1-Season.3.1080p.WEB-DL.x264-GRP", numbering{season: true, seasons: []int{1, 2, 3}}},
+		{"Show S01 - S03 1080p BluRay x264-GRP", numbering{season: true, seasons: []int{1, 2, 3}}},
+		// two seasons that are not a range
+		{"Show.S01S03.1080p.BluRay.x264-GRP", numbering{season: true, seasons: []int{1, 3}}},
+		// a season and then an episode of a later one is not a range of seasons
+		{"Show.S01-S03E05.1080p.BluRay.x264-GRP", numbering{season: true, episode: true, seasons: []int{1, 3}}},
+		// season 1 episode 5
+		{"Show.1x05.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}}},
+		// the parser reads the year as the season and the round as the episode
+		{"Formula1.2024x05.Miami.Grand.Prix.Race.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{2024}}},
+		// dated, and a movie
+		{"Show.2024.10.13.1080p.WEB.h264-GRP", numbering{}},
+		{"Movie.2020.1080p.BluRay.x264-GRP", numbering{}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			r := ParseString(test.name)
+			if got := numberingOf(r); !equalNumbering(got, test.exp) {
+				t.Errorf("got %+v, expected %+v (%e)", got, test.exp, r)
+			}
+		})
+	}
+}
+
+func TestNumberingByHand(t *testing.T) {
+	// a caller clears the fields of a parsed release, and the tags still
+	// give the season and the episode
+	cleared := ParseString("Show.S01E02.1080p.WEB.h264-GRP")
+	cleared.Series, cleared.Episode = 0, 0
+	tests := []struct {
+		name string
+		r    Release
+		exp  numbering
+	}{
+		{"zero", Release{}, numbering{}},
+		{"series", Release{Series: 3}, numbering{season: true, seasons: []int{3}}},
+		{"episode", Release{Episode: 4}, numbering{episode: true}},
+		{"series and episode", Release{Series: 1, Episode: 2}, numbering{season: true, episode: true, seasons: []int{1}}},
+		{"cleared", cleared, numbering{season: true, episode: true, seasons: []int{1}}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := numberingOf(test.r); !equalNumbering(got, test.exp) {
+				t.Errorf("got %+v, expected %+v", got, test.exp)
+			}
+		})
+	}
+}
+
+func TestNumberingAllocs(t *testing.T) {
+	for _, name := range []string{
+		"Show.S01E02-E04.1080p.WEB.h264-GRP",
+		"Show.S01-S03.1080p.BluRay.x264-GRP",
+		"[Grp] Show - 01-12 [1080p]",
+	} {
+		r := ParseString(name)
+		for _, test := range []struct {
+			name string
+			max  float64
+			f    func()
+		}{
+			{"HasSeason", 0, func() { _ = r.HasSeason() }},
+			{"HasEpisode", 0, func() { _ = r.HasEpisode() }},
+			{"EpisodeRange", 0, func() { _, _, _ = r.EpisodeRange() }},
+		} {
+			if n := testing.AllocsPerRun(100, test.f); n > test.max {
+				t.Errorf("%s: %s allocates %v times, expected at most %v", name, test.name, n, test.max)
+			}
+		}
+	}
+}
+
+func equalNumbering(a, b numbering) bool {
+	return a.season == b.season && a.episode == b.episode && slices.Equal(a.seasons, b.seasons) &&
+		a.first == b.first && a.last == b.last && a.ok == b.ok
+}
