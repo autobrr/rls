@@ -634,6 +634,24 @@ func NewFrameRateLexer(strs ...string) Lexer {
 			resolutionf = findFunc(infos["resolution"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			// both patterns are digits and then 'fps', or a 'p' or 'i' with
+			// a digit after it, which few of the numbers in a name have
+			k := i
+			for k < n && (buf[k] >= '0' && buf[k] <= '9' || buf[k] == '.') {
+				k++
+			}
+			if k == i || k+1 >= n {
+				return start, end, i, n, false
+			}
+			switch buf[k] | 0x20 {
+			case 'f':
+			case 'p', 'i':
+				if buf[k+1] < '0' || buf[k+1] > '9' {
+					return start, end, i, n, false
+				}
+			default:
+				return start, end, i, n, false
+			}
 			s, v, j, m, ok := lexer(src, buf, i, n)
 			if !ok {
 				return start, end, i, n, false
