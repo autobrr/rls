@@ -663,10 +663,11 @@
   group: "ZQ"
   ext: "mkv"
 "Der.Denver.Clan.Staffel4.DVD7.German.FS.PAL.DVDR-RSG":
-  type: "movie"
-  title: "Der Denver Clan Staffel4"
+  type: "series"
+  title: "Der Denver Clan"
   source: "DVD"
   resolution: "576p"
+  series: 4
   disc: "DVD7"
   other: "FS"
   language: "GERMAN"
@@ -4360,6 +4361,15 @@
   version: "v2"
   group: "Group"
   site: "Group"
+"Show.Staffel.2.German.1080p.WEB.x264-GRP":
+  type: "series"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 2
+  codec: "x264"
+  language: "GERMAN"
+  group: "GRP"
 "Show.S02E03v2.1080p.WEB.H.264-GRP":
   type: "episode"
   title: "Show"
@@ -4369,6 +4379,16 @@
   episode: 3
   version: "v2"
   codec: "H.264"
+  group: "GRP"
+"Show.Staffel02.Folge05.German.720p.HDTV.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "HDTV"
+  resolution: "720p"
+  series: 2
+  episode: 5
+  codec: "x264"
+  language: "GERMAN"
   group: "GRP"
 "[Group] Show - S02E06 [English Dub] [WEB-DL 1080p] [30E46A21]":
   type: "episode"

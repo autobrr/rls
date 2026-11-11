@@ -497,6 +497,38 @@ func TestHalfEpisodeTags(t *testing.T) {
 	}
 }
 
+// TestGermanSeason checks the German words for a season and an episode, and
+// the names in which they are something else.
+func TestGermanSeason(t *testing.T) {
+	tests := []struct {
+		name            string
+		series, episode int
+		typ             Type
+	}{
+		{"Der.Denver.Clan.Staffel4.DVD7.German.FS.PAL.DVDR-RSG", 4, 0, Series},
+		{"Show.Staffel.2.German.1080p.WEB.x264-GRP", 2, 0, Series},
+		{"Show.Staffel02.Folge05.German.720p.HDTV.x264-GRP", 2, 5, Episode},
+		{"Show.Staffel.2.Folge.5.German.720p.HDTV.x264-GRP", 2, 5, Episode},
+		// the parts of an audio drama are numbered with the word, and its
+		// names are music releases
+		{"Die_Drei_Fragezeichen-Folge_225-Die_Nacht_der_Hexen-DE-2023-VOiCE", 0, 0, Music},
+		{"Artist-Folge_2-DE-2020-GRP", 0, 0, Music},
+		// a relay
+		{"Leichtathletik.EM.2024.Staffel.4.x.100m.Frauen.German.720p.HDTV.x264-GRP", 0, 0, Movie},
+		// a year
+		{"Die.Staffel.2020.German.1080p.BluRay.x264-GRP", 0, 0, Movie},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if r.Series != test.series || r.Episode != test.episode || r.Type != test.typ {
+			t.Errorf("%q: expected series %d, episode %d, type %s, got: %d, %d, %s", test.name, test.series, test.episode, test.typ, r.Series, r.Episode, r.Type)
+		}
+		if s := fmt.Sprintf("%o", r); s != test.name {
+			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
+	}
+}
+
 func TestEpisodeSpans(t *testing.T) {
 	tests := []struct {
 		name string

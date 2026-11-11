@@ -103,15 +103,15 @@ func DefaultLexers() []Lexer {
 			`(?i)^(?P<s>[0-8]?\d)x(?P<e>\d{1,3})\b`,
 			// S01 - 02v3, S07-06, s03-5v.9
 			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]{1,3}(?P<e>\d{1,5})(?:[\-\._ ]{1,3}(?P<v>v\d+(?:\.\d+){0,2}))?\b`,
-			// Season.01.Episode.02, Series.01.Ep.02, Series.01, Season.01, and
-			// Seasons.01 in front of the end of a range
-			`(?i)^(?:series|seasons?|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
+			// Season.01.Episode.02, Series.01.Ep.02, Series.01, Season.01,
+			// Staffel.01, and Seasons.01 in front of the end of a range
+			`(?i)^(?:series|seasons?|staffel|s)[\-\._ ]?(?P<s>[0-8]?\d)(?:[\-\._ ]?(?:episode|ep)(?P<e>\d{1,5}))?\b`,
 			// 2nd Season, 3rd.Season
 			`(?i)^(?P<s>[1-9]\d?)(?:st|nd|rd|th)[\-\._ ]season\b`,
 			// Vol.1.No.2, vol1no2
 			`(?i)^vol(?:ume)?[\-\._ ]?(?P<s>\d{1,3})(?:[\-\._ ]?(?:number|no)[\-\._ ]?(?P<e>\d{1,5}))\b`,
-			// Episode 15, E009, Ep. 007, EP07, Ep07v2, Ep.05-07, Ep 05 ~ 07, Ep 5.5, EP1156-1170
-			`(?i)^e(?:p(?:isode)?[\-\._ ]{0,3})?(?P<e>\d{1,5})(?:(?P<v>v\d+)|(?P<x>\.\d)|(?P<r>[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3}|[\-~]\d{4}))?\b`,
+			// Episode 15, E009, Ep. 007, EP07, Ep07v2, Ep.05-07, Ep 05 ~ 07, Ep 5.5, EP1156-1170, Folge 15
+			`(?i)^(?:e(?:p(?:isode)?[\-\._ ]{0,3})?|folge[\-\._ ]{0,3})(?P<e>\d{1,5})(?:(?P<v>v\d+)|(?P<x>\.\d)|(?P<r>[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3}|[\-~]\d{4}))?\b`,
 			// 10v1.7, 13v2, 24.5v2
 			`(?i)^(?P<e>\d{1,5})(?P<x>\.\d)?(?P<v>v[\-\._ ]?\d+(?:\.\d){0,2})\b`,
 			// S01.Disc02, s01D3, Series.01.Disc.02, S02DVD3
@@ -371,6 +371,26 @@ func NewSeriesLexer(strs ...string) Lexer {
 				if len(series) == 0 && len(episode) == 4 && len(s) > 5 && (s[1] == 'p' || s[1] == 'P') && s[2] == episode[0] &&
 					(episode[0] == '1' && episode[1] == '9' || episode[0] == '2' && episode[1] == '0') {
 					return start, end, i - len(s), n, false
+				}
+				// 'Folge 05' is an episode after 'Staffel 02'. On its own it
+				// numbers the parts of an audio drama, whose names are music
+				// releases ('Artist-Folge_225-Title-DE-2023-GRP'). And
+				// 'Staffel 4 x 100m' is a relay
+				if len(s) > 5 {
+					switch s[0] {
+					case 'f', 'F':
+						k := len(start) - 1
+						for k >= 0 && start[k].Is(TagTypeDelim, TagTypeWhitespace) {
+							k--
+						}
+						if k < 0 || !start[k].Is(TagTypeSeries) || start[k].val(1) == "" || start[k].wroteEpisode() {
+							return start, end, i - len(s), n, false
+						}
+					case 's', 'S':
+						if k := i + 1; (s[1] == 't' || s[1] == 'T') && k+1 < n && (src[k] == 'x' || src[k] == 'X') && isAnyDelim(rune(src[i])) && isAnyDelim(rune(src[k+1])) {
+							return start, end, i - len(s), n, false
+						}
+					}
 				}
 				var tags []Tag
 				// a season with no episode and a higher number after a hyphen
