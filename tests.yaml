@@ -360,6 +360,14 @@
   other: "Digital.Extras"
   group: "NTG"
   ext: "mkv"
+"ATP.Australian.Open.2020.Final.Novak.Djokovic.vs.Dominic.Thiem.HDTV.x264-PLUTONiUM":
+  type: "movie"
+  title: "ATP Australian Open"
+  subtitle: "Final Novak Djokovic vs Dominic Thiem"
+  source: "HDTV"
+  year: 2020
+  codec: "x264"
+  group: "PLUTONiUM"
 "Austin.Powers.The.Spy.Who.Shagged.Me.1999.BluRay.1080p.TrueHD.5.1.VC-1.REMUX-FraMeSToR.mkv":
   type: "movie"
   title: "Austin Powers The Spy Who Shagged Me"
@@ -878,6 +886,7 @@
 "Hercules.2014.Extended.Cut.HDRip.XViD-juggs[ETRG]":
   type: "movie"
   title: "Hercules"
+  subtitle: "Extended Cut"
   source: "HDRiP"
   year: 2014
   codec: "XViD"
@@ -1562,11 +1571,11 @@
 "Show.2023.02.29.HDTV.x264-GRP":
   type: "movie"
   title: "Show"
+  subtitle: "02 29"
   source: "HDTV"
   year: 2023
   codec: "x264"
   group: "GRP"
-  unused: "02 29"
 "[Group][Show_Name][BDRip][1080p]":
   type: "movie"
   title: "Show Name"
@@ -2175,9 +2184,9 @@
 "These.Final.Hours.2013.WBBRip XViD":
   type: "movie"
   title: "These Final Hours"
+  subtitle: "WBBRip"
   year: 2013
   codec: "XViD"
-  group: "WBBRip"
 "THX.DTS.Dolby.Digital.Audio.Experience.Tester.DVDR-WANTED":
   type: "movie"
   title: "THX"
@@ -2340,6 +2349,16 @@
   year: 2016
   size: "600MB"
   group: "NBY"
+"[izu] Weiss Kreuz OVA (1999) [R2JP DVD-Remux ENG]":
+  type: "movie"
+  title: "Weiss Kreuz OVA"
+  source: "DVD"
+  year: 1999
+  other: "REMUX"
+  language: "ENGLiSH"
+  group: "izu"
+  site: "izu"
+  unused: "R2JP"
 "We're.the.Millers.2013.Extended.Cut.1080p.BluRay.DTS.x264-DON.mkv":
   type: "movie"
   title: "We're the Millers"

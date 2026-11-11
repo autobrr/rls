@@ -1130,6 +1130,14 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 	for pos = 0; pos < len(r.tags) && !r.tags[pos].Is(TagTypeResolution); pos++ {
 	}
 	resolution := pos
+	// with no resolution, the first source or codec after the date ends the
+	// subtitle ('Event.2020.Final.A.vs.B.HDTV.x264-GRP')
+	var noResolution bool
+	if resolution == len(r.tags) {
+		for pos = date + 1; pos < len(r.tags) && !r.tags[pos].Is(TagTypeSource, TagTypeCodec); pos++ {
+		}
+		resolution, noResolution = pos, true
+	}
 	if resolution == len(r.tags) {
 		return b.boxTitle(r, start, offset), 0, 0
 	}
@@ -1144,9 +1152,15 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 	// capture subtitle
 	var from, to int
 	if hasSubtitle {
+		var depth int
 		for pos = date + 1; pos < len(r.tags) && !r.tags[pos].Is(TagTypeText, TagTypeCut, TagTypeEdition); pos++ {
+			if r.tags[pos].Is(TagTypeDelim) {
+				depth = bracketDepth(r.tags[pos].Delim(), depth)
+			}
 		}
-		if pos < resolution-1 {
+		// a bracket that opens in front of the source holds tags ('(1999)
+		// [R2JP DVD-Remux]')
+		if pos < resolution-1 && !(noResolution && depth > 0) {
 			var n int
 			r.Subtitle, n = b.title(r.tags[pos:resolution-1], TagTypeText, TagTypeCut, TagTypeEdition)
 			from, to = pos, pos+n
