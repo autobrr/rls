@@ -117,11 +117,9 @@
   group: "SiN"
 "(2001)A Space Odyssey(1961).mkv":
   type: "movie"
-  title: "2001"
+  title: "2001 A Space Odyssey"
   year: 1961
-  group: "Odyssey"
   ext: "mkv"
-  unused: "A Space"
 "2001: A Space Odyssey.mkv":
   type: "movie"
   title: "2001: A Space Odyssey"
