@@ -1366,6 +1366,11 @@ func (b *TagBuilder) musicTitles(r *Release) int {
 			break
 		}
 	}
+	// Artist - Discography
+	if r.Artist == "" && r.Title != "" && peek(r.tags[:r.end], i, TagTypeOther) && r.tags[i].Other() == "Discography" &&
+		peek(r.tags, i-1, TagTypeDelim) && strings.Contains(r.tags[i-1].Delim(), "-") {
+		r.Artist, r.Title, i = r.Title, r.tags[i].Text(), i+1
+	}
 	// check if date was skipped / at end
 	i, skipped, ok := b.checkDate(r, i)
 	if ok {

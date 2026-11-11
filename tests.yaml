@@ -5279,6 +5279,13 @@
   year: 2020
   codec: "x264"
   group: "SRPx"
+"Michael Jackson - Discography (2009) [FLAC]":
+  type: "music"
+  artist: "Michael Jackson"
+  title: "Discography"
+  year: 2009
+  audio: "FLAC"
+  other: "Discography"
 "Michael Jackson - Discography (1967-2009) [FLAC]":
   type: "music"
   artist: "Michael Jackson"
