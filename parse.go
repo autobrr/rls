@@ -825,6 +825,7 @@ func (b *TagBuilder) collect(r *Release) {
 			}
 		case TagTypeDate:
 			r.Year, r.Month, r.Day = r.tags[i].Date()
+			r.YearEnd = r.tags[i].yearEnd()
 		case TagTypeSeries:
 			series, episode := r.tags[i].Series()
 			if r.Series == 0 {
@@ -910,7 +911,7 @@ func (b *TagBuilder) collect(r *Release) {
 	for i := len(r.dates); i > 0; i-- {
 		year, month, day := r.tags[r.dates[i-1]].Date()
 		if r.Year == 0 && year != 0 {
-			r.Year = year
+			r.Year, r.YearEnd = year, r.tags[r.dates[i-1]].yearEnd()
 		}
 		if r.Month == 0 && month != 0 {
 			r.Month = month

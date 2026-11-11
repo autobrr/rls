@@ -926,9 +926,10 @@ type rls struct {
 	Framerate  string
 	Collection string
 
-	Year  int
-	Month int
-	Day   int
+	Year    int
+	Month   int
+	Day     int
+	Yearend int
 
 	Series         int
 	Episode        int
@@ -989,9 +990,10 @@ func buildRls(r Release) rls {
 		Framerate:  r.FrameRate,
 		Collection: r.Collection,
 
-		Year:  r.Year,
-		Month: r.Month,
-		Day:   r.Day,
+		Year:    r.Year,
+		Month:   r.Month,
+		Day:     r.Day,
+		Yearend: r.YearEnd,
 
 		Series:         r.Series,
 		Episode:        r.Episode,

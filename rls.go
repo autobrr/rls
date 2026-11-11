@@ -42,6 +42,9 @@ type Release struct {
 	Year  int
 	Month int
 	Day   int
+	// YearEnd is the last year when the name gives a range of years
+	// ('2014-2015', '2024-25', '1999-2003'), and Year is the first.
+	YearEnd int
 
 	Series  int
 	Episode int
@@ -380,6 +383,9 @@ func (tag Tag) Normalize() string {
 		if month != 0 && day != 0 {
 			return fmt.Sprintf("%d-%02d-%02d", year, month, day)
 		}
+		if last := tag.yearEnd(); last != 0 {
+			return fmt.Sprintf("%d-%d", year, last)
+		}
 		return strconv.Itoa(year)
 	case TagTypeSeries:
 		series, episode := tag.Series()
@@ -580,6 +586,15 @@ func atoi(s string) int {
 func (tag Tag) Date() (int, int, int) {
 	year, month, day := atoi(tag.v[1]), atoi(tag.v[2]), atoi(tag.v[3])
 	return year, month, day
+}
+
+// yearEnd returns the last year of a date written as a range of years
+// ('2014-2015'), or 0.
+func (tag Tag) yearEnd() int {
+	if len(tag.v) > 4 {
+		return atoi(tag.v[4])
+	}
+	return 0
 }
 
 // Series normalizes the series value.

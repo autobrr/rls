@@ -137,8 +137,8 @@ func DefaultLexers() []Lexer {
 		NewDateLexer(
 			// 2006-01-02
 			`(?i)^(?P<2006>(?:19|20)\d{2})[\-\._ ](?P<01>\d{2})[\-\._ ](?P<02>\d{2})\b`,
-			// 2006-2007, 2006-07, 2006/07
-			`(?i)^(?P<2006>(?:19|20)\d{2})[\-/](?P<to>(?:19|20)?\d{2})\b`,
+			// 2006-2007, 2006-07, 2006/07, 1999–2003
+			`(?i)^(?P<2006>(?:19|20)\d{2})(?:[\-/]|–)(?P<to>(?:19|20)?\d{2})\b`,
 			// 2006
 			`(?i)^(?P<2006>(?:19|20)\d{2})\b`,
 			// 02-13-2006
@@ -234,7 +234,7 @@ func NewDateLexer(strs ...string) Lexer {
 					continue
 				}
 				// collect year, month, day
-				var year, month, day []byte
+				var year, month, day, last []byte
 				var y, m, d int
 				matched := true
 				for l := 0; l < len(v); l += 2 {
@@ -242,16 +242,20 @@ func NewDateLexer(strs ...string) Lexer {
 					if f == "YY" {
 						f, t = "2006", "20"+t
 					}
-					// a season that runs over two years ('2024-2025',
-					// '2024-25') has the year it starts in. The second year
-					// has to be the next one, and is not the month of a date
-					// ('2024-25-01')
+					// a range of years ('2024-2025', '1999-2003') has the year
+					// it starts in, and keeps the year it ends in. Written with
+					// two digits ('2024-25') the second year has to be the
+					// next one, and is not the month of a date ('2024-25-01')
 					if f == "to" {
 						to := atoi(t)
-						if to != y+1 && (len(t) != 2 || to != (y+1)%100) ||
-							len(t) == 2 && i+1 < n && src[i] == '-' && src[i+1] >= '0' && src[i+1] <= '9' {
+						switch {
+						case len(t) == 4 && to > y:
+						case len(t) == 2 && to == (y+1)%100 && !(i+1 < n && src[i] == '-' && src[i+1] >= '0' && src[i+1] <= '9'):
+							to = y + 1
+						default:
 							matched = false
 						}
+						last = strconv.AppendInt(nil, int64(to), 10)
 						continue
 					}
 					if t, err := time.Parse(f, t); err == nil {
@@ -272,6 +276,12 @@ func NewDateLexer(strs ...string) Lexer {
 				// the day has to exist in that month of that year
 				if m != 0 && d != 0 && time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC).Day() != d {
 					matched = false
+				}
+				if matched && last != nil {
+					return append(
+						start,
+						NewTag(TagTypeDate, nil, s, year, month, day, last),
+					), end, i, n, true
 				}
 				if matched {
 					return append(

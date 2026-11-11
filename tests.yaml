@@ -868,6 +868,7 @@
   source: "HDTV"
   resolution: "720p"
   year: 2011
+  yearend: 2012
   codec: "x264"
   other: "WS"
   language: "GERMAN"
@@ -1441,6 +1442,15 @@
   codec: "x265"
   bitdepth: "10BIT"
   group: "GRP"
+"Movie.Trilogy.1999-2003.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Movie Trilogy"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1999
+  yearend: 2003
+  codec: "x264"
+  group: "GRP"
 "Mr..&.Mrs..Smith-2005(720p)-NOGROUP[ettv]":
   type: "movie"
   title: "Mr. & Mrs. Smith"
@@ -1480,6 +1490,7 @@
   source: "WEB"
   resolution: "1080p"
   year: 2024
+  yearend: 2025
   codec: "H.264"
   group: "GRP"
 "One Shot [2014] DVDRip XViD-ViCKY":
@@ -1658,6 +1669,17 @@
   codec: "x264"
   group: "GRP"
   unused: "02 29"
+"Shiki The Complete TV Series (2010–2011) 1080p WEB-DL AAC.2.0 H.264 UNCUT":
+  type: "movie"
+  title: "Shiki The Complete TV Series"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2010
+  yearend: 2011
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  cut: "Uncut"
 "Show.2023.02.29.HDTV.x264-GRP":
   type: "movie"
   title: "Show"
@@ -1752,6 +1774,7 @@
   source: "HDTV"
   resolution: "720p"
   year: 2014
+  yearend: 2015
   codec: "x264"
   language: "GERMAN"
   group: "SAPH1R"
@@ -5290,9 +5313,10 @@
   type: "music"
   artist: "Michael Jackson"
   title: "Discography"
-  subtitle: "1967"
-  year: 2009
+  year: 1967
+  yearend: 2009
   audio: "FLAC"
+  other: "Discography"
 "Miles_Davis-Kind_Of_Blue-REMASTERED-(24BiT-192kHz)-WEB-FLAC-2013-OBZEN":
   type: "music"
   artist: "Miles Davis"
