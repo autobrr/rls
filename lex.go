@@ -1101,7 +1101,7 @@ func NewMetaLexer(strs ...string) Lexer {
 	// name holds a block of tags ('[1080p HEVC]'), not a group. restricting
 	// this to offset 0 keeps those apart.
 	lead := regexp.MustCompile(`^\[([^\]\t\r\n\f]{1,40})\]`)
-	// leadTags rejects a leading bracket that is really a block of tags.
+	// leadTags rejects a bracket that is really a block of tags.
 	leadTags := regexp.MustCompile(`(?i)(^|[\-\._ ])(\d{3,4}[ip]|\d{3,4}x\d{3,4}|[xh][\-\. ]?26[45]|hevc|avc|aac|flac|opus|blu[\-\. ]?ray|web[\-\. ]?dl|bd(?:rip)?|dvd|\d{1,2}[\-\. ]?bit|hi10p?|dual[\-\. ]?audio|multi[\-\. ]?subs?)($|[\-\._ ])`)
 	// plus holds the spellings, in upper case, of the tags that end in '+'
 	// ('HDR10+', 'DD+', 'ATV+'). A '+' is a delimiter, and one on the end of
@@ -1195,6 +1195,13 @@ func NewMetaLexer(strs ...string) Lexer {
 						if k, v = strs[l*4], m[1]; hasTwo[l] {
 							k, v = string(m[1]), m[2]
 						}
+						// a bracket of tags is not the site ('[1080p]',
+						// '[HEVC-10bit]'), and does not use up its slot. The
+						// bracket that opens the name is the group even
+						// then ('[Anime-HEVC] Show')
+						if k == "site" && len(start) != 0 && leadTags.Match(v) {
+							continue
+						}
 						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]
 						matched = !prev[k] && !short && !bytes.ContainsAny(v, "\t\r\n\f +")
 						seen(k)
@@ -1230,6 +1237,11 @@ func NewMetaLexer(strs ...string) Lexer {
 					if m = suffix[l].FindSubmatch(src[lo:n]); m != nil {
 						if k, v = strs[l*4], m[1]; hasTwo[l] {
 							k, v = string(m[1]), m[2]
+						}
+						// a bracket of tags is not the site ('[1080p]',
+						// '[HEVC-10bit]'), and does not use up its slot
+						if k == "site" && leadTags.Match(v) {
+							continue
 						}
 						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]
 						matched = !prev[k] && !short && !bytes.ContainsAny(v, "\t\r\n\f +")

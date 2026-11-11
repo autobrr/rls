@@ -1539,6 +1539,14 @@
   codec: "x264"
   group: "GRP"
   unused: "02 29"
+"Show Title (1994) (BDRip 1080p HEVC) [Dual-Audio]":
+  type: "movie"
+  title: "Show Title"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 1994
+  codec: "HEVC"
+  audio: "DUAL.AUDIO"
 "Sin.City.A.Dame.to.Kill.For.2014.1080p.BluRay.x264-SPARKS":
   type: "movie"
   title: "Sin City A Dame to Kill For"
@@ -3812,6 +3820,20 @@
   group: "Group"
   site: "Group"
   unused: "EP : 402"
+"Show Title - 05 [1080p][ABCDEFAB].mkv":
+  type: "episode"
+  title: "Show Title"
+  resolution: "1080p"
+  episode: 5
+  sum: "ABCDEFAB"
+  ext: "mkv"
+"[Anime-HEVC] Show Title - 05 [1080p]":
+  type: "episode"
+  title: "Show Title"
+  resolution: "1080p"
+  episode: 5
+  group: "Anime-HEVC"
+  site: "Anime-HEVC"
 "Show.Title.S01E01.720p.HDTV.x264-GRP-Obfuscated":
   type: "episode"
   title: "Show Title"
