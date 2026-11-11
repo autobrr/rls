@@ -607,9 +607,10 @@ func (b *TagBuilder) fixSourceWeb(r *Release) {
 }
 
 // fixSourceUHD fixes a bare uhd source tag next to a web source tag with only
-// resolution tags between, as the uhd marks a web source and not a bluray (ie,
-// 'Movie.2022.UHD.2160p.WEB...' or 'Movie.2022.2160p.WEB.UHD...'). The first
-// of the pair is changed, as the first source tag is collected.
+// resolution, frame rate, hdr and bit depth tags between, as the uhd marks a
+// web source and not a bluray (ie, 'Movie.2022.UHD.2160p.WEB...',
+// 'Movie.2022.2160p.WEB.UHD...' or 'Event.2026.UHD.2160p50.HLG.WEB...'). The
+// first of the pair is changed, as the first source tag is collected.
 //
 // Next to a tv source the uhd is the resolution of a broadcast (ie,
 // 'Show.S01.UHD.HDTV...'), and the tv source is the one to collect.
@@ -1865,11 +1866,11 @@ func isolated(tags []Tag, i, inc int) bool {
 }
 
 // nextSource returns the index and value of the source tag next to i in the
-// direction of inc, when only whitespace, delimiters and resolutions are
-// between them, or -1.
+// direction of inc, when only whitespace, delimiters and resolution, frame
+// rate, hdr and bit depth tags are between them, or -1.
 func nextSource(tags []Tag, i, inc int) (int, string) {
 	for i += inc; 0 <= i && i < len(tags); i += inc {
-		if tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeResolution) {
+		if tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeResolution, TagTypeFrameRate, TagTypeHDR, TagTypeBitDepth) {
 			continue
 		}
 		if tags[i].Is(TagTypeSource) {

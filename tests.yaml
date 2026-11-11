@@ -850,6 +850,17 @@
   year: 2026
   codec: "x264"
   group: "DARKSPORT"
+"Formula1.2026.Round05.Miami.Grand.Prix.Race.UHD.2160p50.HLG.WEB.h265-GRP":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round05 Miami Grand Prix Race"
+  source: "UHD.WEB"
+  resolution: "2160p"
+  framerate: "50fps"
+  year: 2026
+  codec: "H.265"
+  hdr: "HLG"
+  group: "GRP"
 "Fussball.1.Bundesliga.2011-2012.04.Spieltag.Hannover.96.vs.FSV.Mainz.05.GERMAN.WS.HDTV.720p.x264-SPORTSBAR":
   type: "movie"
   title: "Fussball 1 Bundesliga"
@@ -1261,6 +1272,16 @@
   resolution: "2160p"
   year: 2022
   codec: "x265"
+  group: "GRP"
+"Movie.2022.UHD.2160p.HDR.10bit.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  hdr: "HDR"
+  bitdepth: "10BIT"
   group: "GRP"
 "Movie.2022.UHD.2160p.WEB-DL.DDP.5.1.x265-GRP":
   type: "movie"
