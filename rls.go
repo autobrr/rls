@@ -3,8 +3,8 @@ package rls
 
 import (
 	"bytes"
+	"cmp"
 	"fmt"
-	"math"
 	"regexp"
 	"sort"
 	"strconv"
@@ -1044,7 +1044,7 @@ var CompareMap = map[Type]int{
 // resulting lower cased strings. Release types are grouped together based on
 // the precedence defined in CompareMap.
 func Compare(a, b Release) int {
-	var cmp int
+	var c int
 	for _, f := range []func() int{
 		compareInt(CompareMap[a.Type], CompareMap[b.Type]),
 		compareTitle(a.Artist, b.Artist),
@@ -1062,11 +1062,11 @@ func Compare(a, b Release) int {
 		compareString(a.Title, b.Title),
 		compareOriginal(a, b),
 	} {
-		if cmp = f(); cmp != 0 {
-			return cmp
+		if c = f(); c != 0 {
+			return c
 		}
 	}
-	return cmp
+	return c
 }
 
 // compareInt returns a func that compares a, b.
@@ -1082,7 +1082,9 @@ func compareInt(a, b int) func() int {
 	}
 }
 
-// compareIntString returns a func that compares numbers in a, b.
+// compareIntString returns a func that compares the numbers in a, b, which
+// for a resolution is its line count. At the same line count an interlaced
+// picture ('1080i') sorts below a progressive one ('1080p').
 func compareIntString(a, b string) func() int {
 	return func() int {
 		switch {
@@ -1097,25 +1099,34 @@ func compareIntString(a, b string) func() int {
 		case !strings.ContainsAny(b, "0123456789"):
 			return 1
 		}
-		var ai, bi int
-		for i := len(a); i > 0; i-- {
-			if f := float64(a[i-1] - '0'); f >= 0 {
-				ai += int(f * math.Pow(10, float64(len(a)-i)))
-			}
+		if c := cmp.Compare(digits(a), digits(b)); c != 0 {
+			return c
 		}
-		for i := len(b); i > 0; i-- {
-			if f := float64(b[i-1] - '0'); f >= 0 {
-				bi += int(f * math.Pow(10, float64(len(b)-i)))
-			}
-		}
-		switch {
-		case ai < bi:
+		switch ai, bi := strings.HasSuffix(a, "i"), strings.HasSuffix(b, "i"); {
+		case ai && !bi:
 			return -1
-		case bi < ai:
+		case bi && !ai:
 			return 1
 		}
 		return 0
 	}
+}
+
+// digits returns the digits of s read as one number, so '1080p' and '1080i'
+// are 1080. A number of thousands of columns ('DCI4K', 'DCI2K') is given as
+// the line count it stands for, 2160 and 1080.
+func digits(s string) int {
+	var n int
+	// no more than nine digits, which an int holds on every platform
+	for i := 0; i < len(s) && n < 1e8; i++ {
+		if c := s[i]; '0' <= c && c <= '9' {
+			n = n*10 + int(c-'0')
+		}
+	}
+	if n < 100 && (strings.HasSuffix(s, "K") || strings.HasSuffix(s, "k")) {
+		n *= 540
+	}
+	return n
 }
 
 // compareTitle returns a func that does a title comparison of a, b.

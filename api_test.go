@@ -179,3 +179,48 @@ func TestReleasePredicatesAllocs(t *testing.T) {
 		}
 	}
 }
+
+func TestCompareResolution(t *testing.T) {
+	for _, test := range []struct {
+		a, b string
+		exp  int
+	}{
+		{"1080p", "720p", 1},
+		{"720p", "1080p", -1},
+		{"480p", "2160p", -1},
+		{"1080p", "1080p", 0},
+		// the letter after the number is not part of it, and at the same
+		// number interlaced is the lesser picture
+		{"1080i", "1080p", -1},
+		{"1080p", "1080i", 1},
+		{"1080i", "1080i", 0},
+		{"576i", "720p", -1},
+		{"1080i", "720p", 1},
+		// DCI 4K has the 2160 lines of 2160p, and DCI 2K the 1080 of 1080p
+		{"720p", "DCI4K", -1},
+		{"DCI4K", "1080p", 1},
+		{"2160p", "DCI4K", 0},
+		{"DCI2K", "1080p", 0},
+		{"DCI2K", "DCI4K", -1},
+		{"4320p", "DCI4K", 1},
+		{"DCI4K", "2880p", -1},
+		{"DCI2K", "1440p", -1},
+		{"DCI2K", "2160p", -1},
+		{"1080i", "DCI2K", -1},
+		// no resolution sorts first
+		{"", "720p", -1},
+		{"720p", "", 1},
+	} {
+		if got := compareIntString(test.a, test.b)(); got != test.exp {
+			t.Errorf("compare %q with %q: expected %d, got: %d", test.a, test.b, test.exp, got)
+		}
+	}
+	// two releases that differ in resolution alone sort by it
+	a, b := ParseString("A.2020.1440p.BluRay.x264-G"), ParseString("A.2020.DCI2K.BluRay.x264-G")
+	if a.Resolution != "1440p" || b.Resolution != "DCI2K" {
+		t.Fatalf("expected resolutions 1440p and DCI2K, got: %q %q", a.Resolution, b.Resolution)
+	}
+	if got := Compare(a, b); got != 1 {
+		t.Errorf("expected 1440p after DCI2K, got: %d", got)
+	}
+}
