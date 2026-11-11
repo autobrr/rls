@@ -17,9 +17,7 @@ import (
 // TagParser is a release tag parser.
 type TagParser struct {
 	builder  Builder
-	delim    *regexp.Regexp
 	ellip    []byte
-	work     *regexp.Regexp
 	once     []LexFunc
 	multi    []LexFunc
 	notFirst []bool
@@ -73,9 +71,7 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 	}
 	p := &TagParser{
 		builder:  builder,
-		delim:    delim,
 		ellip:    []byte("..."),
-		work:     regexp.MustCompile(`[_,\+]`),
 		once:     once,
 		multi:    multi,
 		notFirst: notFirst,
@@ -332,16 +328,12 @@ type TagBuilder struct {
 	spaces *regexp.Regexp
 	// ellips matches multiple 3 or more periods (an ellipsis...).
 	ellips *regexp.Regexp
-	// plus matches pluses.
-	plus *regexp.Regexp
 	// sum matches a file checksum.
 	sum *regexp.Regexp
 	// digpre matches digit prefixes.
 	digpre *regexp.Regexp
 	// digsuf matches digit suffixes.
 	digsuf *regexp.Regexp
-	// infos are tag info.
-	infos map[string][]*taginfo.Taginfo
 	// containerf is the container find func.
 	containerf taginfo.FindFunc
 	// audiof is the audio find func.
@@ -360,7 +352,6 @@ func NewTagBuilder() *TagBuilder {
 		fix:     regexp.MustCompile(`([A-Z])\.`),
 		spaces:  regexp.MustCompile(`\s+`),
 		ellips:  regexp.MustCompile(`\.{3,}`),
-		plus:    regexp.MustCompile(`(\+)`),
 		sum:     regexp.MustCompile(`(?i)^[a-f0-9]{8}$`),
 		digpre:  regexp.MustCompile(`^\d+`),
 		digsuf:  regexp.MustCompile(`\d+$`),
@@ -375,11 +366,9 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		fix:         b.fix,
 		spaces:      b.spaces,
 		ellips:      b.ellips,
-		plus:        b.plus,
 		sum:         b.sum,
 		digpre:      b.digpre,
 		digsuf:      b.digsuf,
-		infos:       infos,
 		containerf:  findFunc(infos["container"]...),
 		audiof:      findFunc(infos["audio"]...),
 		resolutionf: findFunc(infos["resolution"]...),
@@ -2143,14 +2132,6 @@ func remove(v []string, str string) []string {
 		s = append(s, t)
 	}
 	return s
-}
-
-// min returns the min of a, b.
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 // peek determines if i is of type.
