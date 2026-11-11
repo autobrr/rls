@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/autobrr/rls/taginfo"
 )
@@ -491,5 +492,41 @@ func TestParseHintAllocs(t *testing.T) {
 		if hint > release {
 			t.Errorf("%q: ParseHint allocates %v, ParseRelease %v", s, hint, release)
 		}
+	}
+}
+
+// TestParseLexerNoProgress checks that a lexer that reports a match and
+// consumes nothing does not hang the parse: its match is dropped, and the
+// input goes to the lexers after it.
+func TestParseLexerNoProgress(t *testing.T) {
+	var calls int
+	stuck := TagLexer{
+		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			calls++
+			return append(start, NewTag(TagTypeText, nil, nil, nil)), end, i, n, true
+		},
+	}
+	back := TagLexer{
+		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			return start, end, i - 1, n + 1, true
+		},
+	}
+	const name = "The.Matrix.1999.1080p.BluRay.x264-GRP"
+	p := NewParser(WithLexers(append([]Lexer{stuck, back}, DefaultLexers()...)...))
+	done := make(chan Release, 1)
+	go func() { done <- p.ParseRelease([]byte(name)) }()
+	select {
+	case r := <-done:
+		if exp := ParseString(name); r.Title != exp.Title || r.Year != exp.Year || r.Group != exp.Group || len(r.Tags()) != len(exp.Tags()) {
+			t.Errorf("expected the parse of the default lexers, got: %q %d %q, %d tags", r.Title, r.Year, r.Group, len(r.Tags()))
+		}
+		if s := fmt.Sprintf("%o", r); s != name {
+			t.Errorf("expected %q, got: %q", name, s)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("parse did not return")
+	}
+	if calls == 0 {
+		t.Error("expected the lexer to be called")
 	}
 }

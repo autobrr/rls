@@ -295,7 +295,10 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 		if p.notFirst[a] && !*notFirst {
 			continue
 		}
-		if s, e, j, k, ok := f(src, buf, start, end, i, n); ok {
+		// a match has to consume input from one end or the other. One that
+		// does not would be offered the same input again without end, so it
+		// is taken as no match and the next lexer is tried
+		if s, e, j, k, ok := f(src, buf, start, end, i, n); ok && i <= j && j <= k && k <= n && (i < j || k < n) {
 			*notFirst = *notFirst || startn != len(s)
 			return s, e, j, k
 		}
