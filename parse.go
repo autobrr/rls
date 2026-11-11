@@ -533,6 +533,7 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 
 // init fixes the initial tag set.
 func (b *TagBuilder) init(r *Release) {
+	b.fixHalfEpisode(r)
 	b.fixFirstDate(r)
 	// determine earliest pivot
 	m, pivot := b.pivots(r, TagTypeDate, TagTypeSource, TagTypeSeries, TagTypeResolution, TagTypeVersion)
@@ -569,6 +570,33 @@ func (b *TagBuilder) init(r *Release) {
 	b.fixIsolated(r)
 	b.fixWords(r)
 	b.fixMusic(r)
+}
+
+// fixHalfEpisode joins the half of an episode back onto it when a video tag
+// follows, ie the '.5' in 'S01E06.5.WEB'. The series lexer hands a digit after
+// a season and episode back when a dot and a letter follow it, since it is
+// the first word of a title there ('S02E09.4.Days.Out'), and cannot tell a tag
+// from a word. Only a tag that no later step turns back into a word counts,
+// which a language or an other tag is not ('S01E06.3.French.Hens').
+//
+// The two tags between are left out of a copy of the tags, and their text is
+// the end of the series tag's. The tags the caller gave are not changed.
+func (b *TagBuilder) fixHalfEpisode(r *Release) {
+	for i := 0; i+4 < r.end; i++ {
+		tag := r.tags[i]
+		if !tag.Is(TagTypeSeries) || len(tag.v) != 3 || tag.v[1] == "" || tag.v[2] == "" || !strings.HasSuffix(tag.v[0], tag.v[2]) {
+			continue
+		}
+		dot, half, next := r.tags[i+1], r.tags[i+2], r.tags[i+3]
+		if !dot.Is(TagTypeDelim) || dot.v[0] != "." || !half.Is(TagTypeText) || len(half.v[0]) != 1 || half.v[0][0] < '0' || half.v[0][0] > '9' ||
+			!next.Is(TagTypeDelim) || next.v[0] != "." || !r.tags[i+4].Is(TagTypeResolution, TagTypeSource, TagTypeCodec, TagTypeHDR, TagTypeCollection) {
+			continue
+		}
+		v := slices.Clone(tag.v)
+		v[0] += "." + half.v[0]
+		r.tags = slices.Delete(slices.Clone(r.tags), i+1, i+3)
+		r.tags[i].v, r.end = v, r.end-2
+	}
 }
 
 // fixFirstDate fixes the special case of a date occuring before text, and

@@ -407,8 +407,16 @@ func TestHalfEpisode(t *testing.T) {
 		{"[Group] Show Ep 5.5 [720p]", 5, ".5", ""},
 		{"Show.S01E06.5.720p.WEB.x264-GRP", 6, ".5", ""},
 		{"Show S01E06.5 The Recap 720p WEB x264-GRP", 6, ".5", "The Recap"},
+		// a video tag after the half, where the lexer sees a letter after
+		// the dot
+		{"Show.S01E06.5.WEB.x264-GRP", 6, ".5", ""},
+		{"Show.S01E06.5.HDTV.x264-GRP", 6, ".5", ""},
+		{"Show.S01E06.5.x264-GRP", 6, ".5", ""},
 		// a number that begins the title of the episode or the channels
 		{"Show.S02E09.4.Days.Out.720p.WEB.x264-GRP", 9, "", "4 Days Out"},
+		// and the same before a word that is a tag elsewhere
+		{"Show.S01E06.3.French.Hens.720p.WEB.x264-GRP", 6, "", "3 French Hens"},
+		{"Show.S01E06.2.Complete.Strangers.720p.WEB.x264-GRP", 6, "", "2 Complete Strangers"},
 		{"Show.S01E06.5.1.AAC.720p.WEB-GRP", 6, "", ""},
 		// a dot that is not a decimal point
 		{"[Group] Show Ep. 07 [720p]", 7, "", ""},
@@ -427,10 +435,34 @@ func TestHalfEpisode(t *testing.T) {
 		if absolute && test.fraction != "" {
 			t.Errorf("%q: expected no absolute episode", test.name)
 		}
+		if pairs := r.SeriesEpisodes(); len(pairs) != 1 {
+			t.Errorf("%q: expected one episode, got: %v", test.name, pairs)
+		}
+		if s := fmt.Sprintf("%o", r); s != test.name {
+			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
 	}
 	// the dot of 'Ep.' is not a decimal point
 	if episode, ok := ParseString("[Group] Show Ep. 07 [720p]").Absolute(); episode != 7 || !ok {
 		t.Errorf("expected absolute 7 true, got: %d %t", episode, ok)
+	}
+}
+
+// TestHalfEpisodeTags checks that joining the half onto its episode leaves
+// the tags the caller gave to Build as they were.
+func TestHalfEpisodeTags(t *testing.T) {
+	const name = "Show.S01E06.5.WEB.x264-GRP"
+	p := NewParser()
+	tags, end := p.Parse([]byte(name))
+	before := slices.Clone(tags)
+	r := p.builder.Build(tags, end)
+	if len(r.Tags()) != len(tags)-2 {
+		t.Fatalf("expected the release to have two tags fewer than %d, got: %d", len(tags), len(r.Tags()))
+	}
+	for i, tag := range tags {
+		if tag.typ != before[i].typ || !slices.Equal(tag.v, before[i].v) {
+			t.Errorf("tag %d: expected %o as %s, got: %o as %s", i, before[i], before[i].typ, tag, tag.typ)
+		}
 	}
 }
 
@@ -486,6 +518,8 @@ func TestEpisodeSpans(t *testing.T) {
 		{"Show.E05.S01.1080p.WEB.h264-GRP", []EpisodeSpan{{"", "05", ""}}},
 		// the channels are not a fraction
 		{"Show.S01E06.5.1.AAC.720p.WEB-GRP", []EpisodeSpan{{"01", "06", ""}}},
+		// half an episode with a tag or a version right after it
+		{"Show.S01E06.5.WEB.x264-GRP", []EpisodeSpan{{"01", "06.5", ""}}},
 		// one episode under two numberings, in the order written
 		{"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP", []EpisodeSpan{{"23", "19", ""}, {"23", "1174", ""}}},
 		// no episode

@@ -479,8 +479,8 @@ func (tag Tag) wroteEpisode() bool {
 
 // fraction returns the decimal part an episode is written with, ie the '.5' of
 // '21.5', 'S01E06.5' or 'Ep 5.5', and the empty string for a whole episode.
-// The lexers leave the part in the text of the tag, behind the last episode,
-// and it is read from there.
+// The lexers and the builder's fixHalfEpisode leave the part in the text of
+// the tag, behind the last episode, and it is read from there.
 func (tag Tag) fraction() string {
 	if tag.typ != TagTypeSeries || len(tag.v) < 3 || tag.v[len(tag.v)-1] == "" {
 		return ""
