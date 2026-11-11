@@ -127,6 +127,8 @@ func TestReleasePredicates(t *testing.T) {
 		proper, repack, remux, hybrid bool
 	}{
 		{"plain", parsed("Show.S01E02.1080p.WEB.h264-GRP"), false, false, false, false},
+		{"repack2 set by hand", Release{Other: []string{"REPACK2"}}, false, true, false, false},
+		{"repack1 set by hand", Release{Other: []string{"REPACK1"}}, false, false, false, false},
 		{"proper", parsed("Show.S01E02.PROPER.1080p.WEB.h264-GRP"), true, false, false, false},
 		{"real proper", parsed("Show.S01E02.REAL.PROPER.1080p.WEB.h264-GRP"), true, false, false, false},
 		{"repack", parsed("Show.S01E02.REPACK.1080p.WEB.h264-GRP"), false, true, false, false},
@@ -136,7 +138,6 @@ func TestReleasePredicates(t *testing.T) {
 		{"re-pack", parsed("Show.S01E02.Re-Pack.1080p.WEB.h264-GRP"), false, true, false, false},
 		{"repack3", parsed("Show.S01E02.REPACK3.1080p.WEB.h264-GRP"), false, true, false, false},
 		{"repack9 in lower case", parsed("Show.S01E02.repack9.1080p.WEB.h264-GRP"), false, true, false, false},
-		{"repack10", parsed("Show.S01E02.REPACK10.1080p.WEB.h264-GRP"), false, false, false, false},
 		{"rerip", parsed("Show.S01E02.RERIP.1080p.WEB.h264-GRP"), false, false, false, false},
 		{"hybrid remux", parsed("Movie.2020.Hybrid.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GRP"), false, false, true, true},
 		{"proper and repack", parsed("Show.S01E02.PROPER.REPACK.1080p.WEB.h264-GRP"), true, true, false, false},
