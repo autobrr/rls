@@ -131,6 +131,8 @@ func DefaultLexers() []Lexer {
 		NewDateLexer(
 			// 2006-01-02
 			`(?i)^(?P<2006>(?:19|20)\d{2})[\-\._ ](?P<01>\d{2})[\-\._ ](?P<02>\d{2})\b`,
+			// 2006-2007, 2006-07, 2006/07
+			`(?i)^(?P<2006>(?:19|20)\d{2})[\-/](?P<to>(?:19|20)?\d{2})\b`,
 			// 2006
 			`(?i)^(?P<2006>(?:19|20)\d{2})\b`,
 			// 02-13-2006
@@ -233,6 +235,18 @@ func NewDateLexer(strs ...string) Lexer {
 					f, t := string(v[l]), string(v[l+1])
 					if f == "YY" {
 						f, t = "2006", "20"+t
+					}
+					// a season that runs over two years ('2024-2025',
+					// '2024-25') has the year it starts in. The second year
+					// has to be the next one, and is not the month of a date
+					// ('2024-25-01')
+					if f == "to" {
+						to := atoi(t)
+						if to != y+1 && (len(t) != 2 || to != (y+1)%100) ||
+							len(t) == 2 && i+1 < n && src[i] == '-' && src[i+1] >= '0' && src[i+1] <= '9' {
+							matched = false
+						}
+						continue
 					}
 					if t, err := time.Parse(f, t); err == nil {
 						switch f {
