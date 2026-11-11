@@ -34,5 +34,21 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Vet
+        run: go vet ./...
+
+      - name: Gofmt
+        run: |
+          out=$(gofmt -l .)
+          if [ -n "$out" ]; then
+            echo "not gofmt'd:"; echo "$out"; exit 1
+          fi
+
       - name: Test
         run: go test ./...
+
+      - name: Test (race)
+        run: go test -race ./...
+
+      - name: Fuzz (smoke)
+        run: go test -run XXX -fuzz FuzzParseString -fuzztime 60s .
