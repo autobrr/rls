@@ -390,9 +390,7 @@ func (b *TagBuilder) init(r *Release) {
 	b.fixBad(r, start, end)
 	b.fixNoText(r, end)
 	b.fixIsolated(r)
-	b.fixRegion(r)
-	b.fixVersus(r)
-	b.fixHighlights(r)
+	b.fixWords(r)
 	b.fixMusic(r)
 }
 
@@ -684,79 +682,75 @@ func (b *TagBuilder) fixIsolated(r *Release) {
 	}
 }
 
-// fixRegion fixes a region tag that is a word of a name, ie the 'US' in
-// 'Tennis.US.Open.2025'. It is one when it stands between two words with plain
-// delimiters around it, outside any bracket. The words must have been read as
-// text, and not be a tag that was reset to text, which keeps the region in
-// 'Videogame EUR NSW'.
-func (b *TagBuilder) fixRegion(r *Release) {
+// fixWords fixes tags that are words of a name, in one pass:
+//
+// A region between two words with plain delimiters around it, outside any
+// bracket, ie the 'US' in 'Tennis.US.Open.2025'. The words must have been
+// read as text, and not be a tag that was reset to text, which keeps the
+// region in 'Videogame EUR NSW'. A note in brackets names the region it means
+// ('(Contains the UK dub)').
+//
+// A region, language or platform on either side of a 'vs', which is one of
+// the two sides of a match, ie the 'USA' in 'Canada.Vs.USA.1080p' or the 'PSV'
+// in 'Ajax.vs.PSV.720p'.
+//
+// A bare 'extended' in front of 'highlights', where it names the programme and
+// not a cut of it, ie 'Arsenal.vs.Liverpool.Extended.Highlights.1080p'.
+func (b *TagBuilder) fixWords(r *Release) {
 	plain := func(i int) bool {
-		return r.tags[i].Is(TagTypeDelim) && strings.Trim(r.tags[i].Delim(), "._ ") == ""
+		return r.tags[i].typ == TagTypeDelim && strings.Trim(r.tags[i].v[0], "._ ") == ""
 	}
 	word := func(i int) bool {
-		return r.tags[i].Is(TagTypeText) && r.tags[i].prev == TagTypeWhitespace
+		return r.tags[i].typ == TagTypeText && r.tags[i].prev == TagTypeWhitespace
 	}
-	// a note in brackets names the region it means ('(Contains the UK dub)')
-	var depth int
-	for i := 0; i < r.end-2; i++ {
-		if r.tags[i].Is(TagTypeDelim) {
-			depth = bracketDepth(r.tags[i].Delim(), depth)
-		}
-		if i >= 2 && depth == 0 && r.tags[i].Is(TagTypeRegion) && plain(i-1) && plain(i+1) && word(i-2) && word(i+2) {
-			r.tags[i] = r.tags[i].As(TagTypeText, nil)
-		}
-	}
-}
-
-// fixVersus fixes a region, language or platform tag on either side of a
-// 'vs', which is one of the two sides of a match, ie the 'USA' in
-// 'Canada.Vs.USA.1080p' or the 'PSV' in 'Ajax.vs.PSV.720p'.
-func (b *TagBuilder) fixVersus(r *Release) {
-	plain := func(i int) bool {
-		return r.tags[i].Is(TagTypeDelim) && strings.Trim(r.tags[i].Delim(), "._ ") == ""
-	}
-	versus := func(i int) bool {
-		if !r.tags[i].Is(TagTypeText) || r.tags[i].prev != TagTypeWhitespace {
-			return false
-		}
-		s := r.tags[i].Text()
-		if len(s) > len("contre") {
-			return false
-		}
-		for _, v := range [...]string{"vs", "v", "gegen", "contre", "at", "@"} {
-			if strings.EqualFold(s, v) {
-				return true
-			}
+	side := func(i int) bool {
+		switch r.tags[i].typ {
+		case TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform:
+			return true
 		}
 		return false
 	}
-	for i := 2; i < r.end-2; i++ {
-		if !versus(i) || !plain(i-1) || !plain(i+1) {
-			continue
-		}
-		if !r.tags[i-2].Is(TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform) ||
-			!r.tags[i+2].Is(TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform) {
-			continue
-		}
-		for _, k := range [...]int{i - 2, i + 2} {
-			if !r.tags[k].Is(TagTypeText) {
-				r.tags[k] = r.tags[k].As(TagTypeText, nil)
+	var depth int
+	for i := 0; i < r.end-2; i++ {
+		switch r.tags[i].typ {
+		case TagTypeDelim:
+			depth = bracketDepth(r.tags[i].v[0], depth)
+		case TagTypeRegion:
+			if i >= 2 && depth == 0 && plain(i-1) && plain(i+1) && word(i-2) && word(i+2) {
+				r.tags[i] = r.tags[i].As(TagTypeText, nil)
+			}
+		case TagTypeText:
+			if i < 2 || !word(i) || !isVersus(r.tags[i].v[0]) || !plain(i-1) || !plain(i+1) || !side(i-2) || !side(i+2) {
+				continue
+			}
+			for _, k := range [...]int{i - 2, i + 2} {
+				if r.tags[k].typ != TagTypeText {
+					r.tags[k] = r.tags[k].As(TagTypeText, nil)
+				}
+			}
+		case TagTypeCut:
+			if strings.EqualFold(r.tags[i].v[0], "extended") && plain(i+1) &&
+				r.tags[i+2].Is(TagTypeText, TagTypeOther) && strings.EqualFold(r.tags[i+2].v[0], "highlights") {
+				r.tags[i] = r.tags[i].As(TagTypeText, nil)
 			}
 		}
 	}
 }
 
-// fixHighlights fixes a bare 'extended' in front of 'highlights', where it
-// names the programme and not a cut of it (ie,
-// 'Arsenal.vs.Liverpool.Extended.Highlights.1080p').
-func (b *TagBuilder) fixHighlights(r *Release) {
-	for i := 0; i < r.end-2; i++ {
-		if r.tags[i].Is(TagTypeCut) && strings.EqualFold(r.tags[i].v[0], "extended") &&
-			r.tags[i+1].Is(TagTypeDelim) && strings.Trim(r.tags[i+1].Delim(), "._ ") == "" &&
-			r.tags[i+2].Is(TagTypeText, TagTypeOther) && strings.EqualFold(r.tags[i+2].v[0], "highlights") {
-			r.tags[i] = r.tags[i].As(TagTypeText, nil)
-		}
+// isVersus reports whether s is a word that stands between the two sides of a
+// match.
+func isVersus(s string) bool {
+	switch len(s) {
+	case 1:
+		return s == "v" || s == "V" || s == "@"
+	case 2:
+		return strings.EqualFold(s, "vs") || strings.EqualFold(s, "at")
+	case 5:
+		return strings.EqualFold(s, "gegen")
+	case 6:
+		return strings.EqualFold(s, "contre")
 	}
+	return false
 }
 
 // fixMusic fixes music tags. Changes single cbr audio tag to the cbr container
