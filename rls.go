@@ -364,6 +364,27 @@ func (tag Tag) wroteEpisode() bool {
 	return false
 }
 
+// fraction returns the decimal part an episode is written with, ie the '.5' of
+// '21.5', 'S01E06.5' or 'Ep 5.5', and the empty string for a whole episode.
+// The lexers leave the part in the text of the tag, behind the last episode,
+// and it is read from there.
+func (tag Tag) fraction() string {
+	if tag.typ != TagTypeSeries || len(tag.v) < 3 || tag.v[len(tag.v)-1] == "" {
+		return ""
+	}
+	s := tag.v[0]
+	i := strings.LastIndexByte(s, '.')
+	if i == -1 || i == len(s)-1 || len(s)-i > 3 || !strings.HasSuffix(s[:i], tag.v[len(tag.v)-1]) {
+		return ""
+	}
+	for _, c := range []byte(s[i+1:]) {
+		if c < '0' || c > '9' {
+			return ""
+		}
+	}
+	return s[i:]
+}
+
 // continuation reports whether a series tag is written as 'E' and digits
 // ('E06' of 'S01E05-E06'), which continues the season and episode before it
 // rather than numbering the episode a second way ('Episode.1174').

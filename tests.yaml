@@ -2651,6 +2651,15 @@
   group: "Trix"
   site: "Trix"
   unused: "Eighty Six Part 1 2 COMPLETE Optional"
+"[SubsPlease] 86 - Eighty Six - 21.5 (720p) [4191AC97].mkv":
+  type: "episode"
+  title: "86 - Eighty Six"
+  resolution: "720p"
+  episode: 21
+  group: "SubsPlease"
+  site: "SubsPlease"
+  sum: "4191AC97"
+  ext: "mkv"
 "1899.S01.PROPER.1080p.NF.WEB-DL.DDP5.1.Atmos.H.264-FLUX":
   type: "series"
   title: "1899"
@@ -2732,6 +2741,19 @@
   other: "REMUX"
   group: "FraMeSToR"
   ext: "mkv"
+"[Mecha] Aldnoah.Zero - 24.5v2 (OVA) (BD 1920x1080 x265-10Bit Flac)":
+  type: "episode"
+  title: "Aldnoah Zero"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 24
+  version: "v2"
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  group: "Mecha"
+  site: "Mecha"
+  unused: "OVA"
 "American Restoration S01 1080p AMZN WEB-DL DDP 2.0 H.264-T7ST":
   type: "series"
   title: "American Restoration"
@@ -2847,6 +2869,16 @@
   episode: 1
   codec: "x264"
   group: "reward"
+"Breaking.Bad.S02E09.4.Days.Out.720p.BluRay.x264-GRP":
+  type: "episode"
+  title: "Breaking Bad"
+  subtitle: "4 Days Out"
+  source: "BluRay"
+  resolution: "720p"
+  series: 2
+  episode: 9
+  codec: "x264"
+  group: "GRP"
 "Brooklyn Nine-Nine S01 DVD9 3-Discs WS NTSC DVDR-NoRBiT":
   type: "series"
   title: "Brooklyn Nine-Nine"
@@ -3491,6 +3523,19 @@
   episode: 7
   codec: "x264"
   group: "THORA"
+  ext: "mkv"
+"Monogatari.Series.Off.and.Monster.Season.S01E06.5.720p.CR.WEB-DL.AAC2.0.H.264-NanDesuKa.mkv":
+  type: "episode"
+  title: "Monogatari Series Off and Monster Season"
+  source: "WEB-DL"
+  resolution: "720p"
+  collection: "CR"
+  series: 1
+  episode: 6
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "NanDesuKa"
   ext: "mkv"
 "Mr.Robot.S01.PROPER.VOSTFR.720p.WEB-DL.DD5.1.H264-ARK01":
   type: "series"
@@ -4574,6 +4619,7 @@
   source: "BluRay"
   resolution: "720p"
   episode: 2
+  absolute: 2
   codec: "x264"
   audio: "DD"
   language: "GERMAN DL"

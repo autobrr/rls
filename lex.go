@@ -76,8 +76,8 @@ func DefaultLexers() []Lexer {
 		NewRegexpLexer(TagTypeResolution, true),
 		NewRegexpSourceLexer(TagTypeCollection, true),
 		NewSeriesLexer(
-			// s02, S01E01, S01E02-04, S01E02v2
-			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]?(?:e(?P<e>\d{1,5})(?:(?P<r>-\d{1,3})|(?P<v>v\d+))?)?\b`,
+			// s02, S01E01, S01E02-04, S01E02v2, S01E06.5
+			`(?i)^s(?P<s>[0-8]?\d)[\-\._ ]?(?:e(?P<e>\d{1,5})(?:(?P<r>-\d{1,3})|(?P<v>v\d+)|(?P<x>\.\d))?)?\b`,
 			// S90E01: a season from 90 up needs its episode to be read as one
 			`(?i)^s(?P<s>9\d)[\-\._ ]?e(?P<e>\d{1,5})(?P<v>v\d+)?\b`,
 			// S01E02E03, S01E02-E03, S01E03.E04.E05
@@ -96,8 +96,8 @@ func DefaultLexers() []Lexer {
 			`(?i)^vol(?:ume)?[\-\._ ]?(?P<s>\d{1,3})(?:[\-\._ ]?(?:number|no)[\-\._ ]?(?P<e>\d{1,5}))\b`,
 			// Episode 15, E009, Ep. 007, EP07, Ep07v2, Ep.05-07, Ep 05 ~ 07, Ep 5.5
 			`(?i)^e(?:p(?:isode)?[\-\._ ]{0,3})?(?P<e>\d{1,5})(?:(?P<v>v\d+)|(?P<x>\.\d)|(?P<r>[\._ ]{0,2}[\-~][\._ ]{0,2}\d{1,3}))?\b`,
-			// 10v1.7, 13v2
-			`(?i)^(?P<e>\d{1,5})(?P<v>v[\-\._ ]?\d+(?:\.\d){0,2})\b`,
+			// 10v1.7, 13v2, 24.5v2
+			`(?i)^(?P<e>\d{1,5})(?P<x>\.\d)?(?P<v>v[\-\._ ]?\d+(?:\.\d){0,2})\b`,
 			// S01.Disc02, s01D3, Series.01.Disc.02, S02DVD3
 			`(?i)^(?:series|season|s)[\-\._ ]?(?P<s>[0-8]?\d)[\-\._ ]?(?P<d>(?:disc|disk|dvd|d)[\-\._ ]?(?:\d{1,3}))\b`,
 			// s1957e01
@@ -386,11 +386,17 @@ func NewSeriesLexer(strs ...string) Lexer {
 						s, i = s[:len(s)-len(tail)], i-len(tail)
 					}
 				}
-				// a decimal episode ('Ep 5.5') stays inside the tag, unless
-				// its digit begins the channels ('E05.5.1.AAC')
-				if len(dec) != 0 && i+1 < n && src[i] == '.' && src[i+1] >= '0' && src[i+1] <= '9' &&
-					(i+2 == n || src[i+2] < '0' || src[i+2] > '9') {
-					s, i = s[:len(s)-len(dec)], i-len(dec)
+				// a decimal episode ('Ep 5.5', 'S01E06.5') stays inside the
+				// tag, unless its digit begins the channels ('E05.5.1.AAC')
+				// or, after a season and episode, a dot and a word follow it:
+				// there the digit is the first word of the episode's title
+				// ('S02E09.4.Days.Out')
+				if len(dec) != 0 && len(version) == 0 && i+1 < n && src[i] == '.' {
+					switch c := src[i+1]; {
+					case c >= '0' && c <= '9' && (i+2 == n || src[i+2] < '0' || src[i+2] > '9'),
+						len(series) != 0 && (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'):
+						s, i = s[:len(s)-len(dec)], i-len(dec)
+					}
 				}
 				// version and disc end the match. They were read from buf,
 				// where '_', ',' and '+' are spaces, so their text is cut
@@ -485,7 +491,8 @@ func NewIDLexer() Lexer {
 
 // NewEpisodeLexer creates a tag lexer for a single episode (`- 2 -`, `- 867 (`, `- 100 [`).
 func NewEpisodeLexer() Lexer {
-	re := regexp.MustCompile(`^(\d{1,4})(\b|[\._ ]?[\-\[\]\(\)\{\}])`)
+	// the number, half an episode ('21.5') and what ends it
+	re := regexp.MustCompile(`^(\d{1,4})(\.\d{1,2})?(\b|[\._ ]?[\-\[\]\(\)\{\}])`)
 	return TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			// the match has to start with a digit, and that is far cheaper to
@@ -496,9 +503,9 @@ func NewEpisodeLexer() Lexer {
 			// compare against src, and match "lookbehind": -[\-\._ ]{1,3}$
 			if behind(src[:i], '-', "-._ ", 1, 3) {
 				if m := re.FindSubmatch(src[i:n]); m != nil && !bytes.HasPrefix(src[i+len(m[1]):], []byte{','}) {
-					tags := []Tag{NewTag(TagTypeSeries, nil, m[1], nil, m[1])}
-					if len(m[2]) != 0 {
-						tags = append(tags, NewTag(TagTypeDelim, nil, m[2], m[2]))
+					tags := []Tag{NewTag(TagTypeSeries, nil, src[i:i+len(m[1])+len(m[2])], nil, m[1])}
+					if len(m[3]) != 0 {
+						tags = append(tags, NewTag(TagTypeDelim, nil, m[3], m[3]))
 					}
 					return append(start, tags...), end, i + len(m[0]), n, true
 				}

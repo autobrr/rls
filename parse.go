@@ -995,7 +995,7 @@ func (b *TagBuilder) fixMusic(r *Release) {
 // number.
 func bareEpisode(tags []Tag, i int) bool {
 	tag := tags[i]
-	if !tag.Is(TagTypeSeries) || len(tag.v) != 3 || tag.v[1] != "" || tag.v[2] == "" || strings.Contains(tag.v[0], ".") {
+	if !tag.Is(TagTypeSeries) || len(tag.v) != 3 || tag.v[1] != "" || tag.v[2] == "" || tag.fraction() != "" {
 		return false
 	}
 	return !(peek(tags, i+1, TagTypeDelim) && tags[i+1].v[0] == "." &&

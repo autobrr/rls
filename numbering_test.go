@@ -231,3 +231,52 @@ func TestSeriesEpisodesSeasonZero(t *testing.T) {
 		}
 	}
 }
+
+// TestHalfEpisode checks that half an episode keeps its fraction in the tag:
+// Episode is the whole number, the fraction is not a word of the name, and the
+// number is not an absolute one.
+func TestHalfEpisode(t *testing.T) {
+	tests := []struct {
+		name     string
+		episode  int
+		fraction string
+		subtitle string
+	}{
+		{"[Group] Show - 21.5 [720p]", 21, ".5", ""},
+		{"[Group] Show - 04.1 [720p]", 4, ".1", ""},
+		{"[Group] Show - 12.10 [720p]", 12, ".10", ""},
+		{"[Group] Show - 21.5 - Recap [720p]", 21, ".5", "Recap"},
+		{"[Group] Show - 13.5v2 [720p]", 13, ".5", ""},
+		// underscores between the words
+		{"[Group]_Show_-_04.1_(DVD)[B6CE8458].mkv", 4, ".1", ""},
+		{"[Group]_Show_-_21.5_-_Recap_[720p].mkv", 21, ".5", "Recap"},
+		{"[Group] Show - 21.5_[720p]", 21, ".5", ""},
+		{"[Group] Show Ep 5.5 [720p]", 5, ".5", ""},
+		{"Show.S01E06.5.720p.WEB.x264-GRP", 6, ".5", ""},
+		{"Show S01E06.5 The Recap 720p WEB x264-GRP", 6, ".5", "The Recap"},
+		// a number that begins the title of the episode or the channels
+		{"Show.S02E09.4.Days.Out.720p.WEB.x264-GRP", 9, "", "4 Days Out"},
+		{"Show.S01E06.5.1.AAC.720p.WEB-GRP", 6, "", ""},
+		// a dot that is not a decimal point
+		{"[Group] Show Ep. 07 [720p]", 7, "", ""},
+		{"[Group] Show - 05.1080p", 5, "", ""},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		var fraction string
+		for _, tag := range r.Tags() {
+			fraction += tag.fraction()
+		}
+		_, absolute := r.Absolute()
+		if r.Episode != test.episode || fraction != test.fraction || r.Subtitle != test.subtitle {
+			t.Errorf("%q: expected episode %d, fraction %q, subtitle %q, got: %d, %q, %q", test.name, test.episode, test.fraction, test.subtitle, r.Episode, fraction, r.Subtitle)
+		}
+		if absolute && test.fraction != "" {
+			t.Errorf("%q: expected no absolute episode", test.name)
+		}
+	}
+	// the dot of 'Ep.' is not a decimal point
+	if episode, ok := ParseString("[Group] Show Ep. 07 [720p]").Absolute(); episode != 7 || !ok {
+		t.Errorf("expected absolute 7 true, got: %d %t", episode, ok)
+	}
+}
