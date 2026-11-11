@@ -3565,6 +3565,25 @@
   episode: 5
   codec: "H.264"
   group: "GRP"
+"[Group] Show - S01E06v2 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  series: 1
+  episode: 6
+  version: "v2"
+  group: "Group"
+  site: "Group"
+"Show.S02E03v2.1080p.WEB.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 2
+  episode: 3
+  version: "v2"
+  codec: "H.264"
+  group: "GRP"
 "Show.S04.1080p.BluRay.x264-GRP (E29-E31)":
   type: "episode"
   title: "Show"
