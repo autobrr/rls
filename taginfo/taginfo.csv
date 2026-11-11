@@ -539,7 +539,7 @@ other,REMAKE,Remake,(?-i:REMAKE),,,
 other,REMASTERED,Remastered,remaster(?:ed)?(?:[\-\._ ]edition)?,,,
 other,REMiX,Remix,(?:re[\-\._ ]?)?mix(?:e[sd])?(?:[\-\._ ]edition)?,,music,1
 other,REMUX,Remux,,,,
-other,REPACK,Repack,repack(?:ed)?,,,
+other,REPACK,Repack,re-?pack(?:ed)?,,,
 other,RERELEASE,Re-release,re[\-\._ ]?release,,music,1
 other,REREPACK,Re-repack,rerepack|repack2,,,
 other,RERiP,Re-rip,re[\-\._ ]?rip,,,

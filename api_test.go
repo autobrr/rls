@@ -133,6 +133,7 @@ func TestReleasePredicates(t *testing.T) {
 		{"repacked", parsed("Show.S01E02.Repacked.1080p.WEB.h264-GRP"), false, true, false, false},
 		{"rerepack", parsed("Show.S01E02.REREPACK.1080p.WEB.h264-GRP"), false, true, false, false},
 		{"repack2", parsed("Show.S01E02.REPACK2.1080p.WEB.h264-GRP"), false, true, false, false},
+		{"re-pack", parsed("Show.S01E02.Re-Pack.1080p.WEB.h264-GRP"), false, true, false, false},
 		{"repack3", parsed("Show.S01E02.REPACK3.1080p.WEB.h264-GRP"), false, true, false, false},
 		{"repack9 in lower case", parsed("Show.S01E02.repack9.1080p.WEB.h264-GRP"), false, true, false, false},
 		{"repack10", parsed("Show.S01E02.REPACK10.1080p.WEB.h264-GRP"), false, false, false, false},
