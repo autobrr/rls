@@ -807,6 +807,11 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 				return Education
 			}
 		case Music:
+			// a music tag in a name with an episode and video tags is a
+			// word that happens to match ('(JA)', '[EP: 403]', 'SP')
+			if series && video {
+				continue
+			}
 			// peek for audiobook
 			for j := i - 1; j > 0; j-- {
 				if typ := r.tags[j-1].InfoType(); typ.Is(Audiobook) {
