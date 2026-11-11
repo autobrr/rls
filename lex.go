@@ -1095,11 +1095,12 @@ func NewMetaLexer(strs ...string) Lexer {
 	}
 	var delim *regexp.Regexp
 	var shortTags map[string]bool
-	// lead matches a leading bracket whose contents contain a space. fansub
-	// release groups regularly do ('[Anime Time]', '[Mad Le Zisell]'), but the
-	// general site pattern disallows spaces because a bracket elsewhere in a
-	// name holds a block of tags ('[1080p HEVC]'), not a group. restricting
-	// this to offset 0 keeps those apart.
+	// lead matches a leading bracket whose contents contain a space or a
+	// plus. fansub release groups regularly do ('[Anime Time]', '[Mad Le
+	// Zisell]', '[SubsPlus+]'), but the general site pattern disallows both
+	// because a bracket elsewhere in a name holds a block of tags ('[1080p
+	// HEVC]', '[DVD+Web-Dl]'), not a group. restricting this to offset 0
+	// keeps those apart.
 	lead := regexp.MustCompile(`^\[([^\]\t\r\n\f]{1,40})\]`)
 	// leadTags rejects a bracket that is really a block of tags.
 	leadTags := regexp.MustCompile(`(?i)(^|[\-\._ ])(\d{3,4}[ip]|\d{3,4}x\d{3,4}|[xh][\-\. ]?26[45]|hevc|avc|aac|flac|opus|blu[\-\. ]?ray|web[\-\. ]?dl|bd(?:rip)?|dvd|\d{1,2}[\-\. ]?bit|hi10p?|dual[\-\. ]?audio|multi[\-\. ]?subs?)($|[\-\._ ])`)
@@ -1195,10 +1196,11 @@ func NewMetaLexer(strs ...string) Lexer {
 			// leading bracket release group containing a space
 			if i == 0 {
 				if g := lead.FindSubmatch(src[i:n]); g != nil {
-					// the value is the trimmed contents; an internal space is
-					// what distinguishes a group from a padded single token
-					// ('[ www.Speed.cd ]'), which the site pattern handles.
-					if t := bytes.TrimSpace(g[1]); bytes.ContainsRune(t, ' ') && !leadTags.Match(t) {
+					// the value is the trimmed contents; an internal space or
+					// a plus is what distinguishes a group from a padded
+					// single token ('[ www.Speed.cd ]'), which the site
+					// pattern handles.
+					if t := bytes.TrimSpace(g[1]); bytes.ContainsAny(t, " +") && !leadTags.Match(t) {
 						start = append(start, NewTag(TagTypeMeta, nil, g[0], []byte(`site`), t))
 						i += len(g[0])
 						seen(`site`)

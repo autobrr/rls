@@ -3818,6 +3818,16 @@
   group: "Group"
   site: "Group"
   unused: "JA"
+"[Mori+Leopard-Raws] Show Name - 09 (1280x720 x264 AAC).mkv":
+  type: "episode"
+  title: "Show Name"
+  resolution: "720p"
+  episode: 9
+  codec: "x264"
+  audio: "AAC"
+  group: "Mori+Leopard-Raws"
+  site: "Mori+Leopard-Raws"
+  ext: "mkv"
 "[Group] Show Name - 24 (JA) [720p WEB-DL AVC AAC]":
   type: "episode"
   title: "Show Name"
@@ -3848,6 +3858,16 @@
   audio: "AAC"
   channels: "2.0"
   group: "GRP"
+"[SubsPlus+] Show Name - S01E21 (WEB 1080p AMZN)":
+  type: "episode"
+  title: "Show Name"
+  source: "WEB"
+  resolution: "1080p"
+  collection: "AMZN"
+  series: 1
+  episode: 21
+  group: "SubsPlus+"
+  site: "SubsPlus+"
 "[Group] Show Name S01E36 [EP: 402] [1080p] [HEVC DDP]":
   type: "episode"
   title: "Show Name"
