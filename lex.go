@@ -1237,7 +1237,13 @@ func NewMetaLexer(strs ...string) Lexer {
 							continue
 						}
 						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]
-						matched = !prev[k] && !short && !bytes.ContainsAny(v, "\t\r\n\f +")
+						// a second bracket with text after it names a second
+						// group ('[A] [B] Show - 01'), where one with a
+						// bracket after it is the title ('[A][Show][01]') and
+						// one of digits a year or an episode ('[A] [2003]')
+						second := k == "site" && prev[k] && i+len(m[0]) < n && src[i+len(m[0])] != '[' &&
+							bytes.IndexFunc(v, func(r rune) bool { return r < '0' || r > '9' }) != -1
+						matched = (!prev[k] || second) && !short && !bytes.ContainsAny(v, "\t\r\n\f +")
 						seen(k)
 					}
 				}

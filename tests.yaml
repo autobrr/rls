@@ -1541,6 +1541,13 @@
   codec: "x264"
   group: "GRP"
   unused: "02 29"
+"[Group][Show_Name][BDRip][1080p]":
+  type: "movie"
+  title: "Show Name"
+  source: "BDRiP"
+  resolution: "1080p"
+  group: "Group"
+  site: "Group"
 "Show.Name.1994.1080p.BluRay.x264 [REMASTERED]":
   type: "movie"
   title: "Show Name"
@@ -3818,6 +3825,15 @@
   group: "Group"
   site: "Group"
   unused: "JA"
+"[Serenae] [CommieRaws] Show Name - 06 [6087FA06].mkv":
+  type: "episode"
+  title: "Show Name"
+  episode: 6
+  group: "Serenae"
+  meta: "site:CommieRaws"
+  site: "Serenae"
+  sum: "6087FA06"
+  ext: "mkv"
 "[Mori+Leopard-Raws] Show Name - 09 (1280x720 x264 AAC).mkv":
   type: "episode"
   title: "Show Name"
