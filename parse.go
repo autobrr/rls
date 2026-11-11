@@ -867,7 +867,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			}
 			return typ
 		case Series, Episode:
-			if r.Episode != 0 || episode || (r.Series == 0 && r.Episode == 0) && !contains(r.Other, "BOXSET") {
+			if r.Episode != 0 || episode || (r.Series == 0 && r.Episode == 0 && !series) && !contains(r.Other, "BOXSET") {
 				return Episode
 			}
 			return Series

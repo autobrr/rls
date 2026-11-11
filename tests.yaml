@@ -3097,6 +3097,13 @@
   group: "P9"
   site: "P9"
   ext: "mkv"
+"[Group] Ken 2 - 12 [1080p]":
+  type: "episode"
+  title: "Ken 2"
+  resolution: "1080p"
+  episode: 12
+  group: "Group"
+  site: "Group"
 "Looney.Tunes.S1958E13.Knighty.Knight.Bugs.1080p.BluRay.REMUX.AVC.DD.1.0-EPSiLON.mkv":
   type: "episode"
   title: "Looney Tunes"
@@ -3834,6 +3841,41 @@
   site: "Group"
   sum: "D2861769"
   ext: "mkv"
+"[Group] Show Name (01-12) [1080p] [Batch]":
+  type: "series"
+  title: "Show Name"
+  resolution: "1080p"
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
+  group: "Group"
+  site: "Group"
+  unused: "Batch"
+"[Group] Show Name - 01 ~ 12 [1080p][BATCH]":
+  type: "series"
+  title: "Show Name"
+  resolution: "1080p"
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
+  group: "Group"
+  site: "Group"
+  unused: "BATCH"
+"[Group] Show Name - 01-12 (AT-X 1440x1080 MPEG2 AAC).ts":
+  type: "series"
+  title: "Show Name"
+  resolution: "1080p"
+  collection: "AT-X"
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
+  codec: "MPEG-2"
+  audio: "AAC"
+  group: "Group"
+  site: "Group"
+  ext: "ts"
+"[Group] Show Name 10-12 [BD 1080p]":
+  type: "series"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  seriesEpisodes: "S00E10 S00E11 S00E12"
+  group: "Group"
+  site: "Group"
 "[Group] Show Name - 05 (JA) [720p]":
   type: "episode"
   title: "Show Name"
@@ -3933,6 +3975,15 @@
   group: "Group"
   site: "Group"
   unused: "EP : 402"
+"[Group] Show Name S2 - 13~24 [BDRip 1080p]":
+  type: "series"
+  title: "Show Name"
+  source: "BDRiP"
+  resolution: "1080p"
+  series: 2
+  seriesEpisodes: "S02E13 S02E14 S02E15 S02E16 S02E17 S02E18 S02E19 S02E20 S02E21 S02E22 S02E23 S02E24"
+  group: "Group"
+  site: "Group"
 "[Group] Show Name 2nd Season - 08 [1080p]":
   type: "episode"
   title: "Show Name"

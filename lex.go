@@ -167,6 +167,7 @@ func DefaultLexers() []Lexer {
 		NewRegexpLexer(TagTypeRegion, true),
 		NewRegexpLexer(TagTypeContainer, true),
 		NewGenreLexer(),
+		NewEpisodeRangeLexer(),
 		NewIDLexer(),
 		NewEpisodeLexer(),
 	}
@@ -470,6 +471,56 @@ func NewEpisodeLexer() Lexer {
 				}
 			}
 			return start, end, i, n, false
+		},
+	}
+}
+
+// NewEpisodeRangeLexer creates a tag lexer for the episodes of a batch, written
+// as a range of bare numbers: '(01-12)', '[01-12]', '- 01 ~ 12', '- 01-12' and
+// 'Title 10-12 [1080p]'.
+//
+// The tag has no episode and the two ends of the range after it, so the
+// release is a pack and not its first episode: Episode stays 0, and
+// Tag.Episodes and Release.SeriesEpisodes give the episodes in the range.
+func NewEpisodeRangeLexer() Lexer {
+	re := regexp.MustCompile(`^(\d{1,4})( ?[\-~] ?)(\d{1,4})`)
+	year := func(b []byte) bool {
+		return len(b) == 4 && (b[0] == '1' && b[1] == '9' || b[0] == '2' && b[1] == '0')
+	}
+	return TagLexer{
+		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			if i == 0 || i >= n || src[i] < '0' || src[i] > '9' {
+				return start, end, i, n, false
+			}
+			m := re.FindSubmatch(src[i:n])
+			if m == nil || year(m[1]) || year(m[3]) || atoi(string(m[1])) >= atoi(string(m[3])) {
+				return start, end, i, n, false
+			}
+			// what follows the range, and whether the hyphen is a bare one
+			var next byte
+			if j := i + len(m[0]); j < n {
+				next = src[j]
+			}
+			tight, free := len(m[2]) == 1 && m[2][0] == '-', next == 0 || next == ' ' || next == '_' || next == '[' || next == '('
+			var ok bool
+			switch prev := src[i-1]; {
+			// (01-12), [01-12]
+			case prev == '(' && next == ')', prev == '[' && next == ']':
+				ok = true
+			// - 01 ~ 12, - 01-12, and not '- 1 - 12', where a title that
+			// ends in a number is followed by an episode
+			case behind(src[:i], '-', "-._ ", 1, 3):
+				ok = free && (tight || bytes.IndexByte(m[2], '~') != -1)
+			// Title 10-12 [1080p]
+			case (prev == ' ' || prev == '_') && i > 1:
+				c := src[i-2]
+				ok = (c|0x20 >= 'a' && c|0x20 <= 'z' || c == '!' || c == '?') &&
+					free && tight && len(m[1]) == len(m[3]) && len(m[1]) > 1
+			}
+			if !ok {
+				return start, end, i, n, false
+			}
+			return append(start, NewTag(TagTypeSeries, nil, m[0], nil, nil, m[1], []byte{'-'}, m[3])), end, i + len(m[0]), n, true
 		},
 	}
 }
