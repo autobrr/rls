@@ -2422,6 +2422,15 @@
   cut: "Uncut"
   language: "GERMAN DL DUBBED"
   group: "PsO"
+"Winter.Olympics.Milano.Cortina.2026.Ice.Hockey.Mens.Final.Canada.Vs.USA.1080p.WEB.h264-EPOWORKS":
+  type: "movie"
+  title: "Winter Olympics Milano Cortina"
+  subtitle: "Ice Hockey Mens Final Canada Vs USA"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  codec: "H.264"
+  group: "EPOWORKS"
 "Withnail.And.I.1987.REPACK.BluRay.1080p.FLAC.1.0.AVC.REMUX-FraMeSToR":
   type: "movie"
   title: "Withnail And I"
@@ -3292,6 +3301,17 @@
   channels: "5.1"
   language: "GERMAN SYNCED DL"
   group: "TVS"
+"NBA.2024.07.10.USA.vs.Canada.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "NBA"
+  subtitle: "USA vs Canada"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2024
+  month: 7
+  day: 10
+  codec: "H.264"
+  group: "GRP"
 "NFL 2019 10 06 Chicago Bears vs Oakland Raiders Highlights 720p HEVC x265-MeGusta":
   type: "episode"
   title: "NFL"

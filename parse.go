@@ -395,6 +395,7 @@ func (b *TagBuilder) init(r *Release) {
 	b.fixNoText(r, end)
 	b.fixIsolated(r)
 	b.fixRegion(r)
+	b.fixVersus(r)
 	b.fixMusic(r)
 }
 
@@ -686,6 +687,37 @@ func (b *TagBuilder) fixRegion(r *Release) {
 	for i := 2; i < r.end-2; i++ {
 		if r.tags[i].Is(TagTypeRegion) && plain(i-1) && plain(i+1) && word(i-2) && word(i+2) {
 			r.tags[i] = r.tags[i].As(TagTypeText, nil)
+		}
+	}
+}
+
+// fixVersus fixes a region, language or platform tag on either side of a
+// 'vs', which is one of the two sides of a match, ie the 'USA' in
+// 'Canada.Vs.USA.1080p' or the 'PSV' in 'Ajax.vs.PSV.720p'.
+func (b *TagBuilder) fixVersus(r *Release) {
+	plain := func(i int) bool {
+		return r.tags[i].Is(TagTypeDelim) && strings.Trim(r.tags[i].Delim(), "._ ") == ""
+	}
+	versus := func(i int) bool {
+		if !r.tags[i].Is(TagTypeText) || r.tags[i].prev != TagTypeWhitespace {
+			return false
+		}
+		switch strings.ToLower(r.tags[i].Text()) {
+		case "vs", "v", "gegen", "contre", "at", "@":
+			return true
+		}
+		return false
+	}
+	for i := 2; i < r.end-2; i++ {
+		if !versus(i) || !plain(i-1) || !plain(i+1) {
+			continue
+		}
+		side := r.tags[i-2].Is(TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform) &&
+			r.tags[i+2].Is(TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform)
+		for _, k := range []int{i - 2, i + 2} {
+			if side && !r.tags[k].Is(TagTypeText) {
+				r.tags[k] = r.tags[k].As(TagTypeText, nil)
+			}
 		}
 	}
 }
