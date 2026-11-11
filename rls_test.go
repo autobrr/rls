@@ -101,6 +101,30 @@ func TestDateColon(t *testing.T) {
 	}
 }
 
+// TestOpeningResolution checks that a resolution alone in the bracket that
+// opens a name is the resolution and not the group, and that a name which is
+// a row of brackets keeps its title.
+func TestOpeningResolution(t *testing.T) {
+	tests := []struct {
+		name, title, resolution, group string
+	}{
+		{"[1080p] Show - 01", "Show", "1080p", ""},
+		{"[1280x720] Show - 01", "Show", "720p", ""},
+		// a tag as a part of the bracket
+		{"[Anime-HEVC] Show - 01", "Show", "", "Anime-HEVC"},
+		// a bracket after it
+		{"[1080p] [Group] Show - 01", "Show", "", "1080p"},
+		{"[1080p][Group] Show - 01 [ABCD1234]", "Show", "", "1080p"},
+		{"[1080p] [Complete Manual] - 04", "Complete Manual", "", "1080p"},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if r.Title != test.title || r.Resolution != test.resolution || r.Group != test.group {
+			t.Errorf("%q: expected title %q, resolution %q, group %q, got: %q, %q, %q", test.name, test.title, test.resolution, test.group, r.Title, r.Resolution, r.Group)
+		}
+	}
+}
+
 func TestCollapser(t *testing.T) {
 	tests := []struct {
 		s string

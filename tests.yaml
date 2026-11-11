@@ -3950,6 +3950,12 @@
   channels: "5.1"
   other: "Audio.Description"
   group: "NTb"
+"[1080p] Show - 01":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
 "[Group] Show - 01 (1080p BD x264) (with the UK dub track)":
   type: "episode"
   title: "Show"

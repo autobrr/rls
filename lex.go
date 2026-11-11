@@ -1389,6 +1389,11 @@ func NewMetaLexer(strs ...string) Lexer {
 	lead := regexp.MustCompile(`^\[([^\]\t\r\n\f]{1,40})\]`)
 	// leadTags rejects a bracket that is really a block of tags.
 	leadTags := regexp.MustCompile(`(?i)(^|[\-\._ ])(\d{3,4}[ip]|\d{3,4}x\d{3,4}|[xh][\-\. ]?26[45]|hevc|avc|aac|flac|opus|blu[\-\. ]?ray|web[\-\. ]?dl|bd(?:rip)?|dvd|\d{1,2}[\-\. ]?bit|hi10p?|dual[\-\. ]?audio|multi[\-\. ]?subs?)($|[\-\._ ])`)
+	// onlyResolution matches a bracket that is a resolution and nothing else.
+	// The bracket that opens a name is its group even when a tag is part of
+	// it ('[Anime-HEVC] Show'), but not when it is this and the title follows
+	// ('[1080p] Show - 01')
+	onlyResolution := regexp.MustCompile(`(?i)^(?:\d{3,4}[ip]|\d{3,4}x\d{3,4})$`)
 	// words holds the words of the tag names, in upper case. A bracket further
 	// into the name that holds one of them, a version or a list of two-letter
 	// codes is not the site ('[REMASTERED]', '[v2]', '[MX-EN-PT]')
@@ -1525,8 +1530,12 @@ func NewMetaLexer(strs ...string) Lexer {
 						// a bracket of tags is not the site ('[1080p]',
 						// '[HEVC-10bit]'), and does not use up its slot. The
 						// bracket that opens the name is the group even
-						// then ('[Anime-HEVC] Show')
-						if k == "site" && len(start) != 0 && notSite(v) {
+						// then ('[Anime-HEVC] Show'), unless it is a
+						// resolution alone. With a bracket after it the name
+						// is a row of brackets, where skipping the first
+						// would leave the group unread ('[1080p][Group]')
+						if k == "site" && (len(start) != 0 && notSite(v) ||
+							onlyResolution.Match(v) && !(i+len(m[0]) < n && src[i+len(m[0])] == '[')) {
 							continue
 						}
 						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]
