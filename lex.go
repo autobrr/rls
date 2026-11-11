@@ -1556,9 +1556,10 @@ func NewExtLexer() Lexer {
 
 // NewRegexpLexer creates a tag lexer for a regexp.
 func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
-	var f taginfo.FindFunc
+	var f, otherf taginfo.FindFunc
 	var re *regexp.Regexp
 	var pf *prefilter
+	bdremux := []byte("bdremux")
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			info := infos[strings.ToLower(typ.String())]
@@ -1568,8 +1569,23 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			}
 			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)), findFunc(info...)
 			pf, _ = newPrefilter(info, ignoreCase)
+			// the split below needs the two rows it stands for
+			if o := findFunc(infos["other"]...); typ == TagTypeSource && ignoreCase && f("BD") != nil && o("Remux") != nil {
+				otherf = o
+			}
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+			// 'BDRemux' is a source and what was done to it in one word,
+			// which no row can give as two tags. As the first word of a name
+			// it is left to the title
+			if k := i + len(bdremux); otherf != nil && k <= n && buf[i]|0x20 == 'b' && bytes.EqualFold(buf[i:k], bdremux) && (k == n || !runByte(buf[k])) &&
+				slices.ContainsFunc(start, func(tag Tag) bool { return !tag.Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) }) {
+				return append(
+					start,
+					NewTag(TagTypeSource, f, src[i:i+2], src[i:i+2]),
+					NewTag(TagTypeOther, otherf, src[i+2:k], src[i+2:k]),
+				), end, k, n, true
+			}
 			if !pf.maybe(buf, i, n) {
 				return start, end, i, n, false
 			}

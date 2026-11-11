@@ -147,6 +147,7 @@ func TestReleasePredicates(t *testing.T) {
 		{"hybrid as the group", parsed("Movie.2020.1080p.BluRay.x264-HYBRiD"), false, false, false, false},
 		{"real proper with a hyphen", parsed("Show.S01E02.Real-Proper.1080p.WEB.h264-GRP"), true, false, false, false},
 		{"remux before the group", parsed("Movie.2020.2160p.UHD.BluRay.HEVC.TrueHD.7.1.Remux-GRP"), false, false, true, false},
+		{"bdremux in one word", parsed("Movie.2020.1080p.BDRemux.AVC.DTS-HD.MA.5.1-GRP"), false, false, true, false},
 
 		{"zero", Release{}, false, false, false, false},
 		{"hand proper", Release{Other: []string{"proper"}}, true, false, false, false},

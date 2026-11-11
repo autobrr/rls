@@ -420,6 +420,14 @@
   channels: "5.1"
   other: "REMUX"
   group: "FraMeSToR"
+"BDRemux.Movie.2020.1080p.WEB.x264-GRP":
+  type: "movie"
+  title: "BDRemux Movie"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "GRP"
 "Beavis.and.Butt-Head.The.Mike.Judge.Collectors.Edition.D03.R2.PAL.DVD5.TVV-Grzechsin":
   type: "movie"
   title: "Beavis and Butt-Head"
@@ -821,6 +829,12 @@
   codec: "H.265"
   hdr: "HLG"
   group: "VERUM"
+"Fight!! Iczer-1 Special Compilation 1080p BDREMUX":
+  type: "movie"
+  title: "Fight!! Iczer-1 Special Compilation"
+  source: "BluRay"
+  resolution: "1080p"
+  other: "REMUX"
 "[ValdikSS]_First_Squad_The_Morment_Of_Truth_[720x576_h264_dvdscr_eng_hardsub].mkv":
   type: "movie"
   title: "First Squad The Morment Of Truth"
@@ -1148,6 +1162,17 @@
   resolution: "1080p"
   year: 2024
   codec: "H.264"
+  group: "GRP"
+"Movie.2020.1080p.BDRemux.AVC.DTS-HD.MA.5.1-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "AVC"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  other: "REMUX"
   group: "GRP"
 "Movie.2020.1080p.BluRay.DTS-ES.x264-GRP":
   type: "movie"
