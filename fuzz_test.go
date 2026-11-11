@@ -113,3 +113,23 @@ func FuzzParseString(f *testing.F) {
 		exercise(r)
 	})
 }
+
+// FuzzParseHint checks that no name and no hint can panic the parser, a wrong
+// type for the name least of all: the steps after the type is known index the
+// tags they expect a release of that type to have. The tags still reproduce
+// the input, since a hint changes how tags are read and never their text.
+func FuzzParseHint(f *testing.F) {
+	for i, test := range rlsTests(f) {
+		f.Add(test.s, uint8(i), i%2 == 0)
+	}
+	f.Add("", uint8(Magazine), true)
+	f.Add("05.06.2024", uint8(Magazine), true)
+	f.Add("Mag.S2024E05.2024", uint8(Magazine), true)
+	f.Fuzz(func(t *testing.T, s string, typ uint8, dayFirst bool) {
+		r := ParseStringHint(s, Hint{Type: Type(typ % uint8(Series+1)), DayFirst: dayFirst})
+		if o := fmt.Sprintf("%o", r); o != s {
+			t.Errorf("round trip failed:\n in: %q\nout: %q", s, o)
+		}
+		exercise(r)
+	})
+}

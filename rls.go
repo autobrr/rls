@@ -93,6 +93,26 @@ func ParseString(src string) Release {
 	return DefaultParser.ParseRelease([]byte(src))
 }
 
+// ParseHint creates a release from src with what the caller knows about it.
+// It uses the ParseHint method of DefaultParser. When DefaultParser has been
+// replaced by a Parser without that method, it calls ParseRelease and the hint
+// is ignored.
+func ParseHint(src []byte, h Hint) Release {
+	if p, ok := DefaultParser.(interface {
+		ParseHint([]byte, Hint) Release
+	}); ok {
+		return p.ParseHint(src, h)
+	}
+	return DefaultParser.ParseRelease(src)
+}
+
+// ParseStringHint creates a release from src with what the caller knows about
+// it. As with ParseHint, the hint is ignored when DefaultParser has no
+// ParseHint method.
+func ParseStringHint(src string, h Hint) Release {
+	return ParseHint([]byte(src), h)
+}
+
 // Format satisfies the fmt.Formatter interface.
 //
 // Format Options:

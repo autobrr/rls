@@ -86,6 +86,136 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 	return p
 }
 
+// ParserOption is an option for NewParser.
+type ParserOption func(*parserOptions)
+
+// parserOptions are what the options given to NewParser change.
+type parserOptions struct {
+	extras []map[string][]*taginfo.Taginfo
+	lexers []Lexer
+}
+
+// NewParser creates a tag parser with the built-in tag infos and the default
+// lexers, changed by opts. With no options it builds the parser
+// NewDefaultParser builds. It returns the concrete type, as ParseHint and
+// SetBuilder are methods of it, and it can still be assigned to DefaultParser.
+// The builder is DefaultBuilder, as with NewTagParser.
+func NewParser(opts ...ParserOption) *TagParser {
+	var o parserOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	lexers := o.lexers
+	if len(lexers) == 0 {
+		lexers = DefaultLexers()
+	}
+	return NewTagParser(taginfo.All(o.extras...), lexers...).(*TagParser)
+}
+
+// WithTaginfo adds tag infos to the built-in ones, keyed by tag type as
+// taginfo.All keys them ('collection'), the way a caller adds the streaming
+// services it knows. It may be given more than once, and the maps add up in
+// the order given. The infos under a key the built-in infos already have are
+// added after the built-in ones and do not replace them, so where a built-in
+// and an extra info match the same text the built-in one is found. A nil map
+// adds nothing, and a nil info in a map is left out, which is what a caller
+// has that did not check the error of taginfo.New.
+func WithTaginfo(extra map[string][]*taginfo.Taginfo) ParserOption {
+	return func(o *parserOptions) {
+		m := make(map[string][]*taginfo.Taginfo, len(extra))
+		for typ, infos := range extra {
+			for _, info := range infos {
+				if info != nil {
+					m[typ] = append(m[typ], info)
+				}
+			}
+		}
+		o.extras = append(o.extras, m)
+	}
+}
+
+// WithLexers replaces the default lexers. Given no lexers it changes nothing,
+// and the default lexers, or those of an earlier WithLexers, stay in place, as
+// a parser with no lexers would read every name as text. A lexer keeps what
+// its parser gave it when it was built, so every parser needs lexers of its
+// own: do not give the same Lexer values to two parsers.
+func WithLexers(lexers ...Lexer) ParserOption {
+	return func(o *parserOptions) {
+		if len(lexers) != 0 {
+			o.lexers = lexers
+		}
+	}
+}
+
+// Hint is what a caller knows about a name before it is parsed, such as the
+// category of the indexer section it was announced in.
+type Hint struct {
+	// Type is the release type when the caller knows it. Unknown lets the
+	// parser decide, as ParseRelease does, and so does a value that is not
+	// one of the release types.
+	Type Type
+	// DayFirst reads a date written with two numbers and a year as day,
+	// month, year: '05.06.2024' is 5 June. Without it that is 6 May, and a
+	// date is read day first only when its first number cannot be a month
+	// ('13.06.2024').
+	DayFirst bool
+}
+
+// ParseHint parses a release from src with what the caller knows about it.
+// The zero Hint gives what ParseRelease gives.
+//
+// The type in h is the release type, and the titles and the tags that are
+// kept follow it. It is set when the parser's builder is a *TagBuilder; with
+// any other Builder the release is what its Build returns, and the type in h
+// has no effect. DayFirst applies to the date tags before any builder sees
+// them.
+func (p *TagParser) ParseHint(src []byte, h Hint) Release {
+	tags, end := p.Parse(src)
+	if h.DayFirst {
+		dayFirst(tags)
+	}
+	if b, ok := p.builder.(*TagBuilder); ok {
+		return b.build(tags, end, h)
+	}
+	return p.builder.Build(tags, end)
+}
+
+// dayFirst swaps the month and day of each date tag that was written as two
+// two-digit numbers and a four-digit year ('05.06.2024') and read month first,
+// when the second number can also be a month. A date read day first already
+// ('13.06.2024'), one whose second number is no month ('06.13.2024'), and one
+// written year first, with a month name or with a two-digit year are left
+// alone. The text as written stays, so the name still prints as given.
+//
+// The tags are those Parse made for this call alone, so changing their values
+// in place is safe.
+func dayFirst(tags []Tag) {
+	for i := range tags {
+		v := tags[i].v
+		// a range of years has a fifth value, and is written year first
+		if tags[i].typ != TagTypeDate || len(v) != 4 {
+			continue
+		}
+		s := v[0]
+		if len(s) != 10 || !isDateSep(s[2]) || !isDateSep(s[5]) || s[6:] != v[1] {
+			continue
+		}
+		// the lexer writes month and day with two digits, so the first
+		// number read as the month and the second as the day means the date
+		// was read month first, and a second number from 01 to 12 can be the
+		// month
+		if first, second := s[:2], s[3:5]; v[2] == first && v[3] == second && second >= "01" && second <= "12" {
+			v[2], v[3] = second, first
+		}
+	}
+}
+
+// isDateSep reports whether c separates the numbers of a date. A comma and a
+// plus do too, since the lexers read them as spaces.
+func isDateSep(c byte) bool {
+	return c == '-' || c == '.' || c == '_' || c == ' ' || c == ',' || c == '+'
+}
+
 // SetBuilder sets the builder for the tag parser.
 func (p *TagParser) SetBuilder(builder Builder) {
 	p.builder = builder
@@ -243,6 +373,14 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 
 // Build builds a release from tags.
 func (b *TagBuilder) Build(tags []Tag, end int) Release {
+	return b.build(tags, end, Hint{})
+}
+
+// build builds a release from tags with what the caller knows about it. A
+// type in h is set before specialDate, unset and titles, the steps that read
+// the type, so that the tags that are unset and the titles that are read are
+// those of that type. Nothing before them reads it.
+func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	r := &Release{
 		tags: tags,
 		end:  end,
@@ -252,8 +390,14 @@ func (b *TagBuilder) Build(tags []Tag, end int) Release {
 	b.fixTailGroup(r)
 	// collect tags into release
 	b.collect(r)
-	// guess type
+	// guess type. The type the caller gave replaces the guess, which is still
+	// made: inspect restores a platform or an arch that was reset when it
+	// finds no other sign of the type, and a hint that agrees with the guess
+	// has to give the same release
 	r.Type = b.inspect(r, true)
+	if Unknown < h.Type && h.Type <= Series {
+		r.Type = h.Type
+	}
 	// special
 	b.specialDate(r)
 	// unset tags
