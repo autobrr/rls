@@ -2792,6 +2792,17 @@
   channels: "2.0"
   group: "WELP"
   ext: "mkv"
+"Eredivisie.2024.03.10.Ajax.vs.PSV.720p.WEB.h264-ULTRAS":
+  type: "episode"
+  title: "Eredivisie"
+  subtitle: "Ajax vs PSV"
+  source: "WEB"
+  resolution: "720p"
+  year: 2024
+  month: 3
+  day: 10
+  codec: "H.264"
+  group: "ULTRAS"
 "Exosquad.1993.S01S02.COMPLETE.x264-PTM":
   type: "series"
   title: "Exosquad"

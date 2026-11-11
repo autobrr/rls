@@ -786,7 +786,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 		app, movie = app || typ == App, movie || typ == Movie
 		switch typ {
 		case Book, Game:
-			if typ == Game && r.tags[i-1].Is(TagTypeGroup) &&
+			if typ == Game && r.tags[i-1].Is(TagTypeGroup, TagTypePlatform) &&
 				video && (series || r.Resolution != "" || (r.Year != 0 && r.Month != 0 && r.Day != 0)) {
 				continue
 			}
