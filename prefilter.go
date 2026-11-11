@@ -4,6 +4,8 @@ import (
 	"errors"
 	"regexp/syntax"
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	"github.com/autobrr/rls/taginfo"
 )
@@ -596,7 +598,47 @@ const maxVariants = 4096
 // A regexp with a non-ASCII rune is unsupported too. The expander works on
 // bytes, so '[uü]' would give 'u' and the two bytes of 'ü' as three members,
 // and the spellings built from them match nothing.
+//
+// The spellings are cached and shared: a row is expanded by its lexer, by the
+// group and meta lexers and by the builder, and a caller must not change the
+// slice it gets.
 func expandRE(re string, ci bool) ([]string, error) {
+	key := expandKey{re, ci}
+	if v, ok := expanded.Load(key); ok {
+		x := v.(expansion)
+		return x.v, x.err
+	}
+	v, err := expandREOnce(re, ci)
+	// the rows of a program are few. The bound is for one that makes rows up
+	// as it runs
+	if expandedLen.Add(1) <= maxExpanded {
+		expanded.Store(key, expansion{v, err})
+	}
+	return v, err
+}
+
+// expandKey is what an expansion depends on.
+type expandKey struct {
+	re string
+	ci bool
+}
+
+// expansion is what expandRE gave for a key.
+type expansion struct {
+	v   []string
+	err error
+}
+
+// maxExpanded is how many expansions are cached.
+const maxExpanded = 8192
+
+var (
+	expanded    sync.Map
+	expandedLen atomic.Int64
+)
+
+// expandREOnce is expandRE without the cache.
+func expandREOnce(re string, ci bool) ([]string, error) {
 	for i := 0; i < len(re); i++ {
 		if re[i] >= 0x80 {
 			return nil, errUnsupported
