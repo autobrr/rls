@@ -345,6 +345,8 @@ type TagBuilder struct {
 	audiof taginfo.FindFunc
 	// resolutionf is the resolution find func.
 	resolutionf taginfo.FindFunc
+	// languagef is the language find func.
+	languagef taginfo.FindFunc
 }
 
 // NewTagBuilder creates a new release builder.
@@ -378,6 +380,7 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		containerf:  findFunc(infos["container"]...),
 		audiof:      findFunc(infos["audio"]...),
 		resolutionf: findFunc(infos["resolution"]...),
+		languagef:   findFunc(infos["language"]...),
 	}
 }
 
@@ -471,11 +474,15 @@ func (b *TagBuilder) trailingGroup(r *Release) {
 	}
 }
 
-// fixTailGroup hands a guessed group back to the title when the name opens
-// with its group in a bracket and plain text stands in front of the hyphen
-// (ie, '[Commie] Hataraku Maou-sama!'). The group lexer takes whatever follows
-// the last hyphen, which is a group after a tag ('[TGx] Movie.1080p.x264-GRP')
-// and the end of the title after a word.
+// fixTailGroup hands a guessed group back to the name when the name opens
+// with its group in a bracket. The group lexer takes whatever follows the last
+// hyphen, which is a group after a tag ('[TGx] Movie.1080p.x264-GRP'). It is
+// the end of the title after a word ('[Commie] Hataraku Maou-sama!'). After a
+// hyphen set off by spaces it is a note after an edition ('[Group] Movie -
+// 30th Anniversary - Patch Subs'), the title of the episode after a series
+// tag ('[Group] Show Episode 00 - Prologue'), and a language when the word
+// names one ('[Group] Movie (BD 1080p) - VOSTFR'), which it also is right
+// after another language ('VF-VOSTFR').
 func (b *TagBuilder) fixTailGroup(r *Release) {
 	i := 0
 	for ; i < len(r.tags) && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim); i++ {
@@ -493,15 +500,25 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 		p := g - 2
 		for ; p > i && r.tags[p].Is(TagTypeWhitespace, TagTypeDelim); p-- {
 		}
-		if !r.tags[p].Is(TagTypeText) {
-			continue
-		}
 		// the group tag holds the spaces after the hyphen, which go to the
 		// delimiter for the title to read 'Chaos - Prologue'
 		s, grp := r.tags[g].v[0], r.tags[g].v[1]
 		d := "-" + s[:len(s)-len(strings.TrimLeft(s, " \t_"))]
-		r.tags[g-1] = NewTag(TagTypeDelim, nil, []byte(d), []byte(d))
-		r.tags[g] = NewTag(TagTypeText, nil, []byte(s[len(d)-1:]), []byte(grp))
+		spaced := len(d) > 1 && p != g-2 && strings.HasSuffix(r.tags[g-2].v[0], " ")
+		var tag Tag
+		switch {
+		case r.tags[p].Is(TagTypeText), spaced && r.tags[p].Is(TagTypeSeries, TagTypeEdition):
+			tag = NewTag(TagTypeText, nil, []byte(s[len(d)-1:]), []byte(grp))
+		case spaced || r.tags[p].Is(TagTypeLanguage):
+			// not a row that takes any word with 'sub' or 'dub' in it
+			if info := b.languagef(grp); info == nil || strings.Contains(info.Tag(), "$") {
+				continue
+			}
+			tag = NewTag(TagTypeLanguage, b.languagef, []byte(s[len(d)-1:]), []byte(grp))
+		default:
+			continue
+		}
+		r.tags[g-1], r.tags[g] = NewTag(TagTypeDelim, nil, []byte(d), []byte(d)), tag
 		if r.end == g-1 {
 			r.end = g + 1
 		}

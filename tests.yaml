@@ -276,6 +276,13 @@
   codec: "H.264"
   language: "DUTCH"
   group: "ADRENALiNE"
+"[Reaktor] Akira - 30th Anniversary - Patch Subs":
+  type: "movie"
+  title: "Akira"
+  edition: "30th.Anniversary.Edition"
+  group: "Reaktor"
+  site: "Reaktor"
+  unused: "Patch Subs"
 "Akira (2016) - UpScaled - 720p - DesiSCR-Rip - Hindi - x264 - AC3 - 5.1 - Mafiaking - M2Tv":
   type: "movie"
   title: "Akira"
@@ -2641,6 +2648,18 @@
   codec: "XViD"
   language: "SWEDiSH"
   group: "HDR"
+"[Trix] 86 (Eighty-Six) Season 1 (Part 1+2) (COMPLETE) [Optional Dual Audio][Multi Subs] (BD 1080p AV1) - VOSTFR":
+  type: "series"
+  title: "86"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "AV1"
+  audio: "DUAL.AUDIO"
+  language: "MULTiSUB VOSTFR"
+  group: "Trix"
+  site: "Trix"
+  unused: "Eighty Six Part 1 2 COMPLETE Optional"
 "1899.S01.PROPER.1080p.NF.WEB-DL.DDP5.1.Atmos.H.264-FLUX":
   type: "series"
   title: "1899"
@@ -4398,6 +4417,12 @@
   audio: "OPUS DUAL.AUDIO"
   group: "ThanksBB"
   site: "ThanksBB"
+"[Hikki] Show Title Episode 00 - Prologue":
+  type: "episode"
+  title: "Show Title"
+  subtitle: "Prologue"
+  group: "Hikki"
+  site: "Hikki"
 "Show Title - 05 [1080p][ABCDEFAB].mkv":
   type: "episode"
   title: "Show Title"
