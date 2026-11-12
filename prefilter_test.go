@@ -12,7 +12,10 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"unicode"
+	"unicode/utf8"
 
+	"github.com/autobrr/rls/reutil"
 	"github.com/autobrr/rls/taginfo"
 )
 
@@ -49,6 +52,100 @@ func TestPrefilterSound(t *testing.T) {
 	}
 }
 
+// TestPrefilterRejectSound checks the same property from the other side, at
+// the positions a spelling does not begin as it is written: what the
+// prefilter of a type rejects, neither alternation of the type matches. The
+// positions begin with a byte that is no letter or digit, with a rune outside
+// ASCII, or with a run that such a rune ends, and among those runes are the
+// two that a letter folds to.
+func TestPrefilterRejectSound(t *testing.T) {
+	infos := taginfo.All()
+	var rejected, tried int
+	for typ, info := range infos {
+		pf, ok := newPrefilter(info, true)
+		if !ok {
+			t.Errorf("%s: no prefilter", typ)
+			continue
+		}
+		// as the lexers that gate what ran everywhere before have it, see
+		// prefilter.fold
+		pf.fold = true
+		plain := regexp.MustCompile(reutil.Taginfo(`^ib`, info...))
+		source := regexp.MustCompile(reutil.Taginfo(`^i`, info...) + `(?:\b|[\-\._ ]` + plusEnd + `)`)
+		for _, i := range info {
+			v, err := expandRE(i.RE(), true)
+			if err != nil {
+				v = []string{i.Tag()}
+			}
+			for k, s := range v {
+				// the first spellings of a row, and every one that begins
+				// with a byte that is no letter or digit
+				if s == "" || k >= 3 && runByte(s[0]) {
+					continue
+				}
+				names := []string{
+					s, s + ".x",
+					"!" + s, "&" + s, "#" + s, "'" + s, "@" + s, "\"" + s, "é" + s, "\xff" + s, "日本" + s, "\u017f" + s, "\u212a" + s, "\xc5" + s, "\xe2\x84" + s,
+					s + "é", s + "\xff", s + "\u017f", s + "\u212a", s + "é.x", s + "\u017f.x", s + "!", s + "&x", s[:1] + "é" + s[1:], s[:1] + "\u212a" + s[1:],
+				}
+				for _, fold := range [][2]string{{"s", "\u017f"}, {"S", "\u017f"}, {"k", "\u212a"}, {"K", "\u212a"}} {
+					if j := strings.Index(s, fold[0]); j != -1 {
+						names = append(names, s[:j]+fold[1]+s[j+1:], s[:j]+fold[1]+s[j+1:]+".x")
+					}
+				}
+				for _, name := range names {
+					b := []byte(name)
+					if tried++; pf.maybe(b, 0, len(b)) {
+						continue
+					}
+					rejected++
+					if plain.Match(b) || source.Match(b) {
+						t.Errorf("%s: prefilter rejected %q, which an alternation of the type matches", typ, name)
+					}
+				}
+			}
+		}
+	}
+	if rejected*4 < tried {
+		t.Errorf("expected the prefilters to reject at least a quarter of the positions, got: %d of %d", rejected, tried)
+	}
+	t.Logf("%d of %d positions rejected", rejected, tried)
+}
+
+// TestFoldRunes checks what the gates take for granted about a regexp that
+// matches without regard to case: that the long s and the Kelvin sign are the
+// only runes outside ASCII it matches an ASCII byte with, and that foldRune
+// knows the two by their bytes and nothing else.
+func TestFoldRunes(t *testing.T) {
+	for c := rune(0); c < utf8.RuneSelf; c++ {
+		for r := unicode.SimpleFold(c); r != c; r = unicode.SimpleFold(r) {
+			if r >= utf8.RuneSelf && r != '\u017f' && r != '\u212a' {
+				t.Errorf("%q folds to %q, which the gates do not know", c, r)
+			}
+		}
+	}
+	letter := regexp.MustCompile(`(?i)^[a-z0-9]`)
+	for r := rune(utf8.RuneSelf); r <= unicode.MaxRune; r++ {
+		b := []byte(string(r) + "x")
+		exp := r == '\u017f' || r == '\u212a'
+		if foldRune(b, 0, len(b)) != exp {
+			t.Fatalf("%U: expected foldRune %t", r, exp)
+		}
+		// and the regexp agrees, for the runes of the scripts that have cases
+		if r < 0x3000 && letter.Match(b) != exp {
+			t.Fatalf("%U: expected a letter to match it only when foldRune does", r)
+		}
+	}
+	for _, s := range []string{"", "\xc5", "\xe2", "\xe2\x84", "\xc5x", "\xe2\x84x", "\xbf", "\xff", "s", "k"} {
+		if foldRune([]byte(s), 0, len(s)) {
+			t.Errorf("%q: expected no rune that a letter folds to", s)
+		}
+	}
+	if b := []byte("a\u017f\u212a"); !foldRune(b, 1, len(b)) || !foldRune(b, 3, len(b)) || foldRune(b, 1, 2) || foldRune(b, 3, 5) || foldRune(b, 6, 6) {
+		t.Errorf("expected foldRune to read the rune at i and stop at n")
+	}
+}
+
 // TestPrefilterSameParse checks that the prefilters only save work: a parser
 // built without them gives the same tags for every name of tests.yaml, for
 // every spelling a row can be expanded to, and for the corpora when they are
@@ -71,6 +168,18 @@ func TestPrefilterSameParse(t *testing.T) {
 			for _, s := range v {
 				names = append(names, "Title."+s+".1080p-GRP")
 			}
+		}
+	}
+	// the names with a byte that is no letter or digit, and no delimiter
+	// either, which is where a prefilter looks past the run. Not those with
+	// a rune that a letter folds to: most prefilters reject a spelling that
+	// is written with one, see prefilter.fold
+	for _, name := range sameParseNames(t) {
+		if strings.ContainsAny(name, "\u017f\u212a") {
+			continue
+		}
+		if strings.IndexFunc(name, func(r rune) bool { return r >= 0x80 || strings.ContainsRune("!&#'@\"", r) }) != -1 {
+			names = append(names, name)
 		}
 	}
 	for _, name := range []string{"nyaa.txt", "sports.txt"} {
@@ -424,6 +533,44 @@ func TestNamedCaptureLead(t *testing.T) {
 		tags, _ := NewTagParser(nil, NewSeriesLexer(test.re)).Parse([]byte(test.s))
 		if len(tags) != 1 || !tags[0].Is(TagTypeSeries) {
 			t.Errorf("%q: expected a series tag for %q, got: %q", test.re, test.s, tags)
+		}
+	}
+}
+
+// TestNamedCaptureUnanchored checks that a pattern of a caller's own that is
+// not anchored at the start is run at every position, as it was before the
+// lexers had gates: it finds its match further on, so the bytes at the
+// position say nothing about it. The text of a match is taken from the
+// position, as before.
+func TestNamedCaptureUnanchored(t *testing.T) {
+	plain := func(strs []string, src []byte, i int) (string, int, bool) {
+		for _, s := range strs {
+			re := regexp.MustCompile(s)
+			if len(re.SubexpNames()) < 2 {
+				continue
+			}
+			if m := re.FindSubmatch(src[i:]); m != nil {
+				return string(src[i : i+len(m[0])]), i + len(m[0]), true
+			}
+		}
+		return "", i, false
+	}
+	for _, strs := range [][]string{
+		{`a(?P<v>b)`},
+		{`(?i)x(?P<v>\d+)`},
+		{`^(?P<a>zz)`, `q(?P<b>r)`},
+		{`(?P<v>b)`, `^(?P<w>a)`},
+	} {
+		lex := NamedCaptureLexer(strs...)
+		for _, s := range []string{"acab", "ab", "cab", "yyx12", "X9", "zzq", "aqr", "bbb", "acr"} {
+			src := []byte(s)
+			for i := range src {
+				text, j, ok := plain(strs, src, i)
+				got, _, k, _, gotOK := lex(src, src, i, len(src))
+				if gotOK != ok || string(got) != text || k != j {
+					t.Errorf("%q on %q at %d: expected %t %q %d, got: %t %q %d", strs, s, i, ok, text, j, gotOK, got, k)
+				}
+			}
 		}
 	}
 }

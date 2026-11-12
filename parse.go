@@ -7,8 +7,10 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
+	"unsafe"
 
 	"github.com/autobrr/rls/reutil"
 	"github.com/autobrr/rls/taginfo"
@@ -16,11 +18,29 @@ import (
 
 // TagParser is a release tag parser.
 type TagParser struct {
+	tagParser
+	// load returns what the built-in default parser parses with, which it
+	// builds when first called (see DefaultParser), and tagParser is then not
+	// used. It is nil for every other parser. A copy of the default parser
+	// has the same load, so it parses with the same state, built once. Only
+	// SetBuilder writes load, and no parse may run beside that, as before.
+	load func() *tagParser
+}
+
+// tagParser is what a TagParser parses with.
+type tagParser struct {
 	builder  Builder
 	ellip    []byte
 	once     []LexFunc
 	multi    []LexFunc
 	notFirst []bool
+	// dispatch gives the lexers of multi that can match at a position.
+	dispatch *dispatch
+	// pooled is whether the tags are lexed into scratch from the pool, which
+	// they are when every lexer is one of this package's. A lexer of a
+	// caller's may keep the slices it is handed, so a parser with one makes
+	// them for each parse alone.
+	pooled bool
 	// isDelim is delim as a byte table: every delimiter is a single ASCII
 	// byte, so membership is all the regexp ever decided.
 	isDelim [256]bool
@@ -28,6 +48,11 @@ type TagParser struct {
 
 // NewTagParser creates a new release tag parser.
 func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
+	return newTagParser(DefaultBuilder, infos, lexers...)
+}
+
+// newTagParser is NewTagParser with the builder to use.
+func newTagParser(builder Builder, infos map[string][]*taginfo.Taginfo, lexers ...Lexer) *TagParser {
 	// delims
 	var v []string
 	for r := rune(0); r < 255; r++ {
@@ -51,31 +76,44 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 			}
 		}
 	}
-	// separate once and multi
+	// separate once and multi. The lexers of this package offer what they
+	// need at a position to match while they are initialized, see withGate
+	offer := &gateOffer{gates: make(map[unsafe.Pointer]*lexGate)}
+	gateOffers.Store(delim, offer)
+	defer gateOffers.Delete(delim)
 	var once, multi []LexFunc
 	var notFirst []bool
+	var gates []*lexGate
+	pooled := true
 	for _, lexer := range lexers {
-		if f, o, nf := lexer.Initialize(infos, delim, short); o {
+		f, o, nf := lexer.Initialize(infos, delim, short)
+		offer.mu.Lock()
+		gate, own := offer.gates[funcID(f)]
+		offer.mu.Unlock()
+		pooled = pooled && own
+		if o {
 			once = append(once, f)
 		} else {
 			multi = append(multi, f)
 			notFirst = append(notFirst, nf)
+			gates = append(gates, gate)
 		}
 	}
 	// init builder
-	builder := DefaultBuilder
 	if b, ok := builder.(interface {
 		Init(map[string][]*taginfo.Taginfo) Builder
 	}); ok {
 		builder = b.Init(infos)
 	}
-	p := &TagParser{
+	p := &TagParser{tagParser: tagParser{
 		builder:  builder,
 		ellip:    []byte("..."),
 		once:     once,
 		multi:    multi,
 		notFirst: notFirst,
-	}
+		dispatch: newDispatch(gates),
+		pooled:   pooled,
+	}}
 	for c := 0; c < 255; c++ {
 		p.isDelim[c] = isAnyDelim(rune(c))
 	}
@@ -172,20 +210,22 @@ type Hint struct {
 // has no effect. DayFirst applies to the date tags before any builder sees
 // them, and Sports is kept for Event with any builder.
 func (p *TagParser) ParseHint(src []byte, h Hint) Release {
-	return p.parseHint(bytes.Clone(src), h)
+	tags, end := parseCopy(p, src)
+	return p.buildHint(tags, end, h)
 }
 
-// parseHint is ParseHint for a name that is the parser's to keep.
-func (p *TagParser) parseHint(src []byte, h Hint) Release {
-	tags, end := p.parse(src)
+// buildHint builds the release of tags that a parse of p made, with what the
+// caller knows about the name.
+func (p *TagParser) buildHint(tags []Tag, end int, h Hint) Release {
 	if h.DayFirst {
 		dayFirst(tags)
 	}
 	var r Release
-	if b, ok := p.builder.(*TagBuilder); ok {
+	builder := p.state().builder
+	if b, ok := builder.(*TagBuilder); ok {
 		r = b.build(tags, end, h)
 	} else {
-		r = p.builder.Build(tags, end)
+		r = builder.Build(tags, end)
 	}
 	r.sports = h.Sports
 	return r
@@ -229,12 +269,35 @@ func isDateSep(c byte) bool {
 
 // SetBuilder sets the builder for the tag parser.
 func (p *TagParser) SetBuilder(builder Builder) {
+	if p.load != nil {
+		// the default parser, or a copy of it, gets a state of its own, so
+		// the builder is set for this parser alone
+		p.tagParser, p.load = *p.load(), nil
+	}
 	p.builder = builder
+}
+
+// state returns what p parses with: its own tagParser, or for the built-in
+// default parser the one that load builds on first use.
+func (p *TagParser) state() *tagParser {
+	if p.load != nil {
+		return p.load()
+	}
+	return &p.tagParser
 }
 
 // Parse parses tags in buf.
 func (p *TagParser) Parse(src []byte) ([]Tag, int) {
-	return p.parse(bytes.Clone(src))
+	return parseCopy(p, src)
+}
+
+// parseCopy parses the tags of a name that is the caller's, given as bytes or
+// as a string. The name is copied into one piece of memory with its working
+// copy, which the tags then share.
+func parseCopy[T string | []byte](p *TagParser, name T) ([]Tag, int) {
+	mem := make([]byte, 2*len(name))
+	n := copy(mem, name)
+	return p.lex(mem[:n:n], mem[n:])
 }
 
 // parse parses the tags of src, which is the parser's to keep: the tags hold
@@ -243,8 +306,23 @@ func (p *TagParser) Parse(src []byte) ([]Tag, int) {
 // is. The lexers of this package only read it. The tags keep it and the
 // working copy alive, and nothing of the caller's.
 func (p *TagParser) parse(src []byte) ([]Tag, int) {
+	return p.lex(src, make([]byte, len(src)))
+}
+
+// lex is parse with the room for the working copy, which is as long as src.
+//
+// The tags are lexed into scratch that the next parse uses again, and copied
+// out of it: the tags a caller gets are a slice of their own that is exactly
+// as long as they are, and nothing of the scratch. With a lexer of a caller's
+// in the parser the room is made for the parse alone, as such a lexer may
+// keep the slices it is handed.
+func (p *TagParser) lex(src, buf []byte) ([]Tag, int) {
+	return p.state().run(src, buf)
+}
+
+// run is lex with the state of the parser.
+func (p *tagParser) run(src, buf []byte) ([]Tag, int) {
 	// working buf
-	buf := make([]byte, len(src))
 	for i, c := range src {
 		switch c {
 		case '_', ',', '+':
@@ -253,9 +331,14 @@ func (p *TagParser) parse(src []byte) ([]Tag, int) {
 		buf[i] = c
 	}
 	i, n := 0, len(buf)
-	// a name yields roughly one tag per three bytes; sizing for one per two
-	// lets start grow once instead of doubling its way up from nothing
-	start, end := make([]Tag, 0, len(src)/2+8), []Tag(nil)
+	var sc *tagScratch
+	var start, end []Tag
+	if p.pooled {
+		sc = tagScratchPool.Get().(*tagScratch)
+		start, end = sc.take(len(src))
+	} else {
+		start = make([]Tag, 0, tagRoom(len(src)))
+	}
 	// once
 	for _, f := range p.once {
 		start, end, i, n, _ = f(src, buf, start, end, i, n)
@@ -265,12 +348,87 @@ func (p *TagParser) parse(src []byte) ([]Tag, int) {
 	for i < n {
 		start, end, i, _ = p.next(src, buf, start, end, i, n, &notFirst)
 	}
-	// add end (reversed) to start
-	tags := start
-	for i := len(end); i > 0; i-- {
-		tags = append(tags, end[i-1])
+	// start, and then end reversed
+	tags := make([]Tag, len(start)+len(end))
+	copy(tags, start)
+	for i, k := len(end), len(start); i > 0; i, k = i-1, k+1 {
+		tags[k] = end[i-1]
 	}
-	return tags, len(tags) - len(end)
+	if sc != nil {
+		sc.give(start, end)
+		tagScratchPool.Put(sc)
+	}
+	return tags, len(start)
+}
+
+// tagScratch is the room a parse lexes its tags into: those read from the
+// start of the name and those read from its end. A parse takes one from the
+// pool and gives it back, so that the room is made once and not for every
+// name, and is not what a caller keeps.
+//
+// A scratch only ever holds memory that take made. What the lexers hand back
+// in its place, because they outgrew it or built a slice of their own, is
+// used for that parse and then left to them.
+type tagScratch struct {
+	start, end []Tag
+}
+
+var tagScratchPool = sync.Pool{New: func() any { return new(tagScratch) }}
+
+// maxScratch is how many tags the scratch that goes back to the pool has
+// room for. A name that needs more gets room of its own.
+const maxScratch = 1024
+
+// endScratch is the room for the tags read from the end of a name, which are
+// few: the extension, the group, the meta suffixes and their delimiters.
+const endScratch = 16
+
+// tagRoom is how many tags to make room for in a name of n bytes: a name
+// yields roughly one tag per three bytes, and room for one per two holds them
+// without growing.
+func tagRoom(n int) int {
+	return n/2 + 8
+}
+
+// take returns the room for the tags of a name of n bytes, empty.
+func (sc *tagScratch) take(n int) (start, end []Tag) {
+	want := tagRoom(n)
+	switch {
+	case cap(sc.start) >= want:
+	case want <= maxScratch:
+		sc.start = make([]Tag, 0, max(want, 64))
+	default:
+		return make([]Tag, 0, want), sc.ends()
+	}
+	return sc.start[:0], sc.ends()
+}
+
+// ends returns the room for the tags read from the end of a name.
+func (sc *tagScratch) ends() []Tag {
+	if sc.end == nil {
+		sc.end = make([]Tag, 0, endScratch)
+	}
+	return sc.end[:0]
+}
+
+// give takes the room back from a parse that lexed start and end into it,
+// and empties it, so that the scratch keeps no name alive while it waits for
+// the next parse.
+func (sc *tagScratch) give(start, end []Tag) {
+	emptyScratch(sc.start, start)
+	emptyScratch(sc.end, end)
+}
+
+// emptyScratch clears the tags a parse left in room, which is the room of a
+// scratch. used is what the lexers made of it: the same memory with tags in
+// it, or other memory when the room was not theirs or they left it, in which
+// case there is no telling how far they wrote.
+func emptyScratch(room, used []Tag) {
+	if cap(room) != 0 && cap(used) != 0 && unsafe.SliceData(room) == unsafe.SliceData(used) {
+		clear(used)
+		return
+	}
+	clear(room[:cap(room)])
 }
 
 // next reads the next token from src up to the next delimiter. Iterates over
@@ -282,7 +440,7 @@ func (p *TagParser) parse(src []byte) ([]Tag, int) {
 // Lexers have the choice of matching against src or buf. Buf is the working
 // version of src, with underscores and other runes replaced with spaces. Using
 // buf allows lexers to matching with Go regexp `\b`.
-func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *bool) ([]Tag, []Tag, int, int) {
+func (p *tagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *bool) ([]Tag, []Tag, int, int) {
 	// delimiter
 	if bytes.HasPrefix(src[i:n], p.ellip) {
 		return append(
@@ -299,18 +457,30 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 			newTag(src, buf, TagTypeDelim, nil, src[i:j], src[i:j]),
 		), end, j, n
 	}
-	// run all lexers
-	startn := len(start)
-	for a, f := range p.multi {
+	// run the lexers that can match here, in lexer order
+	startn, mask := len(start), p.dispatch.mask(buf, i, n)
+	for a := nextLexer(mask, 0); a < len(p.multi); a = nextLexer(mask, a+1) {
 		if p.notFirst[a] && !*notFirst {
 			continue
 		}
 		// a match has to consume input from one end or the other. One that
 		// does not would be offered the same input again without end, so it
 		// is taken as no match and the next lexer is tried
-		if s, e, j, k, ok := f(src, buf, start, end, i, n); ok && i <= j && j <= k && k <= n && (i < j || k < n) {
+		s, e, j, k, ok := p.multi[a](src, buf, start, end, i, n)
+		if !ok {
+			continue
+		}
+		if i <= j && j <= k && k <= n && (i < j || k < n) {
 			*notFirst = *notFirst || startn != len(s)
 			return s, e, j, k
+		}
+		// the tags of a match that is not taken are behind those that are.
+		// In scratch, which later parses use again, they are cleared
+		if p.pooled && len(s) > len(start) {
+			clear(s[len(start):])
+		}
+		if p.pooled && len(e) > len(end) {
+			clear(e[len(end):])
 		}
 	}
 	// text
@@ -327,7 +497,8 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 
 // ParseRelease parses a release from src.
 func (p *TagParser) ParseRelease(src []byte) Release {
-	return p.builder.Build(p.Parse(src))
+	tags, end := p.Parse(src)
+	return p.state().builder.Build(tags, end)
 }
 
 // TagBuilder is a release builder.
@@ -349,13 +520,13 @@ type TagBuilder struct {
 	// digsuf matches digit suffixes.
 	digsuf *regexp.Regexp
 	// containerf is the container find func.
-	containerf taginfo.FindFunc
+	containerf *finder
 	// audiof is the audio find func.
-	audiof taginfo.FindFunc
+	audiof *finder
 	// resolutionf is the resolution find func.
-	resolutionf taginfo.FindFunc
+	resolutionf *finder
 	// languagef is the language find func.
-	languagef taginfo.FindFunc
+	languagef *finder
 }
 
 // NewTagBuilder creates a new release builder.
@@ -383,10 +554,10 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		sum:         b.sum,
 		digpre:      b.digpre,
 		digsuf:      b.digsuf,
-		containerf:  findFunc(infos["container"]...),
-		audiof:      findFunc(infos["audio"]...),
-		resolutionf: findFunc(infos["resolution"]...),
-		languagef:   findFunc(infos["language"]...),
+		containerf:  newFinder(TagTypeContainer, infos["container"]...),
+		audiof:      newFinder(TagTypeAudio, infos["audio"]...),
+		resolutionf: newFinder(TagTypeResolution, infos["resolution"]...),
+		languagef:   newFinder(TagTypeLanguage, infos["language"]...),
 	}
 }
 
@@ -515,16 +686,25 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 		switch {
 		case r.tags[p].Is(TagTypeText), spaced && r.tags[p].Is(TagTypeSeries, TagTypeEdition):
 			tag = NewTag(TagTypeText, nil, []byte(s[len(d)-1:]), []byte(grp))
+		case len(d) == 1 && p == g-2 && r.tags[p].Is(TagTypeOther) && afterBracket(r.tags[p-1]) && isInitials(r.tags[p].v[0], r.tags[i]):
+			// a hyphenated word alone after the last bracket is the mark
+			// of the group in the leading bracket when it begins with the
+			// initials of that group ('[Hakata Ramen] Show (S2) 02 [1080p
+			// HEVC] HR-DR'). Its first half only looks like an other tag.
+			// Any other word there is the tag it looks like, with the
+			// group after it ('[TGx] Movie (2020) [1080p] REPACK-GRP')
+			r.tags[p] = r.tags[p].As(TagTypeText, nil)
+			tag = NewTag(TagTypeText, nil, []byte(s), []byte(grp))
 		case spaced || r.tags[p].Is(TagTypeLanguage):
 			// a builder that was not initialized has no language rows
 			if b.languagef == nil {
 				continue
 			}
 			// not a row that takes any word with 'sub' or 'dub' in it
-			if info := b.languagef(grp); info == nil || strings.Contains(info.Tag(), "$") {
+			if info := b.languagef.find(grp); info == nil || strings.Contains(info.Tag(), "$") {
 				continue
 			}
-			tag = NewTag(TagTypeLanguage, b.languagef, []byte(s[len(d)-1:]), []byte(grp))
+			tag = NewTag(TagTypeLanguage, b.languagef.fn, []byte(s[len(d)-1:]), []byte(grp))
 		default:
 			continue
 		}
@@ -535,9 +715,39 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 	}
 }
 
+// isInitials reports whether s is the first letters of the words of the site
+// that the meta tag site holds, without regard to case ('HR' of 'Hakata
+// Ramen'). A site of one word has no initials to speak of.
+func isInitials(s string, site Tag) bool {
+	_, v := site.Meta()
+	words := strings.FieldsFunc(v, func(r rune) bool {
+		return r == ' ' || r == '_' || r == '.' || r == '-'
+	})
+	if len(words) < 2 || len(words) != len(s) {
+		return false
+	}
+	for i, word := range words {
+		if !strings.EqualFold(word[:1], s[i:i+1]) {
+			return false
+		}
+	}
+	return true
+}
+
+// afterBracket reports whether tag is a delimiter that closes a bracket and
+// then a space ('] ', ') ').
+func afterBracket(tag Tag) bool {
+	if !tag.Is(TagTypeDelim) {
+		return false
+	}
+	d := strings.TrimRight(tag.Delim(), " \t")
+	return d != "" && len(d) < len(tag.Delim()) && strings.IndexByte("])}", d[len(d)-1]) != -1
+}
+
 // init fixes the initial tag set.
 func (b *TagBuilder) init(r *Release) {
 	b.fixHalfEpisode(r)
+	b.fixTitleRange(r)
 	b.fixFirstDate(r)
 	// determine earliest pivot
 	m, pivot := b.pivots(r, TagTypeDate, TagTypeSource, TagTypeSeries, TagTypeResolution, TagTypeVersion)
@@ -600,6 +810,25 @@ func (b *TagBuilder) fixHalfEpisode(r *Release) {
 		v[0] += "." + half.v[0]
 		r.tags = slices.Delete(slices.Clone(r.tags), i+1, i+3)
 		r.tags[i].v, r.end = v, r.end-2
+	}
+}
+
+// fixTitleRange makes a range of numbers after a word the end of the title
+// when an episode follows it past a spaced hyphen, ie the '17-26' of
+// '[Erai-raws] Tatsuki Fujimoto 17-26 - 01 ~ 08', which names the show where
+// the '01 ~ 08' are its episodes. A range that starts at 1 is left alone, as
+// that is how the episodes of a batch are written ('Show 01-12 - 13').
+func (b *TagBuilder) fixTitleRange(r *Release) {
+	for i := 2; i+2 < r.end; i++ {
+		tag, delim, next := r.tags[i], r.tags[i+1], r.tags[i+2]
+		// the shape the episode range lexer gives, written tight ('17-26')
+		if !tag.Is(TagTypeSeries) || len(tag.v) != 6 || tag.v[1] != "" || tag.v[2] != "" || tag.v[4] != "-" || strings.ContainsAny(tag.v[0], " ~") ||
+			atoi(tag.v[3]) <= 1 ||
+			!r.tags[i-2].Is(TagTypeText) || !r.tags[i-1].Is(TagTypeDelim) || r.tags[i-1].v[0] != " " ||
+			!delim.Is(TagTypeDelim) || delim.v[0] != " - " || !next.Is(TagTypeSeries) || next.val(1) != "" || !next.wroteEpisode() {
+			continue
+		}
+		r.tags[i] = tag.As(TagTypeText, nil)
 	}
 }
 
@@ -857,7 +1086,7 @@ func (b *TagBuilder) fixSourceUHD(r *Release) {
 				k := min(i, j)
 				r.tags[k] = NewTag(TagTypeSource, r.tags[i].f, []byte(r.tags[k].v[0]), []byte("UHD."+s))
 			case strings.Contains(s, "TV"):
-				r.tags[i] = r.tags[i].As(TagTypeResolution, b.resolutionf)
+				r.tags[i] = r.tags[i].as(TagTypeResolution, b.resolutionf)
 			default:
 				continue
 			}
@@ -1021,13 +1250,13 @@ func (b *TagBuilder) fixMusic(r *Release) {
 			case musicExcl && singleEp:
 				r.tags[i] = r.tags[i].As(TagTypeText, nil)
 			case musicExcl && sbBit:
-				r.tags[i] = r.tags[i].As(TagTypeAudio, b.audiof)
+				r.tags[i] = r.tags[i].as(TagTypeAudio, b.audiof)
 			}
 		}
 	}
 	// change single cbr audio tag to the cbr container tag
 	if hasCbr && countCbr == 1 {
-		r.tags[posCbr] = r.tags[posCbr].As(TagTypeContainer, b.containerf)
+		r.tags[posCbr] = r.tags[posCbr].as(TagTypeContainer, b.containerf)
 	}
 }
 
@@ -1584,8 +1813,10 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 		// a bracket that opens in front of the source or the other tags
 		// holds tags ('(1999) [R2JP DVD-Remux]', '(2024) [English Dub] [CR
 		// WEB-DL 1080p]'), and a bar opens another name for the title
-		// ('(2019) | Other Name (BD 1080p)')
-		if pos < end-1 && !((noResolution || end != resolution) && depth > 0) && r.tags[pos].v[0] != "|" {
+		// ('(2019) | Other Name (BD 1080p)'). With the year in front of the
+		// title, the text after the year is the title ('(2014) Title [BDRip
+		// 1920x1080]')
+		if pos < end-1 && pos >= start+offset && !((noResolution || end != resolution) && depth > 0) && r.tags[pos].v[0] != "|" {
 			// numbers alone are not a subtitle, ie the rest of a date that
 			// does not exist ('Show.2023.02.29.HDTV'), and neither are cut
 			// and edition tags with no text beside them, which are in Cut

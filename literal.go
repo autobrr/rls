@@ -32,10 +32,11 @@ import (
 //
 // The bytes are compared as ASCII. A case insensitive regexp also matches
 // 'k' and 's' with the runes U+212A and U+017F, so where the matcher would
-// have to judge a byte outside ASCII -- right after the run, inside a
-// spelling it compares, or as the terminator of a source that does not end in
-// a word character -- it does not decide, and the lexer runs the alternation
-// as before.
+// have to judge a byte outside ASCII -- one of those two runes right after
+// the run, which makes the run longer than its bytes say, any such byte
+// inside a spelling it compares, or as the terminator of a source that does
+// not end in a word character -- it does not decide, and the lexer runs the
+// alternation as before.
 type matcher struct {
 	rows []matchRow
 	// runs gives the rows that have a spelling whose first run of letters and
@@ -62,6 +63,9 @@ type matchRow struct {
 	spellings []string
 	// re matches the row alone, anchored and terminated as the alternation.
 	re func() *regexp.Regexp
+	// dfa says whether re can match at a position, where it is then not run.
+	// It gives nil for a row without an automaton.
+	dfa func() *prefixDFA
 	// offset is where the captures of the row start among those of the type.
 	offset int
 	// gate is what a row in scan needs at a position: one of its first bytes,
@@ -103,7 +107,7 @@ func newMatcher(infos []*taginfo.Taginfo, ci, source bool) *matcher {
 		runs:   make(map[string][]int32),
 		source: source,
 	}
-	classes := make(map[byteClass]byte)
+	var cs classSet
 	for i, info := range infos {
 		// the alternation joins the rows with no group around each, so a row
 		// has to be a whole regexp by itself ('a)|(b' is not) and keep its
@@ -129,6 +133,13 @@ func newMatcher(infos []*taginfo.Taginfo, ci, source bool) *matcher {
 		row.re = sync.OnceValue(func() *regexp.Regexp {
 			return regexp.MustCompile(`^` + pattern + end)
 		})
+		// built when the row is first tried, as few rows are
+		row.dfa = func() *prefixDFA { return nil }
+		if !noGates {
+			row.dfa = sync.OnceValue(func() *prefixDFA {
+				return newPrefixDFA(`^` + pattern + end)
+			})
+		}
 		// what the row can be written as, for the runs it can begin with
 		spellings, err := expandRE(info.RE(), ci)
 		if err != nil {
@@ -174,11 +185,12 @@ func newMatcher(infos []*taginfo.Taginfo, ci, source bool) *matcher {
 		}
 		// a row with no group of its own, as a list of spellings
 		if tree.MaxCap() == 1 {
-			if v, ok := m.spell(tree, classes); ok && len(v) != 0 && !slices.Contains(v, "") {
+			if v, ok := cs.spell(tree); ok && len(v) != 0 && !slices.Contains(v, "") {
 				row.spellings = v
 			}
 		}
 	}
+	m.classes = cs.classes
 	return m
 }
 
@@ -203,27 +215,39 @@ func nullable(re *syntax.Regexp) bool {
 	return false
 }
 
+// classSet numbers the sets of bytes that the positions of the spellings of
+// a tag type hold.
+type classSet struct {
+	classes []byteClass
+	index   map[byteClass]byte
+}
+
 // spell returns the strings re matches as strings of class indexes, in the
 // order a backtracking matcher tries them. It returns false when re is not a
-// list of at most maxSpellings ASCII strings, when a letter or class of it
-// folds to a rune outside ASCII, and when the type runs out of classes.
-func (m *matcher) spell(re *syntax.Regexp, classes map[byteClass]byte) ([]string, bool) {
+// list of at most maxSpellings ASCII strings, when a class of it holds a rune
+// outside ASCII, and when the type runs out of classes. A letter that folds
+// to a rune outside ASCII is spelled with its ASCII cases alone, so a string
+// with a byte outside ASCII is not one to compare with the spellings.
+func (cs *classSet) spell(re *syntax.Regexp) ([]string, bool) {
 	class := func(c byteClass) (byte, bool) {
-		if i, ok := classes[c]; ok {
+		if i, ok := cs.index[c]; ok {
 			return i, true
 		}
-		if len(m.classes) == 256 {
+		if len(cs.classes) == 256 {
 			return 0, false
 		}
-		i := byte(len(m.classes))
-		m.classes, classes[c] = append(m.classes, c), i
+		if cs.index == nil {
+			cs.index = make(map[byteClass]byte)
+		}
+		i := byte(len(cs.classes))
+		cs.classes, cs.index[c] = append(cs.classes, c), i
 		return i, true
 	}
 	switch re.Op {
 	case syntax.OpEmptyMatch:
 		return []string{""}, true
 	case syntax.OpCapture:
-		return m.spell(re.Sub[0], classes)
+		return cs.spell(re.Sub[0])
 	case syntax.OpLiteral:
 		b := make([]byte, len(re.Rune))
 		for i, r := range re.Rune {
@@ -260,7 +284,7 @@ func (m *matcher) spell(re *syntax.Regexp, classes map[byteClass]byte) ([]string
 	case syntax.OpConcat:
 		v := []string{""}
 		for _, sub := range re.Sub {
-			w, ok := m.spell(sub, classes)
+			w, ok := cs.spell(sub)
 			if !ok || len(v)*len(w) > maxSpellings {
 				return nil, false
 			}
@@ -276,7 +300,7 @@ func (m *matcher) spell(re *syntax.Regexp, classes map[byteClass]byte) ([]string
 	case syntax.OpAlternate:
 		var v []string
 		for _, sub := range re.Sub {
-			w, ok := m.spell(sub, classes)
+			w, ok := cs.spell(sub)
 			if !ok || len(v)+len(w) > maxSpellings {
 				return nil, false
 			}
@@ -284,7 +308,7 @@ func (m *matcher) spell(re *syntax.Regexp, classes map[byteClass]byte) ([]string
 		}
 		return v, true
 	case syntax.OpQuest:
-		v, ok := m.spell(re.Sub[0], classes)
+		v, ok := cs.spell(re.Sub[0])
 		if !ok || len(v) >= maxSpellings {
 			return nil, false
 		}
@@ -324,7 +348,7 @@ func (m *matcher) match(b []byte, i, n int) (row, value, end int, sub [][]byte, 
 		key[j] = c
 		j++
 	}
-	if j == 0 || j == len(key) || i+j < n && b[i+j] >= 0x80 {
+	if j == 0 || j == len(key) || foldRune(b, i+j, n) {
 		return 0, 0, 0, nil, false
 	}
 	keyed, scan := m.runs[string(key[:j])], m.scan
@@ -341,6 +365,9 @@ func (m *matcher) match(b []byte, i, n int) (row, value, end int, sub [][]byte, 
 		}
 		r := &m.rows[k]
 		if r.spellings == nil {
+			if d := r.dfa(); d != nil && d.mask(b, i, n) == 0 {
+				continue
+			}
 			if sub := r.re().FindSubmatch(b[i:n]); sub != nil {
 				return int(k), i + len(sub[1]), i + len(sub[0]), sub, true
 			}

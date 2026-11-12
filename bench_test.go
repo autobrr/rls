@@ -1,6 +1,7 @@
 package rls
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 )
 
 func BenchmarkMoistari(b *testing.B) {
+	buildDefault()
 	tests := rlsTests(b)
 	for b.Loop() {
 		for _, test := range tests {
@@ -25,6 +27,12 @@ func BenchmarkCytec(b *testing.B) {
 	}
 }
 
+// buildDefault builds the default parser, which is built when it first
+// parses, so that a benchmark does not count its making.
+func buildDefault() {
+	DefaultParser.(*TagParser).state()
+}
+
 // benchCorpus returns the release names from tests.yaml.
 func benchCorpus(tb testing.TB) []string {
 	tests := rlsTests(tb)
@@ -39,6 +47,7 @@ func benchCorpus(tb testing.TB) []string {
 // (which parses the whole corpus per op), each iteration handles one release,
 // so ns/op, B/op and allocs/op read directly as per-release figures.
 func BenchmarkParse(b *testing.B) {
+	buildDefault()
 	corpus := benchCorpus(b)
 	n, i := len(corpus), 0
 	b.ReportAllocs()
@@ -51,6 +60,7 @@ func BenchmarkParse(b *testing.B) {
 // BenchmarkParseTags measures the lexing phase alone (src -> []Tag), the first
 // of the two phases in ParseRelease.
 func BenchmarkParseTags(b *testing.B) {
+	buildDefault()
 	corpus := benchCorpus(b)
 	src := make([][]byte, len(corpus))
 	for i, s := range corpus {
@@ -75,7 +85,7 @@ func BenchmarkBuild(b *testing.B) {
 	// the builder held by DefaultParser is the one initialized with tag info;
 	// the package level DefaultBuilder has no infos and would not be
 	// representative.
-	builder := DefaultParser.(*TagParser).builder
+	builder := DefaultParser.(*TagParser).state().builder
 	tags := make([][]Tag, len(corpus))
 	ends := make([]int, len(corpus))
 	var max int
@@ -103,6 +113,7 @@ func BenchmarkBuild(b *testing.B) {
 var longName = strings.Repeat("Some.Very.Long.Anime.Title.Words.Here.", 12) + "S01E05.1080p.WEB-DL.x264-GRP"
 
 func BenchmarkParseLong(b *testing.B) {
+	buildDefault()
 	b.ReportAllocs()
 	for b.Loop() {
 		ParseString(longName)
@@ -116,8 +127,63 @@ func BenchmarkParseLong(b *testing.B) {
 var trailingDelims = "x" + strings.Repeat("-", 4000)
 
 func BenchmarkParseTrailingDelims(b *testing.B) {
+	buildDefault()
 	b.ReportAllocs()
 	for b.Loop() {
 		ParseString(trailingDelims)
+	}
+}
+
+// readCorpus returns the names of a file of testdata/corpus, one a line. The
+// corpora are not in the repository, so the file may not be there.
+func readCorpus(file string) ([]string, error) {
+	buf, err := os.ReadFile("testdata/corpus/" + file)
+	if err != nil {
+		return nil, err
+	}
+	var v []string
+	for l := range strings.SplitSeq(string(buf), "\n") {
+		if l = strings.TrimRight(l, "\r"); l != "" {
+			v = append(v, l)
+		}
+	}
+	return v, nil
+}
+
+// corpusNames is readCorpus for what cannot do without the file, and is
+// skipped when it is not there.
+func corpusNames(tb testing.TB, file string) []string {
+	v, err := readCorpus(file)
+	if err != nil {
+		tb.Skip(err)
+	}
+	if len(v) == 0 {
+		tb.Skip("testdata/corpus/" + file + " holds no names")
+	}
+	return v
+}
+
+// BenchmarkParseNyaa is BenchmarkParse on the anime corpus, whose names are
+// longer, hold more brackets and are often not ASCII.
+func BenchmarkParseNyaa(b *testing.B) {
+	corpus := corpusNames(b, "nyaa.txt")
+	buildDefault()
+	n, i := len(corpus), 0
+	b.ReportAllocs()
+	for b.Loop() {
+		ParseString(corpus[i%n])
+		i++
+	}
+}
+
+// BenchmarkParseSports is BenchmarkParse on the sports corpus.
+func BenchmarkParseSports(b *testing.B) {
+	corpus := corpusNames(b, "sports.txt")
+	buildDefault()
+	n, i := len(corpus), 0
+	b.ReportAllocs()
+	for b.Loop() {
+		ParseString(corpus[i%n])
+		i++
 	}
 }

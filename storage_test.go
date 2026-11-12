@@ -2,7 +2,9 @@ package rls
 
 import (
 	"fmt"
+	"slices"
 	"strings"
+	"sync"
 	"testing"
 	"unsafe"
 )
@@ -84,16 +86,327 @@ func TestParseReadOnly(t *testing.T) {
 	}
 }
 
-// TestParseAllocs keeps the allocations of a parse from creeping back up.
+// TestParseAllocs keeps the allocations of a parse, and the size of what it
+// allocates most of, from creeping back up.
 func TestParseAllocs(t *testing.T) {
+	// a release holds a tag for every token of its name, so the size of one
+	// is most of what a kept release costs
+	if n := unsafe.Sizeof(Tag{}); n > 72 {
+		t.Errorf("expected a tag of at most 72 bytes, got: %d", n)
+	}
 	if poolDrops() {
 		t.Skip("the regexp keeps its machines in a pool, which drops them under the race detector")
 	}
 	const name = "Show.Title.S01E02.The.Episode.1080p.WEB-DL.DDP5.1.H.264-GRP"
 	b := []byte(name)
-	// 37 when this was written: the name, the working copy, the tags, and
-	// for each tag its values
-	if n := testing.AllocsPerRun(100, func() { DefaultParser.Parse(b) }); n > 40 {
-		t.Errorf("expected at most 40 allocations for the tags, got: %v", n)
+	// 33 when this was written: the name with its working copy, the tags,
+	// for each of the 20 tags its values, and what the regexps that match
+	// give back
+	if n := testing.AllocsPerRun(100, func() { DefaultParser.Parse(b) }); n > 34 {
+		t.Errorf("expected at most 34 allocations for the tags, got: %v", n)
+	}
+	if n := testing.AllocsPerRun(100, func() { ParseTagsString(name) }); n > 34 {
+		t.Errorf("expected at most 34 allocations for the tags of a string, got: %v", n)
+	}
+	// 49 when this was written
+	if n := testing.AllocsPerRun(100, func() { ParseString(name) }); n > 51 {
+		t.Errorf("expected at most 51 allocations for the release, got: %v", n)
+	}
+}
+
+// scratchNames are names that leave the scratch of a parse in every state:
+// short ones, one with more tags than the scratch has room for at first, one
+// that is longer than the scratch that is kept, and ones whose tags are read
+// from the end.
+var scratchNames = sync.OnceValue(func() []string {
+	return append(slices.Clone(storageNames),
+		"x",
+		"",
+		strings.Repeat("a.b-c_d ", 40)+"1080p.WEB-DL.x264-GRP",
+		strings.Repeat("WEB-DL.", 2*maxScratch)+"mkv",
+		"Title.2020.1080p.WEB-DL.x264-GRP"+strings.Repeat(" [site] {{pass}} [ABCD1234] (REQ).mkv", 12),
+		"Title"+strings.Repeat("-", 3*maxScratch),
+	)
+})
+
+// TestParseExactTags checks that the tags a parse gives have no room to spare
+// and are a slice of their own: not the scratch they were lexed into, and not
+// the tags of another parse.
+func TestParseExactTags(t *testing.T) {
+	var prev []Tag
+	for _, name := range scratchNames() {
+		for k, tags := range [][]Tag{
+			tagsOf(DefaultParser.Parse([]byte(name))),
+			tagsOf(ParseTagsString(name)),
+			ParseString(name).Tags(),
+			Parse([]byte(name)).Tags(),
+			ParseStringHint(name, Hint{DayFirst: true}).Tags(),
+			ParseHint([]byte(name), Hint{Type: Movie}).Tags(),
+		} {
+			if cap(tags) != len(tags) {
+				t.Errorf("%.40q: parse %d: expected room for the %d tags and no more, got: %d", name, k, len(tags), cap(tags))
+			}
+			if len(tags) != 0 && len(prev) != 0 && &tags[0] == &prev[0] {
+				t.Errorf("%.40q: parse %d: expected tags of its own, got those of the parse before", name, k)
+			}
+			if len(tags) != 0 {
+				prev = tags
+			}
+		}
+	}
+}
+
+// tagsOf returns the tags of a parse without where they end.
+func tagsOf(tags []Tag, _ int) []Tag {
+	return tags
+}
+
+// TestParseKeepsAfterReuse checks that a release and its tags stay what they
+// were while later parses use the scratch again, and that the scratch gives
+// every later parse what a first parse gives.
+func TestParseKeepsAfterReuse(t *testing.T) {
+	names := append(scratchNames(), benchCorpus(t)[:100]...)
+	type kept struct {
+		r    Release
+		tags []Tag
+		end  int
+		// what they printed as right after the parse
+		release, list string
+	}
+	keep := make([]kept, len(names))
+	for round := range 3 {
+		for k, name := range names {
+			r := ParseString(name)
+			tags, end := ParseTagsString(name)
+			if round == 0 {
+				keep[k] = kept{r, tags, end, fmt.Sprintf("%q %q", r.Tags(), r.Title), tagList(tags)}
+				continue
+			}
+			// every parse of a name gives what the first one gave
+			if !sameRelease(r, keep[k].r) {
+				t.Fatalf("%.40q: round %d: expected the release of the first parse:%s", name, round, diffRelease(r, keep[k].r))
+			}
+			if !slices.EqualFunc(tags, keep[k].tags, sameTag) || end != keep[k].end {
+				t.Fatalf("%.40q: round %d: expected the tags of the first parse\n%s\ngot:\n%s", name, round, tagList(keep[k].tags), tagList(tags))
+			}
+		}
+	}
+	// and what was kept is what it was
+	for k, name := range names {
+		if s := fmt.Sprintf("%q %q", keep[k].r.Tags(), keep[k].r.Title); s != keep[k].release {
+			t.Errorf("%.40q: expected the kept release to stay\n%s\ngot:\n%s", name, keep[k].release, s)
+		}
+		if s := tagList(keep[k].tags); s != keep[k].list {
+			t.Errorf("%.40q: expected the kept tags to stay\n%s\ngot:\n%s", name, keep[k].list, s)
+		}
+		if s := fmt.Sprintf("%o", keep[k].r); s != name {
+			t.Errorf("%.40q: expected the kept release to print as the name, got: %.40q", name, s)
+		}
+		exercise(keep[k].r)
+	}
+}
+
+// TestParseConcurrent checks that parses running at once, which share the
+// parser, its finders and the pool of scratch, give what the same parses give
+// one after the other.
+func TestParseConcurrent(t *testing.T) {
+	names := append(scratchNames(), benchCorpus(t)...)
+	if testing.Short() {
+		names = names[:len(scratchNames())+150]
+	}
+	p := NewParser()
+	exp := make([]Release, len(names))
+	for k, name := range names {
+		exp[k] = p.ParseRelease([]byte(name))
+	}
+	const workers = 8
+	got := make([][]Release, workers)
+	var wg sync.WaitGroup
+	for w := range workers {
+		wg.Go(func() {
+			got[w] = make([]Release, len(names))
+			// each worker starts somewhere else, so that a name meets every
+			// other name in the scratch
+			for k := range names {
+				k = (k + w*len(names)/workers) % len(names)
+				switch (k + w) % 3 {
+				case 0:
+					got[w][k] = p.ParseRelease([]byte(names[k]))
+				case 1:
+					got[w][k] = p.ParseHint([]byte(names[k]), Hint{})
+				default:
+					got[w][k] = p.builder.Build(p.Parse([]byte(names[k])))
+				}
+			}
+		})
+	}
+	wg.Wait()
+	for w := range workers {
+		for k, name := range names {
+			if !sameRelease(got[w][k], exp[k]) {
+				t.Fatalf("%.40q: worker %d: expected the release of a parse on its own:%s", name, w, diffRelease(got[w][k], exp[k]))
+			}
+			if s := fmt.Sprintf("%o", got[w][k]); s != name {
+				t.Fatalf("%.40q: worker %d: expected the release to print as the name, got: %.40q", name, w, s)
+			}
+		}
+	}
+}
+
+// TestParseConcurrentFirstUse checks parses running at once on a parser that
+// has parsed nothing yet, which between them make everything the parser makes
+// when it is first needed: the regexps a lexer falls back on, the automatons
+// and spellings of rows, and the rows of normalized values.
+func TestParseConcurrentFirstUse(t *testing.T) {
+	// names that reach the regexps most names are kept away from: a rune a
+	// letter folds to, a known group, an underscore before a tag at the end,
+	// a hyphen inside a tag, and rows that are no spellings
+	names := append(slices.Clone(storageNames),
+		"Title.2020.1080p.WE\u212a.x264-GRP",
+		"Title.2020.720p.\u017fDTV.x264",
+		"Title.S01E02.1080p.WEB-DL.DD+5.1.H.264-CODEX",
+		"Some.Game.v1.2-FitGirl",
+		"Title.2019.1080p.BluRay.x264-GRP_INT",
+		"Title.2019.DTS-HD.MA.5.1-WEB-DL",
+		"Title.2019.MULTi5.1920x1080.10bit.4.5GB.dubbed",
+		"é.Title.\xff.2019.!x.#y",
+	)
+	exp := make([]Release, len(names))
+	for k, name := range names {
+		exp[k] = DefaultParser.ParseRelease([]byte(name))
+	}
+	for range 4 {
+		p := NewParser()
+		const workers = 8
+		got := make([][]Release, workers)
+		var wg sync.WaitGroup
+		for w := range workers {
+			wg.Go(func() {
+				got[w] = make([]Release, len(names))
+				for k := range names {
+					k = (k + w) % len(names)
+					got[w][k] = p.ParseRelease([]byte(names[k]))
+				}
+			})
+		}
+		wg.Wait()
+		for w := range workers {
+			for k, name := range names {
+				if !sameRelease(got[w][k], exp[k]) {
+					t.Fatalf("%q: worker %d: expected the release of the default parser:%s", name, w, diffRelease(got[w][k], exp[k]))
+				}
+			}
+		}
+	}
+}
+
+// TestParseCallerLexerKeepsTags checks that a parser with a lexer of a
+// caller's does not lex into scratch that later parses use again: the slices
+// such a lexer was handed, which it may keep, stay what they were.
+func TestParseCallerLexerKeepsTags(t *testing.T) {
+	if !NewParser().pooled {
+		t.Errorf("expected a parser with the default lexers to lex into scratch")
+	}
+	var kept [][]Tag
+	var lists []string
+	keeper := func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+		kept, lists = append(kept, start, end), append(lists, tagList(start), tagList(end))
+		return start, end, i, n, false
+	}
+	wrapped := NewRegexpLexer(TagTypeContainer, true)
+	inner := wrapped.Lex
+	wrapped.Lex = func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
+		keeper(src, buf, start, end, i, n)
+		return inner(src, buf, start, end, i, n)
+	}
+	for name, lexers := range map[string][]Lexer{
+		"a lexer of its own":         append(DefaultLexers(), TagLexer{Lex: keeper}),
+		"a lexer that runs once":     append([]Lexer{TagLexer{Lex: keeper, Once: true}}, DefaultLexers()...),
+		"a wrapped lex func":         append(DefaultLexers(), wrapped),
+		"a lex func handed on as is": append(DefaultLexers(), handedOn{TagLexer{Lex: keeper}}),
+	} {
+		p := NewParser(WithLexers(lexers...))
+		if p.pooled {
+			t.Errorf("%s: expected the parser not to lex into scratch", name)
+		}
+		kept, lists = nil, nil
+		var releases []Release
+		for range 2 {
+			for _, name := range scratchNames() {
+				releases = append(releases, p.ParseRelease([]byte(name)))
+			}
+		}
+		if len(kept) == 0 {
+			t.Errorf("%s: expected the lexer to be called", name)
+		}
+		for k := range kept {
+			if s := tagList(kept[k]); s != lists[k] {
+				t.Fatalf("%s: expected the tags the lexer kept to stay\n%.300s\ngot:\n%.300s", name, lists[k], s)
+			}
+		}
+		for k, r := range releases {
+			if exp := DefaultParser.ParseRelease([]byte(scratchNames()[k%len(scratchNames())])); !sameRelease(r, exp) {
+				t.Fatalf("%s: expected the release of the default parser:%s", name, diffRelease(r, exp))
+			}
+		}
+	}
+	// a lexer of this package under a type of a caller's is still one of
+	// this package's
+	if !NewParser(WithLexers(append(DefaultLexers(), handedOn{NewEpisodeLexer()})...)).pooled {
+		t.Errorf("expected a parser with a lexer of this package handed on to lex into scratch")
+	}
+}
+
+// TestTagScratch checks the room a parse lexes into: that it is enough for a
+// name without growing, that a name too long for the scratch that is kept
+// gets room of its own, and that the scratch is given back empty, whatever
+// the lexers made of it.
+func TestTagScratch(t *testing.T) {
+	tag := NewTag(TagTypeText, nil, []byte("x"), []byte("x"))
+	empty := func(tags []Tag) bool {
+		return !slices.ContainsFunc(tags[:cap(tags)], func(tag Tag) bool { return tag.v != nil })
+	}
+	sc := new(tagScratch)
+	for _, n := range []int{0, 60, 300, 2*maxScratch - 16} {
+		start, end := sc.take(n)
+		if len(start) != 0 || len(end) != 0 || cap(start) < n/2+8 || cap(end) < endScratch {
+			t.Fatalf("%d bytes: expected empty room for %d and %d tags, got: %d of %d and %d of %d", n, n/2+8, endScratch, len(start), cap(start), len(end), cap(end))
+		}
+		if unsafe.SliceData(start) != unsafe.SliceData(sc.start) || unsafe.SliceData(end) != unsafe.SliceData(sc.end) {
+			t.Fatalf("%d bytes: expected the room of the scratch", n)
+		}
+		for range n / 3 {
+			start = append(start, tag)
+		}
+		sc.give(start, append(end, tag, tag))
+		if !empty(sc.start) || !empty(sc.end) {
+			t.Fatalf("%d bytes: expected the scratch to be given back empty", n)
+		}
+	}
+	// a long name gets room that is not kept
+	start, end := sc.take(2*maxScratch + 2)
+	if cap(start) <= maxScratch || cap(sc.start) > maxScratch || unsafe.SliceData(start) == unsafe.SliceData(sc.start) {
+		t.Fatalf("expected room of its own for a long name, got: %d, and %d in the scratch", cap(start), cap(sc.start))
+	}
+	sc.give(append(start, tag), end)
+	if !empty(sc.start) || !empty(sc.end) {
+		t.Fatalf("expected the scratch to be given back empty after a long name")
+	}
+	// lexers that outgrow the room, and lexers that hand back a slice of
+	// their own, leave the scratch as it was made, and empty
+	room := unsafe.SliceData(sc.start)
+	start, end = sc.take(0)
+	for range cap(start) + 1 {
+		start = append(start, tag)
+	}
+	if unsafe.SliceData(start) == room {
+		t.Fatalf("expected the tags to outgrow the room")
+	}
+	sc.give(start, []Tag{tag, tag})
+	if unsafe.SliceData(sc.start) != room || !empty(sc.start) || !empty(sc.end) || cap(sc.end) != endScratch {
+		t.Fatalf("expected the scratch to keep its own room, empty")
+	}
+	if start, _ = sc.take(0); !empty(start) {
+		t.Fatalf("expected empty room after the lexers left it")
 	}
 }

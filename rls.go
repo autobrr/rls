@@ -101,7 +101,8 @@ func Parse(src []byte) Release {
 func ParseString(src string) Release {
 	// the one copy of the name that the tags of the release share
 	if p, ok := DefaultParser.(*TagParser); ok {
-		return p.builder.Build(p.parse([]byte(src)))
+		tags, end := parseCopy(p, src)
+		return p.state().builder.Build(tags, end)
 	}
 	return DefaultParser.ParseRelease([]byte(src))
 }
@@ -124,7 +125,8 @@ func ParseHint(src []byte, h Hint) Release {
 // ParseHint method.
 func ParseStringHint(src string, h Hint) Release {
 	if p, ok := DefaultParser.(*TagParser); ok {
-		return p.parseHint([]byte(src), h)
+		tags, end := parseCopy(p, src)
+		return p.buildHint(tags, end, h)
 	}
 	return ParseHint([]byte(src), h)
 }
@@ -695,7 +697,7 @@ func NewTag(typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
 // src and a buf of its own, so the tags of a parse hold one copy of the name
 // between them. Nothing may write to either once a tag points into it, which
 // the lexers of this package do not, and a lexer of a caller's must not.
-func newTag(src, buf []byte, typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
+func newTag(src, buf []byte, typ TagType, f *finder, b ...[]byte) Tag {
 	if len(b) < 2 {
 		panic("must provide at least 2 values to NewTag")
 	}
@@ -711,11 +713,15 @@ func newTag(src, buf []byte, typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
 			v[i] = string(b[i])
 		}
 	}
-	return Tag{
+	tag := Tag{
 		typ: typ,
 		v:   v,
-		f:   f,
-	}.resolve()
+	}
+	if f != nil {
+		tag.f = f.fn
+		f.resolve(&tag)
+	}
+	return tag
 }
 
 // within reports whether the bytes of b, which is not empty, are bytes of a.
@@ -735,7 +741,7 @@ func ParseTags(src []byte) ([]Tag, int) {
 // ParseTagsString parses tags from src.
 func ParseTagsString(src string) ([]Tag, int) {
 	if p, ok := DefaultParser.(*TagParser); ok {
-		return p.parse([]byte(src))
+		return parseCopy(p, src)
 	}
 	return DefaultParser.Parse([]byte(src))
 }
@@ -749,6 +755,22 @@ func (tag Tag) As(typ TagType, f taginfo.FindFunc) Tag {
 		was:   tag.typ ^ wasBit,
 		prevf: tag.f,
 	}.resolve()
+}
+
+// as is As for a finder of this package, whose rows it looks up without the
+// two calls of a find func.
+func (tag Tag) as(typ TagType, f *finder) Tag {
+	t := Tag{
+		typ:   typ,
+		v:     tag.v,
+		was:   tag.typ ^ wasBit,
+		prevf: tag.f,
+	}
+	if f != nil {
+		t.f = f.fn
+		f.resolve(&t)
+	}
+	return t
 }
 
 // Revert returns a copy of tag as the tag's previous type. The copy does not
@@ -1462,14 +1484,32 @@ func NewDefaultParser() Parser {
 var DefaultBuilder Builder
 
 // DefaultParser is the default tag parser.
+//
+// The built-in one is a *TagParser that is built when it first parses, so a
+// program that never parses, or that assigns its own parser here before it
+// parses, does not pay for it.
 var DefaultParser Parser
+
+// defaultBuilds counts the times the built-in default parser was built, for
+// the tests.
+var defaultBuilds atomic.Int32
+
+// newDefaultTagParser returns the built-in default parser, unbuilt. It is
+// built with builder, the DefaultBuilder of the time the package was
+// initialized, as it was when it was built there.
+func newDefaultTagParser(builder Builder) *TagParser {
+	return &TagParser{load: sync.OnceValue(func() *tagParser {
+		defaultBuilds.Add(1)
+		return &newTagParser(builder, taginfo.All(), DefaultLexers()...).tagParser
+	})}
+}
 
 func init() {
 	for i := Unknown; i <= Series; i++ {
 		taginfo.RegisterType(i.String(), int(i))
 	}
 	DefaultBuilder = NewTagBuilder()
-	DefaultParser = NewDefaultParser()
+	DefaultParser = newDefaultTagParser(DefaultBuilder)
 }
 
 // CompareMap is the release compare map. Modifying this will alter the order

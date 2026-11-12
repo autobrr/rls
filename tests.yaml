@@ -1237,6 +1237,16 @@
   codec: "x264"
   group: "GRP"
   site: "TGx"
+"[TGx] Movie.2020.1080p.WEB.x264.REPACK-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  other: "REPACK"
+  group: "GRP"
+  site: "TGx"
 "Movie (2020) [2160p HDR10+]":
   type: "movie"
   title: "Movie"
@@ -1555,6 +1565,16 @@
   yearend: 2025
   codec: "H.264"
   group: "GRP"
+"[Kawaiika-Raws] (2014) No Game No Life [BDRip 1920x1080 HEVC FLAC]":
+  type: "movie"
+  title: "No Game No Life"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 2014
+  codec: "HEVC"
+  audio: "FLAC"
+  group: "Kawaiika-Raws"
+  site: "Kawaiika-Raws"
 "One Shot [2014] DVDRip XViD-ViCKY":
   type: "movie"
   title: "One Shot"
@@ -3439,6 +3459,16 @@
   title: "Hana-Kimi"
   series: 1
   other: "BDMV"
+"[Hakata Ramen] High Score Girl (Season 2) (Complete) [1080p HEVC] HR-DR":
+  type: "series"
+  title: "High Score Girl"
+  resolution: "1080p"
+  series: 2
+  codec: "HEVC"
+  other: "COMPLETE"
+  group: "Hakata Ramen"
+  site: "Hakata Ramen"
+  unused: "HR DR"
 "[SubsPlease]_Higurashi_no_Naku_Koro_ni_Sotsu_-_09_(1080p)_[C00D6C68]":
   type: "episode"
   title: "Higurashi no Naku Koro ni Sotsu"
@@ -5096,6 +5126,19 @@
   episode: 1
   codec: "H.264"
   group: "GRP"
+"[Erai-raws] Tatsuki Fujimoto 17-26 - 01 ~ 08 [1080p AMZN WEB-DL AVC EAC3][MultiSub] [BATCH]":
+  type: "series"
+  title: "Tatsuki Fujimoto 17-26"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08"
+  codec: "AVC"
+  audio: "DDP"
+  language: "MULTiSUB"
+  group: "Erai-raws"
+  site: "Erai-raws"
+  unused: "BATCH"
 "The Big Bang Theory S08E06 HDTV XviD-LOL [eztv]":
   type: "episode"
   title: "The Big Bang Theory"
