@@ -31,7 +31,9 @@ type Release struct {
 	Artist   string
 	Title    string
 	Subtitle string
-	Alt      string
+	// Alt is the other names of a movie or series given with 'AKA' or 'aka'
+	// in the title, joined with ' AKA ' when there are two or more.
+	Alt string
 
 	Platform string
 	Arch     string

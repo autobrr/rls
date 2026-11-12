@@ -1306,3 +1306,37 @@ func TestLeadingGroupMark(t *testing.T) {
 		}
 	}
 }
+
+// TestSplitAKA checks that a title splits on an all upper or all lower case
+// 'AKA' into the first name and the other names, that empty names are
+// dropped, and that a title with one or two names does not allocate.
+func TestSplitAKA(t *testing.T) {
+	tests := []struct {
+		s, title, alt string
+		allocs        float64
+	}{
+		{"Alpha Film", "Alpha Film", "", 0},
+		{"Wakanda Osaka", "Wakanda Osaka", "", 0},
+		{"Mister Aka Manson", "Mister Aka Manson", "", 0},
+		{"Alpha aKa Beta", "Alpha aKa Beta", "", 0},
+		{"Alpha AKAs Beta", "Alpha AKAs Beta", "", 0},
+		{"Alpha Film AKA Beta Film", "Alpha Film", "Beta Film", 0},
+		{"Alpha Film aka Beta Film", "Alpha Film", "Beta Film", 0},
+		{"Alpha AKA Beta AKA Gamma", "Alpha", "Beta AKA Gamma", 1},
+		{"Alpha aka Beta aka Gamma", "Alpha", "Beta AKA Gamma", 1},
+		{"Alpha AKA AKA Beta", "Alpha", "Beta", 0},
+		{"AKA Alpha AKA Beta", "Alpha", "Beta", 0},
+		{"AKA Alpha", "AKA Alpha", "", 0},
+		{"Alpha AKA", "Alpha AKA", "", 0},
+		{"AKA AKA", "AKA AKA", "", 0},
+		{"AKA", "AKA", "", 0},
+	}
+	for _, test := range tests {
+		if title, alt := splitAKA(test.s); title != test.title || alt != test.alt {
+			t.Errorf("%q: expected %q and %q, got: %q and %q", test.s, test.title, test.alt, title, alt)
+		}
+		if n := testing.AllocsPerRun(100, func() { _, _ = splitAKA(test.s) }); n > test.allocs {
+			t.Errorf("%q: allocates %v times, expected at most %v", test.s, n, test.allocs)
+		}
+	}
+}
