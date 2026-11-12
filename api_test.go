@@ -236,3 +236,15 @@ func TestCompareResolution(t *testing.T) {
 		t.Errorf("expected 1440p after DCI2K, got: %d", got)
 	}
 }
+
+// TestBuilderWithoutInit checks that a builder used without Init builds a
+// name with a language after the group hyphen, which needs the language rows
+// it does not have.
+func TestBuilderWithoutInit(t *testing.T) {
+	const name = "[Group] Movie (BD 1080p) - VOSTFR"
+	p := NewParser()
+	p.SetBuilder(NewTagBuilder())
+	if r := p.ParseRelease([]byte(name)); r.Title == "" {
+		t.Errorf("%q: expected a title, got: %q", name, r)
+	}
+}

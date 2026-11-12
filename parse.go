@@ -516,6 +516,10 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 		case r.tags[p].Is(TagTypeText), spaced && r.tags[p].Is(TagTypeSeries, TagTypeEdition):
 			tag = NewTag(TagTypeText, nil, []byte(s[len(d)-1:]), []byte(grp))
 		case spaced || r.tags[p].Is(TagTypeLanguage):
+			// a builder that was not initialized has no language rows
+			if b.languagef == nil {
+				continue
+			}
 			// not a row that takes any word with 'sub' or 'dub' in it
 			if info := b.languagef(grp); info == nil || strings.Contains(info.Tag(), "$") {
 				continue
