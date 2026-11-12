@@ -87,6 +87,20 @@ func fixtureNum(s string) int {
 	return -1
 }
 
+// fixtureRes gives a fixture's resolution in the form the parser reports it:
+// the height of a size ('1280x720' is '720p'), with the p a bare height
+// leaves out.
+func fixtureRes(s string) string {
+	s = strings.ToLower(strings.ReplaceAll(s, "×", "x"))
+	if _, h, ok := strings.Cut(s, "x"); ok {
+		s = h
+	}
+	if s != "" && strings.Trim(s, "0123456789") == "" {
+		s += "p"
+	}
+	return s
+}
+
 type tally struct{ ok, total int }
 
 func (t *tally) add(ok bool) {
@@ -162,7 +176,7 @@ func TestAccuracyLabelled(t *testing.T) {
 					get("group").add(strings.EqualFold(r.Group, g))
 				}
 				if e := first(c.EpisodeNumber); e != "" {
-					get("episode").add(r.Episode == fixtureNum(e))
+					get("episode").add(r.HasEpisode() && r.Episode == fixtureNum(e))
 				}
 				season := first(c.AnimeSeason)
 				if season == "" {
@@ -175,7 +189,7 @@ func TestAccuracyLabelled(t *testing.T) {
 					get("checksum").add(strings.EqualFold(r.Sum, s))
 				}
 				if s := first(c.VideoResolution); s != "" {
-					get("resolution").add(r.Resolution != "")
+					get("resolution").add(r.Resolution == fixtureRes(s))
 				}
 				if s := first(c.FileExtension); s != "" {
 					get("ext").add(strings.EqualFold(r.Ext, s))
@@ -280,33 +294,35 @@ func TestAbsoluteEpisode(t *testing.T) {
 	for _, test := range []struct {
 		s                         string
 		series, episode, absolute int
+		ok                        bool
 		desc                      string
 	}{
-		{"[SubsPlease] One Piece - 1169 (1080p) [ABCD1234].mkv", 0, 1169, 1169, "bare number, no season: absolute"},
-		{"[HorribleSubs] Detective Conan - 862 [1080p].mkv", 0, 862, 862, "same, three digits"},
-		{"[Group] Show Title - 05 - Episode Name (1080p).mkv", 0, 5, 5, "bare number with an episode title"},
-		{"One.Piece.E1100.1080p.WEB.h264-GRP", 0, 1100, 1100, "written with an E, no season: absolute"},
-		{"[Group] One Piece EP1168 1080p WEB-DL AAC2.0 H.264", 0, 1168, 1168, "written with EP"},
-		{"[Group] Show Title Episode 909 [1080p]", 0, 909, 909, "written out"},
-		{"[Group] Show Title 2nd Season - 08 [1080p]", 2, 8, 0, "ordinal season qualifies it"},
-		{"[Group] Show Title Second Season - 08 [1080p]", 2, 8, 0, "so does one written as a word"},
-		{"[Group] Show Title E05-E07 [1080p]", 0, 5, 0, "the ends of a range between two tags are not one episode"},
-		{"[Group] Show Title (E001-E130) (480p)", 0, 1, 0, "the same in a bracket"},
-		{"[Group] Show Title E05~E07 [1080p]", 0, 5, 0, "and with a tilde"},
-		{"[Group] Show Title E07-E05 [1080p]", 0, 7, 7, "a lower number after the hyphen is no range"},
-		{"[Group] Show Title - 21.5 (720p) [4191AC97].mkv", 0, 21, 0, "half an episode has no absolute number"},
-		{"[Group] Show Title - 01 ~ 12 [1080p][BATCH]", 0, 0, 0, "a batch is a range, not an episode"},
-		{"[SubsPlease] Hell Mode S2 - 04 (480p) [20BE14E8].mkv", 2, 4, 0, "season marker qualifies it: not absolute"},
-		{"Show.Title.S01E05.1080p.WEB-DL-GRP", 1, 5, 0, "SxxExx is qualified"},
-		{"Show.Title.S00E05.1080p.WEB-DL-GRP", 0, 5, 0, "S00Exx is a special, not an absolute number"},
-		{"Show.Title.2024.03.11.1080p.WEB-DL-GRP", 0, 0, 0, "date based, no episode at all"},
+		{"[SubsPlease] One Piece - 1169 (1080p) [ABCD1234].mkv", 0, 1169, 1169, true, "bare number, no season: absolute"},
+		{"[HorribleSubs] Detective Conan - 862 [1080p].mkv", 0, 862, 862, true, "same, three digits"},
+		{"[Group] Show Title - 05 - Episode Name (1080p).mkv", 0, 5, 5, true, "bare number with an episode title"},
+		{"One.Piece.E1100.1080p.WEB.h264-GRP", 0, 1100, 1100, true, "written with an E, no season: absolute"},
+		{"[Group] One Piece EP1168 1080p WEB-DL AAC2.0 H.264", 0, 1168, 1168, true, "written with EP"},
+		{"[Group] Show Title Episode 909 [1080p]", 0, 909, 909, true, "written out"},
+		{"[Group] Show Title 2nd Season - 08 [1080p]", 2, 8, 0, false, "ordinal season qualifies it"},
+		{"[Group] Show Title Second Season - 08 [1080p]", 2, 8, 0, false, "so does one written as a word"},
+		{"[Group] Show Title E05-E07 [1080p]", 0, 5, 0, false, "the ends of a range between two tags are not one episode"},
+		{"[Group] Show Title (E001-E130) (480p)", 0, 1, 0, false, "the same in a bracket"},
+		{"[Group] Show Title E05~E07 [1080p]", 0, 5, 0, false, "and with a tilde"},
+		{"[Group] Show Title E07-E05 [1080p]", 0, 7, 7, true, "a lower number after the hyphen is no range"},
+		{"[Group] Show Title - 21.5 (720p) [4191AC97].mkv", 0, 21, 0, false, "half an episode has no absolute number"},
+		{"[Group] Show Title - 01 ~ 12 [1080p][BATCH]", 0, 0, 0, false, "a batch is a range, not an episode"},
+		{"[SubsPlease] Hell Mode S2 - 04 (480p) [20BE14E8].mkv", 2, 4, 0, false, "season marker qualifies it: not absolute"},
+		{"Show.Title.S01E05.1080p.WEB-DL-GRP", 1, 5, 0, false, "SxxExx is qualified"},
+		{"Show.Title.S00E05.1080p.WEB-DL-GRP", 0, 5, 0, false, "S00Exx is a special, not an absolute number"},
+		{"[Group] Show Title - 00 [1080p].mkv", 0, 0, 0, true, "a written episode 0 is absolute"},
+		{"Show.Title.2024.03.11.1080p.WEB-DL-GRP", 0, 0, 0, false, "date based, no episode at all"},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
 			r := ParseString(test.s)
 			absolute, ok := r.Absolute()
-			if r.Series != test.series || r.Episode != test.episode || absolute != test.absolute || ok != (test.absolute != 0) {
-				t.Errorf("%q\n  expected series=%d episode=%d absolute=%d\n  got      series=%d episode=%d absolute=%d ok=%t",
-					test.s, test.series, test.episode, test.absolute, r.Series, r.Episode, absolute, ok)
+			if r.Series != test.series || r.Episode != test.episode || absolute != test.absolute || ok != test.ok {
+				t.Errorf("%q\n  expected series=%d episode=%d absolute=%d ok=%t\n  got      series=%d episode=%d absolute=%d ok=%t",
+					test.s, test.series, test.episode, test.absolute, test.ok, r.Series, r.Episode, absolute, ok)
 			}
 		})
 	}
