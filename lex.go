@@ -2130,14 +2130,19 @@ type namedCapture struct {
 	// false when that set could not be bounded, in which case it always runs.
 	leads [][256]bool
 	gated []bool
-	// pairs[l] narrows that to the first two bytes: 'Se' can begin a month
-	// name where 'Sh' cannot, though both pass on 'S'.
+	// dfa gives the regexps that can match at a position, of which the others
+	// are not run. It is nil when the regexps have no automaton.
+	dfa *prefixDFA
+	// pairs[l] narrows leads[l] to the first two bytes, for regexps without
+	// an automaton: 'Se' can begin a month name where 'Sh' cannot, though
+	// both pass on 'S'.
 	pairs []*pairSet
 }
 
 // newNamedCapture builds the regexps of strs that have a named capture group.
 func newNamedCapture(strs ...string) *namedCapture {
 	nc := &namedCapture{}
+	var kept []string
 	for l := 0; l < len(strs); l++ {
 		// build regexp and collect subexp indexes
 		re := regexp.MustCompile(strs[l])
@@ -2152,7 +2157,12 @@ func newNamedCapture(strs ...string) *namedCapture {
 			lead, ok := leadSet(strs[l])
 			nc.regexps, nc.indexes, nc.subexps = append(nc.regexps, re), append(nc.indexes, idx), append(nc.subexps, names)
 			nc.leads, nc.gated = append(nc.leads, lead), append(nc.gated, ok)
-			nc.pairs = append(nc.pairs, newPairSet(strs[l]))
+			kept = append(kept, strs[l])
+		}
+	}
+	if nc.dfa = newPrefixDFA(kept...); nc.dfa == nil {
+		for _, s := range kept {
+			nc.pairs = append(nc.pairs, newPairSet(s))
 		}
 	}
 	return nc
@@ -2161,14 +2171,26 @@ func newNamedCapture(strs ...string) *namedCapture {
 // lex matches the regexps in turn at i in buf, and returns the text of the
 // first match in src with the names and values of its groups.
 func (nc *namedCapture) lex(src, buf []byte, i, n int) ([]byte, [][]byte, int, int, bool) {
+	var can uint32
+	if nc.dfa != nil {
+		if can = nc.dfa.mask(buf, i, n); can == 0 {
+			return nil, nil, i, n, false
+		}
+	}
 	for l, re := range nc.regexps {
+		switch {
+		case nc.dfa != nil:
+			if can&(1<<l) == 0 {
+				continue
+			}
 		// every one of these regexps is ^-anchored, so a match must begin
 		// with buf[i]
-		if nc.gated[l] && i < n && !nc.leads[l][buf[i]] {
+		case nc.gated[l] && i < n && !nc.leads[l][buf[i]]:
 			continue
-		}
-		if ps := nc.pairs[l]; ps != nil && i+1 < n && buf[i] < 0x80 && buf[i+1] < 0x80 && !ps.has(buf[i], buf[i+1]) {
-			continue
+		default:
+			if ps := nc.pairs[l]; ps != nil && i+1 < n && buf[i] < 0x80 && buf[i+1] < 0x80 && !ps.has(buf[i], buf[i+1]) {
+				continue
+			}
 		}
 		if m := re.FindSubmatch(buf[i:n]); m != nil {
 			// build values

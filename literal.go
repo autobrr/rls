@@ -62,6 +62,9 @@ type matchRow struct {
 	spellings []string
 	// re matches the row alone, anchored and terminated as the alternation.
 	re func() *regexp.Regexp
+	// dfa says whether re can match at a position, where it is then not run.
+	// It gives nil for a row without an automaton.
+	dfa func() *prefixDFA
 	// offset is where the captures of the row start among those of the type.
 	offset int
 	// gate is what a row in scan needs at a position: one of its first bytes,
@@ -129,6 +132,13 @@ func newMatcher(infos []*taginfo.Taginfo, ci, source bool) *matcher {
 		row.re = sync.OnceValue(func() *regexp.Regexp {
 			return regexp.MustCompile(`^` + pattern + end)
 		})
+		// built when the row is first tried, as few rows are
+		row.dfa = func() *prefixDFA { return nil }
+		if !noGates {
+			row.dfa = sync.OnceValue(func() *prefixDFA {
+				return newPrefixDFA(`^` + pattern + end)
+			})
+		}
 		// what the row can be written as, for the runs it can begin with
 		spellings, err := expandRE(info.RE(), ci)
 		if err != nil {
@@ -354,6 +364,9 @@ func (m *matcher) match(b []byte, i, n int) (row, value, end int, sub [][]byte, 
 		}
 		r := &m.rows[k]
 		if r.spellings == nil {
+			if d := r.dfa(); d != nil && d.mask(b, i, n) == 0 {
+				continue
+			}
 			if sub := r.re().FindSubmatch(b[i:n]); sub != nil {
 				return int(k), i + len(sub[1]), i + len(sub[0]), sub, true
 			}
