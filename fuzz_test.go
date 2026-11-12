@@ -54,8 +54,10 @@ func checkTags(tb testing.TB, s string) {
 	var b strings.Builder
 	at := -1
 	for i, tag := range tags {
+		// compare only what the tag added, as the text before it matched
+		n := b.Len()
 		fmt.Fprintf(&b, "%o", tag)
-		if at < 0 && !strings.HasPrefix(s, b.String()) {
+		if at < 0 && !strings.HasPrefix(s[n:], b.String()[n:]) {
 			at = i
 		}
 	}
