@@ -2836,6 +2836,13 @@
   episode: 4
   absolute: 4
   codec: "HEVC"
+"[Hikki] Arifureta Shokugyou de Sekai Saikyou SP/OVA Episode 00 - Prologue":
+  type: "episode"
+  title: "Arifureta Shokugyou de Sekai Saikyou SP"
+  subtitle: "Prologue"
+  group: "Hikki"
+  site: "Hikki"
+  unused: "OVA"
 "Azure.Circles.Ghost.Realm.S01.1080p.BluRay.Opus2.0.x265-RUNE":
   type: "series"
   title: "Azure Circles Ghost Realm"

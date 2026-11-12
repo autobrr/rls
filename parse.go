@@ -1045,6 +1045,34 @@ func bareEpisode(tags []Tag, i int) bool {
 		peek(tags, i+2, TagTypeText) && tags[i+2].v[0] != "" && strings.Trim(tags[i+2].v[0], "0123456789") == "")
 }
 
+// specialEpisode reports whether the tag at i is an 'SP' that may mark a
+// special and not the format of a record. It stands in front of one episode
+// written with no season, with nothing but spaces, dots or underscores
+// between ('Show SP Episode 00 Prologue'), or a slash and one more word ('Show
+// SP/OVA Episode 00'). And the name up to it is a title: text with spaces,
+// dots or underscores between, after a group in square brackets or not, and
+// nothing that was read as a tag. A hyphen there sets an artist apart from an
+// album ('Artist - Album SP Episode 1'), and in a bracket or between hyphens
+// the 'SP' is the format ('Album (SP) Episode 1', 'Album - SP - 01').
+func specialEpisode(tags []Tag, i int) bool {
+	plain := func(k int) bool {
+		return peek(tags, k, TagTypeDelim) && strings.Trim(tags[k].v[0], "._ ") == ""
+	}
+	if !tags[i].Is(TagTypeSource) || tags[i].v[0] != "SP" || !plain(i-1) || !peek(tags, i-2, TagTypeText) {
+		return false
+	}
+	for k := i - 3; k >= 0; k-- {
+		if !plain(k) && !tags[k].Is(TagTypeText, TagTypeWhitespace, TagTypeMeta) {
+			return false
+		}
+	}
+	k := i + 1
+	if peek(tags, k, TagTypeDelim) && tags[k].v[0] == "/" && peek(tags, k+1, TagTypeText) {
+		k += 2
+	}
+	return plain(k) && k+1 < len(tags) && bareEpisode(tags, k+1)
+}
+
 // appendOnce appends s to v unless v holds it already. A name that gives a
 // value twice has it once, whether it writes the tag twice ('[Dual-Audio] ...
 // [Dual-Audio]') or in two spellings ('[Eng] [English]').
@@ -1249,6 +1277,12 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			// broadcast it came on still makes it music ('1080p.MBluRay'),
 			// not a word ('Mixed.Team.Final.1080p')
 			if series && r.Resolution != "" || video && (series || r.Resolution != "" && !r.tags[i-1].Is(TagTypeSource, TagTypeSize)) {
+				continue
+			}
+			// and 'SP' between a title and an episode marks a special. An
+			// audio tag or a year in the name is what a record has ('Album
+			// SP Episode 1 FLAC')
+			if len(r.Audio) == 0 && r.Year == 0 && specialEpisode(r.tags, i-1) {
 				continue
 			}
 			// peek for audiobook

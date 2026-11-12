@@ -127,6 +127,39 @@ func TestOpeningResolution(t *testing.T) {
 	}
 }
 
+// TestSpecialEpisode checks that an 'SP' in front of an episode with no season
+// marks a special, in a name with no video tag as in one with them, and that
+// it stays the format of a record elsewhere.
+func TestSpecialEpisode(t *testing.T) {
+	for _, test := range []struct {
+		name, title, subtitle, source string
+		typ                           Type
+	}{
+		{"[Grp] Show SP Episode 00 - Prologue", "Show SP", "Prologue", "", Episode},
+		{"[Grp] Show SP/OVA Episode 00 - Prologue", "Show SP", "Prologue", "", Episode},
+		{"Show SP Episode 00 Prologue", "Show SP", "Prologue", "", Episode},
+		{"[Grp] Show SP Episode 00 Prologue (Web 1080p AAC).mkv", "Show SP", "Prologue", "WEB", Episode},
+		// in a bracket, between hyphens, with no episode after it, or in a
+		// name with an audio tag or a year
+		{"Artist - Album (SP) Episode 1 FLAC", "Album", "", "SP", Music},
+		{"Artist - Album SP - 01", "Album", "", "SP", Music},
+		{"Artist-Album-SP-FLAC-2020-GRP", "Album", "", "SP", Music},
+		{"Artist-Album_SP_Episode_1-WEB-FLAC-2020-GRP", "Album", "", "SP", Music},
+		{"Artist - Album SP Episode 1 FLAC", "Album", "", "SP", Music},
+		{"Artist - Single SP E01 MP3 320", "Single", "", "SP", Music},
+		{"Artist - Mixtape SP Ep 5 (2019)", "Mixtape", "", "SP", Music},
+		// or after a hyphen, which sets an artist apart from an album
+		{"Artist - Album SP Episode 1", "Album", "", "SP", Music},
+		{"Artist-Album_SP_Episode_1-WEB-GRP", "Album", "", "SP", Music},
+		{"Artist - Album SP Episode 1 (Remastered)", "Album", "", "SP", Music},
+	} {
+		r := ParseString(test.name)
+		if r.Type != test.typ || r.Title != test.title || r.Subtitle != test.subtitle || r.Source != test.source {
+			t.Errorf("%q: expected %s, title %q, subtitle %q, source %q, got: %s, %q, %q, %q", test.name, test.typ, test.title, test.subtitle, test.source, r.Type, r.Title, r.Subtitle, r.Source)
+		}
+	}
+}
+
 // TestListValuesOnce checks that a value the name writes twice is in its
 // list field once, at the place it was first written.
 func TestListValuesOnce(t *testing.T) {
