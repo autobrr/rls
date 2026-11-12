@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"regexp"
 	"slices"
+	"strings"
 	"testing"
+
+	"github.com/autobrr/rls/reutil"
+	"github.com/autobrr/rls/taginfo"
 )
 
 // TestMetaSuffixFrom checks that the suffix of a meta pattern is found from
@@ -119,4 +123,46 @@ func TestMetaSuffixFrom(t *testing.T) {
 		t.Errorf("expected most searches to begin later or not at all and many to match, got: %d and %d of %d", narrowed, matched, searched)
 	}
 	t.Logf("%d of %d searches begin later or not at all, %d match", narrowed, searched, matched)
+}
+
+// TestExtTail checks that the test the ext lexer makes before its regexp
+// never rules out a name the regexp matches: for the extensions as they are
+// written and in other cases, with what may stand in front of and after them,
+// and for the names of tests.yaml.
+func TestExtTail(t *testing.T) {
+	ext := taginfo.All()["ext"]
+	re := regexp.MustCompile(`(?i:\.` + reutil.Taginfo("$", ext...) + `)`)
+	tails := make(map[string]struct{})
+	names := benchCorpus(t)
+	for _, info := range ext {
+		exp, err := expandRE(info.RE(), true)
+		if err != nil {
+			t.Fatalf("%s: expected the row to expand", info.Tag())
+		}
+		for _, s := range exp {
+			tails[strings.ToUpper(s)] = struct{}{}
+			for _, v := range []string{s, strings.ToUpper(s), strings.ToLower(s), strings.Replace(s, "s", "\u017f", 1), strings.Replace(s, "k", "\u212a", 1)} {
+				names = append(names, "Title."+v, "."+v, v, "Title."+v+".", "Title."+v+".x", "Title.x."+v, "Title.é."+v, "Title."+v+"é", "Title."+v+" ", "Title.."+v, "Title.tar."+v)
+			}
+		}
+	}
+	names = append(names, "", ".", "..", "Title", "Title.", "Title.zzz", "Title.\xff", "Title."+strings.Repeat("a", 60))
+	var ruledOut int
+	for _, name := range names {
+		b := []byte(name)
+		matched, tail := re.Match(b), extTail(b, tails)
+		if matched && !tail {
+			t.Errorf("%q: the regexp matches and the test rules it out", name)
+		}
+		if !tail {
+			ruledOut++
+		}
+		if extTail(b, nil) != (strings.IndexByte(name, '.') != -1) {
+			t.Errorf("%q: expected any period to do without tails", name)
+		}
+	}
+	if ruledOut == 0 {
+		t.Errorf("expected names to be ruled out")
+	}
+	t.Logf("%d of %d names ruled out", ruledOut, len(names))
 }

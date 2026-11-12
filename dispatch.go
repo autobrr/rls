@@ -110,8 +110,10 @@ func withGate(lexer TagLexer, gate func() *lexGate) TagLexer {
 	return lexer
 }
 
-// noGates makes a parser try every lexer at every position, for a test to
-// compare a parser built that way with one that has the gates.
+// noGates makes a parser go without what only saves it work, for a test to
+// compare a parser built that way with one that has it all: every lexer is
+// tried at every position, no automaton stands in front of a regexp, and the
+// lexers that run once search the whole of what they are given.
 var noGates bool
 
 // maxDispatch is how many lexers a dispatch can tell apart. The lexers past

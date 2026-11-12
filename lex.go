@@ -2073,6 +2073,9 @@ func NewExtLexer() Lexer {
 	// the longest extension, with every character allowed its widest (?i)
 	// fold (three bytes). It is 0 when a row could not be expanded.
 	var window int
+	// tails are the spellings of the extensions, in upper case, or nil when
+	// the tail is not looked up
+	tails := make(map[string]struct{})
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			ext := infos["ext"]
@@ -2087,18 +2090,23 @@ func NewExtLexer() Lexer {
 					if w := 1 + 3*len(s); w > window {
 						window = w
 					}
+					tails[strings.ToUpper(s)] = struct{}{}
 				}
+			}
+			if noGates {
+				tails = nil
 			}
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			// every match ends at n, so only the tail can hold one, and it has
-			// to contain the period the pattern opens with
+			// to contain the period the pattern opens with and a spelling
+			// from there to its end
 			if window != 0 {
 				i0 := i
 				if n-i > window {
 					i0 = n - window
 				}
-				if bytes.IndexByte(src[i0:n], '.') == -1 {
+				if !extTail(src[i0:n], tails) {
 					return start, end, i, n, false
 				}
 				if m := re.FindSubmatch(src[i0:n]); m != nil {
@@ -2113,6 +2121,40 @@ func NewExtLexer() Lexer {
 		},
 		Once: true,
 	}
+}
+
+// extTail reports whether b may end in an extension: whether it has a period
+// with one of tails from there to its end, which are the spellings of the
+// extensions in upper case. A period with a byte outside ASCII after it is
+// left to the regexp, since a letter of a spelling matches a rune or two
+// outside ASCII, and so is a tail too long to look up. Without tails any
+// period will do.
+func extTail(b []byte, tails map[string]struct{}) bool {
+	var key [48]byte
+	for p := bytes.IndexByte(b, '.'); p != -1; {
+		rest := b[p+1:]
+		if tails == nil || len(rest) > len(key) {
+			return true
+		}
+		for k, c := range rest {
+			if c >= 0x80 {
+				return true
+			}
+			if c >= 'a' && c <= 'z' {
+				c -= 32
+			}
+			key[k] = c
+		}
+		if _, ok := tails[string(key[:len(rest)])]; ok {
+			return true
+		}
+		q := bytes.IndexByte(rest, '.')
+		if q == -1 {
+			break
+		}
+		p += 1 + q
+	}
+	return false
 }
 
 // NewRegexpLexer creates a tag lexer for a regexp.
