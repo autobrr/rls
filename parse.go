@@ -625,6 +625,7 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	// demarcate unused
 	b.unused(r, i)
 	b.trailingGroup(r)
+	leadingAlt(r)
 	return *r
 }
 
@@ -649,6 +650,57 @@ func leadingFlags(tags []Tag, end int) int {
 		return 0
 	}
 	return k
+}
+
+// leadingAlt reads a leading bracket of CJK script as the title in that
+// script when a scene group closes the name ('[港灯].Harbor.Lights.S01-GRP'),
+// where the bracket would otherwise be the site. It is left alone when it is
+// the group ('[桜都字幕组] Show - 01 [1080p]'), when it names a fansub group
+// ('[桜都字幕组] Show.S01E01.1080p.WEB-DL-GRP'), and when another bracket or a
+// title in CJK script follows it.
+func leadingAlt(r *Release) {
+	if r.Alt != "" || r.Site == "" || r.Group == "" || r.Group == r.Site ||
+		strings.IndexFunc(r.Title, isCJK) != -1 || !cjkOnly(r.Site) || fansubMark(r.Site) {
+		return
+	}
+	i := 0
+	for ; i < len(r.tags) && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim); i++ {
+	}
+	if i == len(r.tags) || !r.tags[i].Is(TagTypeMeta) || !strings.HasPrefix(strings.TrimSpace(r.tags[i].v[0]), "[") {
+		return
+	}
+	if k, v := r.tags[i].Meta(); k != "site" || v != r.Site {
+		return
+	}
+	for i++; i < len(r.tags) && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim); i++ {
+		if strings.ContainsAny(r.tags[i].v[0], "[(【（") {
+			return
+		}
+	}
+	if i == len(r.tags) || !r.tags[i].Is(TagTypeText) {
+		return
+	}
+	r.Alt, r.Site = r.Site, ""
+}
+
+// isCJK reports whether c is a letter of a CJK script.
+func isCJK(c rune) bool {
+	return unicode.In(c, unicode.Han, unicode.Hiragana, unicode.Katakana, unicode.Hangul)
+}
+
+// cjkOnly reports whether s is written in CJK script, with spaces and CJK
+// punctuation ('港灯', 'ハーバー・ライツ', '항구의 불빛').
+func cjkOnly(s string) bool {
+	return strings.IndexFunc(s, isCJK) != -1 && strings.IndexFunc(s, func(c rune) bool {
+		return !isCJK(c) && c != ' ' && c != '·' && !('　' <= c && c <= '〿') && c != '・' && c != 'ー'
+	}) == -1
+}
+
+// fansubMark reports whether s names a fansub group: subtitles (字幕),
+// translation (汉化, 漢化), a studio (工作室), or a group or club (组, 組, 社).
+func fansubMark(s string) bool {
+	return strings.Contains(s, "字幕") || strings.Contains(s, "汉化") || strings.Contains(s, "漢化") ||
+		strings.Contains(s, "工作室") || strings.HasSuffix(s, "组") || strings.HasSuffix(s, "組") || strings.HasSuffix(s, "社")
 }
 
 // leadingGroup sets the group from a site meta tag appearing in a leading
