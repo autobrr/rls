@@ -701,7 +701,11 @@ func TestHalfEpisodeTags(t *testing.T) {
 	const name = "Show.S01E06.5.WEB.x264-GRP"
 	p := NewParser()
 	tags, end := p.Parse([]byte(name))
+	// the values too, which a shallow copy shares with tags
 	before := slices.Clone(tags)
+	for i := range before {
+		before[i].v = slices.Clone(before[i].v)
+	}
 	r := p.builder.Build(tags, end)
 	if len(r.Tags()) != len(tags)-2 {
 		t.Fatalf("expected the release to have two tags fewer than %d, got: %d", len(tags), len(r.Tags()))
