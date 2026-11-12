@@ -157,6 +157,9 @@ func corpusNames(tb testing.TB, file string) []string {
 	if err != nil {
 		tb.Skip(err)
 	}
+	if len(v) == 0 {
+		tb.Skip("testdata/corpus/" + file + " holds no names")
+	}
 	return v
 }
 
@@ -164,6 +167,7 @@ func corpusNames(tb testing.TB, file string) []string {
 // longer, hold more brackets and are often not ASCII.
 func BenchmarkParseNyaa(b *testing.B) {
 	corpus := corpusNames(b, "nyaa.txt")
+	buildDefault()
 	n, i := len(corpus), 0
 	b.ReportAllocs()
 	for b.Loop() {
@@ -175,6 +179,7 @@ func BenchmarkParseNyaa(b *testing.B) {
 // BenchmarkParseSports is BenchmarkParse on the sports corpus.
 func BenchmarkParseSports(b *testing.B) {
 	corpus := corpusNames(b, "sports.txt")
+	buildDefault()
 	n, i := len(corpus), 0
 	b.ReportAllocs()
 	for b.Loop() {
