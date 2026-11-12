@@ -2353,7 +2353,11 @@ func newNamedCapture(strs ...string) *namedCapture {
 			}
 		}
 		if len(idx) != 0 {
+			// the bytes a match begins with are those at i only for a regexp
+			// anchored at the start. One that is not finds its match further
+			// on, so it is never skipped
 			lead, ok := leadSet(strs[l])
+			ok = ok && anchored(strs[l])
 			nc.regexps, nc.indexes, nc.subexps = append(nc.regexps, re), append(nc.indexes, idx), append(nc.subexps, names)
 			nc.leads, nc.gated = append(nc.leads, lead), append(nc.gated, ok)
 			kept = append(kept, strs[l])
@@ -2361,10 +2365,25 @@ func newNamedCapture(strs ...string) *namedCapture {
 	}
 	if nc.dfa = newPrefixDFA(kept...); nc.dfa == nil {
 		for _, s := range kept {
-			nc.pairs = append(nc.pairs, newPairSet(s))
+			var ps *pairSet
+			if anchored(s) {
+				ps = newPairSet(s)
+			}
+			nc.pairs = append(nc.pairs, ps)
 		}
 	}
 	return nc
+}
+
+// anchored reports whether every match of the regexp re begins at the start
+// of the text it searches, as the lead and pair gates of a regexp assume.
+func anchored(re string) bool {
+	r, err := syntax.Parse(re, syntax.Perl)
+	if err != nil {
+		return false
+	}
+	prog, err := syntax.Compile(r.Simplify())
+	return err == nil && prog.StartCond()&syntax.EmptyBeginText != 0
 }
 
 // lex matches the regexps in turn at i in buf, and returns the text of the
@@ -2382,8 +2401,7 @@ func (nc *namedCapture) lex(src, buf []byte, i, n int) ([]byte, [][]byte, int, i
 			if can&(1<<l) == 0 {
 				continue
 			}
-		// every one of these regexps is ^-anchored, so a match must begin
-		// with buf[i]
+		// a gated regexp is ^-anchored, so a match must begin with buf[i]
 		case nc.gated[l] && i < n && !nc.leads[l][buf[i]]:
 			continue
 		default:

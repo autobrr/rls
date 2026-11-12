@@ -536,3 +536,41 @@ func TestNamedCaptureLead(t *testing.T) {
 		}
 	}
 }
+
+// TestNamedCaptureUnanchored checks that a pattern of a caller's own that is
+// not anchored at the start is run at every position, as it was before the
+// lexers had gates: it finds its match further on, so the bytes at the
+// position say nothing about it. The text of a match is taken from the
+// position, as before.
+func TestNamedCaptureUnanchored(t *testing.T) {
+	plain := func(strs []string, src []byte, i int) (string, int, bool) {
+		for _, s := range strs {
+			re := regexp.MustCompile(s)
+			if len(re.SubexpNames()) < 2 {
+				continue
+			}
+			if m := re.FindSubmatch(src[i:]); m != nil {
+				return string(src[i : i+len(m[0])]), i + len(m[0]), true
+			}
+		}
+		return "", i, false
+	}
+	for _, strs := range [][]string{
+		{`a(?P<v>b)`},
+		{`(?i)x(?P<v>\d+)`},
+		{`^(?P<a>zz)`, `q(?P<b>r)`},
+		{`(?P<v>b)`, `^(?P<w>a)`},
+	} {
+		lex := NamedCaptureLexer(strs...)
+		for _, s := range []string{"acab", "ab", "cab", "yyx12", "X9", "zzq", "aqr", "bbb", "acr"} {
+			src := []byte(s)
+			for i := range src {
+				text, j, ok := plain(strs, src, i)
+				got, _, k, _, gotOK := lex(src, src, i, len(src))
+				if gotOK != ok || string(got) != text || k != j {
+					t.Errorf("%q on %q at %d: expected %t %q %d, got: %t %q %d", strs, s, i, ok, text, j, gotOK, got, k)
+				}
+			}
+		}
+	}
+}
