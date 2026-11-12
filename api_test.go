@@ -160,6 +160,9 @@ func TestReleasePredicates(t *testing.T) {
 		{"repack3 in a trailing bracket", parsed("Movie (2020) (1080p BluRay x265 - GRP) [Repack3]"), false, true, false, false},
 		{"re-pack in a trailing bracket", parsed("Movie.2020.1080p.BluRay.x264-GRP[RE-PACK]"), false, true, false, false},
 		{"real proper in a trailing bracket", parsed("Movie.2020.1080p.BluRay.x264-GRP[REAL.PROPER]"), true, false, false, false},
+		// and so is a leading one, in front of the group's bracket too
+		{"repack2 in a leading bracket", parsed("[REPACK2] Movie.2020.1080p.BluRay.x264-GRP"), false, true, false, false},
+		{"proper in a leading bracket", parsed("[PROPER][Group] Show - 01 [1080p]"), true, false, false, false},
 
 		{"zero", Release{}, false, false, false, false},
 		{"hand proper", Release{Other: []string{"proper"}}, true, false, false, false},

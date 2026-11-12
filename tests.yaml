@@ -774,6 +774,15 @@
   codec: "x264"
   audio: "DUAL.AUDIO"
   container: "MKV"
+"[REPACK2] Example.Film.2020.1080p.BluRay.x265-GRP":
+  type: "movie"
+  title: "Example Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  other: "REREPACK"
+  group: "GRP"
 "Example Film (2020) REPACK (1080p BDRip x265 10bit AC3 5.1 - Kyo)[Mura]":
   type: "movie"
   title: "Example Film"
@@ -822,6 +831,19 @@
   audio: "DD"
   channels: "5.1"
   other: "REPACK3"
+  language: "ENGLiSH"
+  group: "Kyo Mura"
+"[PROPER] Example Film (2020) (1080p BluRay x265 SDR DD 5.1 English - Kyo Mura)":
+  type: "movie"
+  title: "Example Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DD"
+  channels: "5.1"
+  other: "PROPER"
   language: "ENGLiSH"
   group: "Kyo Mura"
 "Fargo.1996.SF.20th.Anniversary.Edition.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-RU4HD":
@@ -4148,6 +4170,16 @@
   resolution: "1080p"
   episode: 1
   absolute: 1
+"[REPACK3][Erai-raws] Show - 01 [1080p][Multiple Subtitle]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  other: "REPACK3"
+  language: "MULTiSUB"
+  group: "Erai-raws"
+  site: "Erai-raws"
 "[Group] Show - 01 (1080p BD x264) (with the UK dub track)":
   type: "episode"
   title: "Show"
@@ -4222,6 +4254,17 @@
   seriesEpisodes: "S00E01 S00E02 S00E03"
   group: "Group"
   site: "Group"
+"[REPACK] [SubsPlease] Show - 01 (1080p) [ABCD1234].mkv":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  other: "REPACK"
+  group: "SubsPlease"
+  site: "SubsPlease"
+  sum: "ABCD1234"
+  ext: "mkv"
 "[GRP]_Show_Ep03_The_Title_[720p]":
   type: "episode"
   title: "Show"
