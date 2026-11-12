@@ -101,7 +101,7 @@ func Parse(src []byte) Release {
 func ParseString(src string) Release {
 	// the one copy of the name that the tags of the release share
 	if p, ok := DefaultParser.(*TagParser); ok {
-		return p.builder.Build(p.parse([]byte(src)))
+		return p.builder.Build(parseCopy(p, src))
 	}
 	return DefaultParser.ParseRelease([]byte(src))
 }
@@ -124,7 +124,8 @@ func ParseHint(src []byte, h Hint) Release {
 // ParseHint method.
 func ParseStringHint(src string, h Hint) Release {
 	if p, ok := DefaultParser.(*TagParser); ok {
-		return p.parseHint([]byte(src), h)
+		tags, end := parseCopy(p, src)
+		return p.buildHint(tags, end, h)
 	}
 	return ParseHint([]byte(src), h)
 }
@@ -739,7 +740,7 @@ func ParseTags(src []byte) ([]Tag, int) {
 // ParseTagsString parses tags from src.
 func ParseTagsString(src string) ([]Tag, int) {
 	if p, ok := DefaultParser.(*TagParser); ok {
-		return p.parse([]byte(src))
+		return parseCopy(p, src)
 	}
 	return DefaultParser.Parse([]byte(src))
 }

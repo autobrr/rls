@@ -78,6 +78,7 @@ func bytesGate(set string) *lexGate {
 var gateOffers sync.Map // *regexp.Regexp -> *gateOffer
 
 // gateOffer are the gates offered to one parser, by the lex func each is for.
+// A lex func that is in it is one of this package's, with or without a gate.
 type gateOffer struct {
 	mu    sync.Mutex
 	gates map[unsafe.Pointer]*lexGate
@@ -91,7 +92,9 @@ func funcID(f LexFunc) unsafe.Pointer {
 
 // withGate returns lexer with an Init that offers gate to the parser that is
 // being built, after the Init the lexer has. The gate is read after that
-// Init, since it is made of what the Init builds.
+// Init, since it is made of what the Init builds. A lexer that runs once has
+// no use for a gate and offers none, which still tells the parser that the
+// lexer is one of this package's.
 //
 // The offer is for the lex func of the lexer and no other. So a caller that
 // puts a lex func of its own in the place of this one, or wraps it, has a
@@ -104,9 +107,13 @@ func withGate(lexer TagLexer, gate func() *lexGate) TagLexer {
 			init(infos, delim, short)
 		}
 		if v, ok := gateOffers.Load(delim); ok {
+			var g *lexGate
+			if gate != nil {
+				g = gate()
+			}
 			o := v.(*gateOffer)
 			o.mu.Lock()
-			o.gates[funcID(lex)] = gate()
+			o.gates[funcID(lex)] = g
 			o.mu.Unlock()
 		}
 	}

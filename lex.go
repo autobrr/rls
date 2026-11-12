@@ -210,7 +210,7 @@ func NewTrimWhitespaceLexer() Lexer {
 	s := `(\t|\n|\f|\r| |⭐|` + string(rune(0xfe0f)) + `)+`
 	prefix := regexp.MustCompile(`^` + s)
 	suffix := regexp.MustCompile(s + `$`)
-	return TagLexer{
+	return withGate(TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			// both patterns need a whitespace byte, or the first (0xe2, 0xef)
 			// or last (0x90, 0x8f) byte of the star or its variation selector,
@@ -234,7 +234,7 @@ func NewTrimWhitespaceLexer() Lexer {
 			return start, end, i, n, true
 		},
 		Once: true,
-	}
+	}, nil)
 }
 
 // NewDateLexer creates a tag lexer for a date.
@@ -1385,7 +1385,7 @@ func NewGroupLexer() Lexer {
 		}
 		return tags.Match(src[a:b])
 	}
-	return TagLexer{
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, short map[string]bool) {
 			var v []string
 			var known, unexpanded []*taginfo.Taginfo
@@ -1500,7 +1500,7 @@ func NewGroupLexer() Lexer {
 			return start, end, i, n, false
 		},
 		Once: true,
-	}
+	}, nil)
 }
 
 // reposts are the suffixes usenet indexers and reposters append after the
@@ -1755,7 +1755,7 @@ func NewMetaLexer(strs ...string) Lexer {
 		}
 		return false
 	}
-	return TagLexer{
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, re *regexp.Regexp, short map[string]bool) {
 			shortTags = short
 			for c := range delim {
@@ -1937,7 +1937,7 @@ func NewMetaLexer(strs ...string) Lexer {
 			return start, end, i, n, true
 		},
 		Once: true,
-	}
+	}, nil)
 }
 
 // metaNever returns the bytes that cannot stand between the opening literal
@@ -2078,7 +2078,7 @@ func NewExtLexer() Lexer {
 	// tails are the spellings of the extensions, in upper case, or nil when
 	// the tail is not looked up
 	tails := make(map[string]struct{})
-	return TagLexer{
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			ext := infos["ext"]
 			re, extf = regexp.MustCompile(`(?i:\.`+reutil.Taginfo("$", ext...)+`)`), newFinder(TagTypeExt, ext...)
@@ -2122,7 +2122,7 @@ func NewExtLexer() Lexer {
 			return start, end, i, n, false
 		},
 		Once: true,
-	}
+	}, nil)
 }
 
 // extTail reports whether b may end in an extension: whether it has a period
