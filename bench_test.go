@@ -1,6 +1,7 @@
 package rls
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -119,5 +120,45 @@ func BenchmarkParseTrailingDelims(b *testing.B) {
 	b.ReportAllocs()
 	for b.Loop() {
 		ParseString(trailingDelims)
+	}
+}
+
+// corpusNames returns the names of a file of testdata/corpus, one a line. The
+// corpora are not in the repository, so what asks for one is skipped when the
+// file is not there.
+func corpusNames(tb testing.TB, file string) []string {
+	buf, err := os.ReadFile("testdata/corpus/" + file)
+	if err != nil {
+		tb.Skip(err)
+	}
+	var v []string
+	for l := range strings.SplitSeq(string(buf), "\n") {
+		if l = strings.TrimRight(l, "\r"); l != "" {
+			v = append(v, l)
+		}
+	}
+	return v
+}
+
+// BenchmarkParseNyaa is BenchmarkParse on the anime corpus, whose names are
+// longer, hold more brackets and are often not ASCII.
+func BenchmarkParseNyaa(b *testing.B) {
+	corpus := corpusNames(b, "nyaa.txt")
+	n, i := len(corpus), 0
+	b.ReportAllocs()
+	for b.Loop() {
+		ParseString(corpus[i%n])
+		i++
+	}
+}
+
+// BenchmarkParseSports is BenchmarkParse on the sports corpus.
+func BenchmarkParseSports(b *testing.B) {
+	corpus := corpusNames(b, "sports.txt")
+	n, i := len(corpus), 0
+	b.ReportAllocs()
+	for b.Loop() {
+		ParseString(corpus[i%n])
+		i++
 	}
 }
