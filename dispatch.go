@@ -20,10 +20,10 @@ type lexGate struct {
 	// runs are the runs of letters and digits, in upper case, that let the
 	// lexer through when the position begins with one of them.
 	runs map[string]struct{}
-	// fold lets the lexer through when a byte outside ASCII follows the run.
+	// fold lets the lexer through when a rune outside ASCII that a letter
+	// folds to follows the run, see foldRune.
 	fold bool
-	// noRun lets the lexer through when the position begins with a byte that
-	// is no letter or digit.
+	// noRun lets the lexer through when the position begins with such a rune.
 	noRun bool
 	// lead are the first bytes that let the lexer through whatever the run.
 	lead [256]bool
@@ -41,6 +41,9 @@ func prefilterGate(pfs ...*prefilter) *lexGate {
 			g.runs[k] = struct{}{}
 		}
 		g.fold = g.fold || pf.fold
+		for c := range pf.nonRun {
+			g.lead[c] = g.lead[c] || pf.nonRun[c]
+		}
 		if pf.hasLead {
 			for c := range pf.lead {
 				g.lead[c] = g.lead[c] || pf.lead[c]
@@ -122,7 +125,7 @@ const maxDispatch = 64
 
 // A dispatch gives, for a position, the lexers that can match there as a set
 // of bits in lexer order. It looks at the position once: the first byte, the
-// run of letters and digits it begins, and the byte after the run.
+// run of letters and digits it begins, and the rune after the run.
 type dispatch struct {
 	runs  map[string]uint64
 	max   int
@@ -181,9 +184,14 @@ func (d *dispatch) mask(buf []byte, i, n int) uint64 {
 		j++
 	}
 	if j == 0 {
-		return m | d.noRun
+		// a byte that is no letter or digit begins what the lead bytes say
+		// and, when it is a rune a letter folds to, what a run can begin
+		if foldRune(buf, i, n) {
+			m |= d.noRun
+		}
+		return m
 	}
-	if i+j < n && buf[i+j] >= 0x80 {
+	if foldRune(buf, i+j, n) {
 		m |= d.fold
 	}
 	if j <= d.max {

@@ -32,10 +32,11 @@ import (
 //
 // The bytes are compared as ASCII. A case insensitive regexp also matches
 // 'k' and 's' with the runes U+212A and U+017F, so where the matcher would
-// have to judge a byte outside ASCII -- right after the run, inside a
-// spelling it compares, or as the terminator of a source that does not end in
-// a word character -- it does not decide, and the lexer runs the alternation
-// as before.
+// have to judge a byte outside ASCII -- one of those two runes right after
+// the run, which makes the run longer than its bytes say, any such byte
+// inside a spelling it compares, or as the terminator of a source that does
+// not end in a word character -- it does not decide, and the lexer runs the
+// alternation as before.
 type matcher struct {
 	rows []matchRow
 	// runs gives the rows that have a spelling whose first run of letters and
@@ -347,7 +348,7 @@ func (m *matcher) match(b []byte, i, n int) (row, value, end int, sub [][]byte, 
 		key[j] = c
 		j++
 	}
-	if j == 0 || j == len(key) || i+j < n && b[i+j] >= 0x80 {
+	if j == 0 || j == len(key) || foldRune(b, i+j, n) {
 		return 0, 0, 0, nil, false
 	}
 	keyed, scan := m.runs[string(key[:j])], m.scan

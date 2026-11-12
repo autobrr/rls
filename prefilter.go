@@ -30,6 +30,10 @@ import (
 // That holds for ASCII text. Runs are compared byte for byte, and (?i) also
 // matches 'k' and 's' with the non-ASCII runes U+212A and U+017F, so a
 // spelling written with one of those is rejected unless fold is set.
+//
+// No other rune outside ASCII is matched by a spelling, which is ASCII: such
+// a rune ends a run as a delimiter does, and at the start of a position only
+// an unexpanded row can match it.
 type prefilter struct {
 	runs map[string]struct{}
 	max  int
@@ -47,12 +51,16 @@ type prefilter struct {
 	// letter -- from admitting every word.
 	rows []patterned
 	// fold makes maybe exact against (?i), which matches 'k' and 's' with the
-	// non-ASCII runes U+212A and U+017F: a run that stops at a non-ASCII byte
-	// may continue through one of those as far as the regexp is concerned, so
-	// it is let through. It is set where the prefilter gates something that
-	// ran unconditionally before. The older prefilters leave it off and so
+	// non-ASCII runes U+212A and U+017F: a run that stops at one of those
+	// goes on through it as far as the regexp is concerned, so it is let
+	// through. It is set where the prefilter gates something that ran
+	// unconditionally before. The older prefilters leave it off and so
 	// reject 'M\u212aV' where the container alternation would match.
 	fold bool
+	// nonRun are the bytes, none of them a letter or a digit, that a spelling
+	// of a row begins with ('-sign-language'). A position that begins with
+	// any other such byte can only be matched by an unexpanded row.
+	nonRun [256]bool
 }
 
 type patterned struct {
@@ -127,6 +135,9 @@ func newPrefilterRE(res []string, ci bool) (*prefilter, bool) {
 				// and must not cost the type its prefilter ('other' lost its
 				// prefilter to the '-sign-language' spelling of Sign.Language).
 				pf.fold = true
+				if s != "" {
+					pf.nonRun[s[0]] = true
+				}
 				continue
 			}
 			if len(run) > pf.max {
@@ -168,15 +179,16 @@ func (pf *prefilter) maybe(buf []byte, i, n int) bool {
 		key[j] = c
 		j++
 	}
-	if j == 0 {
-		// not on a word character: only reachable for alternations that begin
-		// with a delimiter, which newPrefilter rejects, so let it run
+	switch {
+	case j == 0 && (i >= n || pf.nonRun[buf[i]] || foldRune(buf, i, n)):
+		// not on a letter or a digit: a spelling begins with this byte, or
+		// with the letter this rune folds to. Any other byte begins a match
+		// of an unexpanded row at most, which the lead bytes below decide
 		return true
-	}
-	if pf.fold && i+j < n && buf[i+j] >= 0x80 {
+	case j == 0:
+	case pf.fold && foldRune(buf, i+j, n):
 		return true
-	}
-	if j <= pf.max {
+	case j <= pf.max:
 		if _, ok := pf.runs[string(key[:j])]; ok {
 			return true
 		}
@@ -189,6 +201,22 @@ func (pf *prefilter) maybe(buf []byte, i, n int) bool {
 		if row := &pf.rows[k]; row.lead[buf[i]] && (len(row.lit) == 0 || hasLiteral(buf[i:n], row.lit, row.fold)) {
 			return true
 		}
+	}
+	return false
+}
+
+// foldRune reports whether b[i:n] begins with one of the two runes outside
+// ASCII that an ASCII letter matches without regard to case: U+017F for 's'
+// and U+212A for 'k'.
+func foldRune(b []byte, i, n int) bool {
+	if i >= n {
+		return false
+	}
+	switch b[i] {
+	case 0xc5:
+		return i+1 < n && b[i+1] == 0xbf
+	case 0xe2:
+		return i+2 < n && b[i+1] == 0x84 && b[i+2] == 0xaa
 	}
 	return false
 }
@@ -298,7 +326,7 @@ func (pf *prefilter) maybePrefix(buf []byte, i, n int, next *[256]bool) bool {
 		key[j] = c
 		j++
 	}
-	if j == 0 || j == len(key) || (i+j < n && buf[i+j] >= 0x80) || pf.hasLead {
+	if j == 0 || j == len(key) || foldRune(buf, i+j, n) || pf.hasLead {
 		return true
 	}
 	for l := 1; l <= j && l <= pf.max; l++ {

@@ -166,3 +166,24 @@ func TestExtTail(t *testing.T) {
 	}
 	t.Logf("%d of %d names ruled out", ruledOut, len(names))
 }
+
+// TestLexersOutsideParser calls lexers of this package the way a Parser of
+// another kind may: at a delimiter, where a TagParser never calls them, and
+// at the end of the name.
+func TestLexersOutsideParser(t *testing.T) {
+	infos := taginfo.All()
+	genre, _, _ := NewGenreLexer().Initialize(infos, nil, nil)
+	src := []byte("Title (Drama) x")
+	if start, _, i, _, ok := genre(src, src, nil, nil, 6, len(src)); !ok || i != 13 || len(start) != 1 || start[0].Genre() != "Drama" {
+		t.Errorf("expected the genre lexer to read '(Drama)' from its bracket on, got: %t %d %s", ok, i, tagList(start))
+	}
+	for _, lexer := range []Lexer{NewRegexpLexer(TagTypeSource, true), NewRegexpSourceLexer(TagTypeCodec, true), NewGenreLexer()} {
+		lex, _, _ := lexer.Initialize(infos, nil, nil)
+		for _, name := range []string{"", "x", "WEB", "\u017f", "!", "x-"} {
+			src := []byte(name)
+			if start, end, i, n, ok := lex(src, src, nil, nil, len(src), len(src)); ok || i != len(src) || n != len(src) || len(start)+len(end) != 0 {
+				t.Errorf("%q: expected no match at the end, got: %t %d %d %s", name, ok, i, n, tagList(append(start, end...)))
+			}
+		}
+	}
+}

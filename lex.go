@@ -1295,6 +1295,8 @@ func NewGenreLexer() Lexer {
 			// regexp lexers neither can end part way through a run
 			if pf, _ = newPrefilterRE(v, true); pf != nil {
 				pf.fold = true
+				// re begins with a '(' or with a row
+				pf.nonRun['('] = true
 			}
 			if pfOther, _ = newPrefilterRE(tagv, true); pfOther != nil {
 				pfOther.fold = true
