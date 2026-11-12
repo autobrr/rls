@@ -1417,6 +1417,14 @@ func knownGroupTail(s []byte, runs map[string]struct{}, max int, ok bool) bool {
 }
 
 // NewMetaLexer creates a tag lexer for a file's meta data.
+//
+// The arguments come in fours: the key, the opening literal, the closing
+// literal and a regexp for the value. The regexp has one capture group, or
+// two, and then the first group is the key.
+//
+// A pattern is tried at the start of a name and at its end. At the end only
+// the last 160 bytes are searched, so a pattern whose opening literal, value
+// and closing literal together can be longer than that is not found there.
 func NewMetaLexer(strs ...string) Lexer {
 	if len(strs)%4 != 0 {
 		panic("must be divisible by 4")
