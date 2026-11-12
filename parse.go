@@ -1767,12 +1767,50 @@ func (b *TagBuilder) titles(r *Release) int {
 		f = b.defaultTitle
 	}
 	i := f(r)
-	if aka {
-		if s := strings.Split(r.Title, " AKA "); r.Alt == "" && len(s) == 2 && s[0] != "" && s[1] != "" {
-			r.Title, r.Alt = s[0], s[1]
+	if aka && r.Alt == "" {
+		if title, alt := splitAKA(r.Title); alt != "" {
+			r.Title, r.Alt = title, alt
 		}
 	}
 	return i
+}
+
+// splitAKA splits a title on the words 'AKA' and 'aka' into the first name
+// and the other names joined with ' AKA ', ie 'A aka B aka C' gives 'A' and
+// 'B AKA C'. A mixed case 'Aka' is a word of the title and does not split.
+// Empty names are dropped. It returns an empty alt when there are not two
+// names.
+func splitAKA(s string) (string, string) {
+	if !strings.Contains(s, "AKA") && !strings.Contains(s, "aka") {
+		return s, ""
+	}
+	var buf [4]string
+	names, start := buf[:0], 0
+	for i := 0; i < len(s); {
+		end := strings.IndexByte(s[i:], ' ')
+		if end == -1 {
+			end = len(s)
+		} else {
+			end += i
+		}
+		if w := s[i:end]; w == "AKA" || w == "aka" {
+			if name := strings.TrimSpace(s[start:i]); name != "" {
+				names = append(names, name)
+			}
+			start = end
+		}
+		i = end + 1
+	}
+	if start == 0 {
+		return s, ""
+	}
+	if name := strings.TrimSpace(s[start:]); name != "" {
+		names = append(names, name)
+	}
+	if len(names) < 2 {
+		return s, ""
+	}
+	return names[0], strings.Join(names[1:], " AKA ")
 }
 
 // movieTitles sets the titles for movies.

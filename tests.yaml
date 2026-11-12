@@ -331,6 +331,49 @@
   channels: "5.1"
   other: "HYBRiD REMUX"
   group: "FraMeSToR"
+"Alpha.Film.AKA.AKA.Beta.Film.1999.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Alpha Film"
+  alt: "Beta Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1999
+  codec: "x264"
+  group: "GRP"
+"Alpha.Film.aka.Beta.Film.1999.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-GRP":
+  type: "movie"
+  title: "Alpha Film"
+  alt: "Beta Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1999
+  codec: "AVC"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  other: "REMUX"
+  group: "GRP"
+"Alpha Film aka Beta Film aka Gamma Film 1999 1080p BluRay x264-GRP":
+  type: "movie"
+  title: "Alpha Film"
+  alt: "Beta Film AKA Gamma Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1999
+  codec: "x264"
+  group: "GRP"
+"Alpha.Film.AKA.Beta.Film.AKA.Gamma.Film.1999.1080p.BluRay.REMUX.AVC.FLAC.1.0-GRP.mkv":
+  type: "movie"
+  title: "Alpha Film"
+  alt: "Beta Film AKA Gamma Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1999
+  codec: "AVC"
+  audio: "FLAC"
+  channels: "1.0"
+  other: "REMUX"
+  group: "GRP"
+  ext: "mkv"
 "Amazon.1990.DVD.720p":
   type: "movie"
   title: "Amazon"
@@ -484,6 +527,18 @@
   codec: "x264"
   audio: "DD"
   group: "MAXPRO"
+"Beta Film aka Alpha Film 1999 1080p BluRay REMUX AVC  DTS-HD MA 5.1-GRP":
+  type: "movie"
+  title: "Beta Film"
+  alt: "Alpha Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1999
+  codec: "AVC"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  other: "REMUX"
+  group: "GRP"
 "Black Sabbath The End of the End 2017 720p WEB H264-STRiFE{{reAmy0r0vphpzAnch0it5tZoykb6mZ5s}}":
   type: "movie"
   title: "Black Sabbath The End of the End"
@@ -1242,6 +1297,18 @@
   year: 2014
   audio: "DUAL.AUDIO"
   size: "1400MB"
+"Mister.Aka.Manson.1999.1080p.BluRay.REMUX.AVC.FLAC.1.0-GRP.mkv":
+  type: "movie"
+  title: "Mister Aka Manson"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1999
+  codec: "AVC"
+  audio: "FLAC"
+  channels: "1.0"
+  other: "REMUX"
+  group: "GRP"
+  ext: "mkv"
 "MotoGP.2024.Round.05.Italy.Race.1080p.WEB.h264-GRP":
   type: "movie"
   title: "MotoGP"
@@ -4525,6 +4592,16 @@
   episode: 2
   codec: "H.264"
   other: "REPACK"
+  group: "GRP"
+"Show.S01E02.AKA.Other.Title.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "AKA Other Title"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
   group: "GRP"
 "Show.S01E02.NO.WAY.OUT.1080p.WEB.h264-GRP":
   type: "episode"
