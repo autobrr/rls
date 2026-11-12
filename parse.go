@@ -1045,6 +1045,16 @@ func bareEpisode(tags []Tag, i int) bool {
 		peek(tags, i+2, TagTypeText) && tags[i+2].v[0] != "" && strings.Trim(tags[i+2].v[0], "0123456789") == "")
 }
 
+// appendOnce appends s to v unless v holds it already. A name that gives a
+// value twice has it once, whether it writes the tag twice ('[Dual-Audio] ...
+// [Dual-Audio]') or in two spellings ('[Eng] [English]').
+func appendOnce(v []string, s string) []string {
+	if slices.Contains(v, s) {
+		return v
+	}
+	return append(v, s)
+}
+
 // collect collects tags into the release.
 func (b *TagBuilder) collect(r *Release) {
 	// bareEp is whether an episode was written with no season, ie the '04' in
@@ -1104,9 +1114,9 @@ func (b *TagBuilder) collect(r *Release) {
 				r.Disc = r.tags[i].Disc()
 			}
 		case TagTypeCodec:
-			r.Codec = append(r.Codec, r.tags[i].Codec())
+			r.Codec = appendOnce(r.Codec, r.tags[i].Codec())
 		case TagTypeHDR:
-			r.HDR = append(r.HDR, r.tags[i].HDR())
+			r.HDR = appendOnce(r.HDR, r.tags[i].HDR())
 		case TagTypeBitDepth:
 			if r.BitDepth == "" {
 				r.BitDepth = r.tags[i].BitDepth()
@@ -1116,19 +1126,19 @@ func (b *TagBuilder) collect(r *Release) {
 				r.FrameRate = r.tags[i].FrameRate()
 			}
 		case TagTypeAudio:
-			r.Audio = append(r.Audio, r.tags[i].Audio())
+			r.Audio = appendOnce(r.Audio, r.tags[i].Audio())
 		case TagTypeChannels:
 			if r.Channels == "" {
 				r.Channels = r.tags[i].Channels()
 			}
 		case TagTypeOther:
-			r.Other = append(r.Other, r.tags[i].Other())
+			r.Other = appendOnce(r.Other, r.tags[i].Other())
 		case TagTypeCut:
-			r.Cut = append(r.Cut, r.tags[i].Cut())
+			r.Cut = appendOnce(r.Cut, r.tags[i].Cut())
 		case TagTypeEdition:
-			r.Edition = append(r.Edition, r.tags[i].Edition())
+			r.Edition = appendOnce(r.Edition, r.tags[i].Edition())
 		case TagTypeLanguage:
-			r.Language = append(r.Language, r.tags[i].Language())
+			r.Language = appendOnce(r.Language, r.tags[i].Language())
 		case TagTypeSize:
 			if r.Size == "" {
 				r.Size = r.tags[i].Size()

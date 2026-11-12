@@ -127,6 +127,34 @@ func TestOpeningResolution(t *testing.T) {
 	}
 }
 
+// TestListValuesOnce checks that a value the name writes twice is in its
+// list field once, at the place it was first written.
+func TestListValuesOnce(t *testing.T) {
+	r := ParseString("[Group] Show - 01 [Dual-Audio] [1080p HEVC x265] [AAC] [Dual-Audio] [HEVC] [Eng] [English]")
+	if exp := []string{"DUAL.AUDIO", "AAC"}; !slices.Equal(r.Audio, exp) {
+		t.Errorf("expected audio %q, got: %q", exp, r.Audio)
+	}
+	if exp := []string{"HEVC", "x265"}; !slices.Equal(r.Codec, exp) {
+		t.Errorf("expected codec %q, got: %q", exp, r.Codec)
+	}
+	if exp := []string{"ENGLiSH"}; !slices.Equal(r.Language, exp) {
+		t.Errorf("expected language %q, got: %q", exp, r.Language)
+	}
+	r = ParseString("Movie.2020.PROPER.REPACK.Limited.Edition.1080p.BluRay.HDR.HDR.Extended.Extended.REPACK.LIMITED.EDITION.x264-GRP")
+	if exp := []string{"Limited.Edition"}; !slices.Equal(r.Edition, exp) {
+		t.Errorf("expected edition %q, got: %q", exp, r.Edition)
+	}
+	if exp := []string{"PROPER", "REPACK"}; !slices.Equal(r.Other, exp) {
+		t.Errorf("expected other %q, got: %q", exp, r.Other)
+	}
+	if exp := []string{"HDR"}; !slices.Equal(r.HDR, exp) {
+		t.Errorf("expected hdr %q, got: %q", exp, r.HDR)
+	}
+	if exp := []string{"Extended.Cut"}; !slices.Equal(r.Cut, exp) {
+		t.Errorf("expected cut %q, got: %q", exp, r.Cut)
+	}
+}
+
 // TestSubtitleNotUnused checks that the words of the subtitle are not also in
 // the unused text, and that the words a later subtitle replaced are.
 func TestSubtitleNotUnused(t *testing.T) {

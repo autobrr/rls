@@ -4078,6 +4078,15 @@
   audio: "FLAC"
   group: "Group"
   site: "Group"
+"[Group] Show - 01 [Dual-Audio] [1080p] [Dual-Audio]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  audio: "DUAL.AUDIO"
+  group: "Group"
+  site: "Group"
 "[Group] Show - Episode 01 ~ 03 [1080p]":
   type: "episode"
   title: "Show"
