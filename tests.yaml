@@ -1206,6 +1206,15 @@
   codec: "x264"
   bitdepth: "10BIT"
   group: "GRP"
+"Movie.2020.REPACK10.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  other: "REPACK10"
+  group: "GRP"
 "Movie.2020.Remastered.Edition.1080p.BluRay.x264-GRP":
   type: "movie"
   title: "Movie"

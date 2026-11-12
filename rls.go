@@ -540,15 +540,19 @@ func (r Release) IsProper() bool {
 }
 
 // IsRepack reports whether the release is a repack, written REPACK, REPACKED,
-// REREPACK or REPACK2 to REPACK9. It reads Other, where the parser puts them
-// as REPACK, REREPACK and REPACK3 to REPACK9, and compares without regard to
+// REREPACK or REPACK2 to REPACK99. It reads Other, where the parser puts them
+// as REPACK, REREPACK and REPACK3 to REPACK99, and compares without regard to
 // case. A REPACK2 set by hand counts too. A re-rip (RERiP) is not a repack.
 func (r Release) IsRepack() bool {
 	if r.hasOther("REPACK", "REREPACK") {
 		return true
 	}
 	for _, s := range r.Other {
-		if len(s) == 7 && s[6] >= '2' && s[6] <= '9' && strings.EqualFold(s[:6], "REPACK") {
+		if len(s) < 7 || len(s) > 8 || !strings.EqualFold(s[:6], "REPACK") {
+			continue
+		}
+		// one digit from 2 on, or two digits that do not begin with 0
+		if d := s[6:]; d[0] >= '1' && d[0] <= '9' && (len(d) == 1 && d[0] != '1' || len(d) == 2 && d[1] >= '0' && d[1] <= '9') {
 			return true
 		}
 	}
