@@ -405,3 +405,21 @@ func TestScanner_errConcurrent(t *testing.T) {
 		t.Errorf("expected no error, got: %v", err)
 	}
 }
+
+// TestScanner_errFirst checks that a scan keeps only the first parser panic,
+// which is the one Err reports.
+func TestScanner_errFirst(t *testing.T) {
+	s := NewReleaseScanner(panicParser{DefaultParser}, WithWorkers(2))
+	input := strings.Repeat("BOOM.line\n", 100) + "The.Matrix.1999.1080p.BluRay.x264-GRP\n"
+	if v := scanIDs(t, s.ScanReader(t.Context(), strings.NewReader(input)), 10*time.Second); len(v) != 1 {
+		t.Fatalf("expected 1 result, got: %d", len(v))
+	}
+	if _, ok := errors.AsType[*ScanRecoverError](s.Err()); !ok {
+		t.Fatalf("expected a *ScanRecoverError, got: %v", s.Err())
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if len(s.errs) != 1 {
+		t.Errorf("expected 1 recorded panic, got: %d", len(s.errs))
+	}
+}

@@ -156,8 +156,11 @@ func (s *ReleaseScanner) run(ctx context.Context, worker int, in, out chan *Scan
 func (s *ReleaseScanner) parse(worker int, scan *Scan) (ok bool) {
 	defer func() {
 		if err := recover(); err != nil {
+			// Err reports only the first panic, so the others are not kept
 			s.mu.Lock()
-			s.errs = append(s.errs, &ScanRecoverError{worker, scan.ID, scan.Line, debug.Stack(), err})
+			if len(s.errs) == 0 {
+				s.errs = append(s.errs, &ScanRecoverError{worker, scan.ID, scan.Line, debug.Stack(), err})
+			}
 			s.mu.Unlock()
 			ok = false
 		}
