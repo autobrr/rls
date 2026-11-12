@@ -216,8 +216,9 @@ func (r Release) SeriesEpisodes() [][]int {
 			v = append(v, []int{s, episode})
 		}
 		if !bare {
-			// an episode after a range of seasons is in none of them
-			if last = i; r.seasonRange(i) != -1 {
+			// an episode after a range or a list of seasons is in none of
+			// them
+			if last = i; r.seasonRange(i) != -1 || r.seasonList(i) != -1 {
 				last = -1
 			}
 		}
@@ -337,6 +338,42 @@ func (r Release) seasonRange(i int) int {
 	return start
 }
 
+// seasonList returns the index of the series tag before the one at i when the
+// two are seasons of a list, or -1. Both tags write a season and no episode,
+// the second season is the higher one, and a plus, an ampersand or a comma
+// stands between the two with nothing but spaces and underscores beside it
+// ('S01+S02', 'Season 1 + 2', 'S1, S2', 'Season 01 & Season 02').
+//
+// As after a range, an episode written after the list with no season of its
+// own is in none of them, whether it is a range or one episode ('S1+S2
+// (01-25)', 'S1 + S2 - 05').
+func (r Release) seasonList(i int) int {
+	tag := r.tags[i]
+	if tag.typ != TagTypeSeries || tag.val(1) == "" || tag.wroteEpisode() {
+		return -1
+	}
+	var sep bool
+	for j := i - 1; j >= 0; j-- {
+		s := strings.Trim(r.tags[j].val(0), " _")
+		switch r.tags[j].typ {
+		case TagTypeDelim, TagTypeWhitespace, TagTypeText:
+			if s != "" && s != "+" && s != "&" && s != "," {
+				return -1
+			}
+			sep = sep || s != ""
+		case TagTypeSeries:
+			sep = sep || s != "" && strings.IndexByte("+&,", s[len(s)-1]) != -1
+			if !sep || r.tags[j].val(1) == "" || r.tags[j].wroteEpisode() || atoi(r.tags[j].val(1)) >= atoi(tag.val(1)) {
+				return -1
+			}
+			return j
+		default:
+			return -1
+		}
+	}
+	return -1
+}
+
 // EpisodeRange returns the first and last episode when the name gives more
 // than one ('S01E05E06', 'S01E02-04', '01-12'). The episodes are those of the
 // first season the name gives, the one in Series: 'S01E01.S02E01' is not a
@@ -364,7 +401,7 @@ func (r Release) EpisodeRange() (first, last int, ok bool) {
 		switch {
 		case tag.val(1) != "":
 			s = atoi(tag.val(1))
-			if cur = s; r.seasonRange(i) != -1 {
+			if cur = s; r.seasonRange(i) != -1 || r.seasonList(i) != -1 {
 				cur = 0
 			}
 		case scheme && !tag.continuation():
@@ -425,7 +462,7 @@ func (r Release) EpisodeSpans() []EpisodeSpan {
 		}
 		bare := tag.val(1) == ""
 		if !bare {
-			if season = tag.val(1); r.seasonRange(i) != -1 {
+			if season = tag.val(1); r.seasonRange(i) != -1 || r.seasonList(i) != -1 {
 				season = ""
 			}
 		}

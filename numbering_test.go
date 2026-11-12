@@ -530,6 +530,44 @@ func TestSeasonList(t *testing.T) {
 	}
 }
 
+// TestSeasonListEpisodes checks that episodes written beside a list of
+// seasons with no season of their own are in none of them, as beside a range.
+func TestSeasonListEpisodes(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		seasons []int
+		spans   []EpisodeSpan
+	}{
+		{"[Grp] Show Season 1+2 (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
+		{"[Grp] Show S1+S2 (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
+		{"[Grp] Show S1, S2 (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
+		{"[Grp] Show (Season 01 + Season 02) (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
+		{"[Grp] Show Season 1 & Season 2 (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
+		{"[Grp] Show S1 + S2 - 05 [1080p]", []int{1, 2}, []EpisodeSpan{{"", "05", ""}}},
+		// one season, written twice or once
+		{"[Grp] Show Season 1 (S01) (01-25) [1080p]", []int{1}, []EpisodeSpan{{"01", "01", "25"}}},
+		{"[Grp] Show S2 (01-25) [1080p]", []int{2}, []EpisodeSpan{{"2", "01", "25"}}},
+	} {
+		r := ParseString(test.name)
+		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
+		}
+		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
+			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		}
+		season := atoi(test.spans[0].Season)
+		for _, pair := range r.SeriesEpisodes() {
+			if pair[0] != season {
+				t.Errorf("%q: expected the episodes in season %d, got: %v", test.name, season, pair)
+				break
+			}
+		}
+		if first, last, ok := r.EpisodeRange(); ok != (test.spans[0].Last != "") || ok && (first != 1 || last != 25) {
+			t.Errorf("%q: expected the range 1 to 25 where one is written, got: %d, %d, %t", test.name, first, last, ok)
+		}
+	}
+}
+
 // TestSeasonZeroFirst checks that Series is the first season the name writes
 // when that season is 0, and not the season of a second numbering after it.
 func TestSeasonZeroFirst(t *testing.T) {
