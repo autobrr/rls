@@ -9,10 +9,11 @@ read them when they are absent, so the package still builds and tests without th
 
 ## Why this exists
 
-`tests.yaml` cannot answer "did this change make the parser better or worse". It is regenerated from
-this parser's own output by `TESTS=export go test`, so the parser scores 100% on it *by
-construction*, and a wrong result becomes the expectation the moment someone re-exports. That is not
-hypothetical — it is how `Hi10` came to be recorded as `HDR10`.
+`tests.yaml` cannot answer "did this change make the parser better or worse". Its expectations are
+written by us, often from this parser's own output when a case is added, so a wrong result can
+become the expectation and the parser passes it. That is not hypothetical — it is how `Hi10` came to
+be recorded as `HDR10`. (`TESTS=export go test` only sorts the stored expectations; it does not
+recompute them.)
 
 Everything here is labelled or collected by someone else, so it can disagree with us.
 
