@@ -9,6 +9,7 @@ import (
 )
 
 func BenchmarkMoistari(b *testing.B) {
+	buildDefault()
 	tests := rlsTests(b)
 	for b.Loop() {
 		for _, test := range tests {
@@ -26,6 +27,12 @@ func BenchmarkCytec(b *testing.B) {
 	}
 }
 
+// buildDefault builds the default parser, which is built when it first
+// parses, so that a benchmark does not count its making.
+func buildDefault() {
+	DefaultParser.(*TagParser).state()
+}
+
 // benchCorpus returns the release names from tests.yaml.
 func benchCorpus(tb testing.TB) []string {
 	tests := rlsTests(tb)
@@ -40,6 +47,7 @@ func benchCorpus(tb testing.TB) []string {
 // (which parses the whole corpus per op), each iteration handles one release,
 // so ns/op, B/op and allocs/op read directly as per-release figures.
 func BenchmarkParse(b *testing.B) {
+	buildDefault()
 	corpus := benchCorpus(b)
 	n, i := len(corpus), 0
 	b.ReportAllocs()
@@ -52,6 +60,7 @@ func BenchmarkParse(b *testing.B) {
 // BenchmarkParseTags measures the lexing phase alone (src -> []Tag), the first
 // of the two phases in ParseRelease.
 func BenchmarkParseTags(b *testing.B) {
+	buildDefault()
 	corpus := benchCorpus(b)
 	src := make([][]byte, len(corpus))
 	for i, s := range corpus {
@@ -76,7 +85,7 @@ func BenchmarkBuild(b *testing.B) {
 	// the builder held by DefaultParser is the one initialized with tag info;
 	// the package level DefaultBuilder has no infos and would not be
 	// representative.
-	builder := DefaultParser.(*TagParser).builder
+	builder := DefaultParser.(*TagParser).state().builder
 	tags := make([][]Tag, len(corpus))
 	ends := make([]int, len(corpus))
 	var max int
@@ -104,6 +113,7 @@ func BenchmarkBuild(b *testing.B) {
 var longName = strings.Repeat("Some.Very.Long.Anime.Title.Words.Here.", 12) + "S01E05.1080p.WEB-DL.x264-GRP"
 
 func BenchmarkParseLong(b *testing.B) {
+	buildDefault()
 	b.ReportAllocs()
 	for b.Loop() {
 		ParseString(longName)
@@ -117,6 +127,7 @@ func BenchmarkParseLong(b *testing.B) {
 var trailingDelims = "x" + strings.Repeat("-", 4000)
 
 func BenchmarkParseTrailingDelims(b *testing.B) {
+	buildDefault()
 	b.ReportAllocs()
 	for b.Loop() {
 		ParseString(trailingDelims)

@@ -18,6 +18,17 @@ import (
 
 // TagParser is a release tag parser.
 type TagParser struct {
+	tagParser
+	// load returns what the built-in default parser parses with, which it
+	// builds when first called (see DefaultParser), and tagParser is then not
+	// used. It is nil for every other parser. A copy of the default parser
+	// has the same load, so it parses with the same state, built once. Only
+	// SetBuilder writes load, and no parse may run beside that, as before.
+	load func() *tagParser
+}
+
+// tagParser is what a TagParser parses with.
+type tagParser struct {
 	builder  Builder
 	ellip    []byte
 	once     []LexFunc
@@ -37,6 +48,11 @@ type TagParser struct {
 
 // NewTagParser creates a new release tag parser.
 func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
+	return newTagParser(DefaultBuilder, infos, lexers...)
+}
+
+// newTagParser is NewTagParser with the builder to use.
+func newTagParser(builder Builder, infos map[string][]*taginfo.Taginfo, lexers ...Lexer) *TagParser {
 	// delims
 	var v []string
 	for r := rune(0); r < 255; r++ {
@@ -84,13 +100,12 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 		}
 	}
 	// init builder
-	builder := DefaultBuilder
 	if b, ok := builder.(interface {
 		Init(map[string][]*taginfo.Taginfo) Builder
 	}); ok {
 		builder = b.Init(infos)
 	}
-	p := &TagParser{
+	p := &TagParser{tagParser: tagParser{
 		builder:  builder,
 		ellip:    []byte("..."),
 		once:     once,
@@ -98,7 +113,7 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 		notFirst: notFirst,
 		dispatch: newDispatch(gates),
 		pooled:   pooled,
-	}
+	}}
 	for c := 0; c < 255; c++ {
 		p.isDelim[c] = isAnyDelim(rune(c))
 	}
@@ -206,10 +221,11 @@ func (p *TagParser) buildHint(tags []Tag, end int, h Hint) Release {
 		dayFirst(tags)
 	}
 	var r Release
-	if b, ok := p.builder.(*TagBuilder); ok {
+	builder := p.state().builder
+	if b, ok := builder.(*TagBuilder); ok {
 		r = b.build(tags, end, h)
 	} else {
-		r = p.builder.Build(tags, end)
+		r = builder.Build(tags, end)
 	}
 	r.sports = h.Sports
 	return r
@@ -253,7 +269,21 @@ func isDateSep(c byte) bool {
 
 // SetBuilder sets the builder for the tag parser.
 func (p *TagParser) SetBuilder(builder Builder) {
+	if p.load != nil {
+		// the default parser, or a copy of it, gets a state of its own, so
+		// the builder is set for this parser alone
+		p.tagParser, p.load = *p.load(), nil
+	}
 	p.builder = builder
+}
+
+// state returns what p parses with: its own tagParser, or for the built-in
+// default parser the one that load builds on first use.
+func (p *TagParser) state() *tagParser {
+	if p.load != nil {
+		return p.load()
+	}
+	return &p.tagParser
 }
 
 // Parse parses tags in buf.
@@ -287,6 +317,11 @@ func (p *TagParser) parse(src []byte) ([]Tag, int) {
 // in the parser the room is made for the parse alone, as such a lexer may
 // keep the slices it is handed.
 func (p *TagParser) lex(src, buf []byte) ([]Tag, int) {
+	return p.state().run(src, buf)
+}
+
+// run is lex with the state of the parser.
+func (p *tagParser) run(src, buf []byte) ([]Tag, int) {
 	// working buf
 	for i, c := range src {
 		switch c {
@@ -405,7 +440,7 @@ func emptyScratch(room, used []Tag) {
 // Lexers have the choice of matching against src or buf. Buf is the working
 // version of src, with underscores and other runes replaced with spaces. Using
 // buf allows lexers to matching with Go regexp `\b`.
-func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *bool) ([]Tag, []Tag, int, int) {
+func (p *tagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *bool) ([]Tag, []Tag, int, int) {
 	// delimiter
 	if bytes.HasPrefix(src[i:n], p.ellip) {
 		return append(
@@ -462,7 +497,8 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 
 // ParseRelease parses a release from src.
 func (p *TagParser) ParseRelease(src []byte) Release {
-	return p.builder.Build(p.Parse(src))
+	tags, end := p.Parse(src)
+	return p.state().builder.Build(tags, end)
 }
 
 // TagBuilder is a release builder.

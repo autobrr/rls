@@ -101,7 +101,8 @@ func Parse(src []byte) Release {
 func ParseString(src string) Release {
 	// the one copy of the name that the tags of the release share
 	if p, ok := DefaultParser.(*TagParser); ok {
-		return p.builder.Build(parseCopy(p, src))
+		tags, end := parseCopy(p, src)
+		return p.state().builder.Build(tags, end)
 	}
 	return DefaultParser.ParseRelease([]byte(src))
 }
@@ -1483,14 +1484,32 @@ func NewDefaultParser() Parser {
 var DefaultBuilder Builder
 
 // DefaultParser is the default tag parser.
+//
+// The built-in one is a *TagParser that is built when it first parses, so a
+// program that never parses, or that assigns its own parser here before it
+// parses, does not pay for it.
 var DefaultParser Parser
+
+// defaultBuilds counts the times the built-in default parser was built, for
+// the tests.
+var defaultBuilds atomic.Int32
+
+// newDefaultTagParser returns the built-in default parser, unbuilt. It is
+// built with builder, the DefaultBuilder of the time the package was
+// initialized, as it was when it was built there.
+func newDefaultTagParser(builder Builder) *TagParser {
+	return &TagParser{load: sync.OnceValue(func() *tagParser {
+		defaultBuilds.Add(1)
+		return &newTagParser(builder, taginfo.All(), DefaultLexers()...).tagParser
+	})}
+}
 
 func init() {
 	for i := Unknown; i <= Series; i++ {
 		taginfo.RegisterType(i.String(), int(i))
 	}
 	DefaultBuilder = NewTagBuilder()
-	DefaultParser = NewDefaultParser()
+	DefaultParser = newDefaultTagParser(DefaultBuilder)
 }
 
 // CompareMap is the release compare map. Modifying this will alter the order

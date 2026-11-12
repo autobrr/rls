@@ -168,7 +168,7 @@ func (s *ReleaseScanner) parse(worker int, scan *Scan) (ok bool) {
 	// the one copy of the line that the tags of the release share
 	if p, ok := s.parser.(*TagParser); ok {
 		tags, end := parseCopy(p, scan.Line)
-		scan.Release = p.builder.Build(tags, end)
+		scan.Release = p.state().builder.Build(tags, end)
 		return true
 	}
 	scan.Release = s.parser.ParseRelease([]byte(scan.Line))
