@@ -150,6 +150,27 @@ func FuzzParseMatcher(f *testing.F) {
 	})
 }
 
+// FuzzParseGates checks that a parser gives the tags with its gates that it
+// gives without them: with every lexer tried at every position, no automaton
+// in front of a regexp, and the lexers that run once searching the whole of
+// what they are given.
+func FuzzParseGates(f *testing.F) {
+	for _, test := range rlsTests(f) {
+		f.Add(test.s)
+	}
+	for _, s := range []string{
+		"", "x", "!x", "#1080p", "'s", "\u017fDTV", "WE\u212a", "é.1080p", "\xff.mkv", "Title.mkv.", "Title.tar.gz", "Title.m\u212av",
+		"[a] [b]", "x [ABCD1234] ", "x {{p}} [[k:v]] (REQ)", "-={s}=- x", "x [a]]", "[[a] x [b]", "S01E02", "2x05", "1080p60", "12 Jan 2020",
+		"BDRemux", "(Drama)", "(ABC-123)", "- 05 -", "01-12", "v2", "1.2.3",
+	} {
+		f.Add(s)
+	}
+	fast, slow := NewParser(), ungated()
+	f.Fuzz(func(t *testing.T, s string) {
+		sameTags(t, fast, slow, s)
+	})
+}
+
 // FuzzParseHint checks that no name and no hint can panic the parser, a wrong
 // type for the name least of all: the steps after the type is known index the
 // tags they expect a release of that type to have. The tags still reproduce
