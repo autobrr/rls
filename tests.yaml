@@ -3613,6 +3613,58 @@
   title: "Hana-Kimi"
   series: 1
   other: "BDMV"
+"Harbor Lights 2022 S01 Complete 1080p WEB-DL HEVC DDP5.1-GRP":
+  type: "series"
+  title: "Harbor Lights"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  codec: "HEVC"
+  audio: "DDP"
+  channels: "5.1"
+  other: "COMPLETE"
+  group: "GRP"
+"[港灯] Harbor Lights 2022 S01 Complete 1080p WEB-DL HEVC DDP5.1-GRP":
+  type: "series"
+  title: "Harbor Lights"
+  alt: "港灯"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  codec: "HEVC"
+  audio: "DDP"
+  channels: "5.1"
+  other: "COMPLETE"
+  group: "GRP"
+"[港灯].Harbor.Lights.2022.S01.Complete.1080p.WEB-DL.HEVC.DDP5.1-GRP":
+  type: "series"
+  title: "Harbor Lights"
+  alt: "港灯"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  codec: "HEVC"
+  audio: "DDP"
+  channels: "5.1"
+  other: "COMPLETE"
+  group: "GRP"
+"[港灯].Harbor.Lights.2022.S01E01.1080p.WEB-DL.HEVC.DDP5.1-GRP.mkv":
+  type: "episode"
+  title: "Harbor Lights"
+  alt: "港灯"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2022
+  series: 1
+  episode: 1
+  codec: "HEVC"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+  ext: "mkv"
 "[Hakata Ramen] High Score Girl (Season 2) (Complete) [1080p HEVC] HR-DR":
   type: "series"
   title: "High Score Girl"
@@ -4358,6 +4410,16 @@
   site: "SubsPlease"
   sum: "ABCD1234"
   ext: "mkv"
+"[桜都字幕组] Show - 01 [1080p][简体内嵌].mp4":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "桜都字幕组"
+  site: "桜都字幕组"
+  ext: "mp4"
+  unused: "简体内嵌"
 "[GRP]_Show_Ep03_The_Title_[720p]":
   type: "episode"
   title: "Show"
@@ -4554,6 +4616,16 @@
   audio: "DDP"
   group: "GROUP"
   ext: "mkv"
+"[桜都字幕组] Show.S01E01.1080p.WEB-DL.HEVC-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "HEVC"
+  group: "GRP"
+  site: "桜都字幕组"
 "Show.S01E02-04.1080p.WEB-GRP":
   type: "episode"
   title: "Show"

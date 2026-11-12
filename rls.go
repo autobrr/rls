@@ -32,7 +32,9 @@ type Release struct {
 	Title    string
 	Subtitle string
 	// Alt is the other names of a movie or series given with 'AKA' or 'aka'
-	// in the title, joined with ' AKA ' when there are two or more.
+	// in the title, joined with ' AKA ' when there are two or more, or the
+	// title in CJK script from a leading bracket in front of a scene name
+	// ('[港灯].Harbor.Lights.S01-GRP').
 	Alt string
 
 	Platform string
