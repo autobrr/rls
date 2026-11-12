@@ -695,7 +695,7 @@ func NewTag(typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
 // src and a buf of its own, so the tags of a parse hold one copy of the name
 // between them. Nothing may write to either once a tag points into it, which
 // the lexers of this package do not, and a lexer of a caller's must not.
-func newTag(src, buf []byte, typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
+func newTag(src, buf []byte, typ TagType, f *finder, b ...[]byte) Tag {
 	if len(b) < 2 {
 		panic("must provide at least 2 values to NewTag")
 	}
@@ -711,11 +711,15 @@ func newTag(src, buf []byte, typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
 			v[i] = string(b[i])
 		}
 	}
-	return Tag{
+	tag := Tag{
 		typ: typ,
 		v:   v,
-		f:   f,
-	}.resolve()
+	}
+	if f != nil {
+		tag.f = f.fn
+		f.resolve(&tag)
+	}
+	return tag
 }
 
 // within reports whether the bytes of b, which is not empty, are bytes of a.
@@ -749,6 +753,22 @@ func (tag Tag) As(typ TagType, f taginfo.FindFunc) Tag {
 		was:   tag.typ ^ wasBit,
 		prevf: tag.f,
 	}.resolve()
+}
+
+// as is As for a finder of this package, whose rows it looks up without the
+// two calls of a find func.
+func (tag Tag) as(typ TagType, f *finder) Tag {
+	t := Tag{
+		typ:   typ,
+		v:     tag.v,
+		was:   tag.typ ^ wasBit,
+		prevf: tag.f,
+	}
+	if f != nil {
+		t.f = f.fn
+		f.resolve(&t)
+	}
+	return t
 }
 
 // Revert returns a copy of tag as the tag's previous type. The copy does not

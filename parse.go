@@ -361,13 +361,13 @@ type TagBuilder struct {
 	// digsuf matches digit suffixes.
 	digsuf *regexp.Regexp
 	// containerf is the container find func.
-	containerf taginfo.FindFunc
+	containerf *finder
 	// audiof is the audio find func.
-	audiof taginfo.FindFunc
+	audiof *finder
 	// resolutionf is the resolution find func.
-	resolutionf taginfo.FindFunc
+	resolutionf *finder
 	// languagef is the language find func.
-	languagef taginfo.FindFunc
+	languagef *finder
 }
 
 // NewTagBuilder creates a new release builder.
@@ -395,10 +395,10 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		sum:         b.sum,
 		digpre:      b.digpre,
 		digsuf:      b.digsuf,
-		containerf:  findFunc(infos["container"]...),
-		audiof:      findFunc(infos["audio"]...),
-		resolutionf: findFunc(infos["resolution"]...),
-		languagef:   findFunc(infos["language"]...),
+		containerf:  newFinder(TagTypeContainer, infos["container"]...),
+		audiof:      newFinder(TagTypeAudio, infos["audio"]...),
+		resolutionf: newFinder(TagTypeResolution, infos["resolution"]...),
+		languagef:   newFinder(TagTypeLanguage, infos["language"]...),
 	}
 }
 
@@ -533,10 +533,10 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 				continue
 			}
 			// not a row that takes any word with 'sub' or 'dub' in it
-			if info := b.languagef(grp); info == nil || strings.Contains(info.Tag(), "$") {
+			if info := b.languagef.find(grp); info == nil || strings.Contains(info.Tag(), "$") {
 				continue
 			}
-			tag = NewTag(TagTypeLanguage, b.languagef, []byte(s[len(d)-1:]), []byte(grp))
+			tag = NewTag(TagTypeLanguage, b.languagef.fn, []byte(s[len(d)-1:]), []byte(grp))
 		default:
 			continue
 		}
@@ -869,7 +869,7 @@ func (b *TagBuilder) fixSourceUHD(r *Release) {
 				k := min(i, j)
 				r.tags[k] = NewTag(TagTypeSource, r.tags[i].f, []byte(r.tags[k].v[0]), []byte("UHD."+s))
 			case strings.Contains(s, "TV"):
-				r.tags[i] = r.tags[i].As(TagTypeResolution, b.resolutionf)
+				r.tags[i] = r.tags[i].as(TagTypeResolution, b.resolutionf)
 			default:
 				continue
 			}
@@ -1033,13 +1033,13 @@ func (b *TagBuilder) fixMusic(r *Release) {
 			case musicExcl && singleEp:
 				r.tags[i] = r.tags[i].As(TagTypeText, nil)
 			case musicExcl && sbBit:
-				r.tags[i] = r.tags[i].As(TagTypeAudio, b.audiof)
+				r.tags[i] = r.tags[i].as(TagTypeAudio, b.audiof)
 			}
 		}
 	}
 	// change single cbr audio tag to the cbr container tag
 	if hasCbr && countCbr == 1 {
-		r.tags[posCbr] = r.tags[posCbr].As(TagTypeContainer, b.containerf)
+		r.tags[posCbr] = r.tags[posCbr].as(TagTypeContainer, b.containerf)
 	}
 }
 

@@ -103,7 +103,7 @@ func newMatcher(infos []*taginfo.Taginfo, ci, source bool) *matcher {
 		runs:   make(map[string][]int32),
 		source: source,
 	}
-	classes := make(map[byteClass]byte)
+	var cs classSet
 	for i, info := range infos {
 		// the alternation joins the rows with no group around each, so a row
 		// has to be a whole regexp by itself ('a)|(b' is not) and keep its
@@ -174,11 +174,12 @@ func newMatcher(infos []*taginfo.Taginfo, ci, source bool) *matcher {
 		}
 		// a row with no group of its own, as a list of spellings
 		if tree.MaxCap() == 1 {
-			if v, ok := m.spell(tree, classes); ok && len(v) != 0 && !slices.Contains(v, "") {
+			if v, ok := cs.spell(tree); ok && len(v) != 0 && !slices.Contains(v, "") {
 				row.spellings = v
 			}
 		}
 	}
+	m.classes = cs.classes
 	return m
 }
 
@@ -203,27 +204,39 @@ func nullable(re *syntax.Regexp) bool {
 	return false
 }
 
+// classSet numbers the sets of bytes that the positions of the spellings of
+// a tag type hold.
+type classSet struct {
+	classes []byteClass
+	index   map[byteClass]byte
+}
+
 // spell returns the strings re matches as strings of class indexes, in the
 // order a backtracking matcher tries them. It returns false when re is not a
-// list of at most maxSpellings ASCII strings, when a letter or class of it
-// folds to a rune outside ASCII, and when the type runs out of classes.
-func (m *matcher) spell(re *syntax.Regexp, classes map[byteClass]byte) ([]string, bool) {
+// list of at most maxSpellings ASCII strings, when a class of it holds a rune
+// outside ASCII, and when the type runs out of classes. A letter that folds
+// to a rune outside ASCII is spelled with its ASCII cases alone, so a string
+// with a byte outside ASCII is not one to compare with the spellings.
+func (cs *classSet) spell(re *syntax.Regexp) ([]string, bool) {
 	class := func(c byteClass) (byte, bool) {
-		if i, ok := classes[c]; ok {
+		if i, ok := cs.index[c]; ok {
 			return i, true
 		}
-		if len(m.classes) == 256 {
+		if len(cs.classes) == 256 {
 			return 0, false
 		}
-		i := byte(len(m.classes))
-		m.classes, classes[c] = append(m.classes, c), i
+		if cs.index == nil {
+			cs.index = make(map[byteClass]byte)
+		}
+		i := byte(len(cs.classes))
+		cs.classes, cs.index[c] = append(cs.classes, c), i
 		return i, true
 	}
 	switch re.Op {
 	case syntax.OpEmptyMatch:
 		return []string{""}, true
 	case syntax.OpCapture:
-		return m.spell(re.Sub[0], classes)
+		return cs.spell(re.Sub[0])
 	case syntax.OpLiteral:
 		b := make([]byte, len(re.Rune))
 		for i, r := range re.Rune {
@@ -260,7 +273,7 @@ func (m *matcher) spell(re *syntax.Regexp, classes map[byteClass]byte) ([]string
 	case syntax.OpConcat:
 		v := []string{""}
 		for _, sub := range re.Sub {
-			w, ok := m.spell(sub, classes)
+			w, ok := cs.spell(sub)
 			if !ok || len(v)*len(w) > maxSpellings {
 				return nil, false
 			}
@@ -276,7 +289,7 @@ func (m *matcher) spell(re *syntax.Regexp, classes map[byteClass]byte) ([]string
 	case syntax.OpAlternate:
 		var v []string
 		for _, sub := range re.Sub {
-			w, ok := m.spell(sub, classes)
+			w, ok := cs.spell(sub)
 			if !ok || len(v)+len(w) > maxSpellings {
 				return nil, false
 			}
@@ -284,7 +297,7 @@ func (m *matcher) spell(re *syntax.Regexp, classes map[byteClass]byte) ([]string
 		}
 		return v, true
 	case syntax.OpQuest:
-		v, ok := m.spell(re.Sub[0], classes)
+		v, ok := cs.spell(re.Sub[0])
 		if !ok || len(v) >= maxSpellings {
 			return nil, false
 		}

@@ -315,14 +315,14 @@ func NewDateLexer(strs ...string) Lexer {
 
 // NewSeriesLexer creates a tag lexer for a series.
 func NewSeriesLexer(strs ...string) Lexer {
-	var sourcef taginfo.FindFunc
+	var sourcef *finder
 	lexer := newNamedCapture(strs...)
 	mlt := regexp.MustCompile(`(?i)s(\d?\d)`)
 	mny := regexp.MustCompile(`(?i)[\-\._ ]?e(\d{1,5})`)
 	dsc := regexp.MustCompile(`(?i)^(?:disc|disk|dvd|d)`)
 	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
-			sourcef = findFunc(infos["source"]...)
+			sourcef = newFinder(TagTypeSource, infos["source"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if s, v, i, n, ok := lexer.lex(src, buf, i, n); ok {
@@ -996,11 +996,11 @@ func NewVersionLexer(strs ...string) Lexer {
 // NewDiscSourceYearLexer creates a tag lexer for the combined disc, source,
 // year style tag.
 func NewDiscSourceYearLexer(strs ...string) Lexer {
-	var sourcef taginfo.FindFunc
+	var sourcef *finder
 	lexer := newNamedCapture(strs...)
 	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
-			sourcef = findFunc(infos["source"]...)
+			sourcef = newFinder(TagTypeSource, infos["source"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if _, v, i, n, ok := lexer.lex(src, buf, i, n); ok {
@@ -1041,11 +1041,11 @@ func NewDiscSourceYearLexer(strs ...string) Lexer {
 //	r - resolution
 //	f - frames per second
 func NewFrameRateLexer(strs ...string) Lexer {
-	var resolutionf taginfo.FindFunc
+	var resolutionf *finder
 	lexer := NamedCaptureLexer(strs...)
 	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
-			resolutionf = findFunc(infos["resolution"]...)
+			resolutionf = newFinder(TagTypeResolution, infos["resolution"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			// the patterns are digits and then 'fps', or a 'p' or 'i' with a
@@ -1100,7 +1100,7 @@ func NewFrameRateLexer(strs ...string) Lexer {
 				}
 			}
 			if len(resolution) != 0 {
-				if resolutionf(string(resolution)) == nil {
+				if resolutionf.find(string(resolution)) == nil {
 					return start, end, i, n, false
 				}
 				text := s[:len(resolution)]
@@ -1118,11 +1118,11 @@ func NewFrameRateLexer(strs ...string) Lexer {
 //	t - type
 //	x - xXtype
 func NewDiscLexer(strs ...string) Lexer {
-	var sourcef, sizef taginfo.FindFunc
+	var sourcef, sizef *finder
 	lexer, re := newNamedCapture(strs...), regexp.MustCompile(`(?i)^(?:dvd|cd|d|s|x)`)
 	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
-			sourcef, sizef = findFunc(infos["source"]...), findFunc(infos["size"]...)
+			sourcef, sizef = newFinder(TagTypeSource, infos["source"]...), newFinder(TagTypeSize, infos["size"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if s, v, j, k, ok := lexer.lex(src, buf, i, n); ok {
@@ -1187,7 +1187,7 @@ func NewDiscLexer(strs ...string) Lexer {
 // NewAudioLexer creates a tag lexer for audios.
 func NewAudioLexer() Lexer {
 	var re *regexp.Regexp
-	var audiof, channelsf taginfo.FindFunc
+	var audiof, channelsf *finder
 	var lead [256]bool
 	var gated bool
 	var pf *prefilter
@@ -1214,7 +1214,7 @@ func NewAudioLexer() Lexer {
 			}
 			codec := reutil.Taginfo(``, infos["codec"]...)
 			re = regexp.MustCompile(reutil.Taginfo(`^i`, audio...) + `(?:[\-\._ ]?(` + strings.Join(v, "|") + `))?(?:\b|[\-\._ ]|(` + codec + `(?:\b|[\-\._ ]))` + plusEnd + `)`)
-			audiof, channelsf = findFunc(audio...), findFunc(channels...)
+			audiof, channelsf = newFinder(TagTypeAudio, audio...), newFinder(TagTypeChannels, channels...)
 			lead, gated = leadSet(re.String())
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
@@ -1273,7 +1273,7 @@ func NewAudioLexer() Lexer {
 
 // NewGenreLexer creates a tag lexer for a genre.
 func NewGenreLexer() Lexer {
-	var genref taginfo.FindFunc
+	var genref *finder
 	var re, lb, other *regexp.Regexp
 	var pf, pfOther *prefilter
 	return withGate(TagLexer{
@@ -1288,7 +1288,7 @@ func NewGenreLexer() Lexer {
 				}
 			}
 			s := `\(?(` + strings.Join(v, `|`) + `)\s*\)`
-			re, lb, other, genref = regexp.MustCompile(`(?i)^`+s), regexp.MustCompile(`(?i)\(\s*`+s+`$`), regexp.MustCompile(`(?i)^(`+strings.Join(tagv, `|`)+`)\b`), findFunc(genre...)
+			re, lb, other, genref = regexp.MustCompile(`(?i)^`+s), regexp.MustCompile(`(?i)\(\s*`+s+`$`), regexp.MustCompile(`(?i)^(`+strings.Join(tagv, `|`)+`)\b`), newFinder(TagTypeGenre, genre...)
 			// re ends on a ')' and other on a word boundary, so as with the
 			// regexp lexers neither can end part way through a run
 			if pf, _ = newPrefilterRE(v, true); pf != nil {
@@ -1334,7 +1334,7 @@ var dottedGroup = regexp.MustCompile(`(?i)^(?:[a-z]\.){2,}[a-z]$`)
 func NewGroupLexer() Lexer {
 	const delim, invalid = '-', ` _.()[]{}+`
 	bracket := regexp.MustCompile(`^[\]\)\}]`)
-	var groupf, otherf taginfo.FindFunc
+	var groupf, otherf *finder
 	var re, special, tags *regexp.Regexp
 	var shortTags map[string]bool
 	// lastRuns holds the final word-run of every spelling a known group row
@@ -1425,7 +1425,7 @@ func NewGroupLexer() Lexer {
 					spans[strings.ToUpper(s)] = struct{}{}
 				}
 			}
-			groupf, otherf = findFunc(group...), findFunc(other...)
+			groupf, otherf = newFinder(TagTypeGroup, group...), newFinder(TagTypeOther, other...)
 			for _, info := range group {
 				exp, err := expandRE(info.RE(), true)
 				if err != nil {
@@ -1926,7 +1926,7 @@ func metaSpace(c byte) bool {
 
 // NewExtLexer creates a tag lexer for a file's extension.
 func NewExtLexer() Lexer {
-	var extf taginfo.FindFunc
+	var extf *finder
 	var re *regexp.Regexp
 	// window bounds how far from the end a match can start: the period plus
 	// the longest extension, with every character allowed its widest (?i)
@@ -1935,7 +1935,7 @@ func NewExtLexer() Lexer {
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			ext := infos["ext"]
-			re, extf = regexp.MustCompile(`(?i:\.`+reutil.Taginfo("$", ext...)+`)`), findFunc(ext...)
+			re, extf = regexp.MustCompile(`(?i:\.`+reutil.Taginfo("$", ext...)+`)`), newFinder(TagTypeExt, ext...)
 			for _, info := range ext {
 				exp, err := expandRE(info.RE(), true)
 				if err != nil {
@@ -1976,7 +1976,7 @@ func NewExtLexer() Lexer {
 
 // NewRegexpLexer creates a tag lexer for a regexp.
 func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
-	var f, otherf taginfo.FindFunc
+	var f, otherf *finder
 	var re *regexp.Regexp
 	var pf *prefilter
 	var mt *matcher
@@ -1988,12 +1988,12 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			if !ignoreCase {
 				s = `^b`
 			}
-			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)), findFunc(info...)
+			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)), newFinder(typ, info...)
 			pf, _ = newPrefilter(info, ignoreCase)
 			mt = newMatcher(info, ignoreCase, false)
 			// the split below needs the two rows it stands for
-			if typ == TagTypeSource && ignoreCase && f("BD") != nil {
-				if o := findFunc(infos["other"]...); o("Remux") != nil {
+			if typ == TagTypeSource && ignoreCase && f.find("BD") != nil {
+				if o := newFinder(TagTypeOther, infos["other"]...); o.find("Remux") != nil {
 					otherf = o
 				}
 			}
@@ -2052,7 +2052,7 @@ func tagDelim(c byte) bool {
 
 // NewRegexpSourceLexer creates a tag lexer for a regexp.
 func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
-	var f taginfo.FindFunc
+	var f *finder
 	var re *regexp.Regexp
 	var pf *prefilter
 	var mt *matcher
@@ -2063,7 +2063,7 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 			if !ignoreCase {
 				s = `^`
 			}
-			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)+`(?:\b|[\-\._ ]`+plusEnd+`)`), findFunc(info...)
+			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)+`(?:\b|[\-\._ ]`+plusEnd+`)`), newFinder(typ, info...)
 			pf, _ = newPrefilter(info, ignoreCase)
 			mt = newMatcher(info, ignoreCase, true)
 		},
