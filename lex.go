@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode"
 
@@ -1339,7 +1340,7 @@ func NewGroupLexer() Lexer {
 	const delim, invalid = '-', ` _.()[]{}+`
 	bracket := regexp.MustCompile(`^[\]\)\}]`)
 	var groupf, otherf *finder
-	var re, special, tags *regexp.Regexp
+	var re, special, tags func() *regexp.Regexp
 	var shortTags map[string]bool
 	// lastRuns holds the final word-run of every spelling a known group row
 	// can take. A known group is anchored to the end of the name, so the name
@@ -1358,7 +1359,7 @@ func NewGroupLexer() Lexer {
 	// literal, in which case tags always runs.
 	spans, spansOK := make(map[string]struct{}), true
 	var patterns []patterned
-	var rest *regexp.Regexp
+	var rest func() *regexp.Regexp
 	inTag := func(src []byte, h int) bool {
 		a, b := bytes.LastIndexAny(src[:h], invalid)+1, len(src)
 		if k := bytes.IndexAny(src[h+1:], invalid); k != -1 {
@@ -1369,7 +1370,7 @@ func NewGroupLexer() Lexer {
 			for k, c := range w {
 				// (?i) folds onto non-ASCII runes; leave those to the regexp
 				if c >= 0x80 {
-					return tags.Match(w)
+					return tags().Match(w)
 				}
 				if c >= 'a' && c <= 'z' {
 					c -= 32
@@ -1377,13 +1378,13 @@ func NewGroupLexer() Lexer {
 				key[k] = c
 			}
 			if _, ok := spans[string(key[:len(w)])]; ok {
-				return tags.Match(w)
+				return tags().Match(w)
 			}
 			return slices.ContainsFunc(patterns, func(row patterned) bool {
 				return row.lead[w[0]] && hasLiteral(w, row.lit, row.fold)
-			}) && rest.Match(w)
+			}) && rest().Match(w)
 		}
-		return tags.Match(src[a:b])
+		return tags().Match(src[a:b])
 	}
 	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, short map[string]bool) {
@@ -1450,9 +1451,10 @@ func NewGroupLexer() Lexer {
 					}
 				}
 			}
-			re, special = regexp.MustCompile(`(?i)[\-\._ ]+`+reutil.Taginfo(`$`, group...)), regexp.MustCompile(`(?i)_(`+strings.Join(v, `|`)+`)$`)
-			tags = regexp.MustCompile(reutil.Taginfo(`i^$`, known...))
-			rest = regexp.MustCompile(reutil.Taginfo(`i^$`, unexpanded...))
+			// each is asked for by few names, see the tests in front of them
+			re, special = lazyRegexp(`(?i)[\-\._ ]+`+reutil.Taginfo(`$`, group...)), lazyRegexp(`(?i)_(`+strings.Join(v, `|`)+`)$`)
+			tags = lazyRegexp(reutil.Taginfo(`i^$`, known...))
+			rest = lazyRegexp(reutil.Taginfo(`i^$`, unexpanded...))
 			shortTags = short
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
@@ -1467,13 +1469,13 @@ func NewGroupLexer() Lexer {
 			// special end tags on groups. the pattern opens with a literal
 			// underscore, so a name without one cannot match
 			if bytes.IndexByte(src[i:n], '_') != -1 {
-				if m := special.FindSubmatch(src[i:n]); m != nil {
+				if m := special().FindSubmatch(src[i:n]); m != nil {
 					end, n = append(end, newTag(src, buf, TagTypeOther, otherf, m...)), n-len(m[0])
 				}
 			}
 			// known groups
 			if knownGroupTail(src[i:n], lastRuns, lastMax, lastOK) {
-				if m := re.FindSubmatch(src[i:n]); m != nil {
+				if m := re().FindSubmatch(src[i:n]); m != nil {
 					return start, append(end, newTag(src, buf, TagTypeGroup, groupf, m...)), i, n - len(m[0]), true
 				}
 			}
@@ -2162,7 +2164,7 @@ func extTail(b []byte, tails map[string]struct{}) bool {
 // NewRegexpLexer creates a tag lexer for a regexp.
 func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 	var f, otherf *finder
-	var re *regexp.Regexp
+	var re func() *regexp.Regexp
 	var pf *prefilter
 	var mt *matcher
 	bdremux := []byte("bdremux")
@@ -2173,7 +2175,8 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			if !ignoreCase {
 				s = `^b`
 			}
-			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)), newFinder(typ, info...)
+			// the alternation is what the matcher falls back on
+			re, f = lazyRegexp(reutil.Taginfo(s, info...)), newFinder(typ, info...)
 			pf, _ = newPrefilter(info, ignoreCase)
 			mt = newMatcher(info, ignoreCase, false)
 			// the split below needs the two rows it stands for
@@ -2207,7 +2210,7 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 				var v [20][]byte
 				return append(start, newTag(src, buf, typ, f, mt.values(v[:], src[i:e], buf[i:e], row, sub)...)), end, e, n, true
 			}
-			if m := re.FindSubmatch(buf[i:n]); m != nil {
+			if m := re().FindSubmatch(buf[i:n]); m != nil {
 				return append(start, newTag(src, buf, typ, f, append([][]byte{src[i : i+len(m[0])]}, m[1:]...)...)), end, i + len(m[0]), n, true
 			}
 			return start, end, i, n, false
@@ -2219,6 +2222,17 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			g.runs[strings.ToUpper(string(bdremux))] = struct{}{}
 		}
 		return g
+	})
+}
+
+// lazyRegexp returns a func that gives the regexp for expr, compiled when it
+// is first asked for. It is for the regexps of a lexer that a test in front
+// of them keeps most names away from: the alternation of a type's rows takes
+// longer to compile than anything else a parser is built from, and some are
+// never run.
+func lazyRegexp(expr string) func() *regexp.Regexp {
+	return sync.OnceValue(func() *regexp.Regexp {
+		return regexp.MustCompile(expr)
 	})
 }
 
@@ -2238,7 +2252,7 @@ func tagDelim(c byte) bool {
 // NewRegexpSourceLexer creates a tag lexer for a regexp.
 func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 	var f *finder
-	var re *regexp.Regexp
+	var re func() *regexp.Regexp
 	var pf *prefilter
 	var mt *matcher
 	return withGate(TagLexer{
@@ -2248,7 +2262,7 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 			if !ignoreCase {
 				s = `^`
 			}
-			re, f = regexp.MustCompile(reutil.Taginfo(s, info...)+`(?:\b|[\-\._ ]`+plusEnd+`)`), newFinder(typ, info...)
+			re, f = lazyRegexp(reutil.Taginfo(s, info...)+`(?:\b|[\-\._ ]`+plusEnd+`)`), newFinder(typ, info...)
 			pf, _ = newPrefilter(info, ignoreCase)
 			mt = newMatcher(info, ignoreCase, true)
 		},
@@ -2276,7 +2290,7 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 				var v [20][]byte
 				return append(start, newTag(src, buf, typ, f, mt.values(v[:], src[i:e], src[i:e], row, sub)...)), end, e, n, true
 			}
-			if m := re.FindSubmatch(src[i:n]); m != nil {
+			if m := re().FindSubmatch(src[i:n]); m != nil {
 				if len(m[0]) != len(m[1]) && !tagDelim(m[0][len(m[1])]) {
 					// See plusEnd.
 					m[0] = m[0][:len(m[1])]

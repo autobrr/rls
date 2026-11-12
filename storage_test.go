@@ -253,6 +253,53 @@ func TestParseConcurrent(t *testing.T) {
 	}
 }
 
+// TestParseConcurrentFirstUse checks parses running at once on a parser that
+// has parsed nothing yet, which between them make everything the parser makes
+// when it is first needed: the regexps a lexer falls back on, the automatons
+// and spellings of rows, and the rows of normalized values.
+func TestParseConcurrentFirstUse(t *testing.T) {
+	// names that reach the regexps most names are kept away from: a rune a
+	// letter folds to, a known group, an underscore before a tag at the end,
+	// a hyphen inside a tag, and rows that are no spellings
+	names := append(slices.Clone(storageNames),
+		"Title.2020.1080p.WE\u212a.x264-GRP",
+		"Title.2020.720p.\u017fDTV.x264",
+		"Title.S01E02.1080p.WEB-DL.DD+5.1.H.264-CODEX",
+		"Some.Game.v1.2-FitGirl",
+		"Title.2019.1080p.BluRay.x264-GRP_INT",
+		"Title.2019.DTS-HD.MA.5.1-WEB-DL",
+		"Title.2019.MULTi5.1920x1080.10bit.4.5GB.dubbed",
+		"é.Title.\xff.2019.!x.#y",
+	)
+	exp := make([]Release, len(names))
+	for k, name := range names {
+		exp[k] = DefaultParser.ParseRelease([]byte(name))
+	}
+	for range 4 {
+		p := NewParser()
+		const workers = 8
+		got := make([][]Release, workers)
+		var wg sync.WaitGroup
+		for w := range workers {
+			wg.Go(func() {
+				got[w] = make([]Release, len(names))
+				for k := range names {
+					k = (k + w) % len(names)
+					got[w][k] = p.ParseRelease([]byte(names[k]))
+				}
+			})
+		}
+		wg.Wait()
+		for w := range workers {
+			for k, name := range names {
+				if !sameRelease(got[w][k], exp[k]) {
+					t.Fatalf("%q: worker %d: expected the release of the default parser:%s", name, w, diffRelease(got[w][k], exp[k]))
+				}
+			}
+		}
+	}
+}
+
 // TestParseCallerLexerKeepsTags checks that a parser with a lexer of a
 // caller's does not lex into scratch that later parses use again: the slices
 // such a lexer was handed, which it may keep, stay what they were.
