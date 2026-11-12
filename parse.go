@@ -1757,8 +1757,10 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 		// a bracket that opens in front of the source or the other tags
 		// holds tags ('(1999) [R2JP DVD-Remux]', '(2024) [English Dub] [CR
 		// WEB-DL 1080p]'), and a bar opens another name for the title
-		// ('(2019) | Other Name (BD 1080p)')
-		if pos < end-1 && !((noResolution || end != resolution) && depth > 0) && r.tags[pos].v[0] != "|" {
+		// ('(2019) | Other Name (BD 1080p)'). With the year in front of the
+		// title, the text after the year is the title ('(2014) Title [BDRip
+		// 1920x1080]')
+		if pos < end-1 && pos >= start+offset && !((noResolution || end != resolution) && depth > 0) && r.tags[pos].v[0] != "|" {
 			// numbers alone are not a subtitle, ie the rest of a date that
 			// does not exist ('Show.2023.02.29.HDTV'), and neither are cut
 			// and edition tags with no text beside them, which are in Cut

@@ -1565,6 +1565,16 @@
   yearend: 2025
   codec: "H.264"
   group: "GRP"
+"[Kawaiika-Raws] (2014) No Game No Life [BDRip 1920x1080 HEVC FLAC]":
+  type: "movie"
+  title: "No Game No Life"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 2014
+  codec: "HEVC"
+  audio: "FLAC"
+  group: "Kawaiika-Raws"
+  site: "Kawaiika-Raws"
 "One Shot [2014] DVDRip XViD-ViCKY":
   type: "movie"
   title: "One Shot"
