@@ -4,6 +4,7 @@
 "   ":
 "  -  -[[ foo:bar ]]-__-{{ secret }}-.-([ABCD1234]).0.([ mountain ][[ key:value ]])  ":
   title: "0"
+  group: "mountain"
   meta: "foo:bar key:value"
   site: "mountain"
   sum: "ABCD1234"
@@ -19,8 +20,16 @@
   meta: "key1:value1"
 "A.DOCUMENTARY":
   title: "A DOCUMENTARY"
+"Bakemonogatari Limited Edition [BDMV]":
+  title: "Bakemonogatari"
+  other: "BDMV"
+  edition: "Limited.Edition"
 "foo\nbar":
   title: "foo bar"
+"[Commie] Hataraku Maou-sama!":
+  title: "Hataraku Maou-sama!"
+  group: "Commie"
+  site: "Commie"
 "I.AND.THE.KING":
   title: "I AND THE KING"
 "LA.GUERRE.DE.100.ANS.FRENCH-PETANK":
@@ -33,7 +42,12 @@
   title: "S.W.A.T."
 "[BBT-RMX]_Servant_x_Service":
   title: "Servant x Service"
+  group: "BBT-RMX"
   site: "BBT-RMX"
+"[Group] Show Name - Prologue":
+  title: "Show Name - Prologue"
+  group: "Group"
+  site: "Group"
 "Spider-Man Homecoming":
   title: "Spider-Man Homecoming"
 "TEST.A.Documentary":
@@ -42,6 +56,8 @@
   title: "Vol I.V."
 "WITHNAIL.AND.I":
   title: "WITHNAIL AND I"
+"WWE.Monday.Night.Raw":
+  title: "WWE Monday Night Raw"
 "X-Men Apocalypse":
   title: "X-Men Apocalypse"
 "You.I.Me":
@@ -81,6 +97,7 @@
   resolution: "1080p"
   year: 2011
   audio: "DTS-HD"
+  group: "test"
   site: "test"
 "50.50.2011.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR.mkv":
   type: "movie"
@@ -104,14 +121,17 @@
   group: "SiN"
 "(2001)A Space Odyssey(1961).mkv":
   type: "movie"
-  title: "2001"
+  title: "2001 A Space Odyssey"
   year: 1961
-  group: "Odyssey"
   ext: "mkv"
-  unused: "A Space"
 "2001: A Space Odyssey.mkv":
   type: "movie"
   title: "2001: A Space Odyssey"
+  ext: "mkv"
+"(2001) A Space Odyssey (1968).mkv":
+  type: "movie"
+  title: "2001 A Space Odyssey"
+  year: 1968
   ext: "mkv"
 "2001.A.Space.Odyssey.1968.2160p.UHD.BluRay.DD+5.1.DoVi.x265-c0kE":
   type: "movie"
@@ -190,6 +210,13 @@
   sum: "ABCD1234"
   pass: "secret"
   ext: "m2ts"
+"3x3.Eyes.1991.DVDRip.x264-GRP":
+  type: "movie"
+  title: "3x3 Eyes"
+  source: "DVDRiP"
+  year: 1991
+  codec: "x264"
+  group: "GRP"
 "8-Bit.Christmas.(2021)(2160p.HMAX-WEBRip.DoVi HDR.x265.crf18.S97.E-AC3.5.1.Atmos)[cTurtle-4K].torrent":
   type: "movie"
   title: "8-Bit Christmas"
@@ -201,14 +228,21 @@
   hdr: "DV HDR"
   audio: "DDP Atmos"
   channels: "5.1"
-  group: "S97"
+  group: "cTurtle-4K"
   site: "cTurtle-4K"
   ext: "torrent"
-  unused: "crf18"
+  unused: "crf18 S97"
 "a file.mkv":
   type: "movie"
   title: "a file"
   ext: "mkv"
+"A.Movie.2020.700MB.x264-G":
+  type: "movie"
+  title: "A Movie"
+  year: 2020
+  codec: "x264"
+  size: "700MB"
+  group: "G"
 "A.River.Runs.Through.It.1992.Remastered.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR":
   type: "movie"
   title: "A River Runs Through It"
@@ -249,6 +283,13 @@
   codec: "H.264"
   language: "DUTCH"
   group: "ADRENALiNE"
+"[Reaktor] Akira - 30th Anniversary - Patch Subs":
+  type: "movie"
+  title: "Akira"
+  edition: "30th.Anniversary.Edition"
+  group: "Reaktor"
+  site: "Reaktor"
+  unused: "Patch Subs"
 "Akira (2016) - UpScaled - 720p - DesiSCR-Rip - Hindi - x264 - AC3 - 5.1 - Mafiaking - M2Tv":
   type: "movie"
   title: "Akira"
@@ -272,6 +313,7 @@
 "Almost.Famous.2000.Bootleg.Cut.UHD.BluRay.2160p.DTS-HD.MA.5.1.DV.HEVC.HYBRID.REMUX-FraMeSToR":
   type: "movie"
   title: "Almost Famous"
+  subtitle: "Bootleg Cut"
   source: "UHD.BluRay"
   resolution: "2160p"
   year: 2000
@@ -281,7 +323,6 @@
   channels: "5.1"
   other: "HYBRiD REMUX"
   group: "FraMeSToR"
-  unused: "Bootleg Cut"
 "Amazon.1990.DVD.720p":
   type: "movie"
   title: "Amazon"
@@ -333,6 +374,26 @@
   other: "Digital.Extras"
   group: "NTG"
   ext: "mkv"
+"ATP.Australian.Open.2020.Final.Novak.Djokovic.vs.Dominic.Thiem.HDTV.x264-PLUTONiUM":
+  type: "movie"
+  title: "ATP Australian Open"
+  subtitle: "Final Novak Djokovic vs Dominic Thiem"
+  source: "HDTV"
+  year: 2020
+  codec: "x264"
+  group: "PLUTONiUM"
+"[Yameii] Attack on Titan - The Last Attack (2024) [English Dub] [CR WEB-DL 1080p] [5433BCE3] (Shingeki no Kyojin: The Last Attack)":
+  type: "movie"
+  title: "Attack on Titan - The Last Attack"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "CR"
+  year: 2024
+  language: "ENGLiSH"
+  group: "Yameii"
+  site: "Yameii"
+  sum: "5433BCE3"
+  unused: "Dub Shingeki no Kyojin: The Last Attack"
 "Austin.Powers.The.Spy.Who.Shagged.Me.1999.BluRay.1080p.TrueHD.5.1.VC-1.REMUX-FraMeSToR.mkv":
   type: "movie"
   title: "Austin Powers The Spy Who Shagged Me"
@@ -368,6 +429,14 @@
   channels: "5.1"
   other: "REMUX"
   group: "FraMeSToR"
+"BDRemux.Movie.2020.1080p.WEB.x264-GRP":
+  type: "movie"
+  title: "BDRemux Movie"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "GRP"
 "Beavis.and.Butt-Head.The.Mike.Judge.Collectors.Edition.D03.R2.PAL.DVD5.TVV-Grzechsin":
   type: "movie"
   title: "Beavis and Butt-Head"
@@ -512,6 +581,16 @@
   cut: "Extended.Cut"
   language: "MULTi"
   group: "MONUMENT"
+"Cricket.2025.India.vs.New.Zealand.1080p50fps.WEB.h264-GRP":
+  type: "movie"
+  title: "Cricket"
+  subtitle: "India vs New Zealand"
+  source: "WEB"
+  resolution: "1080p"
+  framerate: "50fps"
+  year: 2025
+  codec: "H.264"
+  group: "GRP"
 "D.A.R.Y.L.1985.1080p.BluRay.x264-GRP":
   type: "movie"
   title: "D.A.R.Y.L."
@@ -567,7 +646,7 @@
   type: "movie"
   title: "Deep Web"
   source: "BluRay"
-  resolution: "1080p"
+  resolution: "1080i"
   year: 2015
   codec: "AVC"
   audio: "DTS-HD.MA"
@@ -593,10 +672,11 @@
   group: "ZQ"
   ext: "mkv"
 "Der.Denver.Clan.Staffel4.DVD7.German.FS.PAL.DVDR-RSG":
-  type: "movie"
-  title: "Der Denver Clan Staffel4"
+  type: "series"
+  title: "Der Denver Clan"
   source: "DVD"
   resolution: "576p"
+  series: 4
   disc: "DVD7"
   other: "FS"
   language: "GERMAN"
@@ -672,6 +752,7 @@
   bitdepth: "10BIT"
   audio: "FLAC"
   channels: "2.0"
+  group: "Dekinai"
   site: "Dekinai"
 "E.T.the.Extra-Terrestrial.1982.UHD.BluRay.2160p.DTS-X.7.1.HEVC.REMUX-FraMeSToR":
   type: "movie"
@@ -748,6 +829,22 @@
   codec: "x264"
   audio: "DTS"
   group: "HiFi"
+"FIFA.World.Cup.2026.Semi.Final.England.vs.Argentina.HLG.2160p.WEB.h265-VERUM":
+  type: "movie"
+  title: "FIFA World Cup"
+  subtitle: "Semi Final England vs Argentina"
+  source: "WEB"
+  resolution: "2160p"
+  year: 2026
+  codec: "H.265"
+  hdr: "HLG"
+  group: "VERUM"
+"Fight!! Iczer-1 Special Compilation 1080p BDREMUX":
+  type: "movie"
+  title: "Fight!! Iczer-1 Special Compilation"
+  source: "BluRay"
+  resolution: "1080p"
+  other: "REMUX"
 "[ValdikSS]_First_Squad_The_Morment_Of_Truth_[720x576_h264_dvdscr_eng_hardsub].mkv":
   type: "movie"
   title: "First Squad The Morment Of Truth"
@@ -755,6 +852,7 @@
   resolution: "576p"
   codec: "H.264"
   language: "ENGLiSH HARDSUB"
+  group: "ValdikSS"
   site: "ValdikSS"
   ext: "mkv"
 "\t foo\nbar\n\f\r1080p \t\nbluray\n\t":
@@ -762,17 +860,47 @@
   title: "foo bar"
   source: "BluRay"
   resolution: "1080p"
+"Formula1.2024.Round19.USA.Austin.Race.1080p.WEB.h264-GRP":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round19 USA Austin Race"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2024
+  codec: "H.264"
+  group: "GRP"
+"Formula1.2026.Hungarian.Grand.Prix.Practice.One.1080p.AHDTV.x264-DARKSPORT":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Hungarian Grand Prix Practice One"
+  source: "AHDTV"
+  resolution: "1080p"
+  year: 2026
+  codec: "x264"
+  group: "DARKSPORT"
+"Formula1.2026.Round05.Miami.Grand.Prix.Race.UHD.2160p50.HLG.WEB.h265-GRP":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round05 Miami Grand Prix Race"
+  source: "UHD.WEB"
+  resolution: "2160p"
+  framerate: "50fps"
+  year: 2026
+  codec: "H.265"
+  hdr: "HLG"
+  group: "GRP"
 "Fussball.1.Bundesliga.2011-2012.04.Spieltag.Hannover.96.vs.FSV.Mainz.05.GERMAN.WS.HDTV.720p.x264-SPORTSBAR":
   type: "movie"
-  title: "Fussball 1 Bundesliga 2011"
+  title: "Fussball 1 Bundesliga"
+  subtitle: "04 Spieltag Hannover 96 vs FSV Mainz 05"
   source: "HDTV"
   resolution: "720p"
-  year: 2012
+  year: 2011
+  yearend: 2012
   codec: "x264"
   other: "WS"
   language: "GERMAN"
   group: "SPORTSBAR"
-  unused: "04 Spieltag Hannover 96 vs FSV Mainz 05"
 "G.I.Joe.Retaliation.2013.1080p.BluRay.x264-GRP":
   type: "movie"
   title: "G.I. Joe Retaliation"
@@ -793,6 +921,16 @@
   other: "REMUX"
   group: "FraMeSToR"
   ext: "mkv"
+"[Group] Given The Movie - Hiiragi Mix (2024) (BD 1080p x264 Opus)":
+  type: "movie"
+  title: "Given The Movie - Hiiragi Mix"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2024
+  codec: "x264"
+  audio: "OPUS"
+  group: "Group"
+  site: "Group"
 "Guardians of the Galaxy (2014) Dual Audio DVDRip AVI":
   type: "movie"
   title: "Guardians of the Galaxy"
@@ -856,7 +994,6 @@
 "Hercules.2014.EXTENDED.1080p.WEB-DL.DD5.1.H264-RARBG":
   type: "movie"
   title: "Hercules"
-  subtitle: "EXTENDED"
   source: "WEB-DL"
   resolution: "1080p"
   year: 2014
@@ -885,6 +1022,15 @@
   audio: "AAC"
   language: "ENGLiSH"
   group: "CPG"
+"[GHOST][1080p] Inuyasha - Movie 4 Fire on the Mystic Island [BD HEVC Dual Audio AC3]":
+  type: "movie"
+  title: "Inuyasha - Movie 4 Fire on the Mystic Island"
+  source: "BluRay"
+  resolution: "1080p"
+  codec: "HEVC"
+  audio: "DUAL.AUDIO DD"
+  group: "GHOST"
+  site: "GHOST"
 "Jack.And.The.Cuckoo-Clock.Heart.2013.BRRip XViD":
   type: "movie"
   title: "Jack And The Cuckoo-Clock Heart"
@@ -942,6 +1088,7 @@
   resolution: "720p"
   bitdepth: "10BIT"
   audio: "FLAC"
+  group: "KAIJU"
   site: "KAIJU"
 "[KAIJU] Kaiju Squad (BD 1080p Ma10p FLAC)":
   type: "movie"
@@ -950,6 +1097,7 @@
   resolution: "1080p"
   bitdepth: "10BIT"
   audio: "FLAC"
+  group: "KAIJU"
   site: "KAIJU"
 "Kiss the blood off my hands - (Norman FOSTER) - 1948 - VOSTFR - Dvdrip-x264 - kerfiche":
   type: "movie"
@@ -1016,6 +1164,43 @@
   year: 2014
   audio: "DUAL.AUDIO"
   size: "1400MB"
+"MotoGP.2024.Round.05.Italy.Race.1080p.WEB.h264-GRP":
+  type: "movie"
+  title: "MotoGP"
+  subtitle: "Round 05 Italy Race"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2024
+  codec: "H.264"
+  group: "GRP"
+"Movie 2020 1080p BluRay x264 + Bonus":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  unused: "Bonus"
+"Movie.2020.1080p.BDRemux.AVC.DTS-HD.MA.5.1-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "AVC"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  other: "REMUX"
+  group: "GRP"
+"Movie.2020.1080p.BluRay.DTS-ES.x264-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  audio: "DTS ES"
+  group: "GRP"
 "Movie.2020.1080p.BluRay.x264.Hi10P-GRP":
   type: "movie"
   title: "Movie"
@@ -1025,6 +1210,56 @@
   codec: "x264"
   bitdepth: "10BIT"
   group: "GRP"
+"Movie.2020.REPACK10.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  other: "REPACK10"
+  group: "GRP"
+"Movie.2020.Remastered.Edition.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  other: "REMASTERED"
+  group: "GRP"
+"[TGx] Movie.2020.1080p.WEB.x264-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "GRP"
+  site: "TGx"
+"Movie (2020) [2160p HDR10+]":
+  type: "movie"
+  title: "Movie"
+  resolution: "2160p"
+  year: 2020
+  hdr: "HDR10+"
+"Movie.2020.2160p.WEB-DL.H.265.DD+":
+  type: "movie"
+  title: "Movie"
+  source: "WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "H.265"
+  audio: "DDP"
+"Movie.2020.2160p.WEB-DL.H.265.HDR10+.mkv":
+  type: "movie"
+  title: "Movie"
+  source: "WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "H.265"
+  hdr: "HDR10+"
+  ext: "mkv"
 "Movie.2022.1080p.BluRay.x264.8bit-GRP":
   type: "movie"
   title: "Movie"
@@ -1102,6 +1337,16 @@
   year: 2022
   codec: "x265"
   group: "GRP"
+"Movie.2022.UHD.2160p.HDR.10bit.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2022
+  codec: "x265"
+  hdr: "HDR"
+  bitdepth: "10BIT"
+  group: "GRP"
 "Movie.2022.UHD.2160p.WEB-DL.DDP.5.1.x265-GRP":
   type: "movie"
   title: "Movie"
@@ -1157,12 +1402,118 @@
   audio: "DDP"
   group: "GROUP"
   ext: "mkv"
+"Movie (2024) (2160p BluRay HDR10+) x265-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2024
+  codec: "x265"
+  hdr: "HDR10+"
+  group: "GROUP"
+"Movie 2024 2160p BluRay x265 DV HDR 10+ DTS-HD MA 5.1-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2024
+  codec: "x265"
+  hdr: "DV HDR10+"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  group: "GROUP"
+"Movie.2024.2160p.BluRay.x265.DV.HDR10+-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2024
+  codec: "x265"
+  hdr: "DV HDR10+"
+  group: "GROUP"
+"Movie.2024.2160p.BluRay.x265.DV.HDR10.PLUS-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "2160p"
+  year: 2024
+  codec: "x265"
+  hdr: "DV HDR10+"
+  group: "GROUP"
+"Movie.2024.2160p.WEB-DL.H.265.DD+-GROUP":
+  type: "movie"
+  title: "Movie"
+  source: "WEB-DL"
+  resolution: "2160p"
+  year: 2024
+  codec: "H.265"
+  audio: "DDP"
+  group: "GROUP"
+"Movie.5x5.2020.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Movie 5x5"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "GRP"
+"Movie.Title.2010.DVDRip.XviD":
+  type: "movie"
+  title: "Movie Title"
+  source: "DVDRiP"
+  year: 2010
+  codec: "XViD"
 "Movie.Title.2015.DVD-R-Pate":
   type: "movie"
   title: "Movie Title"
   year: 2015
   size: "DVDR"
   group: "Pate"
+"Movie.Title.2020.1080p.Blu-Ray":
+  type: "movie"
+  title: "Movie Title"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+"Movie.Title.2020.1080p.BluRay.DTS-hd":
+  type: "movie"
+  title: "Movie Title"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  audio: "DTS-HD"
+"Movie.Title.2020.1080p.BluRay.x264.Dual-Audio":
+  type: "movie"
+  title: "Movie Title"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  audio: "DUAL.AUDIO"
+"movie.title.2020.1080p.web-dl":
+  type: "movie"
+  title: "movie title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2020
+"Movie.Title.2020.1080p.BluRay.10bits.x265-GRP":
+  type: "movie"
+  title: "Movie Title"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  bitdepth: "10BIT"
+  group: "GRP"
+"Movie.Trilogy.1999-2003.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Movie Trilogy"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1999
+  yearend: 2003
+  codec: "x264"
+  group: "GRP"
 "Mr..&.Mrs..Smith-2005(720p)-NOGROUP[ettv]":
   type: "movie"
   title: "Mr. & Mrs. Smith"
@@ -1173,7 +1524,6 @@
 "Mr. Nobody 2009 Theatrical Cut 1080p BluRay Remux AVC DTS-HD MA 5.1 -236@BHD    ":
   type: "movie"
   title: "Mr. Nobody"
-  subtitle: "Theatrical Cut"
   source: "BluRay"
   resolution: "1080p"
   year: 2009
@@ -1191,9 +1541,20 @@
   bitdepth: "10BIT"
   audio: "DD DTS-HD.MA"
   region: "JPN"
+  group: "Koten_Gars"
   site: "Koten_Gars"
   sum: "1EE5162E"
   ext: "mkv"
+"NHL.2024-25.Regular.Season.Oilers.vs.Stars.1080p.WEB.h264-GRP":
+  type: "movie"
+  title: "NHL"
+  subtitle: "Regular Season Oilers vs Stars"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2024
+  yearend: 2025
+  codec: "H.264"
+  group: "GRP"
 "One Shot [2014] DVDRip XViD-ViCKY":
   type: "movie"
   title: "One Shot"
@@ -1208,6 +1569,15 @@
   resolution: "1080p"
   year: 2007
   codec: "x264"
+  group: "GRP"
+"Pelicula.2020.MULTi.ES.EN.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Pelicula"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  language: "MULTi SPANiSH ENGLiSH"
   group: "GRP"
 "Pirates.of.the.Caribbean.On.Stranger.Tides.2011.BluRay.1080p.AVC.DTS-HDMA.7.1.REMUX-FraMeSToR":
   type: "movie"
@@ -1349,9 +1719,96 @@
   type: "movie"
   title: "Senki Zesshou Symphogear XV"
   resolution: "720p"
-  group: "Batch"
+  group: "Commie"
   site: "Commie"
-  unused: "Unofficial"
+  unused: "Unofficial Batch"
+"Show.2023.02.29.1080p.HDTV.x264-GRP":
+  type: "movie"
+  title: "Show"
+  source: "HDTV"
+  resolution: "1080p"
+  year: 2023
+  codec: "x264"
+  group: "GRP"
+  unused: "02 29"
+"Shiki The Complete TV Series (2010–2011) 1080p WEB-DL AAC.2.0 H.264 UNCUT":
+  type: "movie"
+  title: "Shiki The Complete TV Series"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2010
+  yearend: 2011
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  cut: "Uncut"
+"Show.2023.02.29.HDTV.x264-GRP":
+  type: "movie"
+  title: "Show"
+  source: "HDTV"
+  year: 2023
+  codec: "x264"
+  group: "GRP"
+  unused: "02 29"
+"[Group][Show_Name][BDRip][1080p]":
+  type: "movie"
+  title: "Show Name"
+  source: "BDRiP"
+  resolution: "1080p"
+  group: "Group"
+  site: "Group"
+"Show.Name.1994.1080p.BluRay.x264 [REMASTERED]":
+  type: "movie"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1994
+  codec: "x264"
+  other: "REMASTERED"
+"Show.Name.2010.BDRip.720p.x264.FLAC[Coalgirls]":
+  type: "movie"
+  title: "Show Name"
+  source: "BDRiP"
+  resolution: "720p"
+  year: 2010
+  codec: "x264"
+  audio: "FLAC"
+  group: "Coalgirls"
+  site: "Coalgirls"
+"Show Name (2014) [BDRip] [1080p] [HEVC] [v2]":
+  type: "movie"
+  title: "Show Name"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 2014
+  version: "v2"
+  codec: "HEVC"
+"[Group] Show Name - Special v3 (DVD)":
+  type: "movie"
+  title: "Show Name - Special"
+  source: "DVD"
+  version: "v3"
+  group: "Group"
+  site: "Group"
+"[Group] Show: The Movie (2019) | Other Name (BD 1080p HEVC FLAC)":
+  type: "movie"
+  title: "Show: The Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2019
+  codec: "HEVC"
+  audio: "FLAC"
+  group: "Group"
+  site: "Group"
+  unused: "| Other Name"
+"Show Title (1994) (BDRip 1080p HEVC) [Dual-Audio]":
+  type: "movie"
+  title: "Show Title"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 1994
+  codec: "HEVC"
+  audio: "DUAL.AUDIO"
 "Sin.City.A.Dame.to.Kill.For.2014.1080p.BluRay.x264-SPARKS":
   type: "movie"
   title: "Sin City A Dame to Kill For"
@@ -1372,6 +1829,26 @@
   channels: "5.1"
   other: "Sign.Language"
   group: "Kitsune"
+"Snooker.Main.Tour.2014-2015.Coral.UK.Championship.in.York.Finale.GERMAN.720p.HDTV.x264-SAPH1R":
+  type: "movie"
+  title: "Snooker Main Tour"
+  subtitle: "Coral UK Championship in York Finale"
+  source: "HDTV"
+  resolution: "720p"
+  year: 2014
+  yearend: 2015
+  codec: "x264"
+  language: "GERMAN"
+  group: "SAPH1R"
+"Snooker.World.Championship.2026.SF.Session.2.1080p.WEB.h264-GRP":
+  type: "movie"
+  title: "Snooker World Championship"
+  subtitle: "SF Session 2"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  codec: "H.264"
+  group: "GRP"
 "Song Of The South 1946 V2 1080p 35mm DD 2.0 x264-RESTORED.mkv":
   type: "movie"
   title: "Song Of The South"
@@ -1421,6 +1898,7 @@
 "Star.Wars.Episode.VI.Return.of.the.Jedi.1983.4K83.minimalNR.v1.6.2160p.35mm.DD2.0.x265-TN1":
   type: "movie"
   title: "Star Wars Episode VI Return of the Jedi"
+  subtitle: "4K83"
   source: "35mm"
   resolution: "2160p"
   year: 1983
@@ -1430,16 +1908,15 @@
   channels: "2.0"
   other: "minimalNR"
   group: "TN1"
-  unused: "4K83"
 "Star Wars - Return of the Jedi (1983).4K83.35mm.minimalNR.v1.4.UHD.2160p.mkv":
   type: "movie"
   title: "Star Wars - Return of the Jedi"
+  subtitle: "4K83"
   source: "35mm"
   resolution: "2160p"
   year: 1983
   version: "v1.4"
   other: "minimalNR"
-  group: "4K83"
   ext: "mkv"
 "Stillwater Ridge (2020) (1080p BluRay x265 - Kyoshi 51)":
   type: "movie"
@@ -1683,6 +2160,7 @@
   codec: "H.264"
   audio: "TrueHD"
   channels: "5.1"
+  group: "UTW-TMD"
   site: "UTW-TMD"
   sum: "9F311DAB"
   ext: "mkv"
@@ -1742,10 +2220,18 @@
   audio: "DD"
   channels: "5.1"
   group: "RARBG"
+"Tennis.US.Open.2025.Mens.Final.Jannik.Sinner.vs.Carlos.Alcaraz.1080p.WEB.h264-EPOWORKS":
+  type: "movie"
+  title: "Tennis US Open"
+  subtitle: "Mens Final Jannik Sinner vs Carlos Alcaraz"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2025
+  codec: "H.264"
+  group: "EPOWORKS"
 "The.Boss.2016.UNRATED.720p.BRRip.x264.AAC-ETRG":
   type: "movie"
   title: "The Boss"
-  subtitle: "UNRATED"
   source: "BDRiP"
   resolution: "720p"
   year: 2016
@@ -1886,7 +2372,6 @@
 "The.Wizard.of.Oz.1939.70th.Anniversary.Ultimate.Collectors.Edition.1080p.BluRay.REMUX.VC-1.TrueHD.5.1-TL":
   type: "movie"
   title: "The Wizard of Oz"
-  subtitle: "70th Anniversary Ultimate Collectors Edition"
   source: "BluRay"
   resolution: "1080p"
   year: 1939
@@ -1894,9 +2379,8 @@
   audio: "TrueHD"
   channels: "5.1"
   other: "REMUX"
-  edition: "70th.Anniversary.Edition Collectors.Edition"
+  edition: "70th.Anniversary.Edition Ultimate.Collectors.Edition"
   group: "TL"
-  unused: "Ultimate"
 "The.Wolf.of.Wall.Street.2013.UHD.BluRay.2160p.DTS-HD.MA.5.1.DV.HEVC.REMUX-FraMeSToR":
   type: "movie"
   title: "The Wolf of Wall Street"
@@ -1912,9 +2396,9 @@
 "These.Final.Hours.2013.WBBRip XViD":
   type: "movie"
   title: "These Final Hours"
+  subtitle: "WBBRip"
   year: 2013
   codec: "XViD"
-  group: "WBBRip"
 "THX.DTS.Dolby.Digital.Audio.Experience.Tester.DVDR-WANTED":
   type: "movie"
   title: "THX"
@@ -2077,10 +2561,19 @@
   year: 2016
   size: "600MB"
   group: "NBY"
+"[izu] Weiss Kreuz OVA (1999) [R2JP DVD-Remux ENG]":
+  type: "movie"
+  title: "Weiss Kreuz OVA"
+  source: "DVD"
+  year: 1999
+  other: "REMUX"
+  language: "ENGLiSH"
+  group: "izu"
+  site: "izu"
+  unused: "R2JP"
 "We're.the.Millers.2013.Extended.Cut.1080p.BluRay.DTS.x264-DON.mkv":
   type: "movie"
   title: "We're the Millers"
-  subtitle: "Extended Cut"
   source: "BluRay"
   resolution: "1080p"
   year: 2013
@@ -2099,6 +2592,24 @@
   cut: "Uncut"
   language: "GERMAN DL DUBBED"
   group: "PsO"
+"Winter.Olympics.Milano.Cortina.2026.Freestyle.Dual.Moguls.Mens.Final.1080p.WEB.h264-EPOWORKS":
+  type: "movie"
+  title: "Winter Olympics Milano Cortina"
+  subtitle: "Freestyle Dual Moguls Mens Final"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  codec: "H.264"
+  group: "EPOWORKS"
+"Winter.Olympics.Milano.Cortina.2026.Ice.Hockey.Mens.Final.Canada.Vs.USA.1080p.WEB.h264-EPOWORKS":
+  type: "movie"
+  title: "Winter Olympics Milano Cortina"
+  subtitle: "Ice Hockey Mens Final Canada Vs USA"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  codec: "H.264"
+  group: "EPOWORKS"
 "Withnail.And.I.1987.REPACK.BluRay.1080p.FLAC.1.0.AVC.REMUX-FraMeSToR":
   type: "movie"
   title: "Withnail And I"
@@ -2152,6 +2663,16 @@
   cut: "Uncut"
   language: "GERMAN DL"
   group: "GOREHOUNDS"
+"Zombie.Bloody.Demons.UNGEKÜRZT.GERMAN.1987.DL.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Zombie Bloody Demons"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1987
+  codec: "x264"
+  cut: "Uncut"
+  language: "GERMAN DL"
+  group: "GRP"
 "Zombie Shark The Swimming Dead French 2015 AC3 BDRiP x264-XF":
   type: "movie"
   title: "Zombie Shark The Swimming Dead"
@@ -2170,6 +2691,27 @@
   codec: "XViD"
   language: "SWEDiSH"
   group: "HDR"
+"[Trix] 86 (Eighty-Six) Season 1 (Part 1+2) (COMPLETE) [Optional Dual Audio][Multi Subs] (BD 1080p AV1) - VOSTFR":
+  type: "series"
+  title: "86"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "AV1"
+  audio: "DUAL.AUDIO"
+  language: "MULTiSUB VOSTFR"
+  group: "Trix"
+  site: "Trix"
+  unused: "Eighty Six Part 1 2 COMPLETE Optional"
+"[SubsPlease] 86 - Eighty Six - 21.5 (720p) [4191AC97].mkv":
+  type: "episode"
+  title: "86 - Eighty Six"
+  resolution: "720p"
+  episode: 21
+  group: "SubsPlease"
+  site: "SubsPlease"
+  sum: "4191AC97"
+  ext: "mkv"
 "1899.S01.PROPER.1080p.NF.WEB-DL.DDP5.1.Atmos.H.264-FLUX":
   type: "series"
   title: "1899"
@@ -2251,6 +2793,19 @@
   other: "REMUX"
   group: "FraMeSToR"
   ext: "mkv"
+"[Mecha] Aldnoah.Zero - 24.5v2 (OVA) (BD 1920x1080 x265-10Bit Flac)":
+  type: "episode"
+  title: "Aldnoah Zero"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 24
+  version: "v2"
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  group: "Mecha"
+  site: "Mecha"
+  unused: "OVA"
 "American Restoration S01 1080p AMZN WEB-DL DDP 2.0 H.264-T7ST":
   type: "series"
   title: "American Restoration"
@@ -2274,6 +2829,20 @@
   channels: "5.1"
   group: "NTb"
   ext: "torrent"
+"[1080p HEVC] Anime - 04":
+  type: "episode"
+  title: "Anime"
+  resolution: "1080p"
+  episode: 4
+  absolute: 4
+  codec: "HEVC"
+"[Hikki] Arifureta Shokugyou de Sekai Saikyou SP/OVA Episode 00 - Prologue":
+  type: "episode"
+  title: "Arifureta Shokugyou de Sekai Saikyou SP"
+  subtitle: "Prologue"
+  group: "Hikki"
+  site: "Hikki"
+  unused: "OVA"
 "Azure.Circles.Ghost.Realm.S01.1080p.BluRay.Opus2.0.x265-RUNE":
   type: "series"
   title: "Azure Circles Ghost Realm"
@@ -2329,6 +2898,19 @@
   audio: "DDP"
   channels: "5.1"
   group: "BTN"
+"[Anime Time] Black Lagoon (Complete Series) (Season 01+02+03+OST) [BD] [Dual Audio] [1080p][HEVC 10bit x265][AC3][Eng Sub] [Batch]":
+  type: "series"
+  title: "Black Lagoon"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "DUAL.AUDIO DD"
+  language: "ENGLiSH"
+  group: "Anime Time"
+  site: "Anime Time"
+  unused: "Complete Series OST Sub Batch"
 "Black White S01 2xDVD9 NTSC MPEG-2 DD2.0":
   type: "series"
   title: "Black White"
@@ -2339,6 +2921,42 @@
   audio: "DD"
   channels: "2.0"
   size: "DVD9"
+"[Anime Time] Blue Lock (Season 01 & 02) [Dual Audio] [BD] [1080p][HEVC 10bit x265][AAC][Eng Sub] [Batch]":
+  type: "series"
+  title: "Blue Lock"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "DUAL.AUDIO AAC"
+  language: "ENGLiSH"
+  group: "Anime Time"
+  site: "Anime Time"
+  unused: "Sub Batch"
+"[Suki Desu] Boku no Hero Academia (Season 1 - 3) [BD 1080p x265 HEVC 10bit][Eng-Sub][Judas] (My Hero Academia)":
+  type: "series"
+  title: "Boku no Hero Academia"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x265 HEVC"
+  bitdepth: "10BIT"
+  language: "ENGLiSH"
+  group: "Suki Desu"
+  site: "Suki Desu"
+  unused: "Sub Judas My Hero Academia"
+"[Diogo4D] [BD][1080p] Boku no Kokoro no Yabai Yatsu - 07 [68A22760].mkv":
+  type: "episode"
+  title: "Boku no Kokoro no Yabai Yatsu"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 7
+  absolute: 7
+  group: "Diogo4D"
+  site: "Diogo4D"
+  sum: "68A22760"
+  ext: "mkv"
 "breaking.bad.s01e01.720p.bluray.x264-reward":
   type: "episode"
   title: "breaking bad"
@@ -2348,6 +2966,16 @@
   episode: 1
   codec: "x264"
   group: "reward"
+"Breaking.Bad.S02E09.4.Days.Out.720p.BluRay.x264-GRP":
+  type: "episode"
+  title: "Breaking Bad"
+  subtitle: "4 Days Out"
+  source: "BluRay"
+  resolution: "720p"
+  series: 2
+  episode: 9
+  codec: "x264"
+  group: "GRP"
 "Brooklyn Nine-Nine S01 DVD9 3-Discs WS NTSC DVDR-NoRBiT":
   type: "series"
   title: "Brooklyn Nine-Nine"
@@ -2357,6 +2985,31 @@
   other: "WS"
   size: "DVD9"
   group: "NoRBiT"
+"Bundesliga.2024.05.04.VfB.Stuttgart.Vs.FC.Bayern.Munchen.720p.WEB.H264-B0UNCE":
+  type: "episode"
+  title: "Bundesliga"
+  subtitle: "VfB Stuttgart Vs FC Bayern Munchen"
+  source: "WEB"
+  resolution: "720p"
+  year: 2024
+  month: 5
+  day: 4
+  codec: "H.264"
+  group: "B0UNCE"
+"[Trix] Cat's Eye (1983) S01+02 (COMPLETE) (BD 1080p AV1 Opus) [Dual Subs] - Cats Eye キャッツ・アイ Season 1 & 2 (VOSTFR)":
+  type: "series"
+  title: "Cat's Eye"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1983
+  series: 1
+  codec: "AV1"
+  audio: "OPUS DUAL.AUDIO"
+  other: "COMPLETE"
+  language: "VOSTFR"
+  group: "Trix"
+  site: "Trix"
+  unused: "Subs Cats Eye キャッツ・アイ"
 "Cells.at.Work.S01.1080p.BluRay.FLAC2.0x265-Main10p-CTR":
   type: "series"
   title: "Cells at Work"
@@ -2386,6 +3039,8 @@
   title: "Clockwork Planet"
   resolution: "480p"
   episode: 10
+  absolute: 10
+  group: "HorribleSubs"
   site: "HorribleSubs"
   ext: "mkv"
 "Community.s02e20.rus.eng.720p.Kybik.v.Kybe":
@@ -2396,6 +3051,14 @@
   series: 2
   episode: 20
   language: "RUSSiAN ENGLiSH"
+"[Group] [Complete Manual] - 04 [1080p]":
+  type: "episode"
+  title: "Complete Manual"
+  resolution: "1080p"
+  episode: 4
+  absolute: 4
+  group: "Group"
+  site: "Group"
 "Copper.Skies.S00.1080p.BluRay.x265-CODEX":
   type: "series"
   title: "Copper Skies"
@@ -2455,6 +3118,8 @@
   title: "Detective Conan"
   resolution: "1080p"
   episode: 862
+  absolute: 862
+  group: "HorribleSubs"
   site: "HorribleSubs"
   ext: "mkv"
 "Detective Conan S01E1207 The J League Starting Whistle 1080p CR WEB-DL AAC2.0 H 264-VARYG (Meitantei Conan, Multi-Subs)":
@@ -2470,8 +3135,8 @@
   audio: "AAC"
   channels: "2.0"
   language: "MULTiSUB"
-  group: "Conan"
-  unused: "VARYG Meitantei"
+  group: "VARYG"
+  unused: "Meitantei Conan"
 "DI.Ray.S01.1080p.AMZN.WEB-DL.DDP2.0.H.264-NTb":
   type: "series"
   title: "DI Ray"
@@ -2483,6 +3148,15 @@
   audio: "DDP"
   channels: "2.0"
   group: "NTb"
+"DOC.Martin.S01E01.720p.HDTV.x264-GRP":
+  type: "episode"
+  title: "DOC Martin"
+  source: "HDTV"
+  resolution: "720p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  group: "GRP"
 "Doctor.Who.S02E05.The.Web.Planet.1080p.WEB-DL.AAC2.0.H.264-GROUP":
   type: "episode"
   title: "Doctor Who"
@@ -2566,6 +3240,19 @@
   channels: "2.0"
   region: "UK"
   group: "Cinefeel"
+"[Judas] Durarara!! (Seasons 01-02) [BD 1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs] (Batch)":
+  type: "series"
+  title: "Durarara!!"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "DUAL.AUDIO"
+  language: "MULTiSUB"
+  group: "Judas"
+  site: "Judas"
+  unused: "Batch"
 "Dynasties.2018.S02E04.Hyena.2160p.iP.WEB-DL.AAC2.0.HLG.HEVC-WELP.mkv":
   type: "episode"
   title: "Dynasties"
@@ -2582,6 +3269,40 @@
   channels: "2.0"
   group: "WELP"
   ext: "mkv"
+"EPL.2026.10.26.Arsenal.vs.Liverpool.EXTENDED.HIGHLIGHTS.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "EPL"
+  subtitle: "Arsenal vs Liverpool EXTENDED"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  month: 10
+  day: 26
+  codec: "H.264"
+  other: "HiGHLiGHTS"
+  group: "GRP"
+"EPL.2026.10.26.Arsenal.vs.Liverpool.Extended.Highlights.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "EPL"
+  subtitle: "Arsenal vs Liverpool Extended Highlights"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2026
+  month: 10
+  day: 26
+  codec: "H.264"
+  group: "GRP"
+"Eredivisie.2024.03.10.Ajax.vs.PSV.720p.WEB.h264-ULTRAS":
+  type: "episode"
+  title: "Eredivisie"
+  subtitle: "Ajax vs PSV"
+  source: "WEB"
+  resolution: "720p"
+  year: 2024
+  month: 3
+  day: 10
+  codec: "H.264"
+  group: "ULTRAS"
 "Exosquad.1993.S01S02.COMPLETE.x264-PTM":
   type: "series"
   title: "Exosquad"
@@ -2607,6 +3328,7 @@
   source: "BDRiP"
   year: 2009
   episode: 9
+  absolute: 9
   codec: "x264"
   language: "GERMAN DL"
   genre: "Anime"
@@ -2622,6 +3344,36 @@
   other: "BOXSET"
   language: "NORDiC"
   group: "TWASERiES"
+"[WEB] Fantasy X Hunter - Season 1 [1080P][HEVC][x265][10-bit][HFR][AAC]":
+  type: "series"
+  title: "Fantasy X Hunter"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "AAC"
+"[UTW]_Fate_stay_night_Unlimited_Blade_Works_-_00-12_[BD][h264-1080p][FLAC]":
+  type: "series"
+  title: "Fate stay night Unlimited Blade Works"
+  source: "BluRay"
+  resolution: "1080p"
+  seriesEpisodes: "S00E00 S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
+  codec: "H.264"
+  audio: "FLAC"
+  group: "UTW"
+  site: "UTW"
+"Formula1.2024x05.Miami.Grand.Prix.Race.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Formula1"
+  subtitle: "Miami Grand Prix Race"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2024
+  series: 2024
+  episode: 5
+  codec: "H.264"
+  group: "GRP"
 "Game of Thrones - 4x03 - Breaker of Chains":
   type: "episode"
   title: "Game of Thrones"
@@ -2673,15 +3425,31 @@
   other: "FS REAL INTERNAL READNFO"
   language: "GERMAN"
   group: "TVARCHiV"
+"[Commie] Haikyuu!! Second Season [BD 720p AAC]":
+  type: "series"
+  title: "Haikyuu!!"
+  source: "BluRay"
+  resolution: "720p"
+  series: 2
+  audio: "AAC"
+  group: "Commie"
+  site: "Commie"
+"[BDMV] Hana-Kimi Season 1":
+  type: "series"
+  title: "Hana-Kimi"
+  series: 1
+  other: "BDMV"
 "[SubsPlease]_Higurashi_no_Naku_Koro_ni_Sotsu_-_09_(1080p)_[C00D6C68]":
   type: "episode"
   title: "Higurashi no Naku Koro ni Sotsu"
   resolution: "1080p"
   episode: 9
+  absolute: 9
+  group: "SubsPlease"
   site: "SubsPlease"
   sum: "C00D6C68"
 "Hold.The.Sunset.S01E00.Christmas.Special.720p.HDTV.X264-MTB":
-  type: "series"
+  type: "episode"
   title: "Hold The Sunset"
   subtitle: "Christmas Special"
   source: "HDTV"
@@ -2728,6 +3496,19 @@
   other: "AI.Upscale"
   group: "JBENT"
   site: "TAoE"
+"[R-Archive] Inuyasha Seasons 1~7 R1 DVD Remux 480p Eng Sub Dub Dual Audio":
+  type: "series"
+  title: "Inuyasha"
+  source: "DVD"
+  resolution: "480p"
+  series: 1
+  audio: "DUAL.AUDIO"
+  other: "REMUX"
+  language: "ENGLiSH"
+  region: "R1"
+  group: "R-Archive"
+  site: "R-Archive"
+  unused: "Sub Dub"
 "Invincible.2021.S02E01.A.LESSON.FOR.YOUR.NEXT.LIFE.1080p.AMZN.WEB-DL.DDP5.1.H.264-FLUX.mkv":
   type: "episode"
   title: "Invincible"
@@ -2795,8 +3576,17 @@
   series: 1
   episode: 1
   audio: "AAC"
+  group: "P9"
   site: "P9"
   ext: "mkv"
+"[Group] Ken 2 - 12 [1080p]":
+  type: "episode"
+  title: "Ken 2"
+  resolution: "1080p"
+  episode: 12
+  absolute: 12
+  group: "Group"
+  site: "Group"
 "Looney.Tunes.S1958E13.Knighty.Knight.Bugs.1080p.BluRay.REMUX.AVC.DD.1.0-EPSiLON.mkv":
   type: "episode"
   title: "Looney Tunes"
@@ -2812,6 +3602,17 @@
   other: "REMUX"
   group: "EPSiLON"
   ext: "mkv"
+"[Tenma] Major Henshū - Seasons 1 & 2 V2 - 1080p.AV1[Multiple Subtitle] [ENG][FRE-ADN][FRE-FANSUB]":
+  type: "series"
+  title: "Major Henshū"
+  resolution: "1080p"
+  series: 1
+  version: "v2"
+  codec: "AV1"
+  language: "MULTiSUB ENGLiSH FRENCH FANSUB"
+  group: "Tenma"
+  site: "Tenma"
+  unused: "ADN"
 "Married At First Sight AU S13E02 1080p AV1 10bit-MeGusta":
   type: "episode"
   title: "Married At First Sight AU"
@@ -2853,8 +3654,10 @@
   type: "episode"
   title: "Mezzo"
   episode: 5
+  absolute: 5
   codec: "x264"
   audio: "OGG"
+  group: "RaX"
   site: "RaX"
   sum: "585d9971"
   ext: "mkv"
@@ -2868,6 +3671,7 @@
   version: "v2"
   codec: "H.264"
   audio: "AAC"
+  group: "Conclave-Mendoi"
   site: "Conclave-Mendoi"
   sum: "4863FBE8"
   ext: "mkv"
@@ -2881,6 +3685,19 @@
   episode: 7
   codec: "x264"
   group: "THORA"
+  ext: "mkv"
+"Monogatari.Series.Off.and.Monster.Season.S01E06.5.720p.CR.WEB-DL.AAC2.0.H.264-NanDesuKa.mkv":
+  type: "episode"
+  title: "Monogatari Series Off and Monster Season"
+  source: "WEB-DL"
+  resolution: "720p"
+  collection: "CR"
+  series: 1
+  episode: 6
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "NanDesuKa"
   ext: "mkv"
 "Mr.Robot.S01.PROPER.VOSTFR.720p.WEB-DL.DD5.1.H264-ARK01":
   type: "series"
@@ -2915,6 +3732,41 @@
   channels: "5.1"
   language: "GERMAN SYNCED DL"
   group: "TVS"
+"NBA.2024.07.10.USA.vs.Canada.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "NBA"
+  subtitle: "USA vs Canada"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2024
+  month: 7
+  day: 10
+  codec: "H.264"
+  group: "GRP"
+"NBA.2026.03.30.Lakers.vs.Celtics.720p60.WEB.h264-GRP":
+  type: "episode"
+  title: "NBA"
+  subtitle: "Lakers vs Celtics"
+  source: "WEB"
+  resolution: "720p"
+  framerate: "60fps"
+  year: 2026
+  month: 3
+  day: 30
+  codec: "H.264"
+  group: "GRP"
+"NBA.2026.03.30.Lakers.vs.Celtics.1080p.60fps.WEB.h264-GRP":
+  type: "episode"
+  title: "NBA"
+  subtitle: "Lakers vs Celtics"
+  source: "WEB"
+  resolution: "1080p"
+  framerate: "60fps"
+  year: 2026
+  month: 3
+  day: 30
+  codec: "H.264"
+  group: "GRP"
 "NFL 2019 10 06 Chicago Bears vs Oakland Raiders Highlights 720p HEVC x265-MeGusta":
   type: "episode"
   title: "NFL"
@@ -2925,14 +3777,54 @@
   day: 6
   codec: "HEVC x265"
   group: "MeGusta"
+"[Coalgirls]_Nisekoi_Second_Season_05-06_(1920x1080_Blu-ray_FLAC)":
+  type: "series"
+  title: "Nisekoi"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 2
+  seriesEpisodes: "S02E05 S02E06"
+  audio: "FLAC"
+  group: "Coalgirls"
+  site: "Coalgirls"
+"No Game No Life Season 1 [Complete][720p] + Special [1080p] English Subbed":
+  type: "series"
+  title: "No Game No Life"
+  resolution: "720p"
+  series: 1
+  other: "COMPLETE"
+  language: "ENGLiSH SUBBED"
+  unused: "Special"
 "[SubsPlease] One Piece - 1125 (1080p) [7E631F90].mkv":
   type: "episode"
   title: "One Piece"
   resolution: "1080p"
   episode: 1125
+  absolute: 1125
+  group: "SubsPlease"
   site: "SubsPlease"
   sum: "7E631F90"
   ext: "mkv"
+"[Group] One Piece EP1156-1170 [1080p]":
+  type: "episode"
+  title: "One Piece"
+  resolution: "1080p"
+  episode: 1156
+  seriesEpisodes: "S00E1156 S00E1157 S00E1158 S00E1159 S00E1160 S00E1161 S00E1162 S00E1163 S00E1164 S00E1165 S00E1166 S00E1167 S00E1168 S00E1169 S00E1170"
+  group: "Group"
+  site: "Group"
+"[Group] One Piece EP1168 2160p WEB-DL AAC2.0 H.264":
+  type: "episode"
+  title: "One Piece"
+  source: "WEB-DL"
+  resolution: "2160p"
+  episode: 1168
+  absolute: 1168
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "Group"
+  site: "Group"
 "Party.Planner.with.David.Tutera.S01E46.Dr..Zhivago-A-Go-Go.720p":
   type: "episode"
   title: "Party Planner with David Tutera"
@@ -3008,6 +3900,19 @@
   group: "JBENT"
   site: "TAoE"
   ext: "mkv"
+"[Anime Time] Pokemon Complete Series (Season 01-25+Movies+Specials+Shorts+OST) [Eng Dub] [DVD+Web-Dl][1080p][HEVC 10bit x265][AAC] [Batch]":
+  type: "series"
+  title: "Pokemon Complete Series"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "AAC"
+  language: "ENGLiSH"
+  group: "Anime Time"
+  site: "Anime Time"
+  unused: "Movies Specials Shorts OST Dub Batch"
 "Power.On.The.Story.Of.Xbox.S01.1080p.AMZN.WEB-DL.DDP2.0.H.264-WELP":
   type: "series"
   title: "Power On The Story Of Xbox"
@@ -3019,6 +3924,15 @@
   audio: "DDP"
   channels: "2.0"
   group: "WELP"
+"[HorribleSubs] Re Zero Kara Hajimeru Isekai Seikatsu S2 + OVAs (1-13) [720p]":
+  type: "series"
+  title: "Re Zero Kara Hajimeru Isekai Seikatsu"
+  resolution: "720p"
+  series: 2
+  seriesEpisodes: "S02E01 S02E02 S02E03 S02E04 S02E05 S02E06 S02E07 S02E08 S02E09 S02E10 S02E11 S02E12 S02E13"
+  group: "HorribleSubs"
+  site: "HorribleSubs"
+  unused: "OVAs"
 "RealityLovers.17.04.01.Arya.Fae.Aryas.Pool.Day.XXX.VR180.1920p.MP4-GUSH":
   type: "episode"
   title: "RealityLovers"
@@ -3082,6 +3996,8 @@
   title: "Saikin Yatotta Maid ga Ayashii"
   resolution: "1080p"
   episode: 9
+  absolute: 9
+  group: "SubsPlease"
   site: "SubsPlease"
   sum: "990FF01E"
   ext: "mkv"
@@ -3111,8 +4027,10 @@
   type: "episode"
   title: "Seikon no Qwaser"
   episode: 13
+  absolute: 13
   version: "v0"
   cut: "Uncensored.Cut Directors.Cut"
+  group: "chibi-Doki"
   site: "chibi-Doki"
   sum: "988DB090"
   ext: "mkv"
@@ -3141,14 +4059,48 @@
   channels: "5.1"
   other: "Audio.Description"
   group: "NTb"
+"Show - 01 (1080p@59.94fps)":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  framerate: "59.94fps"
+  episode: 1
+  absolute: 1
+"Show - 01 [1080p@60fps]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  framerate: "60fps"
+  episode: 1
+  absolute: 1
+"[1080p] Show - 01":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+"[Group] Show - 01 (1080p BD x264) (with the UK dub track)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  codec: "x264"
+  region: "UK"
+  group: "Group"
+  site: "Group"
+  unused: "with the dub track"
 "[Group] Show - 01 (BD 1080p Hi10 FLAC)":
   type: "episode"
   title: "Show"
   source: "BluRay"
   resolution: "1080p"
   episode: 1
+  absolute: 1
   bitdepth: "10BIT"
   audio: "FLAC"
+  group: "Group"
   site: "Group"
 "[Group] Show - 01 (BD 1080p Hi10P FLAC)":
   type: "episode"
@@ -3156,8 +4108,22 @@
   source: "BluRay"
   resolution: "1080p"
   episode: 1
+  absolute: 1
   bitdepth: "10BIT"
   audio: "FLAC"
+  group: "Group"
+  site: "Group"
+"[Group] Show - 01 (BD 1920x1080 23.976fps HEVC FLAC)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  framerate: "23.976fps"
+  episode: 1
+  absolute: 1
+  codec: "HEVC"
+  audio: "FLAC"
+  group: "Group"
   site: "Group"
 "[Group] Show - 01 [BD 1080p Hi-10P FLAC]":
   type: "episode"
@@ -3165,9 +4131,103 @@
   source: "BluRay"
   resolution: "1080p"
   episode: 1
+  absolute: 1
   bitdepth: "10BIT"
   audio: "FLAC"
+  group: "Group"
   site: "Group"
+"[Group] Show - 01 [Dual-Audio] [1080p] [Dual-Audio]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  audio: "DUAL.AUDIO"
+  group: "Group"
+  site: "Group"
+"[Group] Show - Episode 01 ~ 03 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  seriesEpisodes: "S00E01 S00E02 S00E03"
+  group: "Group"
+  site: "Group"
+"[GRP]_Show_Ep03_The_Title_[720p]":
+  type: "episode"
+  title: "Show"
+  subtitle: "The Title"
+  resolution: "720p"
+  episode: 3
+  absolute: 3
+  group: "GRP"
+  site: "GRP"
+"Show.E05.5.1.AAC.1080p.WEB-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  episode: 5
+  absolute: 5
+  audio: "AAC"
+  channels: "5.1"
+  group: "GRP"
+"[Group] Show - 05 (BDRip 1080p HEVC 10 bits)":
+  type: "episode"
+  title: "Show"
+  source: "BDRiP"
+  resolution: "1080p"
+  episode: 5
+  absolute: 5
+  codec: "HEVC"
+  bitdepth: "10BIT"
+  group: "Group"
+  site: "Group"
+"[Group] Show - Episode 05.5 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 5
+  group: "Group"
+  site: "Group"
+"[Group] Show - Ep05v2 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 5
+  absolute: 5
+  version: "v2"
+  group: "Group"
+  site: "Group"
+"Show - 38 (1280x720 HEVC2 AAC).mkv":
+  type: "episode"
+  title: "Show"
+  resolution: "720p"
+  episode: 38
+  absolute: 38
+  audio: "AAC"
+  ext: "mkv"
+  unused: "HEVC2"
+"[Group] Show - 075 (BS11 1440x1080 MPEG2 AAC).ts":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 75
+  absolute: 75
+  codec: "MPEG-2"
+  audio: "AAC"
+  group: "Group"
+  site: "Group"
+  ext: "ts"
+  unused: "BS11"
+"Show S01 1080p BluRay x264 + Specials":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x264"
+  unused: "Specials"
 "Show.S01.1080p.WEB-DL.x264.8-bit.EAC-3-GROUP":
   type: "series"
   title: "Show"
@@ -3178,6 +4238,69 @@
   bitdepth: "8BIT"
   audio: "DDP"
   group: "GROUP"
+"Show.S01-03.1080p.BluRay.x264-GRP":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x264"
+  group: "GRP"
+"Show.S01.1080p.BluRay.Opus.2.0.x265-GRP (Alt Title)":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x265"
+  audio: "OPUS"
+  channels: "2.0"
+  group: "GRP"
+  unused: "Alt Title"
+"Show.Season.1-3.1080p.BluRay.x264-GRP":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x264"
+  group: "GRP"
+"Show.S01.UHD.HDTV.x265-GRP":
+  type: "series"
+  title: "Show"
+  source: "HDTV"
+  resolution: "2160p"
+  series: 1
+  codec: "x265"
+  group: "GRP"
+"Show.S01E01.480i.DVD.MPEG2-GRP":
+  type: "episode"
+  title: "Show"
+  source: "DVD"
+  resolution: "480i"
+  series: 1
+  episode: 1
+  codec: "MPEG-2"
+  group: "GRP"
+"Show.S01E01.576i.DVD.MPEG2-GRP":
+  type: "episode"
+  title: "Show"
+  source: "DVD"
+  resolution: "576i"
+  series: 1
+  episode: 1
+  codec: "MPEG-2"
+  group: "GRP"
+"Show.S01E01.1080i50.HDTV.h264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "HDTV"
+  resolution: "1080i"
+  framerate: "50fps"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Show.S01E01.1080p.IP.WEB-DL.AAC2.0.H.264-GROUP":
   type: "episode"
   title: "Show"
@@ -3226,6 +4349,219 @@
   audio: "DDP"
   group: "GROUP"
   ext: "mkv"
+"Show.S01E02-04.1080p.WEB-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  seriesEpisodes: "S01E02 S01E03 S01E04"
+  group: "GRP"
+"Show.S01E02.GERMAN.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  language: "GERMAN"
+  group: "GRP"
+"Show.S01E02.REPACK3.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  other: "REPACK3"
+  group: "GRP"
+"Show.S01E02.Re-Pack.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  other: "REPACK"
+  group: "GRP"
+"Show.S01E02.NO.WAY.OUT.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "NO WAY OUT"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  group: "GRP"
+"Show.S01E02.(The.Title).1080p.WEB.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "The Title"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  group: "GRP"
+"Show S01E04 VOSTFR 1080p WEB x264 AAC -Tsundere-Raws (Alt Title)":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 4
+  codec: "x264"
+  audio: "AAC"
+  language: "VOSTFR"
+  group: "Tsundere-Raws"
+  unused: "Alt Title"
+"[Group] Show - S01E04 - The Title [WEB-DL 1080p] [5D5E8524] (Alt Title)":
+  type: "episode"
+  title: "Show"
+  subtitle: "The Title"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 4
+  group: "Group"
+  site: "Group"
+  sum: "5D5E8524"
+  unused: "Alt Title"
+"Show.S01E05-02.1080p.WEB-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "02"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 5
+  group: "GRP"
+"Show.S01E05.Boom.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "Boom"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 5
+  codec: "H.264"
+  group: "GRP"
+"Show.S01E05.Stan.Returns.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "Stan Returns"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 5
+  codec: "H.264"
+  group: "GRP"
+"[Group] Show - S01E06v2 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  series: 1
+  episode: 6
+  version: "v2"
+  group: "Group"
+  site: "Group"
+"Show.Staffel.2.German.1080p.WEB.x264-GRP":
+  type: "series"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 2
+  codec: "x264"
+  language: "GERMAN"
+  group: "GRP"
+"Show.S02E03v2.1080p.WEB.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 2
+  episode: 3
+  version: "v2"
+  codec: "H.264"
+  group: "GRP"
+"Show.Staffel02.Folge05.German.720p.HDTV.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "HDTV"
+  resolution: "720p"
+  series: 2
+  episode: 5
+  codec: "x264"
+  language: "GERMAN"
+  group: "GRP"
+"[Group] Show - S02E06 [English Dub] [WEB-DL 1080p] [30E46A21]":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 2
+  episode: 6
+  language: "ENGLiSH"
+  group: "Group"
+  site: "Group"
+  sum: "30E46A21"
+  unused: "Dub"
+"Show.S04.1080p.BluRay.x264-GRP (E29-E31)":
+  type: "episode"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 4
+  episode: 29
+  seriesEpisodes: "S04E29 S04E30 S04E31"
+  codec: "x264"
+  group: "GRP"
+"[ToonsHub] Show S04E29~E31 1080p WEB H.264":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 4
+  episode: 29
+  seriesEpisodes: "S04E29 S04E30 S04E31"
+  codec: "H.264"
+  group: "ToonsHub"
+  site: "ToonsHub"
+"Show.S90E01.1080p.WEB-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 90
+  episode: 1
+  group: "GRP"
+"Show (2014) S01 (1080p BluRay AV1 10bit Opus 2.0 GRP)":
+  type: "series"
+  title: "Show"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2014
+  series: 1
+  codec: "AV1"
+  bitdepth: "10BIT"
+  audio: "OPUS"
+  channels: "2.0"
+  group: "GRP"
+"Show.S01E05-2020.1080p.WEB.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  series: 1
+  episode: 5
+  codec: "x264"
+  group: "GRP"
 "[Group] Show (2024) - 01 (S01E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]":
   type: "episode"
   title: "Show"
@@ -3238,7 +4574,261 @@
   codec: "x264"
   bitdepth: "8BIT"
   audio: "DDP DUAL.AUDIO"
+  group: "Group"
   site: "Group"
+"Show.2024.02.29.HDTV.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "HDTV"
+  year: 2024
+  month: 2
+  day: 29
+  codec: "x264"
+  group: "GRP"
+"Show.2024.05.06.[The.Title].720p.HDTV.x264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "The Title"
+  source: "HDTV"
+  resolution: "720p"
+  year: 2024
+  month: 5
+  day: 6
+  codec: "x264"
+  group: "GRP"
+"Show.13-10-2024.HDTV.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "HDTV"
+  year: 2024
+  month: 10
+  day: 13
+  codec: "x264"
+  group: "GRP"
+"[Group] Show Name - 00 [720p][D2861769].mkv":
+  type: "episode"
+  title: "Show Name"
+  resolution: "720p"
+  group: "Group"
+  site: "Group"
+  sum: "D2861769"
+  ext: "mkv"
+"[Group] Show Name (01-12) [1080p] [Batch]":
+  type: "series"
+  title: "Show Name"
+  resolution: "1080p"
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
+  group: "Group"
+  site: "Group"
+  unused: "Batch"
+"[Group] Show Name - 01 ~ 12 [1080p][BATCH]":
+  type: "series"
+  title: "Show Name"
+  resolution: "1080p"
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
+  group: "Group"
+  site: "Group"
+  unused: "BATCH"
+"[Group] Show Name - 01-12 (AT-X 1440x1080 MPEG2 AAC).ts":
+  type: "series"
+  title: "Show Name"
+  resolution: "1080p"
+  collection: "AT-X"
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
+  codec: "MPEG-2"
+  audio: "AAC"
+  group: "Group"
+  site: "Group"
+  ext: "ts"
+"[Group] Show Name 10-12 [BD 1080p]":
+  type: "series"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  seriesEpisodes: "S00E10 S00E11 S00E12"
+  group: "Group"
+  site: "Group"
+"[Group] Show Name - 05 (JA) [720p]":
+  type: "episode"
+  title: "Show Name"
+  resolution: "720p"
+  episode: 5
+  absolute: 5
+  group: "Group"
+  site: "Group"
+  unused: "JA"
+"[Serenae] [CommieRaws] Show Name - 06 [6087FA06].mkv":
+  type: "episode"
+  title: "Show Name"
+  episode: 6
+  absolute: 6
+  group: "Serenae"
+  meta: "site:CommieRaws"
+  site: "Serenae"
+  sum: "6087FA06"
+  ext: "mkv"
+"[Mori+Leopard-Raws] Show Name - 09 (1280x720 x264 AAC).mkv":
+  type: "episode"
+  title: "Show Name"
+  resolution: "720p"
+  episode: 9
+  absolute: 9
+  codec: "x264"
+  audio: "AAC"
+  group: "Mori+Leopard-Raws"
+  site: "Mori+Leopard-Raws"
+  ext: "mkv"
+"[Group] Show Name - 24 (JA) [720p WEB-DL AVC AAC]":
+  type: "episode"
+  title: "Show Name"
+  source: "WEB-DL"
+  resolution: "720p"
+  episode: 24
+  absolute: 24
+  codec: "AVC"
+  audio: "AAC"
+  group: "Group"
+  site: "Group"
+  unused: "JA"
+"[Group] Show Name - S00E28 (WEB 1080p) (Show Name 2nd Season OVA)":
+  type: "episode"
+  title: "Show Name"
+  source: "WEB"
+  resolution: "1080p"
+  episode: 28
+  group: "Group"
+  site: "Group"
+  unused: "Show Name 2nd Season OVA"
+"Show Name - 471 [720p] [ES-EN-DE-PT] [A05B966C].mkv":
+  type: "episode"
+  title: "Show Name"
+  resolution: "720p"
+  episode: 471
+  absolute: 471
+  language: "SPANiSH ENGLiSH GERMAN PORTUGUESE"
+  sum: "A05B966C"
+  ext: "mkv"
+"Show_Name_S01E01_1080p_WEB-DL_AAC2.0_H.264-GRP":
+  type: "episode"
+  title: "Show Name"
+  source: "WEB-DL"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "GRP"
+"[SubsPlus+] Show Name - S01E21 (WEB 1080p AMZN)":
+  type: "episode"
+  title: "Show Name"
+  source: "WEB"
+  resolution: "1080p"
+  collection: "AMZN"
+  series: 1
+  episode: 21
+  group: "SubsPlus+"
+  site: "SubsPlus+"
+"[Group] Show Name S01E36 [EP: 402] [1080p] [HEVC DDP]":
+  type: "episode"
+  title: "Show Name"
+  resolution: "1080p"
+  series: 1
+  episode: 36
+  codec: "HEVC"
+  audio: "DDP"
+  group: "Group"
+  site: "Group"
+  unused: "EP : 402"
+"[Group] Show Name S01E36 [EP: 402] [1080p] [HEVC WEBRip DDP]":
+  type: "episode"
+  title: "Show Name"
+  source: "WEBRiP"
+  resolution: "1080p"
+  series: 1
+  episode: 36
+  codec: "HEVC"
+  audio: "DDP"
+  group: "Group"
+  site: "Group"
+  unused: "EP : 402"
+"[Group] Show Name S2 - 13~24 [BDRip 1080p]":
+  type: "series"
+  title: "Show Name"
+  source: "BDRiP"
+  resolution: "1080p"
+  series: 2
+  seriesEpisodes: "S02E13 S02E14 S02E15 S02E16 S02E17 S02E18 S02E19 S02E20 S02E21 S02E22 S02E23 S02E24"
+  group: "Group"
+  site: "Group"
+"[Group] Show Name 2nd Season - 08 [1080p]":
+  type: "episode"
+  title: "Show Name"
+  resolution: "1080p"
+  series: 2
+  episode: 8
+  group: "Group"
+  site: "Group"
+"Show Name 3rd Season (BD 1080p HEVC Opus)":
+  type: "series"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 3
+  codec: "HEVC"
+  audio: "OPUS"
+"Show Name - S03 [BD 1080p HEVC Opus Dual-Audio] [ThanksBB]":
+  type: "series"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 3
+  codec: "HEVC"
+  audio: "OPUS DUAL.AUDIO"
+  group: "ThanksBB"
+  site: "ThanksBB"
+"[Hikki] Show Title Episode 00 - Prologue":
+  type: "episode"
+  title: "Show Title"
+  subtitle: "Prologue"
+  group: "Hikki"
+  site: "Hikki"
+"Show Title - 05 [1080p][ABCDEFAB].mkv":
+  type: "episode"
+  title: "Show Title"
+  resolution: "1080p"
+  episode: 5
+  absolute: 5
+  sum: "ABCDEFAB"
+  ext: "mkv"
+"[Anime-HEVC] Show Title - 05 [1080p]":
+  type: "episode"
+  title: "Show Title"
+  resolution: "1080p"
+  episode: 5
+  absolute: 5
+  group: "Anime-HEVC"
+  site: "Anime-HEVC"
+"Show.Title.S01E01.720p.HDTV.x264-GRP-Obfuscated":
+  type: "episode"
+  title: "Show Title"
+  source: "HDTV"
+  resolution: "720p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  other: "Obfuscated"
+  group: "GRP"
+"Show.Title.S01E01.720p.HDTV.x264-GRP.sample":
+  type: "episode"
+  title: "Show Title"
+  source: "HDTV"
+  resolution: "720p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  other: "Sample"
+  group: "GRP"
 "Silo.S03E03.A.Dark.Web.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-Kronos":
   type: "episode"
   title: "Silo"
@@ -3320,6 +4910,20 @@
   channels: "5.1"
   group: "NTb"
   ext: "mkv"
+"[EMBER] Solo Leveling (2024-2025) (Season 1 + 2) [BDRip] [1080p Dual Audio HEVC 10 bits DDP] (Ore dake Level Up na Ken) (Batch)":
+  type: "series"
+  title: "Solo Leveling"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 2024
+  yearend: 2025
+  series: 1
+  codec: "HEVC"
+  bitdepth: "10BIT"
+  audio: "DUAL.AUDIO DDP"
+  group: "EMBER"
+  site: "EMBER"
+  unused: "Ore dake Level Up na Ken Batch"
 "Sons.of.Anarchy.S01E03":
   type: "episode"
   title: "Sons of Anarchy"
@@ -3351,6 +4955,7 @@
   source: "BluRay"
   resolution: "720p"
   episode: 1
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12 S00E13 S00E14 S00E15 S00E16 S00E17 S00E18 S00E19 S00E20 S00E21 S00E22 S00E23 S00E24 S00E25 S00E26 S00E27 S00E28 S00E29 S00E30 S00E31 S00E32 S00E33 S00E34 S00E35 S00E36 S00E37 S00E38 S00E39 S00E40 S00E41 S00E42 S00E43 S00E44 S00E45 S00E46 S00E47 S00E48 S00E49 S00E50 S00E51"
   codec: "x264"
   audio: "DD"
   other: "COMPLETE"
@@ -3362,6 +4967,7 @@
   source: "BluRay"
   resolution: "720p"
   episode: 2
+  absolute: 2
   codec: "x264"
   audio: "DD"
   language: "GERMAN DL"
@@ -3402,9 +5008,23 @@
   subtitle: "Nervous Wait"
   collection: "XXX"
   episode: 57
+  absolute: 57
   other: "HR"
   container: "WMV"
   group: "KTR"
+"[Judas] Steins;Gate (Season 1 + OVA + Movie) [BD 1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs] (Batch)":
+  type: "series"
+  title: "Steins;Gate"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "DUAL.AUDIO"
+  language: "MULTiSUB"
+  group: "Judas"
+  site: "Judas"
+  unused: "OVA Movie Batch"
 "Stillwater Ridge S01E01 WEB-DL x264":
   type: "episode"
   title: "Stillwater Ridge"
@@ -3700,6 +5320,18 @@
   genre: "Anime"
   group: "ShadowTX"
   ext: "mkv"
+"UEFA.Champions.League.14.04.2026.Atletico.Madrid.vs.Barcelona.SPANISH.1080p.HDTV.h264-SOMBRA":
+  type: "episode"
+  title: "UEFA Champions League"
+  subtitle: "Atletico Madrid vs Barcelona"
+  source: "HDTV"
+  resolution: "1080p"
+  year: 2026
+  month: 4
+  day: 14
+  codec: "H.264"
+  language: "SPANiSH"
+  group: "SOMBRA"
 "UFC.179.PPV.HDTV.x264-Ebi[rartv]":
   type: "episode"
   title: "UFC 179"
@@ -3708,6 +5340,15 @@
   codec: "x264"
   group: "Ebi"
   site: "rartv"
+"[Vivid-Asenshi + Multi Subs] Violet Evergarden - 13 [1080p].mkv":
+  type: "episode"
+  title: "Violet Evergarden"
+  resolution: "1080p"
+  episode: 13
+  absolute: 13
+  group: "Vivid-Asenshi"
+  site: "Vivid-Asenshi"
+  ext: "mkv"
 "VTC.S01E01.FRENCH.1080p.WEB.H264-PROPJOE":
   type: "episode"
   title: "VTC"
@@ -3751,9 +5392,8 @@
 "World's End Harem (Shuumatsu no Harem) S01E08 (2022 Airing) AT-X 2021 1080i HDTV AAC 2.0 English Subbed -ZR-.mkv":
   type: "episode"
   title: "World's End Harem"
-  subtitle: "2022 Airing"
   source: "HDTV"
-  resolution: "1080p"
+  resolution: "1080i"
   collection: "AT-X"
   year: 2021
   series: 1
@@ -3763,7 +5403,7 @@
   language: "ENGLiSH SUBBED"
   group: "ZR"
   ext: "mkv"
-  unused: "Shuumatsu no Harem"
+  unused: "Shuumatsu no Harem 2022 Airing"
 "WWE.Clash.at.the.Castle.2022.PPV.1080p.PCOK.WEB-DL.AAC2.0.H.264-ShiNobi":
   type: "episode"
   title: "WWE Clash at the Castle"
@@ -3971,6 +5611,28 @@
   year: 2022
   audio: "FLAC LOSSLESS"
   group: "Single"
+"[Sub] Artist-Album-2020":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  year: 2020
+  group: "Sub"
+  site: "Sub"
+"Artist-Title-EP2004-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Title"
+  source: "EP"
+  year: 2004
+  group: "GRP"
+"Artist-Title-WEB2021-PROMO-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Title"
+  source: "WEB"
+  year: 2021
+  other: "PROMO"
+  group: "GRP"
 "B_recordings--instant-(supercheap-03)-2VLS1998-kW":
   type: "music"
   artist: "B recordings"
@@ -4120,6 +5782,7 @@
   title: "When It's All Said And Done... Take Time"
   year: 2021
   audio: "MP3 320Kbps"
+  group: "PMEDIA"
   site: "PMEDIA"
 "Hawk-H.A.W.K-2002-SUT_INT":
   type: "music"
@@ -4164,13 +5827,21 @@
   year: 2020
   codec: "x264"
   group: "SRPx"
+"Michael Jackson - Discography (2009) [FLAC]":
+  type: "music"
+  artist: "Michael Jackson"
+  title: "Discography"
+  year: 2009
+  audio: "FLAC"
+  other: "Discography"
 "Michael Jackson - Discography (1967-2009) [FLAC]":
   type: "music"
   artist: "Michael Jackson"
   title: "Discography"
-  subtitle: "1967"
-  year: 2009
+  year: 1967
+  yearend: 2009
   audio: "FLAC"
+  other: "Discography"
 "Miles_Davis-Kind_Of_Blue-REMASTERED-(24BiT-192kHz)-WEB-FLAC-2013-OBZEN":
   type: "music"
   artist: "Miles Davis"
@@ -4267,6 +5938,7 @@
   year: 2020
   audio: "MP3 320Kbps"
   other: "REMiX"
+  group: "PMEDIA"
   site: "PMEDIA"
 "Tales From Europe - 40 [2023] [Album] - FLAC / Lossless / WEB":
   type: "music"
@@ -4358,6 +6030,15 @@
   edition: "Limited.Edition"
   group: "WEM"
   unused: "Bootleg"
+"VA-Hard_Trance_Classics-3CD2004-Retail-GRP":
+  type: "music"
+  artist: "VA"
+  title: "Hard Trance Classics"
+  source: "CD"
+  year: 2004
+  disc: "3x"
+  other: "RETAiL"
+  group: "GRP"
 "VA_-_Hellz_Army_EP_(APOC_001)-2xVinyl-2000-RSQ":
   type: "music"
   artist: "VA"
@@ -4624,6 +6305,12 @@
   other: "UPDATE"
   language: "MULTi"
   group: "SUXXORS"
+"Some.Game.v1.2.MULTi9-PROPHET":
+  type: "game"
+  title: "Some Game"
+  version: "v1.2"
+  language: "MULTi9"
+  group: "PROPHET"
 "Super_Mario_3D_World_plus_Bowsers_Fury_Update_v1.1.0_NSW-VENOM":
   type: "game"
   title: "Super Mario 3D World plus Bowsers Fury"
@@ -4773,16 +6460,16 @@
   type: "comic"
   title: "Rick and Morty 020"
   year: 2016
-  group: "Empire"
+  group: "d'argh-Empire"
   ext: "cbr"
-  unused: "digital d'argh"
+  unused: "digital"
 "Rick and Morty Presents - Krombopulos Michael (2018) (digital) (d'argh-Empire).cbr":
   type: "comic"
   title: "Rick and Morty Presents - Krombopulos Michael"
   year: 2018
-  group: "Empire"
+  group: "d'argh-Empire"
   ext: "cbr"
-  unused: "digital d'argh"
+  unused: "digital"
 "Wolverine.And.The.X.Men.Vol.1.No.26.May.2013.SCAN.Comic.eBook-iNTENSiTY (REQ)":
   type: "comic"
   title: "Wolverine And The X Men"
@@ -4799,6 +6486,7 @@
   series: 1
   episode: 22
   container: "CBR"
+  group: "thesite"
   site: "thesite"
 "L.Elephant.N26.2019.FRENCH.RETAiL.MAGAZiNE.eBook-PRiNTER":
   type: "magazine"

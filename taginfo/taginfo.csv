@@ -48,9 +48,9 @@ audio,OGG,Vorbis Audio (OGG),,,,
 audio,OPUS,Opus,,,,
 audio,TrueHD,Dolby TrueHD,(?:dolby[\-\._ ]?)?true[\-\._ ]?hd,,movie,
 audio,VBR,Variable Bit Rate,,,music,1
-bitdepth,12BIT,,12[\-\. ]?bit,,movie,
-bitdepth,10BIT,,10[\-\. ]?bit|ma10p?|hi-?10p?,,movie,
-bitdepth,8BIT,,8[\-\. ]?bit,,movie,
+bitdepth,12BIT,,12[\-\. ]?bits?,,movie,
+bitdepth,10BIT,,10[\-\. ]?bits?|ma10p?|hi-?10p?,,movie,
+bitdepth,8BIT,,8[\-\. ]?bits?,,movie,
 channels,7.1,,7\.1(?:[\-\._ ]?audios?)?,,,
 channels,7.0,,7\.0(?:[\-\._ ]?audios?)?,,,
 channels,6.1,,6\.1(?:[\-\._ ]?audios?)?,,,
@@ -94,7 +94,7 @@ collection,ATVP,Apple TV+,atv[p\+],,,
 collection,B-Global,Bilibili Global,b[\-\._ ]?global,,,
 collection,BBC,British Broadcasting Corporation,,,,
 collection,BCORE,Bravia Core,,,movie,1
-collection,BOOM,Boomerang,,,,
+collection,BOOM,Boomerang,(?-i:BOOM),,,
 collection,BRAVO,Bravo,(?-i:BRAVO?),,,
 collection,Career.Academy,Career Academy,career[\-\._ ]?academy,,education,1
 collection,CBC,Canadian Broadcasting Corporation,,,,
@@ -166,7 +166,7 @@ collection,SiriusXM,Sirius XM,sirius[\-\._ ]?xm,,music,1
 collection,Skillfeed,,,,education,1
 collection,Skillshare,,skillshare(?:[\-\._ ]?com)?,,education,1
 collection,Sonic.Academy,Sonic Academy,sonic[\-\._ ]?academy(?:[\-\._ ]?com)?,,education,1
-collection,STAN,Stan,,,,
+collection,STAN,Stan,(?-i:STAN),,,
 collection,STV,Straight-to-Video,,,movie,
 collection,STZ,STARZ,st(?:ar)?z,,,
 collection,Total.Training,Total Training,total[\-\._ ]?training,,education,1
@@ -205,7 +205,7 @@ container,M4V,,,,movie,
 container,PDF,Portable Document Format (PDF),,,book,
 container,WMV,Windows Media Video (WMV),,,movie,
 cut,Censored.Cut,Censored,censored(?:[\-\._ ]cut)?,,movie,
-cut,Directors.Cut,Director's,director[\-\._ ']?s[\-\._ ]cut|(?-i:DC),,movie,
+cut,Directors.Cut,Director's,director[\-\._ ']?s[\-\._ ]cut,,movie,
 cut,Extended.Cut,Extended,extended(?:[\-\._ ](?:version|edition|cut))?,,,
 cut,Final.Cut,Final,final[\-\._ ]cut,,movie,
 cut,International.Cut,International,international[\-\._ ]cut,,movie,
@@ -233,19 +233,20 @@ edition,Remastered.Edition,Remastered,remaster(?:ed)?(?:[\-\._ ]edition)?,,,
 edition,Restored.Edition,Restored,restored(?:[\-\._ ]edition)?,,movie,
 edition,Special.Edition,Special,special[\-\._ ]edition|edicion[\-\._ ]especial,,movie,
 edition,Super.Deluxe,Super Deluxe,super[\-\._ ]deluxe,,movie,
+edition,Ultimate.Collectors.Edition,Ultimate Collectors,ultimate[\-\._ ]collector[\-\._ ']?s[\-\._ ]edition,,movie,
 edition,Ultimate.Edition,Ultimate,ultimate[\-\._ ]edition,,movie,
 edition,$1.Anniversary.Edition,Anniversary ($1),(\d+(?:th|st|nd|rd))[\-\._ ]anniversary(?:[\-\._ ]edition)?,,movie,
 ext,aac,Advanced Audio Coding (aac),(?-i:aac),,music,
 ext,asf,Advanced Systems Format (asf),,,movie,
 ext,asx,Advanced Stream Redirector (asx),,,movie,
-ext,avc,Advanced Video Coding (avc),,,movie,
+ext,avc,Advanced Video Coding (avc),(?-i:avc),,movie,
 ext,avi,Audio Video Interleave (avi),,,movie,
 ext,bin,Binary (bin),,,app,
 ext,bz2,BZip2 (bz2),,,app,
 ext,cbr,Comic Book (CBR),,,comic,1
 ext,cbz,Comic Book (CBZ),,,comic,1
 ext,dat,Data (dat),,,app,
-ext,divx,DivX,[bd]ivx,,movie,
+ext,divx,DivX,(?-i:[bd]ivx),,movie,
 ext,dvr-ms,Microsoft Digital Video Recording (dvr-ms),,,movie,
 ext,flac,Free Lossless Audio Codec (flac),(?-i:flac),,music,
 ext,fli,FLIC Animation (fli),,,movie,
@@ -274,7 +275,7 @@ ext,ogv,OGV,,,movie,
 ext,pva,PVA,,,series,
 ext,qt,QuickTime (qt),,,movie,
 ext,rar,Roshal Archive (rar),,,,
-ext,raw,RAW,,,movie,
+ext,raw,RAW,(?-i:raw),,movie,
 ext,rmvb,Real Media (rmvb),,,movie,
 ext,rm,Real Media (rm),,,movie,
 ext,strm,Stream (strm),,,game,1
@@ -283,7 +284,7 @@ ext,tar.bz2,BZip2 TAR (tar.bz2),,,app,
 ext,tar.gz,GZip TAR (tar.gz),,,app,
 ext,tar,TAR,,,app,
 ext,torrent,Torrent,,,,
-ext,ts,TS,,,movie,
+ext,ts,TS,(?-i:ts),,movie,
 ext,ty,TY,,,movie,
 ext,viv,VIV,,,movie,
 ext,vob,VOB,,,movie,
@@ -292,7 +293,7 @@ ext,webm,WebM,,,movie,
 ext,wmv,WMV,,,movie,
 ext,wpl,WPL,,,music,
 ext,wtv,WTV,,,movie,
-ext,xvid,Xvid,,,movie,
+ext,xvid,Xvid,(?-i:xvid),,movie,
 ext,7z,7-Zip (7z),,,app,
 ext,zip,Zip,,,,
 genre,Action,,,,movie,
@@ -396,7 +397,7 @@ group,0x0815,,,,game,1
 group,0x0007,,,,game,1
 group,XB3,,,,game,1
 group,ZKY,,,,game,1
-hdr,HDR10+,High Dynamic Range (10-bit+),hdr[\-\.]?10\+|hdr10plus|hdr[\-\.]?10P,,movie,
+hdr,HDR10+,High Dynamic Range (10-bit+),hdr[\-\._ ]?10\+|hdr[\-\._ ]?10[\-\._ ]?plus|hdr[\-\._ ]?10P,,movie,
 hdr,HDR10,High Dynamic Range (10-bit),hdr[\-\.]?10,,movie,
 hdr,HDR+,High Dynamic Range+,hdr\+,,movie,
 hdr,HDR,High Dynamic Range,,,movie,
@@ -461,11 +462,12 @@ language,VOSTEN,Version Originale Sous-Titrée en Anglais,(?i:vosten),,,
 language,VOSTFR,Version Originale Sous-Titrée en Français,(?i:vostfr),,,
 language,YUGOSLOViAN,Yugoslovian,(?i:yugoslovian)|YU,,,
 language,$1$2UB$3,$2ubs ($1$3),([A-Zi]*)([SD])UB([A-Zi]*),,,
-language,MULTi$2,Multi ($2),(?i:multi)[\-\._ ]?(\d+),,,
+language,MULTi$1,Multi ($1),(?i:multi)[\-\._ ]?(\d+),,,
 other,ADVANCE,Advance,adv(?:anced?)?,,music,1
 other,AI.Upscale,Upscaled (AI),ai[\-\._ ]upscaled?,,movie,
 other,All.Access.Cheat,All Access Cheat,all[\-\._ ]access[\-\._ ](?:cheats?|save),,game,1
 other,Audio.Description,Audio Description,(?:with[\-\._ ])?audio[\-\._ ]description,,movie,
+other,BDMV,Full disc (BDMV),,,,
 other,BONUS.TRACKS,Bonus Tracks,bonus[\-\._ ]tracks?,,music,1
 other,BONUS,Bonus,(?-i:BONUS),,,
 other,BOOKWARE,Bookware,,,education,1
@@ -513,7 +515,7 @@ other,JB,Jailbroken,(?-i:JB),,game,1
 other,KONTAKT,Samples (Kontakt),(?-i:KONTAKT),,music,1
 other,LD,Line Dubbed,,,,
 other,MD,Mic Dubbed,(?-i:MD),,,
-other,MERRY.XMAS,Holiday (xmas),(?-i:.ERRY[\-\._ ](?:XMAS|CHRISTMAS)),,,
+other,MERRY.XMAS,Holiday (xmas),(?-i:MERRY[\-\._ ](?:XMAS|CHRISTMAS)),,,
 other,minimalNR,Minimal Noise-Reduction,minimal[\-\._ ]?nr,,movie,1
 other,MOViE.PACK,Movie Pack,movie[\-\._ ]?pack,,movie,1
 other,MULTiFORMAT,Multiformat,,,music,1
@@ -535,10 +537,10 @@ other,REAL,Real,(?-i:REAL),,,
 other,REGiSTERED,Registered,registered|regged,,app,1
 other,REISSUE,Reissue,,,music,
 other,REMAKE,Remake,(?-i:REMAKE),,,
-other,REMASTERED,Remastered,remaster(?:ed)?,,,
+other,REMASTERED,Remastered,remaster(?:ed)?(?:[\-\._ ]edition)?,,,
 other,REMiX,Remix,(?:re[\-\._ ]?)?mix(?:e[sd])?(?:[\-\._ ]edition)?,,music,1
 other,REMUX,Remux,,,,
-other,REPACK,Repack,repack(?:ed)?,,,
+other,REPACK,Repack,re-?pack(?:ed)?,,,
 other,RERELEASE,Re-release,re[\-\._ ]?release,,music,1
 other,REREPACK,Re-repack,rerepack|repack2,,,
 other,RERiP,Re-rip,re[\-\._ ]?rip,,,
@@ -569,13 +571,14 @@ other,VR,,,,movie,
 other,WORKING,Working,(?-i:W[oO]RK[iI]NG),,app,
 other,WS,Widescreen,widescreen|ws,,movie,
 other,$1X,,((?:19|20)[\d|x])x,,music,1
-other,Plus.$2.Trainer,Trainer ($2),(?:plus[\-\._ ])?(\d\d?)[\-\._ ]?trainer,,game,1
+other,Plus.$1.Trainer,Trainer ($1),(?:plus[\-\._ ])?(\d\d?)[\-\._ ]?trainer,,game,1
+other,REPACK$1,Repack ($1),repack([3-9]|[1-9][0-9]),,,
 platform,AIX,,,,app,1
 platform,ANDROiD,Android,(?-i:ANDRO[iI]D),,app,
 platform,DOS,,(?-i:DOS),,app,1
 platform,3DS,Nintendo 3DS,(?-i:3DS),,game,1
 platform,DSi,Nintendo DSi,,,game,1
-platform,FC,Nintendo Famicom,,,game,1
+platform,Famicom,Nintendo Famicom,,,game,1
 platform,FreeBSD,,free[\-\._ ]?bsd,,app,1
 platform,GBA,Nintendo Gameboy Advanced,,,game,1
 platform,GB,Nintendo Gameboy,,,game,1
@@ -655,18 +658,21 @@ region,USA,United States,(?-i:US|USA),,,
 resolution,PN.Selector,PAL/NTSC Selector,p(?:al)?[\-\._ ]?n(?:tsc)?[\-\._ ]selector,,game,1
 resolution,DCI4K,DCI 4k,dci[\-\._ ]?4k|4096x2160,,,
 resolution,DCI2K,DCI 2k,dci[\-\._ ]?2k|2048x1080,,,
+resolution,1080i,FullHD (1080i),,,,
+resolution,576i,PAL (576i),,,,
+resolution,480i,NTSC (480i),,,,
 resolution,4320p,UltraHD 8K (4320p),4320p|7680x4320,,,
 resolution,3240p,6k (3240p),3240p|6k|5760x3240,,,
 resolution,2880p,5k (2880p),2880p|5k|5120x2880,,,
 resolution,2160p,UltraHD 4K (2160p),2160p|3840x2160|uhd|ultra[\-\._ ]?hd|4k,,,
 resolution,1800p,QHD+ (1800p),1800p|3200x1800,,,
 resolution,1440p,QHD (1440p),1440p|2560x1440,,,
-resolution,1080p,FullHD (1080p),1080[ip]|1920x1080,,,
+resolution,1080p,FullHD (1080p),1080p|1920x1080|1440x1080,,,
 resolution,900p,HD+ (900p),900[ip]|1600x900,,,
 resolution,720p,HD (720p),720[ip]|1280x720,,,
-resolution,576p,PAL (576p),576[ip]|720x576|pal,,,
+resolution,576p,PAL (576p),576p|720x576|pal,,,
 resolution,540p,qHD (540p),540[ip]|960x540,,,
-resolution,480p,NTSC (480p),480[ip]|720x480|848x480|854x480|ntsc,,,
+resolution,480p,NTSC (480p),480p|720x480|848x480|854x480|ntsc,,,
 resolution,360p,nHD (360p),360[ip]|640x360,,,
 resolution,$1p,Other ($1p),([123]\d{3})p,,,
 size,BD50,BD (50GB),bd[\-\._ ]?50,,movie,
@@ -689,7 +695,7 @@ size,MDVDRW,DVD (RW music),m[\-\._ ]?dvd(?:[\-\._ ]?rw),,music,1
 size,MDVDR,DVD (R music),m[\-\._ ]?dvd(?:[\-\._ ]?r),,music,1
 size,MDVD,DVD (music),m[\-\._ ]?dvd,,music,1
 size,512MS,MemoryStick (512mb),,,game,1
-size,$1$2,$1 $2,(\d+(?:\.\d+)?)[\-\._ ]?([kmgt]i?b),,movie,
+size,$1$2,$1 $2,(\d\d?\d?\.\d+|\d+)[\-\._ ]?([kmgt]i?b),,movie,
 source,AHDTV,High-Definition TV (analog),,,movie,
 source,AUDiOBOOK,Audiobook,a(?:udio[\-\._ ]?)?books?,,audiobook,1
 source,BDRiP,BluRay (rip),b[dr]?[\-\._ ]?rip,,movie,
@@ -814,4 +820,4 @@ source,WEB,Web,,,,
 source,Whitelabel,Whitelabel Promo,whitelabel|wlp,,music,1
 source,WORKPRiNT,Workprint,workprint|wp,,movie,1
 source,XBOXDVD,Xbox (DVD),,,game,1
-source,$1INCH.ViNYL,Vinyl ($i inch),(\d\d?)[\-\._ ]?inch(?:[\-\._ ]?vinyl)?,,music,1
+source,$1INCH.ViNYL,Vinyl ($1 inch),(\d\d?)[\-\._ ]?inch(?:[\-\._ ]?vinyl)?,,music,1

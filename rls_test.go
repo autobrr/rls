@@ -4,19 +4,24 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"maps"
 	"math/rand"
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/autobrr/rls/taginfo"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 func TestParseRelease(t *testing.T) {
@@ -59,6 +64,157 @@ func TestParseRelease(t *testing.T) {
 	}
 }
 
+// TestSeriesEpisodesRangeFill checks that the episodes inside a range are
+// filled in, and that ranges too wide to fill are given by their ends.
+func TestSeriesEpisodesRangeFill(t *testing.T) {
+	for _, test := range []struct {
+		s   string
+		exp int
+	}{
+		{"Show.S01E02-04.1080p.WEB-GRP", 3},
+		{"[Group] One Piece (E001-E1100) (480p)", 1100},
+		{"Show.E1-E99999.1080p.WEB-GRP", 2},
+		{"Show.S01.E1-E99999.1080p.WEB-GRP", 2},
+	} {
+		if n := len(ParseString(test.s).SeriesEpisodes()); n != test.exp {
+			t.Errorf("%q expected %d episodes, got: %d", test.s, test.exp, n)
+		}
+	}
+	// every range adds its two ends, and together they fill no more than
+	// maxRangeFill episodes
+	for _, s := range []string{"E1-999.", "E1-E9999.", "S01E1-999."} {
+		const count = 500
+		if n := len(ParseString(strings.Repeat(s, count)).SeriesEpisodes()); n > maxRangeFill+2*count {
+			t.Errorf("%q repeated expected at most %d episodes, got: %d", s, maxRangeFill+2*count, n)
+		}
+	}
+}
+
+// TestDateColon checks that a colon before two digits does not make a month.
+func TestDateColon(t *testing.T) {
+	for _, s := range []string{
+		"Show - :.05 [1080p]",
+		"Show.S01E05: 12.Rounds.1080p.WEB.h264-GRP",
+		"[EMBER] 86 - Eighty Six (2021) (Season 1 (EP: 12-23) + Specials) [BDRip] [1080p Dual Audio HEVC 10 bits DDP]",
+	} {
+		if r := ParseString(s); r.Month != 0 {
+			t.Errorf("%q expected no month, got: %d", s, r.Month)
+		}
+	}
+}
+
+// TestOpeningResolution checks that a resolution alone in the bracket that
+// opens a name is the resolution and not the group, and that a name which is
+// a row of brackets keeps its title.
+func TestOpeningResolution(t *testing.T) {
+	tests := []struct {
+		name, title, resolution, group string
+	}{
+		{"[1080p] Show - 01", "Show", "1080p", ""},
+		{"[1280x720] Show - 01", "Show", "720p", ""},
+		// a tag as a part of the bracket
+		{"[Anime-HEVC] Show - 01", "Show", "", "Anime-HEVC"},
+		// a bracket after it
+		{"[1080p] [Group] Show - 01", "Show", "", "1080p"},
+		{"[1080p][Group] Show - 01 [ABCD1234]", "Show", "", "1080p"},
+		{"[1080p] [Complete Manual] - 04", "Complete Manual", "", "1080p"},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if r.Title != test.title || r.Resolution != test.resolution || r.Group != test.group {
+			t.Errorf("%q: expected title %q, resolution %q, group %q, got: %q, %q, %q", test.name, test.title, test.resolution, test.group, r.Title, r.Resolution, r.Group)
+		}
+	}
+}
+
+// TestSpecialEpisode checks that an 'SP' in front of an episode with no season
+// marks a special, in a name with no video tag as in one with them, and that
+// it stays the format of a record elsewhere.
+func TestSpecialEpisode(t *testing.T) {
+	for _, test := range []struct {
+		name, title, subtitle, source string
+		typ                           Type
+	}{
+		{"[Grp] Show SP Episode 00 - Prologue", "Show SP", "Prologue", "", Episode},
+		{"[Grp] Show SP/OVA Episode 00 - Prologue", "Show SP", "Prologue", "", Episode},
+		{"Show SP Episode 00 Prologue", "Show SP", "Prologue", "", Episode},
+		{"[Grp] Show SP Episode 00 Prologue (Web 1080p AAC).mkv", "Show SP", "Prologue", "WEB", Episode},
+		// in a bracket, between hyphens, with no episode after it, or in a
+		// name with an audio tag or a year
+		{"Artist - Album (SP) Episode 1 FLAC", "Album", "", "SP", Music},
+		{"Artist - Album SP - 01", "Album", "", "SP", Music},
+		{"Artist-Album-SP-FLAC-2020-GRP", "Album", "", "SP", Music},
+		{"Artist-Album_SP_Episode_1-WEB-FLAC-2020-GRP", "Album", "", "SP", Music},
+		{"Artist - Album SP Episode 1 FLAC", "Album", "", "SP", Music},
+		{"Artist - Single SP E01 MP3 320", "Single", "", "SP", Music},
+		{"Artist - Mixtape SP Ep 5 (2019)", "Mixtape", "", "SP", Music},
+		// or after a hyphen, which sets an artist apart from an album
+		{"Artist - Album SP Episode 1", "Album", "", "SP", Music},
+		{"Artist-Album_SP_Episode_1-WEB-GRP", "Album", "", "SP", Music},
+		{"Artist - Album SP Episode 1 (Remastered)", "Album", "", "SP", Music},
+	} {
+		r := ParseString(test.name)
+		if r.Type != test.typ || r.Title != test.title || r.Subtitle != test.subtitle || r.Source != test.source {
+			t.Errorf("%q: expected %s, title %q, subtitle %q, source %q, got: %s, %q, %q, %q", test.name, test.typ, test.title, test.subtitle, test.source, r.Type, r.Title, r.Subtitle, r.Source)
+		}
+	}
+}
+
+// TestListValuesOnce checks that a value the name writes twice is in its
+// list field once, at the place it was first written.
+func TestListValuesOnce(t *testing.T) {
+	r := ParseString("[Group] Show - 01 [Dual-Audio] [1080p HEVC x265] [AAC] [Dual-Audio] [HEVC] [Eng] [English]")
+	if exp := []string{"DUAL.AUDIO", "AAC"}; !slices.Equal(r.Audio, exp) {
+		t.Errorf("expected audio %q, got: %q", exp, r.Audio)
+	}
+	if exp := []string{"HEVC", "x265"}; !slices.Equal(r.Codec, exp) {
+		t.Errorf("expected codec %q, got: %q", exp, r.Codec)
+	}
+	if exp := []string{"ENGLiSH"}; !slices.Equal(r.Language, exp) {
+		t.Errorf("expected language %q, got: %q", exp, r.Language)
+	}
+	r = ParseString("Movie.2020.PROPER.REPACK.Limited.Edition.1080p.BluRay.HDR.HDR.Extended.Extended.REPACK.LIMITED.EDITION.x264-GRP")
+	if exp := []string{"Limited.Edition"}; !slices.Equal(r.Edition, exp) {
+		t.Errorf("expected edition %q, got: %q", exp, r.Edition)
+	}
+	if exp := []string{"PROPER", "REPACK"}; !slices.Equal(r.Other, exp) {
+		t.Errorf("expected other %q, got: %q", exp, r.Other)
+	}
+	if exp := []string{"HDR"}; !slices.Equal(r.HDR, exp) {
+		t.Errorf("expected hdr %q, got: %q", exp, r.HDR)
+	}
+	if exp := []string{"Extended.Cut"}; !slices.Equal(r.Cut, exp) {
+		t.Errorf("expected cut %q, got: %q", exp, r.Cut)
+	}
+}
+
+// TestSubtitleNotUnused checks that the words of the subtitle are not also in
+// the unused text, and that the words a later subtitle replaced are.
+func TestSubtitleNotUnused(t *testing.T) {
+	tests := []struct {
+		name, subtitle string
+		unused         []string
+	}{
+		{"Show.2024.05.06.[The.Title].720p.HDTV.x264-GRP", "The Title", nil},
+		{"Show.2024.05.06.(The.Title).720p.HDTV.x264-GRP", "The Title", nil},
+		{"Show.2024.05.06.The.Title.720p.HDTV.x264-GRP", "The Title", nil},
+		{"Show S01E08 (2022 Airing) 1080i HDTV AAC 2.0-ZR", "Airing", nil},
+		// the episode's own title replaces the one read after the year
+		{"Show.2024.The.Title.720p.S01E05.Name.WEB.x264-GRP", "Name", []string{"The", "Title"}},
+		{"Show.2024.[The.Title].720p.S01E05.Name.WEB-GRP", "Name", []string{"The", "Title"}},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		var unused []string
+		for _, tag := range r.Unused() {
+			unused = append(unused, tag.Text())
+		}
+		if r.Subtitle != test.subtitle || !slices.Equal(unused, test.unused) {
+			t.Errorf("%q: expected subtitle %q and unused %q, got: %q and %q", test.name, test.subtitle, test.unused, r.Subtitle, unused)
+		}
+	}
+}
+
 func TestCollapser(t *testing.T) {
 	tests := []struct {
 		s string
@@ -75,6 +231,15 @@ func TestCollapser(t *testing.T) {
 		{"$100 TAXI RIDE", "$100 TAXI RIDE", "100 taxi ride"},
 		{"Mr. & Mrs. Smith", "Mr. & Mrs. Smith", "mr & mrs smith"},
 		{"Bob's Burgers", "Bobs Burgers", "bobs burgers"},
+		// a byte that is not valid utf-8 becomes U+FFFD, as strings.ToValidUTF8
+		// would make it, and the text after it is kept
+		{"Am\xe9lie", "Am\ufffdlie", "am\ufffdlie"},
+		{"Am\xe9rica Latina", "Am\ufffdrica Latina", "am\ufffdrica latina"},
+		{"a\xff\xfeb", "a\ufffdb", "a\ufffdb"},
+		{" \xffTitle  Two ", "\ufffdTitle Two", "\ufffdtitle two"},
+		{"Caf\xc3", "Caf\ufffd", "caf\ufffd"},
+		{"Title \ufffd Two", "Title \ufffd Two", "title \ufffd two"},
+		{"a\ufffd\xffb", "a\ufffd\ufffdb", "a\ufffd\ufffdb"},
 	}
 	for i, test := range tests {
 		c, _, err := transform.String(NewCleaner(), test.s)
@@ -90,6 +255,77 @@ func TestCollapser(t *testing.T) {
 		}
 		if n != test.n {
 			t.Errorf("test %d normalize expected %q, got: %q", i, test.n, n)
+		}
+	}
+}
+
+// TestCollapserLong checks input longer than the buffers a transform chain
+// passes between its links, where a rune can be split across two calls.
+func TestCollapserLong(t *testing.T) {
+	const n = 5000
+	for _, test := range []struct {
+		s, c, n string
+	}{
+		{strings.Repeat("é", n), strings.Repeat("e", n), strings.Repeat("e", n)},
+		{strings.Repeat("É\xff", n), strings.Repeat("E\ufffd", n), strings.Repeat("e\ufffd", n)},
+	} {
+		if c := MustClean(test.s); c != test.c {
+			t.Errorf("clean of %d bytes expected %d bytes, got: %d", len(test.s), len(test.c), len(c))
+		}
+		if n := MustNormalize(test.s); n != test.n {
+			t.Errorf("normalize of %d bytes expected %d bytes, got: %d", len(test.s), len(test.n), len(n))
+		}
+	}
+}
+
+// TestCollapserChunks checks that the result does not depend on how a transform
+// chain cuts the input into calls. A chain hands a Collapser the text in pieces
+// once it is longer than its buffers, so a space at the end of one piece and the
+// word at the start of the next have to come out as they would from one call.
+func TestCollapserChunks(t *testing.T) {
+	// once runs the collapser over the whole of s in a single call
+	once := func(c Collapser, s string) string {
+		src := norm.NFD.String(s)
+		dst := make([]byte, 4*len(src)+utf8.UTFMax)
+		c.Reset()
+		n, _, err := c.Transform(dst, []byte(src), true)
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		return norm.NFC.String(string(dst[:n]))
+	}
+	for _, pattern := range []string{
+		"ab ",
+		"The  Quick Brown - Fox, $100 and LAWLE$$ ",
+		"Amélie\t\tPok\xe9mon  Mr. & Mrs. O'Neil \u2b50\ufe0f ",
+		"a  \xff\xfe  b - c ",
+	} {
+		long := strings.Repeat(pattern, 9000/len(pattern)+1)
+		for n := 1; n <= 9000; n++ {
+			// cover every length around the buffer sizes, sample the rest
+			if n > 600 && n%97 != 0 && (n < 4000 || n > 4200) && (n < 8100 || n > 8300) {
+				continue
+			}
+			s := long[:n]
+			if c, exp := MustClean(s), once(newCleanCollapser(), s); c != exp {
+				t.Fatalf("clean of %d bytes of %q differs from a single call:\n  %q\n  %q", n, pattern, c, exp)
+			}
+			if c, exp := MustNormalize(s), once(newNormalizeCollapser(), s); c != exp {
+				t.Fatalf("normalize of %d bytes of %q differs from a single call:\n  %q\n  %q", n, pattern, c, exp)
+			}
+		}
+	}
+	// a collapser used for one string after another, with and without Reset
+	c, dst := newCleanCollapser(), make([]byte, 64)
+	for range 2 {
+		n, _, err := c.Transform(dst, []byte("  a  b  "), true)
+		if s := string(dst[:n]); err != nil || s != "a b" {
+			t.Errorf("expected %q, got: %q (%v)", "a b", s, err)
+		}
+	}
+	for _, s := range []string{strings.Repeat("ab ", 200), "  cd  "} {
+		if c, exp := MustClean(s), strings.TrimSpace(strings.ReplaceAll(s, "  ", " ")); c != exp {
+			t.Errorf("expected %q, got: %q", exp, c)
 		}
 	}
 }
@@ -334,6 +570,43 @@ func TestTagInfo_find(t *testing.T) {
 	}
 }
 
+// TestTagInfo_newType checks that a tag info with a type that does not exist
+// is refused whether or not it has a title.
+func TestTagInfo_newType(t *testing.T) {
+	for _, title := range []string{"", "Title"} {
+		if info, err := taginfo.New("X", title, "", "", "gaem", ""); err == nil {
+			t.Errorf("title %q: expected an error, got: %v", title, info)
+		}
+	}
+	if _, err := taginfo.New("X", "", "", "", "game", ""); err != nil {
+		t.Errorf("expected no error, got: %v", err)
+	}
+}
+
+// TestTagInfo_newRegexp checks that a regexp that does not compile is refused
+// when the tag info is made, though it is compiled when first used, and that
+// a tag info matches from several goroutines at once.
+func TestTagInfo_newRegexp(t *testing.T) {
+	for _, re := range []string{"(", "a{2,1}", `\p{Nope}`, "[z-a]"} {
+		if info, err := taginfo.New("X", "", re, "", "", ""); err == nil {
+			t.Errorf("%q: expected an error, got: %v", re, info)
+		}
+	}
+	info, err := taginfo.New("MULTi$1", "Multi ($1)", `multi[\-\._ ]?(\d+)`, "", "", "")
+	if err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Go(func() {
+			if tag, _ := info.Expand("multi5"); !info.Match("MULTI5") || info.Match("multi") || tag != "MULTi5" {
+				t.Errorf("expected multi5 to match and expand to MULTi5, got: %q", tag)
+			}
+		})
+	}
+	wg.Wait()
+}
+
 func TestParseRoman(t *testing.T) {
 	for i, test := range []struct {
 		s   string
@@ -360,6 +633,60 @@ func TestParseRoman(t *testing.T) {
 			t.Errorf("test %d expected to be %d, got: %d", i, test.exp, v)
 		}
 		// t.Logf("%q: %d", test.s, v)
+	}
+}
+
+// TestTagInfo_placeholders checks that every tag info with a $1 ... $N in its
+// tag or title fills it from its own capture groups.
+func TestTagInfo_placeholders(t *testing.T) {
+	types := map[string]TagType{
+		"edition":    TagTypeEdition,
+		"language":   TagTypeLanguage,
+		"other":      TagTypeOther,
+		"resolution": TagTypeResolution,
+		"size":       TagTypeSize,
+		"source":     TagTypeSource,
+	}
+	tests := map[string]struct {
+		s, tag, title string
+	}{
+		"edition/$1.Anniversary.Edition": {"25th Anniversary Edition", "25th.Anniversary.Edition", "Anniversary (25th)"},
+		"language/$1$2UB$3":              {"GERSUB", "GERSUB", "Subs (GER)"},
+		"language/MULTi$1":               {"multi5", "MULTi5", "Multi (5)"},
+		"other/$1X":                      {"19XX", "19XX", "19XX"},
+		"other/Plus.$1.Trainer":          {"plus 10 trainer", "Plus.10.Trainer", "Trainer (10)"},
+		"other/REPACK$1":                 {"repack3", "REPACK3", "Repack (3)"},
+		"resolution/$1p":                 {"1600p", "1600p", "Other (1600p)"},
+		"size/$1$2":                      {"4.7GB", "4.7GB", "4.7 GB"},
+		"source/$1INCH.ViNYL":            {"12 inch vinyl", "12INCH.ViNYL", "Vinyl (12 inch)"},
+	}
+	var n int
+	for typ, infos := range taginfo.All() {
+		for _, info := range infos {
+			if !strings.Contains(info.Tag()+info.Title(), "$") {
+				continue
+			}
+			name := typ + "/" + info.Tag()
+			test, ok := tests[name]
+			if !ok {
+				t.Errorf("%s has a placeholder and no test", name)
+				continue
+			}
+			n++
+			if tag, title := info.Expand(test.s); tag != test.tag || title != test.title {
+				t.Errorf("%s expected %q to expand to %q, %q, got: %q, %q", name, test.s, test.tag, test.title, tag, title)
+			}
+			tag := NewTag(types[typ], findFunc(infos...), []byte(test.s), []byte(test.s))
+			if s := tag.Normalize(); s != test.tag {
+				t.Errorf("%s expected %q to normalize to %q, got: %q", name, test.s, test.tag, s)
+			}
+			if s := tag.InfoTitle(); s != test.title {
+				t.Errorf("%s expected %q to have title %q, got: %q", name, test.s, test.title, s)
+			}
+		}
+	}
+	if n != len(tests) {
+		t.Errorf("expected %d tag infos with a placeholder, got: %d", len(tests), n)
 	}
 }
 
@@ -507,8 +834,12 @@ func exportTaginfo(file string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	// the types in a fixed order: the comparison below is not a strict order
+	// for every pair of rows, so the result depends on where a type's rows
+	// start, which the order of a map would change from run to run
 	var all [][]string
-	for k, v := range infos {
+	for _, k := range slices.Sorted(maps.Keys(infos)) {
+		v := infos[k]
 		for _, info := range v {
 			title := info.Title()
 			if info.Tag() == title {
@@ -749,14 +1080,17 @@ type rls struct {
 
 	Source     string
 	Resolution string
+	Framerate  string
 	Collection string
 
-	Year  int
-	Month int
-	Day   int
+	Year    int
+	Month   int
+	Day     int
+	Yearend int
 
 	Series         int
 	Episode        int
+	Absolute       int
 	SeriesEpisodes string
 	Version        string
 	Disc           string
@@ -788,6 +1122,7 @@ type rls struct {
 }
 
 func buildRls(r Release) rls {
+	absolute, _ := r.Absolute()
 	req := 0
 	if r.Req {
 		req = 1
@@ -811,14 +1146,17 @@ func buildRls(r Release) rls {
 
 		Source:     r.Source,
 		Resolution: r.Resolution,
+		Framerate:  r.FrameRate,
 		Collection: r.Collection,
 
-		Year:  r.Year,
-		Month: r.Month,
-		Day:   r.Day,
+		Year:    r.Year,
+		Month:   r.Month,
+		Day:     r.Day,
+		Yearend: r.YearEnd,
 
 		Series:         r.Series,
 		Episode:        r.Episode,
+		Absolute:       absolute,
 		SeriesEpisodes: strings.Join(seriesEpisodes, " "),
 		Version:        r.Version,
 		Disc:           r.Disc,
