@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/autobrr/rls/taginfo"
 )
@@ -310,250 +312,118 @@ func (pf *prefilter) maybePrefix(buf []byte, i, n int, next *[256]bool) bool {
 	return false
 }
 
-// firstBytes fills lead with the bytes re can begin with, reporting false when
-// that set is unbounded (an unescaped '.', a negated class, and so on). It is a
-// deliberately shallow analysis: it only has to be an over-approximation.
+// firstBytes adds to lead the bytes a match of re can begin with, reporting
+// false when it gives no set: for a regexp that begins with any rune ('.'),
+// for one that matches the empty string, which it does at every position, and
+// for one that does not compile. The callers skip a position whose byte is not
+// in the set without running the regexp, so a byte left out loses a tag, and
+// one too many costs a run of the regexp. A set may hold nearly every byte
+// ('[^a]'), and it is empty for a regexp that matches no string.
+//
+// The set is read off the program the regexp compiles to, which is what
+// matches it: every instruction that takes a rune and is reached from the
+// start with nothing read. An assertion on the way is taken to hold ('^',
+// '$', '\b').
+//
+// Some callers match the regexp as it is written and some without regard to
+// case, and the set is that of both readings: 'k' begins with 'K' and with
+// the first byte of the Kelvin sign, and '[^k]' begins with 'K' as well.
 func firstBytes(re string, lead *[256]bool) bool {
-	f := &leader{src: re, lead: lead}
-	return f.alt() && f.pos == len(f.src)
-}
-
-type leader struct {
-	src  string
-	pos  int
-	lead *[256]bool
-}
-
-func (f *leader) set(c byte) { f.lead[c] = true }
-
-func (f *leader) setRange(lo, hi byte) {
-	for x := lo; x <= hi; x++ {
-		f.lead[x] = true
-	}
-}
-
-// alt walks each branch, taking the first bytes of every one.
-func (f *leader) alt() bool {
-	for {
-		if !f.seq() {
+	var set [256]bool
+	for _, flags := range [...]syntax.Flags{syntax.Perl, syntax.Perl | syntax.FoldCase} {
+		r, err := syntax.Parse(re, flags)
+		if err != nil {
 			return false
 		}
-		if f.pos < len(f.src) && f.src[f.pos] == '|' {
-			f.pos++
-			continue
-		}
-		return true
-	}
-}
-
-// seq contributes the first bytes of the leading atoms, continuing past an atom
-// only while it is optional (and so may contribute nothing).
-func (f *leader) seq() bool {
-	for f.pos < len(f.src) {
-		c := f.src[f.pos]
-		if c == '|' || c == ')' {
-			return true
-		}
-		start := f.pos
-		// every atom up to and including the first mandatory one can begin the
-		// match, because an optional atom may match nothing. In
-		// '(?:(?:incl?|and)[\-\._ ])?key...' both {i,a} and {k} are leads.
-		optional, ok := f.atom(true)
-		if !ok {
+		prog, err := syntax.Compile(r.Simplify())
+		if err != nil {
 			return false
 		}
-		if !optional {
-			return f.skipBranch()
-		}
-		if f.pos == start {
-			return false // no progress; bail rather than spin
-		}
-	}
-	return true
-}
-
-// skipBranch consumes to the end of the current alternation branch.
-func (f *leader) skipBranch() bool {
-	depth := 0
-	for f.pos < len(f.src) {
-		switch f.src[f.pos] {
-		case '\\':
-			f.pos++
-		case '(':
-			depth++
-		case ')':
-			if depth == 0 {
-				return true
-			}
-			depth--
-		case '|':
-			if depth == 0 {
-				return true
-			}
-		}
-		f.pos++
-	}
-	return true
-}
-
-// atom records the first bytes of one atom, reporting whether it is optional.
-func (f *leader) atom(contribute bool) (optional, ok bool) {
-	switch c := f.src[f.pos]; c {
-	case '(':
-		f.pos++
-		// inline flag group, eg (?i) -- zero width, contributes nothing
-		if j := strings.IndexByte(f.src[f.pos:], ')'); j != -1 && j > 0 && f.src[f.pos] == '?' {
-			if flags := f.src[f.pos : f.pos+j]; !strings.ContainsAny(flags, ":<=!P") {
-				f.pos += j + 1
-				return true, true
-			}
-		}
-		for _, p := range []string{"?:", "?i:", "?-i:"} {
-			if strings.HasPrefix(f.src[f.pos:], p) {
-				f.pos += len(p)
-				break
-			}
-		}
-		// named capture, eg (?P<s>...)
-		if strings.HasPrefix(f.src[f.pos:], "?P<") {
-			j := strings.IndexByte(f.src[f.pos:], '>')
-			if j == -1 {
-				return false, false
-			}
-			f.pos += j + 1
-		}
-		if f.pos < len(f.src) && f.src[f.pos] == '?' {
-			return false, false
-		}
-		sub := &leader{src: f.src, pos: f.pos, lead: f.lead}
-		if contribute {
-			if !sub.alt() {
-				return false, false
-			}
-		}
-		// walk to the matching ')'
-		depth := 0
-		for f.pos < len(f.src) {
-			switch f.src[f.pos] {
-			case '\\':
-				f.pos++
-			case '(':
-				depth++
-			case ')':
-				if depth == 0 {
-					f.pos++
-					return f.quant(), true
-				}
-				depth--
-			}
-			f.pos++
-		}
-		return false, false
-	case '[':
-		f.pos++
-		neg := f.pos < len(f.src) && f.src[f.pos] == '^'
-		if neg {
-			return false, false
-		}
-		for f.pos < len(f.src) && f.src[f.pos] != ']' {
-			ch := f.src[f.pos]
-			if ch == '\\' {
-				f.pos++
-				if f.pos >= len(f.src) {
-					return false, false
-				}
-				ch = f.src[f.pos]
-			}
-			f.pos++
-			if f.pos+1 < len(f.src) && f.src[f.pos] == '-' && f.src[f.pos+1] != ']' {
-				f.pos++
-				hi := f.src[f.pos]
-				f.pos++
-				if contribute {
-					f.setRange(ch, hi)
-				}
+		seen := make([]bool, len(prog.Inst))
+		stack := []uint32{uint32(prog.Start)}
+		for len(stack) != 0 {
+			pc := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			if seen[pc] {
 				continue
 			}
-			if contribute {
-				f.set(ch)
+			seen[pc] = true
+			switch inst := &prog.Inst[pc]; inst.Op {
+			case syntax.InstAlt, syntax.InstAltMatch:
+				stack = append(stack, inst.Out, inst.Arg)
+			case syntax.InstCapture, syntax.InstNop, syntax.InstEmptyWidth:
+				stack = append(stack, inst.Out)
+			case syntax.InstMatch, syntax.InstRuneAny, syntax.InstRuneAnyNotNL:
+				return false
+			case syntax.InstRune, syntax.InstRune1:
+				instBytes(inst, &set)
 			}
 		}
-		if f.pos >= len(f.src) {
-			return false, false
-		}
-		f.pos++ // ]
-		return f.quant(), true
-	case '\\':
-		f.pos++
-		if f.pos >= len(f.src) {
-			return false, false
-		}
-		e := f.src[f.pos]
-		f.pos++
-		if contribute {
-			switch e {
-			case 'd':
-				f.setRange('0', '9')
-			case 'w':
-				f.setRange('0', '9')
-				f.setRange('a', 'z')
-				f.setRange('A', 'Z')
-				f.set('_')
-			case 'Q':
-				j := strings.Index(f.src[f.pos:], `\E`)
-				if j == -1 || j == 0 {
-					return false, false
-				}
-				f.set(f.src[f.pos])
-				f.pos += j + 2
-				return f.quant(), true
-			default:
-				if !literalEscape(e) {
-					return false, false
-				}
-				f.set(e)
+	}
+	for c, ok := range set {
+		lead[c] = lead[c] || ok
+	}
+	return true
+}
+
+// instBytes adds to set the first byte of every rune the instruction takes.
+func instBytes(inst *syntax.Inst, set *[256]bool) {
+	// one rune, in every case it is written in when the instruction folds
+	if len(inst.Rune) == 1 {
+		r := inst.Rune[0]
+		rangeBytes(r, r, set)
+		if syntax.Flags(inst.Arg)&syntax.FoldCase != 0 {
+			for f := unicode.SimpleFold(r); f != r; f = unicode.SimpleFold(f) {
+				rangeBytes(f, f, set)
 			}
 		}
-		return f.quant(), true
-	case '^', '$':
-		// zero width: contributes nothing and does not end the scan
-		f.pos++
-		return true, true
-	case '.':
-		return false, false
-	default:
-		f.pos++
-		if contribute {
-			f.set(c)
-		}
-		return f.quant(), true
+		return
+	}
+	for i := 0; i+1 < len(inst.Rune); i += 2 {
+		rangeBytes(inst.Rune[i], inst.Rune[i+1], set)
 	}
 }
 
-// quant consumes a trailing quantifier, reporting whether it makes the atom
-// optional.
-func (f *leader) quant() bool {
-	if f.pos >= len(f.src) {
-		return false
+// rangeBytes adds to set the first byte of the UTF-8 of every rune from lo to
+// hi. A byte that is no UTF-8 is read as U+FFFD, so a range with that rune in
+// it begins with any such byte.
+func rangeBytes(lo, hi rune, set *[256]bool) {
+	for c := lo; c <= hi && c < utf8.RuneSelf; c++ {
+		set[c] = true
 	}
-	switch f.src[f.pos] {
-	case '?', '*':
-		f.pos++
-		return true
-	case '+':
-		f.pos++
-		return false
-	case '{':
-		// {n}, {n,}, {n,m}: optional only when n is 0
-		j := strings.IndexByte(f.src[f.pos:], '}')
-		if j == -1 {
-			return false
+	if hi < utf8.RuneSelf {
+		return
+	}
+	lo = max(lo, utf8.RuneSelf)
+	if lo <= utf8.RuneError && utf8.RuneError <= hi {
+		for c := utf8.RuneSelf; c < len(set); c++ {
+			set[c] = true
 		}
-		spec := f.src[f.pos+1 : f.pos+j]
-		f.pos += j + 1
-		return strings.HasPrefix(spec, "0")
+		return
 	}
-	return false
+	// a surrogate has no encoding and no input decodes to one. Written as
+	// the literal a regexp begins with it is looked for as the bytes of
+	// U+FFFD all the same ('\x{D800}x' matches "�x")
+	const surrogateMin, surrogateMax = 0xd800, 0xdfff
+	if lo <= surrogateMax && hi >= surrogateMin {
+		set[0xef] = true
+	}
+	// the first bytes grow with the runes on either side of the surrogates
+	if lo >= surrogateMin && lo <= surrogateMax {
+		lo = surrogateMax + 1
+	}
+	if hi >= surrogateMin && hi <= surrogateMax {
+		hi = surrogateMin - 1
+	}
+	if lo > hi {
+		return
+	}
+	var a, b [utf8.UTFMax]byte
+	utf8.EncodeRune(a[:], lo)
+	utf8.EncodeRune(b[:], hi)
+	for c := int(a[0]); c <= int(b[0]); c++ {
+		set[c] = true
+	}
 }
 
 // leadSet returns the bytes an anchored regexp can begin with, folded to both

@@ -135,9 +135,9 @@ func newMatcher(infos []*taginfo.Taginfo, ci, source bool) *matcher {
 			if !firstBytes(info.RE(), &row.gate.lead) {
 				return nil
 			}
-			// a rune outside ASCII in the row may fold to a letter, which
-			// the first bytes do not show ('ſtuff' matches 'stuff'): such a
-			// row is tried everywhere
+			// a row with a rune outside ASCII in it is tried everywhere,
+			// which asks nothing of how its runes fold ('ſtuff' matches
+			// 'stuff')
 			if strings.IndexFunc(info.RE(), func(r rune) bool { return r >= 0x80 }) != -1 {
 				for c := range row.gate.lead {
 					row.gate.lead[c] = true
