@@ -1710,9 +1710,10 @@ func NewMetaLexer(strs ...string) Lexer {
 	// it ('[Anime-HEVC] Show'), but not when it is this and the title follows
 	// ('[1080p] Show - 01')
 	onlyResolution := regexp.MustCompile(`(?i)^(?:\d{3,4}[ip]|\d{3,4}x\d{3,4})$`)
-	// words holds the words of the tag names, in upper case. A bracket further
-	// into the name that holds one of them, a version or a list of two-letter
-	// codes is not the site ('[REMASTERED]', '[v2]', '[MX-EN-PT]')
+	// words holds the words of the tag names and the spellings of the flags,
+	// in upper case. A bracket further into the name that holds one of them, a
+	// version or a list of two-letter codes is not the site ('[REMASTERED]',
+	// '[REPACK2]', '[v2]', '[MX-EN-PT]')
 	words := make(map[string]struct{})
 	notSite := func(v []byte) bool {
 		if leadTags.Match(v) {
@@ -1773,6 +1774,23 @@ func NewMetaLexer(strs ...string) Lexer {
 						for field := range strings.FieldsFuncSeq(info.Tag(), isAnyDelim) {
 							if !strings.Contains(field, "$") {
 								words[strings.ToUpper(field)] = struct{}{}
+							}
+						}
+					}
+					// a flag that any release can have is not the site in any
+					// spelling, though the spelling need not be its tag
+					// ('[REPACK2]' is REREPACK, '[REPACK3]' is REPACK$1,
+					// '[RE-RIP]' is RERiP). Only those: a row of one release
+					// type would let the bracket decide the type of the name
+					// ('[SI]' makes it a music single), and the short codes
+					// of the other tag types are read badly alone ('[SCI-FI]'
+					// as Finnish)
+					if typ == "other" && Type(info.Type()) == Unknown {
+						if exp, err := expandRE(info.RE(), true); err == nil {
+							for _, s := range exp {
+								if s != "" && len(s) <= 32 {
+									words[strings.ToUpper(s)] = struct{}{}
+								}
 							}
 						}
 					}

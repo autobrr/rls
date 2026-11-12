@@ -774,6 +774,19 @@
   codec: "x264"
   audio: "DUAL.AUDIO"
   container: "MKV"
+"Example Film (2020) REPACK (1080p BDRip x265 10bit AC3 5.1 - Kyo)[Mura]":
+  type: "movie"
+  title: "Example Film"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "DD"
+  channels: "5.1"
+  other: "REPACK"
+  group: "Kyo"
+  site: "Mura"
 "Example.Film.2020.UHD.WEBRip.1080p.DDP.5.1.Atmos.DoVi.HDR.x265-Kyo":
   type: "movie"
   title: "Example Film"
@@ -785,6 +798,32 @@
   audio: "DDP Atmos"
   channels: "5.1"
   group: "Kyo"
+"Example Film (2020) (1080p BluRay x265 SDR DD 5.1 English - Kyo Mura) [REPACK2]":
+  type: "movie"
+  title: "Example Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DD"
+  channels: "5.1"
+  other: "REREPACK"
+  language: "ENGLiSH"
+  group: "Kyo Mura"
+"Example Film (2020) (1080p BluRay x265 SDR DD 5.1 English - Kyo Mura) [REPACK3]":
+  type: "movie"
+  title: "Example Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DD"
+  channels: "5.1"
+  other: "REPACK3"
+  language: "ENGLiSH"
+  group: "Kyo Mura"
 "Fargo.1996.SF.20th.Anniversary.Edition.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-RU4HD":
   type: "movie"
   title: "Fargo"
