@@ -217,6 +217,14 @@
   year: 1991
   codec: "x264"
   group: "GRP"
+"[REPACK] 3x3.Eyes.1991.DVDRip.x264-GRP":
+  type: "movie"
+  title: "3x3 Eyes"
+  source: "DVDRiP"
+  year: 1991
+  codec: "x264"
+  other: "REPACK"
+  group: "GRP"
 "8-Bit.Christmas.(2021)(2160p.HMAX-WEBRip.DoVi HDR.x265.crf18.S97.E-AC3.5.1.Atmos)[cTurtle-4K].torrent":
   type: "movie"
   title: "8-Bit Christmas"
@@ -436,6 +444,15 @@
   resolution: "1080p"
   year: 2020
   codec: "x264"
+  group: "GRP"
+"[REPACK] BDRemux.Movie.2020.1080p.WEB.x264-GRP":
+  type: "movie"
+  title: "BDRemux Movie"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  other: "REPACK"
   group: "GRP"
 "Beavis.and.Butt-Head.The.Mike.Judge.Collectors.Edition.D03.R2.PAL.DVD5.TVV-Grzechsin":
   type: "movie"
@@ -774,6 +791,28 @@
   codec: "x264"
   audio: "DUAL.AUDIO"
   container: "MKV"
+"[REPACK2] Example.Film.2020.1080p.BluRay.x265-GRP":
+  type: "movie"
+  title: "Example Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  other: "REREPACK"
+  group: "GRP"
+"Example Film (2020) REPACK (1080p BDRip x265 10bit AC3 5.1 - Kyo)[Mura]":
+  type: "movie"
+  title: "Example Film"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  bitdepth: "10BIT"
+  audio: "DD"
+  channels: "5.1"
+  other: "REPACK"
+  group: "Kyo"
+  site: "Mura"
 "Example.Film.2020.UHD.WEBRip.1080p.DDP.5.1.Atmos.DoVi.HDR.x265-Kyo":
   type: "movie"
   title: "Example Film"
@@ -785,6 +824,45 @@
   audio: "DDP Atmos"
   channels: "5.1"
   group: "Kyo"
+"Example Film (2020) (1080p BluRay x265 SDR DD 5.1 English - Kyo Mura) [REPACK2]":
+  type: "movie"
+  title: "Example Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DD"
+  channels: "5.1"
+  other: "REREPACK"
+  language: "ENGLiSH"
+  group: "Kyo Mura"
+"Example Film (2020) (1080p BluRay x265 SDR DD 5.1 English - Kyo Mura) [REPACK3]":
+  type: "movie"
+  title: "Example Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DD"
+  channels: "5.1"
+  other: "REPACK3"
+  language: "ENGLiSH"
+  group: "Kyo Mura"
+"[PROPER] Example Film (2020) (1080p BluRay x265 SDR DD 5.1 English - Kyo Mura)":
+  type: "movie"
+  title: "Example Film"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x265"
+  hdr: "SDR"
+  audio: "DD"
+  channels: "5.1"
+  other: "PROPER"
+  language: "ENGLiSH"
+  group: "Kyo Mura"
 "Fargo.1996.SF.20th.Anniversary.Edition.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-RU4HD":
   type: "movie"
   title: "Fargo"
@@ -1735,6 +1813,15 @@
   audio: "DD"
   language: "GERMAN DL"
   group: "EXQUiSiTE"
+"[PROPER] Second.Season.Blues.2005.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "Second Season Blues"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2005
+  codec: "H.264"
+  other: "PROPER"
+  group: "GRP"
 "[Commie] Senki Zesshou Symphogear XV [720p] (Unofficial Batch)":
   type: "movie"
   title: "Senki Zesshou Symphogear XV"
@@ -4109,6 +4196,16 @@
   resolution: "1080p"
   episode: 1
   absolute: 1
+"[REPACK3][Erai-raws] Show - 01 [1080p][Multiple Subtitle]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  other: "REPACK3"
+  language: "MULTiSUB"
+  group: "Erai-raws"
+  site: "Erai-raws"
 "[Group] Show - 01 (1080p BD x264) (with the UK dub track)":
   type: "episode"
   title: "Show"
@@ -4183,6 +4280,17 @@
   seriesEpisodes: "S00E01 S00E02 S00E03"
   group: "Group"
   site: "Group"
+"[REPACK] [SubsPlease] Show - 01 (1080p) [ABCD1234].mkv":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  other: "REPACK"
+  group: "SubsPlease"
+  site: "SubsPlease"
+  sum: "ABCD1234"
+  ext: "mkv"
 "[GRP]_Show_Ep03_The_Title_[720p]":
   type: "episode"
   title: "Show"

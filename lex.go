@@ -361,11 +361,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 				// it opens the name ('3x3.Eyes.1991') or a year follows it
 				// ('Movie.5x5.2020'), where it belongs to the title
 				if len(series) != 0 && len(s) > len(series) && (s[len(series)] == 'x' || s[len(series)] == 'X') {
-					k := len(start) - 1
-					for k >= 0 && start[k].Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) {
-						k--
-					}
-					if k < 0 || firstYearEnd(buf[i:min(n, i+6)]) != -1 {
+					if opensName(start) || firstYearEnd(buf[i:min(n, i+6)]) != -1 {
 						return start, end, i - len(s), n, false
 					}
 				}
@@ -373,11 +369,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 				// itself when it opens the name ('Second.Season.Blues.2005')
 				// or goes on as a word ("Second Season's End")
 				if ordinal {
-					k := len(start) - 1
-					for k >= 0 && start[k].Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) {
-						k--
-					}
-					if k < 0 || i < n && src[i] == '\'' {
+					if opensName(start) || i < n && src[i] == '\'' {
 						return start, end, i - len(s), n, false
 					}
 				}
@@ -1710,10 +1702,31 @@ func NewMetaLexer(strs ...string) Lexer {
 	// it ('[Anime-HEVC] Show'), but not when it is this and the title follows
 	// ('[1080p] Show - 01')
 	onlyResolution := regexp.MustCompile(`(?i)^(?:\d{3,4}[ip]|\d{3,4}x\d{3,4})$`)
-	// words holds the words of the tag names, in upper case. A bracket further
-	// into the name that holds one of them, a version or a list of two-letter
-	// codes is not the site ('[REMASTERED]', '[v2]', '[MX-EN-PT]')
+	// words holds the words of the tag names and the spellings of the flags,
+	// in upper case. A bracket further into the name that holds one of them, a
+	// version or a list of two-letter codes is not the site ('[REMASTERED]',
+	// '[REPACK2]', '[v2]', '[MX-EN-PT]')
 	words := make(map[string]struct{})
+	// flags holds the spellings, in upper case, of the flags a release is
+	// put out again or set right with. A bracket that holds one is not the
+	// site, also the bracket that opens the name ('[REPACK2] Movie'), and
+	// flagf finds the row of the flag it is
+	flags := make(map[string]struct{})
+	var flagf *finder
+	flag := func(v []byte) bool {
+		var key [32]byte
+		if len(v) > len(key) {
+			return false
+		}
+		for k, c := range v {
+			if c >= 'a' && c <= 'z' {
+				c -= 32
+			}
+			key[k] = c
+		}
+		_, ok := flags[string(key[:len(v)])]
+		return ok
+	}
 	notSite := func(v []byte) bool {
 		if leadTags.Match(v) {
 			return true
@@ -1766,6 +1779,7 @@ func NewMetaLexer(strs ...string) Lexer {
 			if noGates {
 				clear(narrow)
 			}
+			var flagInfos []*taginfo.Taginfo
 			for typ, v := range infos {
 				for _, info := range v {
 					// a group's name is what the site may well be
@@ -1773,6 +1787,30 @@ func NewMetaLexer(strs ...string) Lexer {
 						for field := range strings.FieldsFuncSeq(info.Tag(), isAnyDelim) {
 							if !strings.Contains(field, "$") {
 								words[strings.ToUpper(field)] = struct{}{}
+							}
+						}
+					}
+					// a flag that any release can have is not the site in any
+					// spelling, though the spelling need not be its tag
+					// ('[REPACK2]' is REREPACK, '[REPACK3]' is REPACK$1,
+					// '[RE-RIP]' is RERiP). Only those: a row of one release
+					// type would let the bracket decide the type of the name
+					// ('[SI]' makes it a music single), and the short codes
+					// of the other tag types are read badly alone ('[SCI-FI]'
+					// as Finnish)
+					if typ == "other" && Type(info.Type()) == Unknown {
+						if exp, err := expandRE(info.RE(), true); err == nil {
+							_, isFlag := releaseFlags[info.Tag()]
+							if isFlag {
+								flagInfos = append(flagInfos, info)
+							}
+							for _, s := range exp {
+								if s != "" && len(s) <= 32 {
+									words[strings.ToUpper(s)] = struct{}{}
+									if isFlag {
+										flags[strings.ToUpper(s)] = struct{}{}
+									}
+								}
 							}
 						}
 					}
@@ -1790,6 +1828,7 @@ func NewMetaLexer(strs ...string) Lexer {
 					}
 				}
 			}
+			flagf = newFinder(TagTypeOther, flagInfos...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			var l int
@@ -1797,7 +1836,7 @@ func NewMetaLexer(strs ...string) Lexer {
 			var m [][]byte
 			var k string
 			var v []byte
-			var matched, short bool
+			var matched, short, flagged bool
 			var prev map[string]bool
 			seen := func(k string) {
 				if prev == nil {
@@ -1805,8 +1844,36 @@ func NewMetaLexer(strs ...string) Lexer {
 				}
 				prev[k] = true
 			}
+			// flags in brackets that open the name ('[REPACK] [Group] Show'):
+			// what follows them is read as if it opened the name
+			// opened is how many tags lie in front of the bracket that opens
+			// the name: none, or the flags in front of it
+			first, opened := i == 0, 0
+			for first && i < n && (src[i] == '[' || src[i] == '(') {
+				cl := byte(']')
+				if src[i] == '(' {
+					cl = ')'
+				}
+				j := bytes.IndexByte(src[i+1:n], cl)
+				if j <= 0 || !flag(src[i+1:i+1+j]) {
+					break
+				}
+				e := i + j + 2
+				start = append(start,
+					newTag(src, buf, TagTypeDelim, nil, src[i:i+1], src[i:i+1]),
+					newTag(src, buf, TagTypeOther, flagf, src[i+1:e-1], src[i+1:e-1]),
+					newTag(src, buf, TagTypeDelim, nil, src[e-1:e], src[e-1:e]))
+				i = e
+				for e < n && delim[src[e]] && src[e] != '[' && src[e] != '(' {
+					e++
+				}
+				if e != i {
+					start, i = append(start, newTag(src, buf, TagTypeDelim, nil, src[i:e], src[i:e])), e
+				}
+				opened = len(start)
+			}
 			// leading bracket release group containing a space
-			if i == 0 && n != 0 && src[0] == '[' {
+			if first && i < n && src[i] == '[' {
 				if g := lead.FindSubmatch(src[i:n]); g != nil {
 					// the value is the trimmed contents; an internal space or
 					// a plus is what distinguishes a group from a padded
@@ -1820,7 +1887,7 @@ func NewMetaLexer(strs ...string) Lexer {
 						start = append(start, newTag(src, buf, TagTypeMeta, nil, g[0], []byte(`site`), name))
 						i += len(g[0])
 						seen(`site`)
-					} else if bytes.ContainsAny(t, " +") && !leadTags.Match(t) {
+					} else if bytes.ContainsAny(t, " +") && !leadTags.Match(t) && !flag(t) {
 						start = append(start, newTag(src, buf, TagTypeMeta, nil, g[0], []byte(`site`), t))
 						i += len(g[0])
 						seen(`site`)
@@ -1856,7 +1923,15 @@ func NewMetaLexer(strs ...string) Lexer {
 						// resolution alone. With a bracket after it the name
 						// is a row of brackets, where skipping the first
 						// would leave the group unread ('[1080p][Group]')
-						if k == "site" && (len(start) != 0 && notSite(v) ||
+						// a flag is read as the flag where it stands, and the
+						// bracket after it may still be the group ('[REPACK]
+						// [Group] Show - 01'). A padded one is left as it was
+						// ('[ REPACK ]'), as a tag between spaces is a word
+						if k == "site" && flag(v) && tight(m[0], v) {
+							matched, flagged = true, true
+							continue
+						}
+						if k == "site" && (len(start) != opened && notSite(v) ||
 							onlyResolution.Match(v) && !(i+len(m[0]) < n && src[i+len(m[0])] == '[')) {
 							continue
 						}
@@ -1875,7 +1950,19 @@ func NewMetaLexer(strs ...string) Lexer {
 					if len(d) != 0 {
 						start, d = append(start, newTag(src, buf, TagTypeDelim, nil, d, d)), d[:0]
 					}
-					start = append(start, newTag(src, buf, TagTypeMeta, nil, m[0], []byte(k), v))
+					if flagged {
+						a := bytes.Index(m[0], v)
+						if open := m[0][:a]; len(open) != 0 {
+							start = append(start, newTag(src, buf, TagTypeDelim, nil, open, open))
+						}
+						start = append(start, newTag(src, buf, TagTypeOther, flagf, v, v))
+						if cl := m[0][a+len(v):]; len(cl) != 0 {
+							start = append(start, newTag(src, buf, TagTypeDelim, nil, cl, cl))
+						}
+						flagged = false
+					} else {
+						start = append(start, newTag(src, buf, TagTypeMeta, nil, m[0], []byte(k), v))
+					}
 					i = i + len(m[0]) - 1
 				} else if !delim[src[i]] {
 					break
@@ -2060,6 +2147,51 @@ func suffixFrom(src []byte, lo, cl int, open byte, never *[256]bool) int {
 	return p
 }
 
+// tight reports whether v, which s holds, stands right inside the bracket
+// around it ('[REPACK]', not '[ REPACK ]').
+func tight(s, v []byte) bool {
+	a := bytes.Index(s, v)
+	return a > 0 && strings.IndexByte("[({", s[a-1]) != -1 &&
+		a+len(v) < len(s) && strings.IndexByte("])}", s[a+len(v)]) != -1
+}
+
+// opensName reports whether what the tags in start read opens the name: there
+// are only delimiters, meta tags and the flags in brackets in front of it
+// ('[REPACK] 3x3.Eyes.1991').
+func opensName(start []Tag) bool {
+	for i, tag := range start {
+		switch {
+		case tag.Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta):
+		case tag.Is(TagTypeOther) && i != 0 && start[i-1].Is(TagTypeDelim) && strings.ContainsAny(start[i-1].Delim()[len(start[i-1].Delim())-1:], "[("):
+			if info := tag.Info(); info == nil || !isReleaseFlag(info.Tag()) {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// isReleaseFlag reports whether tag is the tag of a row in releaseFlags.
+func isReleaseFlag(tag string) bool {
+	_, ok := releaseFlags[tag]
+	return ok
+}
+
+// releaseFlags are the tags of the rows that mark a release put out again
+// or set right. The opening bracket is the group even when it holds a tag
+// ('[Anime-HEVC] Show'), but not when it holds one of these.
+var releaseFlags = map[string]struct{}{
+	"PROPER":      {},
+	"REAL":        {},
+	"REAL.PROPER": {},
+	"REPACK":      {},
+	"REPACK$1":    {},
+	"REREPACK":    {},
+	"RERiP":       {},
+}
+
 // metaSpace reports whether c is matched by \s.
 func metaSpace(c byte) bool {
 	switch c {
@@ -2191,7 +2323,7 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			// which no row can give as two tags. As the first word of a name
 			// it is left to the title
 			if k := i + len(bdremux); otherf != nil && k <= n && buf[i]|0x20 == 'b' && bytes.EqualFold(buf[i:k], bdremux) && (k == n || !runByte(buf[k])) &&
-				slices.ContainsFunc(start, func(tag Tag) bool { return !tag.Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) }) {
+				!opensName(start) {
 				return append(
 					start,
 					newTag(src, buf, TagTypeSource, f, src[i:i+2], src[i:i+2]),

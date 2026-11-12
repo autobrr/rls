@@ -571,6 +571,29 @@ func (b *TagBuilder) Build(tags []Tag, end int) Release {
 // the type, so that the tags that are unset and the titles that are read are
 // those of that type. Nothing before them reads it.
 func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
+	// flags in brackets that open the name ('[REPACK] [Group] Show'), which
+	// only the meta lexer puts there, are left out of the build of the rest,
+	// so that the rest reads as if it opened the name
+	if k := leadingFlags(tags, end); k != 0 {
+		r := b.build(tags[k:], end-k, h)
+		var other []string
+		for _, tag := range tags[:k] {
+			if tag.Is(TagTypeOther) {
+				other = appendOnce(other, tag.Other())
+			}
+		}
+		for _, s := range r.Other {
+			other = appendOnce(other, s)
+		}
+		r.tags, r.end, r.Other = tags, end, other
+		for i := range r.dates {
+			r.dates[i] += k
+		}
+		for i := range r.unused {
+			r.unused[i] += k
+		}
+		return r
+	}
 	r := &Release{
 		tags: tags,
 		end:  end,
@@ -605,15 +628,41 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	return *r
 }
 
+// leadingFlags returns how many tags the flags in brackets that open the name
+// take up ('[REPACK] [Group] Show'), with the delimiters after them, or 0 when
+// nothing else is left.
+func leadingFlags(tags []Tag, end int) int {
+	bracket := func(tag Tag, s string) bool {
+		return tag.Is(TagTypeDelim) && len(tag.Delim()) == 1 && strings.Contains(s, tag.Delim())
+	}
+	k := 0
+	for k+2 < end && bracket(tags[k], "[(") && bracket(tags[k+2], "])") && tags[k+1].Is(TagTypeOther) {
+		if info := tags[k+1].Info(); info == nil || !isReleaseFlag(info.Tag()) {
+			break
+		}
+		k += 3
+		if k < end && tags[k].Is(TagTypeDelim, TagTypeWhitespace) && !strings.ContainsAny(tags[k].Delim(), "[(") {
+			k++
+		}
+	}
+	if k >= end {
+		return 0
+	}
+	return k
+}
+
 // leadingGroup sets the group from a site meta tag appearing in a leading
-// bracket (ie, '[SubsPlease] Show - 04 ...'), when no group was found.
+// bracket (ie, '[SubsPlease] Show - 04 ...'), when no group was found. A flag
+// in front of it is passed over ('[REPACK] [SubsPlease] Show - 04').
 func (b *TagBuilder) leadingGroup(r *Release) {
 	if r.Group != "" || r.Site == "" {
 		return
 	}
 	for i := 0; i < len(r.tags); i++ {
 		switch {
-		case r.tags[i].Is(TagTypeWhitespace, TagTypeDelim):
+		// only the meta lexer puts an other tag in front of the site, and
+		// only a flag
+		case r.tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeOther):
 			continue
 		case r.tags[i].Is(TagTypeMeta):
 			if k, v := r.tags[i].Meta(); k == "site" && v == r.Site {

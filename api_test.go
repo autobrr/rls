@@ -155,6 +155,14 @@ func TestReleasePredicates(t *testing.T) {
 		{"real proper with a hyphen", parsed("Show.S01E02.Real-Proper.1080p.WEB.h264-GRP"), true, false, false, false},
 		{"remux before the group", parsed("Movie.2020.2160p.UHD.BluRay.HEVC.TrueHD.7.1.Remux-GRP"), false, false, true, false},
 		{"bdremux in one word", parsed("Movie.2020.1080p.BDRemux.AVC.DTS-HD.MA.5.1-GRP"), false, false, true, false},
+		// a trailing bracket of the flag is the flag, not the site
+		{"repack2 in a trailing bracket", parsed("Movie (2020) (1080p BluRay x265 - GRP) [REPACK2]"), false, true, false, false},
+		{"repack3 in a trailing bracket", parsed("Movie (2020) (1080p BluRay x265 - GRP) [Repack3]"), false, true, false, false},
+		{"re-pack in a trailing bracket", parsed("Movie.2020.1080p.BluRay.x264-GRP[RE-PACK]"), false, true, false, false},
+		{"real proper in a trailing bracket", parsed("Movie.2020.1080p.BluRay.x264-GRP[REAL.PROPER]"), true, false, false, false},
+		// and so is a leading one, in front of the group's bracket too
+		{"repack2 in a leading bracket", parsed("[REPACK2] Movie.2020.1080p.BluRay.x264-GRP"), false, true, false, false},
+		{"proper in a leading bracket", parsed("[PROPER][Group] Show - 01 [1080p]"), true, false, false, false},
 
 		{"zero", Release{}, false, false, false, false},
 		{"hand proper", Release{Other: []string{"proper"}}, true, false, false, false},
