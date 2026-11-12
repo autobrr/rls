@@ -229,7 +229,6 @@ edition,Limited.Edition,Limited,limited(?:[\-\._ ]edition)?,,,
 edition,Ltd.Ed,Limited,ltd[\-\._ ][\-\._ ]?ed,,music,1
 edition,Noir.Edition,Noir,noir[\-\._ ]edition,,movie,1
 edition,Open.Matte,Open Matte,open[\-\._ ]matte,,movie,1
-edition,Remastered.Edition,Remastered,remaster(?:ed)?(?:[\-\._ ]edition)?,,,
 edition,Restored.Edition,Restored,restored(?:[\-\._ ]edition)?,,movie,
 edition,Special.Edition,Special,special[\-\._ ]edition|edicion[\-\._ ]especial,,movie,
 edition,Super.Deluxe,Super Deluxe,super[\-\._ ]deluxe,,movie,
