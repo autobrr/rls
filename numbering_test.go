@@ -774,6 +774,10 @@ func TestEpisodeSpans(t *testing.T) {
 		{"Show.S00E02-S00E04.1080p.WEB.h264-GRP", []EpisodeSpan{{"00", "02", "04"}}},
 		{"[Group] Show - 00 ~ 12 [720p]", []EpisodeSpan{{"", "00", "12"}}},
 		{"[Group] Show (01-12) [720p]", []EpisodeSpan{{"", "01", "12"}}},
+		// a range that ends the title, in front of the episodes
+		{"[Group] Show 17-26 - 01 ~ 08 [720p]", []EpisodeSpan{{"", "01", "08"}}},
+		// a range that starts at 1 is the episodes of a batch, not the title
+		{"[Group] Show 01-12 - 13 [720p]", []EpisodeSpan{{"", "01", "12"}, {"", "13", ""}}},
 		{"Show.S01E1-E99999.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "1", "99999"}}},
 		// episodes that are not a range
 		{"Show.S01E05E06.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "05", ""}, {"01", "06", ""}}},

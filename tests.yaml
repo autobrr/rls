@@ -5126,6 +5126,19 @@
   episode: 1
   codec: "H.264"
   group: "GRP"
+"[Erai-raws] Tatsuki Fujimoto 17-26 - 01 ~ 08 [1080p AMZN WEB-DL AVC EAC3][MultiSub] [BATCH]":
+  type: "series"
+  title: "Tatsuki Fujimoto 17-26"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08"
+  codec: "AVC"
+  audio: "DDP"
+  language: "MULTiSUB"
+  group: "Erai-raws"
+  site: "Erai-raws"
+  unused: "BATCH"
 "The Big Bang Theory S08E06 HDTV XviD-LOL [eztv]":
   type: "episode"
   title: "The Big Bang Theory"

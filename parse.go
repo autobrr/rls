@@ -711,6 +711,7 @@ func afterBracket(tag Tag) bool {
 // init fixes the initial tag set.
 func (b *TagBuilder) init(r *Release) {
 	b.fixHalfEpisode(r)
+	b.fixTitleRange(r)
 	b.fixFirstDate(r)
 	// determine earliest pivot
 	m, pivot := b.pivots(r, TagTypeDate, TagTypeSource, TagTypeSeries, TagTypeResolution, TagTypeVersion)
@@ -773,6 +774,25 @@ func (b *TagBuilder) fixHalfEpisode(r *Release) {
 		v[0] += "." + half.v[0]
 		r.tags = slices.Delete(slices.Clone(r.tags), i+1, i+3)
 		r.tags[i].v, r.end = v, r.end-2
+	}
+}
+
+// fixTitleRange makes a range of numbers after a word the end of the title
+// when an episode follows it past a spaced hyphen, ie the '17-26' of
+// '[Erai-raws] Tatsuki Fujimoto 17-26 - 01 ~ 08', which names the show where
+// the '01 ~ 08' are its episodes. A range that starts at 1 is left alone, as
+// that is how the episodes of a batch are written ('Show 01-12 - 13').
+func (b *TagBuilder) fixTitleRange(r *Release) {
+	for i := 2; i+2 < r.end; i++ {
+		tag, delim, next := r.tags[i], r.tags[i+1], r.tags[i+2]
+		// the shape the episode range lexer gives, written tight ('17-26')
+		if !tag.Is(TagTypeSeries) || len(tag.v) != 6 || tag.v[1] != "" || tag.v[2] != "" || tag.v[4] != "-" || strings.ContainsAny(tag.v[0], " ~") ||
+			atoi(tag.v[3]) <= 1 ||
+			!r.tags[i-2].Is(TagTypeText) || !r.tags[i-1].Is(TagTypeDelim) || r.tags[i-1].v[0] != " " ||
+			!delim.Is(TagTypeDelim) || delim.v[0] != " - " || !next.Is(TagTypeSeries) || next.val(1) != "" || !next.wroteEpisode() {
+			continue
+		}
+		r.tags[i] = tag.As(TagTypeText, nil)
 	}
 }
 
