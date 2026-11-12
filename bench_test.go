@@ -123,19 +123,28 @@ func BenchmarkParseTrailingDelims(b *testing.B) {
 	}
 }
 
-// corpusNames returns the names of a file of testdata/corpus, one a line. The
-// corpora are not in the repository, so what asks for one is skipped when the
-// file is not there.
-func corpusNames(tb testing.TB, file string) []string {
+// readCorpus returns the names of a file of testdata/corpus, one a line. The
+// corpora are not in the repository, so the file may not be there.
+func readCorpus(file string) ([]string, error) {
 	buf, err := os.ReadFile("testdata/corpus/" + file)
 	if err != nil {
-		tb.Skip(err)
+		return nil, err
 	}
 	var v []string
 	for l := range strings.SplitSeq(string(buf), "\n") {
 		if l = strings.TrimRight(l, "\r"); l != "" {
 			v = append(v, l)
 		}
+	}
+	return v, nil
+}
+
+// corpusNames is readCorpus for what cannot do without the file, and is
+// skipped when it is not there.
+func corpusNames(tb testing.TB, file string) []string {
+	v, err := readCorpus(file)
+	if err != nil {
+		tb.Skip(err)
 	}
 	return v
 }

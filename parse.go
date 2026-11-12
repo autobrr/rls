@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 	"unicode"
+	"unsafe"
 
 	"github.com/autobrr/rls/reutil"
 	"github.com/autobrr/rls/taginfo"
@@ -21,6 +22,8 @@ type TagParser struct {
 	once     []LexFunc
 	multi    []LexFunc
 	notFirst []bool
+	// dispatch gives the lexers of multi that can match at a position.
+	dispatch *dispatch
 	// isDelim is delim as a byte table: every delimiter is a single ASCII
 	// byte, so membership is all the regexp ever decided.
 	isDelim [256]bool
@@ -51,15 +54,23 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 			}
 		}
 	}
-	// separate once and multi
+	// separate once and multi. The lexers of this package offer what they
+	// need at a position to match while they are initialized, see withGate
+	offer := &gateOffer{gates: make(map[unsafe.Pointer]*lexGate)}
+	gateOffers.Store(delim, offer)
+	defer gateOffers.Delete(delim)
 	var once, multi []LexFunc
 	var notFirst []bool
+	var gates []*lexGate
 	for _, lexer := range lexers {
 		if f, o, nf := lexer.Initialize(infos, delim, short); o {
 			once = append(once, f)
 		} else {
 			multi = append(multi, f)
 			notFirst = append(notFirst, nf)
+			offer.mu.Lock()
+			gates = append(gates, offer.gates[funcID(f)])
+			offer.mu.Unlock()
 		}
 	}
 	// init builder
@@ -75,6 +86,7 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 		once:     once,
 		multi:    multi,
 		notFirst: notFirst,
+		dispatch: newDispatch(gates),
 	}
 	for c := 0; c < 255; c++ {
 		p.isDelim[c] = isAnyDelim(rune(c))
@@ -299,16 +311,16 @@ func (p *TagParser) next(src, buf []byte, start, end []Tag, i, n int, notFirst *
 			newTag(src, buf, TagTypeDelim, nil, src[i:j], src[i:j]),
 		), end, j, n
 	}
-	// run all lexers
-	startn := len(start)
-	for a, f := range p.multi {
+	// run the lexers that can match here, in lexer order
+	startn, mask := len(start), p.dispatch.mask(buf, i, n)
+	for a := nextLexer(mask, 0); a < len(p.multi); a = nextLexer(mask, a+1) {
 		if p.notFirst[a] && !*notFirst {
 			continue
 		}
 		// a match has to consume input from one end or the other. One that
 		// does not would be offered the same input again without end, so it
 		// is taken as no match and the next lexer is tried
-		if s, e, j, k, ok := f(src, buf, start, end, i, n); ok && i <= j && j <= k && k <= n && (i < j || k < n) {
+		if s, e, j, k, ok := p.multi[a](src, buf, start, end, i, n); ok && i <= j && j <= k && k <= n && (i < j || k < n) {
 			*notFirst = *notFirst || startn != len(s)
 			return s, e, j, k
 		}

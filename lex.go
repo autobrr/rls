@@ -240,14 +240,14 @@ func NewDateLexer(strs ...string) Lexer {
 	// one lexer per pattern: a pattern can match text that is not a date in
 	// its reading ('13.10.2024' as month 13), and the patterns after it must
 	// still get their turn
-	lexers := make([]func([]byte, []byte, int, int) ([]byte, [][]byte, int, int, bool), len(strs))
+	lexers := make([]*namedCapture, len(strs))
 	for l, s := range strs {
-		lexers[l] = NamedCaptureLexer(s)
+		lexers[l] = newNamedCapture(s)
 	}
-	return TagLexer{
+	return withGate(TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			for _, lexer := range lexers {
-				s, v, i, n, ok := lexer(src, buf, i, n)
+				s, v, i, n, ok := lexer.lex(src, buf, i, n)
 				if !ok {
 					continue
 				}
@@ -310,22 +310,22 @@ func NewDateLexer(strs ...string) Lexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, func() *lexGate { return namedCaptureGate(lexers...) })
 }
 
 // NewSeriesLexer creates a tag lexer for a series.
 func NewSeriesLexer(strs ...string) Lexer {
 	var sourcef taginfo.FindFunc
-	lexer := NamedCaptureLexer(strs...)
+	lexer := newNamedCapture(strs...)
 	mlt := regexp.MustCompile(`(?i)s(\d?\d)`)
 	mny := regexp.MustCompile(`(?i)[\-\._ ]?e(\d{1,5})`)
 	dsc := regexp.MustCompile(`(?i)^(?:disc|disk|dvd|d)`)
-	return TagLexer{
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			sourcef = findFunc(infos["source"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
-			if s, v, i, n, ok := lexer(src, buf, i, n); ok {
+			if s, v, i, n, ok := lexer.lex(src, buf, i, n); ok {
 				// collect series, episode, version
 				var series, episode, version, disc, multi, many, rng, dec []byte
 				var ordinal bool
@@ -575,7 +575,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, lexer.gate)
 }
 
 // ordinalSeason returns the number of a season written as a word, ie '2' for
@@ -856,7 +856,7 @@ func NewIDLexer() Lexer {
 		idLead[c] = true
 	}
 	re := regexp.MustCompile(`^([A-Z\d\-\_\. ]{2,24})\)`)
-	return TagLexer{
+	return withGate(TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			// as in the episode lexer, rule out the position on its first byte
 			// before scanning the prefix for the lookbehind
@@ -877,14 +877,14 @@ func NewIDLexer() Lexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, func() *lexGate { return leadGate(idLead, true) })
 }
 
 // NewEpisodeLexer creates a tag lexer for a single episode (`- 2 -`, `- 867 (`, `- 100 [`).
 func NewEpisodeLexer() Lexer {
 	// the number, half an episode ('21.5') and what ends it
 	re := regexp.MustCompile(`^(\d{1,4})(\.\d{1,2})?(\b|[\._ ]?[\-\[\]\(\)\{\}])`)
-	return TagLexer{
+	return withGate(TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			// the match has to start with a digit, and that is far cheaper to
 			// rule out than the lookbehind below, which scans the whole prefix
@@ -903,7 +903,7 @@ func NewEpisodeLexer() Lexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, func() *lexGate { return bytesGate(digitBytes) })
 }
 
 // NewEpisodeRangeLexer creates a tag lexer for the episodes of a batch, written
@@ -918,7 +918,7 @@ func NewEpisodeRangeLexer() Lexer {
 	year := func(b []byte) bool {
 		return len(b) == 4 && (b[0] == '1' && b[1] == '9' || b[0] == '2' && b[1] == '0')
 	}
-	return TagLexer{
+	return withGate(TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 			if i == 0 || i >= n || src[i] < '0' || src[i] > '9' {
 				return start, end, i, n, false
@@ -959,15 +959,15 @@ func NewEpisodeRangeLexer() Lexer {
 			}
 			return append(start, newTag(src, buf, TagTypeSeries, nil, m[0], nil, nil, m[1], []byte{'-'}, m[3])), end, i + len(m[0]), n, true
 		},
-	}
+	}, func() *lexGate { return bytesGate(digitBytes) })
 }
 
 // NewVersionLexer creates a tag lexer for a version.
 func NewVersionLexer(strs ...string) Lexer {
-	lexer := NamedCaptureLexer(strs...)
-	return TagLexer{
+	lexer := newNamedCapture(strs...)
+	return withGate(TagLexer{
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
-			if s, v, i, n, ok := lexer(src, buf, i, n); ok {
+			if s, v, i, n, ok := lexer.lex(src, buf, i, n); ok {
 				var version []byte
 				for l := 0; l < len(v); l += 2 {
 					switch string(v[l]) {
@@ -990,20 +990,20 @@ func NewVersionLexer(strs ...string) Lexer {
 			return start, end, i, n, false
 		},
 		NotFirst: true,
-	}
+	}, lexer.gate)
 }
 
 // NewDiscSourceYearLexer creates a tag lexer for the combined disc, source,
 // year style tag.
 func NewDiscSourceYearLexer(strs ...string) Lexer {
 	var sourcef taginfo.FindFunc
-	lexer := NamedCaptureLexer(strs...)
-	return TagLexer{
+	lexer := newNamedCapture(strs...)
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			sourcef = findFunc(infos["source"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
-			if _, v, i, n, ok := lexer(src, buf, i, n); ok {
+			if _, v, i, n, ok := lexer.lex(src, buf, i, n); ok {
 				// collect series, episode, version
 				var disc, source, year []byte
 				for l := 0; l < len(v); l += 2 {
@@ -1031,7 +1031,7 @@ func NewDiscSourceYearLexer(strs ...string) Lexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, lexer.gate)
 }
 
 // NewFrameRateLexer creates a tag lexer for a frame rate, written on its own
@@ -1043,7 +1043,7 @@ func NewDiscSourceYearLexer(strs ...string) Lexer {
 func NewFrameRateLexer(strs ...string) Lexer {
 	var resolutionf taginfo.FindFunc
 	lexer := NamedCaptureLexer(strs...)
-	return TagLexer{
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			resolutionf = findFunc(infos["resolution"]...)
 		},
@@ -1108,7 +1108,8 @@ func NewFrameRateLexer(strs ...string) Lexer {
 			}
 			return append(start, newTag(src, buf, TagTypeFrameRate, nil, s, rate)), end, j, m, true
 		},
-	}
+		// the lexer looks for a run of digits and periods first
+	}, func() *lexGate { return bytesGate(digitBytes + ".") })
 }
 
 // NewDiscLexer creates a tag lexer for a disc.
@@ -1118,13 +1119,13 @@ func NewFrameRateLexer(strs ...string) Lexer {
 //	x - xXtype
 func NewDiscLexer(strs ...string) Lexer {
 	var sourcef, sizef taginfo.FindFunc
-	lexer, re := NamedCaptureLexer(strs...), regexp.MustCompile(`(?i)^(?:dvd|cd|d|s|x)`)
-	return TagLexer{
+	lexer, re := newNamedCapture(strs...), regexp.MustCompile(`(?i)^(?:dvd|cd|d|s|x)`)
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			sourcef, sizef = findFunc(infos["source"]...), findFunc(infos["size"]...)
 		},
 		Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
-			if s, v, j, k, ok := lexer(src, buf, i, n); ok {
+			if s, v, j, k, ok := lexer.lex(src, buf, i, n); ok {
 				var typ, c, x, z []byte
 				for l := 0; l < len(v); l += 2 {
 					switch string(v[l]) {
@@ -1180,7 +1181,7 @@ func NewDiscLexer(strs ...string) Lexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, lexer.gate)
 }
 
 // NewAudioLexer creates a tag lexer for audios.
@@ -1193,7 +1194,7 @@ func NewAudioLexer() Lexer {
 	// next holds the bytes that can follow the audio tag's first run inside
 	// the same run: a channel digit or the start of an attached codec
 	var next [256]bool
-	return TagLexer{
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			audio, channels := infos["audio"], infos["channels"]
 			if p, ok := newPrefilter(audio, true); ok && !p.hasLead {
@@ -1267,7 +1268,7 @@ func NewAudioLexer() Lexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, func() *lexGate { return leadGate(lead, gated) })
 }
 
 // NewGenreLexer creates a tag lexer for a genre.
@@ -1275,7 +1276,7 @@ func NewGenreLexer() Lexer {
 	var genref taginfo.FindFunc
 	var re, lb, other *regexp.Regexp
 	var pf, pfOther *prefilter
-	return TagLexer{
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			genre := infos["genre"]
 			// build regexp for (Genre)
@@ -1319,7 +1320,7 @@ func NewGenreLexer() Lexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, func() *lexGate { return prefilterGate(pf, pfOther) })
 }
 
 // spacedGroup bounds a group name whose words are space- or underscore-separated.
@@ -1980,7 +1981,7 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 	var pf *prefilter
 	var mt *matcher
 	bdremux := []byte("bdremux")
-	return TagLexer{
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			info := infos[strings.ToLower(typ.String())]
 			s := `^ib`
@@ -2026,7 +2027,14 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, func() *lexGate {
+		g := prefilterGate(pf)
+		if otherf != nil && !g.always {
+			// the word the lexer splits before it asks its prefilter
+			g.runs[strings.ToUpper(string(bdremux))] = struct{}{}
+		}
+		return g
+	})
 }
 
 // plusEnd extends a tag terminator for the tags that end in '+' ('HDR10+',
@@ -2048,7 +2056,7 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 	var re *regexp.Regexp
 	var pf *prefilter
 	var mt *matcher
-	return TagLexer{
+	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			info := infos[strings.ToLower(typ.String())]
 			s := `^i`
@@ -2100,23 +2108,36 @@ func NewRegexpSourceLexer(typ TagType, ignoreCase bool) TagLexer {
 			}
 			return start, end, i, n, false
 		},
-	}
+	}, func() *lexGate { return prefilterGate(pf) })
 }
+
+// digitBytes are the bytes a number begins with.
+const digitBytes = "0123456789"
 
 // NamedCaptureLexer returns a func that matches named capture groups,
 // returning as name/value string pairs.
 func NamedCaptureLexer(strs ...string) func([]byte, []byte, int, int) ([]byte, [][]byte, int, int, bool) {
-	var regexps []*regexp.Regexp
-	var indexes [][]int
-	var subexps [][]string
+	return newNamedCapture(strs...).lex
+}
+
+// namedCapture is what NamedCaptureLexer matches with.
+type namedCapture struct {
+	regexps []*regexp.Regexp
+	indexes [][]int
+	subexps [][]string
 	// leads[l] holds the bytes regexps[l] can start with, so a position it
 	// cannot match is skipped without entering the regexp engine. gated[l] is
 	// false when that set could not be bounded, in which case it always runs.
-	var leads [][256]bool
-	var gated []bool
+	leads [][256]bool
+	gated []bool
 	// pairs[l] narrows that to the first two bytes: 'Se' can begin a month
 	// name where 'Sh' cannot, though both pass on 'S'.
-	var pairs []*pairSet
+	pairs []*pairSet
+}
+
+// newNamedCapture builds the regexps of strs that have a named capture group.
+func newNamedCapture(strs ...string) *namedCapture {
+	nc := &namedCapture{}
 	for l := 0; l < len(strs); l++ {
 		// build regexp and collect subexp indexes
 		re := regexp.MustCompile(strs[l])
@@ -2129,35 +2150,61 @@ func NamedCaptureLexer(strs ...string) func([]byte, []byte, int, int) ([]byte, [
 		}
 		if len(idx) != 0 {
 			lead, ok := leadSet(strs[l])
-			regexps, indexes, subexps = append(regexps, re), append(indexes, idx), append(subexps, names)
-			leads, gated = append(leads, lead), append(gated, ok)
-			pairs = append(pairs, newPairSet(strs[l]))
+			nc.regexps, nc.indexes, nc.subexps = append(nc.regexps, re), append(nc.indexes, idx), append(nc.subexps, names)
+			nc.leads, nc.gated = append(nc.leads, lead), append(nc.gated, ok)
+			nc.pairs = append(nc.pairs, newPairSet(strs[l]))
 		}
 	}
-	o := len(regexps)
-	return func(src, buf []byte, i, n int) ([]byte, [][]byte, int, int, bool) {
-		for l := 0; l < o; l++ {
-			// every one of these regexps is ^-anchored, so a match must begin
-			// with buf[i]
-			if gated[l] && i < n && !leads[l][buf[i]] {
-				continue
-			}
-			if ps := pairs[l]; ps != nil && i+1 < n && buf[i] < 0x80 && buf[i+1] < 0x80 && !ps.has(buf[i], buf[i+1]) {
-				continue
-			}
-			if m := regexps[l].FindSubmatch(buf[i:n]); m != nil {
-				// build values
-				var v [][]byte
-				for j, k := range indexes[l] {
-					if len(m[k]) != 0 {
-						v = append(v, []byte(subexps[l][j]), m[k])
-					}
+	return nc
+}
+
+// lex matches the regexps in turn at i in buf, and returns the text of the
+// first match in src with the names and values of its groups.
+func (nc *namedCapture) lex(src, buf []byte, i, n int) ([]byte, [][]byte, int, int, bool) {
+	for l, re := range nc.regexps {
+		// every one of these regexps is ^-anchored, so a match must begin
+		// with buf[i]
+		if nc.gated[l] && i < n && !nc.leads[l][buf[i]] {
+			continue
+		}
+		if ps := nc.pairs[l]; ps != nil && i+1 < n && buf[i] < 0x80 && buf[i+1] < 0x80 && !ps.has(buf[i], buf[i+1]) {
+			continue
+		}
+		if m := re.FindSubmatch(buf[i:n]); m != nil {
+			// build values
+			var v [][]byte
+			for j, k := range nc.indexes[l] {
+				if len(m[k]) != 0 {
+					v = append(v, []byte(nc.subexps[l][j]), m[k])
 				}
-				if len(v) != 0 {
-					return src[i : i+len(m[0])], v, i + len(m[0]), n, true
-				}
+			}
+			if len(v) != 0 {
+				return src[i : i+len(m[0])], v, i + len(m[0]), n, true
 			}
 		}
-		return nil, nil, i, n, false
 	}
+	return nil, nil, i, n, false
+}
+
+// gate is the gate of a lexer that returns false when lex does: the bytes
+// the regexps can begin with.
+func (nc *namedCapture) gate() *lexGate {
+	return namedCaptureGate(nc)
+}
+
+// namedCaptureGate is the gate of a lexer that returns false when none of
+// ncs matches.
+func namedCaptureGate(ncs ...*namedCapture) *lexGate {
+	g := &lexGate{}
+	for _, nc := range ncs {
+		for l, lead := range nc.leads {
+			if !nc.gated[l] {
+				return &lexGate{always: true}
+			}
+			for c, ok := range lead {
+				g.lead[c] = g.lead[c] || ok
+			}
+		}
+	}
+	return g
 }
