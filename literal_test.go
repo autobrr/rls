@@ -19,12 +19,22 @@ var parsers = sync.OnceValues(func() (*TagParser, *TagParser) {
 	return NewParser(), slow
 })
 
+// tagList gives each tag's type and values, which the %q form of a tag leaves
+// the type out of.
+func tagList(tags []Tag) string {
+	var b strings.Builder
+	for _, tag := range tags {
+		fmt.Fprintf(&b, "%s:%q ", tag.TagType(), tag.v)
+	}
+	return b.String()
+}
+
 // sameTags checks that the two parsers give the same tags for name.
 func sameTags(tb testing.TB, fast, slow *TagParser, name string) {
 	tb.Helper()
 	a, an := fast.Parse([]byte(name))
 	b, bn := slow.Parse([]byte(name))
-	if s, exp := fmt.Sprintf("%q", a), fmt.Sprintf("%q", b); s != exp || an != bn {
+	if s, exp := tagList(a), tagList(b); s != exp || an != bn {
 		tb.Fatalf("%q: expected the tags of the alternation\n%s (%d)\ngot:\n%s (%d)", name, exp, bn, s, an)
 	}
 }

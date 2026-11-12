@@ -1,7 +1,6 @@
 package rls
 
 import (
-	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -82,7 +81,7 @@ func TestPrefilterSameParse(t *testing.T) {
 	for _, name := range names {
 		a, an := fast.Parse([]byte(name))
 		b, bn := slow.Parse([]byte(name))
-		if s, exp := fmt.Sprintf("%q", a), fmt.Sprintf("%q", b); s != exp || an != bn {
+		if s, exp := tagList(a), tagList(b); s != exp || an != bn {
 			t.Fatalf("%q: expected the tags without prefilters\n%s (%d)\ngot:\n%s (%d)", name, exp, bn, s, an)
 		}
 	}
