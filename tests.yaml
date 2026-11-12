@@ -217,6 +217,14 @@
   year: 1991
   codec: "x264"
   group: "GRP"
+"[REPACK] 3x3.Eyes.1991.DVDRip.x264-GRP":
+  type: "movie"
+  title: "3x3 Eyes"
+  source: "DVDRiP"
+  year: 1991
+  codec: "x264"
+  other: "REPACK"
+  group: "GRP"
 "8-Bit.Christmas.(2021)(2160p.HMAX-WEBRip.DoVi HDR.x265.crf18.S97.E-AC3.5.1.Atmos)[cTurtle-4K].torrent":
   type: "movie"
   title: "8-Bit Christmas"
@@ -436,6 +444,15 @@
   resolution: "1080p"
   year: 2020
   codec: "x264"
+  group: "GRP"
+"[REPACK] BDRemux.Movie.2020.1080p.WEB.x264-GRP":
+  type: "movie"
+  title: "BDRemux Movie"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  other: "REPACK"
   group: "GRP"
 "Beavis.and.Butt-Head.The.Mike.Judge.Collectors.Edition.D03.R2.PAL.DVD5.TVV-Grzechsin":
   type: "movie"
@@ -1796,6 +1813,15 @@
   audio: "DD"
   language: "GERMAN DL"
   group: "EXQUiSiTE"
+"[PROPER] Second.Season.Blues.2005.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "Second Season Blues"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2005
+  codec: "H.264"
+  other: "PROPER"
+  group: "GRP"
 "[Commie] Senki Zesshou Symphogear XV [720p] (Unofficial Batch)":
   type: "movie"
   title: "Senki Zesshou Symphogear XV"

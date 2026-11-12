@@ -361,11 +361,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 				// it opens the name ('3x3.Eyes.1991') or a year follows it
 				// ('Movie.5x5.2020'), where it belongs to the title
 				if len(series) != 0 && len(s) > len(series) && (s[len(series)] == 'x' || s[len(series)] == 'X') {
-					k := len(start) - 1
-					for k >= 0 && start[k].Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) {
-						k--
-					}
-					if k < 0 || firstYearEnd(buf[i:min(n, i+6)]) != -1 {
+					if opensName(start) || firstYearEnd(buf[i:min(n, i+6)]) != -1 {
 						return start, end, i - len(s), n, false
 					}
 				}
@@ -373,11 +369,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 				// itself when it opens the name ('Second.Season.Blues.2005')
 				// or goes on as a word ("Second Season's End")
 				if ordinal {
-					k := len(start) - 1
-					for k >= 0 && start[k].Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) {
-						k--
-					}
-					if k < 0 || i < n && src[i] == '\'' {
+					if opensName(start) || i < n && src[i] == '\'' {
 						return start, end, i - len(s), n, false
 					}
 				}
@@ -2163,6 +2155,24 @@ func tight(s, v []byte) bool {
 		a+len(v) < len(s) && strings.IndexByte("])}", s[a+len(v)]) != -1
 }
 
+// opensName reports whether what the tags in start read opens the name: there
+// are only delimiters, meta tags and the flags in brackets in front of it
+// ('[REPACK] 3x3.Eyes.1991').
+func opensName(start []Tag) bool {
+	for i, tag := range start {
+		switch {
+		case tag.Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta):
+		case tag.Is(TagTypeOther) && i != 0 && start[i-1].Is(TagTypeDelim) && strings.ContainsAny(start[i-1].Delim()[len(start[i-1].Delim())-1:], "[("):
+			if info := tag.Info(); info == nil || !isReleaseFlag(info.Tag()) {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+	return true
+}
+
 // isReleaseFlag reports whether tag is the tag of a row in releaseFlags.
 func isReleaseFlag(tag string) bool {
 	_, ok := releaseFlags[tag]
@@ -2313,7 +2323,7 @@ func NewRegexpLexer(typ TagType, ignoreCase bool) TagLexer {
 			// which no row can give as two tags. As the first word of a name
 			// it is left to the title
 			if k := i + len(bdremux); otherf != nil && k <= n && buf[i]|0x20 == 'b' && bytes.EqualFold(buf[i:k], bdremux) && (k == n || !runByte(buf[k])) &&
-				slices.ContainsFunc(start, func(tag Tag) bool { return !tag.Is(TagTypeDelim, TagTypeWhitespace, TagTypeMeta) }) {
+				!opensName(start) {
 				return append(
 					start,
 					newTag(src, buf, TagTypeSource, f, src[i:i+2], src[i:i+2]),
