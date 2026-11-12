@@ -914,7 +914,15 @@ func comparePlatform(a, b []string) func() int {
 		if a[0] != "platform" || b[0] != "platform" || !strings.HasPrefix(as, "win") || !strings.HasPrefix(bs, "win") {
 			return 0
 		}
+		// a bare 'Windows' begins the spelling of every other row, which
+		// would never match after it ('Windows.64')
 		switch {
+		case as == bs:
+			return 0
+		case as == "windows":
+			return 1
+		case bs == "windows":
+			return -1
 		case len(a[1]) < len(b[1]):
 			return 1
 		case len(b[1]) < len(a[1]):

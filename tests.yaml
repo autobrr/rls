@@ -24,6 +24,9 @@
   title: "Bakemonogatari"
   other: "BDMV"
   edition: "Limited.Edition"
+"Broken.Windows-GROUP":
+  title: "Broken Windows"
+  group: "GROUP"
 "foo\nbar":
   title: "foo bar"
 "[Commie] Hataraku Maou-sama!":
@@ -577,6 +580,14 @@
   audio: "LiNE"
   region: "R5"
   group: "UNiQUE"
+"Broken.Windows.2020.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "Broken Windows"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "H.264"
+  group: "GRP"
 "BURN-E.2008.BluRay.1080p.DD5.1-EX.AVC.REMUX-FraMeSToR.mkv":
   type: "movie"
   title: "BURN-E"
@@ -1790,6 +1801,15 @@
   audio: "FLAC"
   group: "decibeL"
   ext: "mkv"
+"Rear.Windows.1954.REMASTERED.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Rear Windows"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1954
+  codec: "x264"
+  other: "REMASTERED"
+  group: "GRP"
 "RED.2010.UHD.BluRay.2160p.TrueHD.Atmos.7.1.HEVC.REMUX-FraMeSToR":
   type: "movie"
   title: "RED"
@@ -5929,6 +5949,12 @@
   year: 2020
   group: "Sub"
   site: "Sub"
+"Artist - Open Windows (2019) [FLAC]":
+  type: "music"
+  artist: "Artist"
+  title: "Open Windows"
+  year: 2019
+  audio: "FLAC"
 "Artist-Title-EP2004-GRP":
   type: "music"
   artist: "Artist"
@@ -5943,6 +5969,13 @@
   source: "WEB"
   year: 2021
   other: "PROMO"
+  group: "GRP"
+"Artist-Windows-WEB-2020-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Windows"
+  source: "WEB"
+  year: 2020
   group: "GRP"
 "B_recordings--instant-(supercheap-03)-2VLS1998-kW":
   type: "music"
@@ -6478,6 +6511,20 @@
   version: "v22.0.316"
   other: "REPACK"
   group: "me"
+"Some.App.v1.0.Windows.64-GROUP":
+  type: "app"
+  title: "Some App"
+  platform: "Win64"
+  version: "v1.0"
+  group: "GROUP"
+"Some.App.v1.2.3-GROUP (2019) [Windows / English]":
+  type: "app"
+  title: "Some App"
+  platform: "Windows"
+  year: 2019
+  version: "v1.2.3"
+  language: "ENGLiSH"
+  group: "GROUP"
 "Some.Title-GROUP [macOS]":
   type: "app"
   title: "Some Title"
@@ -6489,6 +6536,21 @@
   platform: "Linux"
   year: 2019
   group: "GROUP"
+"Some Title-GROUP (2019) [Windows / Multi-Language / Full ISO]":
+  type: "app"
+  title: "Some Title"
+  platform: "Windows"
+  year: 2019
+  language: "MULTi"
+  container: "ISO"
+  group: "GROUP"
+  unused: "Full"
+"Some Title-GROUP (2019) [Windows]":
+  type: "app"
+  title: "Some Title"
+  platform: "Windows"
+  year: 2019
+  group: "GROUP"
 "Some Title-GROUP (2019) [macOS / English / DMG]":
   type: "app"
   title: "Some Title"
@@ -6497,6 +6559,15 @@
   language: "ENGLiSH"
   group: "GROUP"
   unused: "DMG"
+"Some.Title-GROUP (2019) [Windows / Multi-Language / Full ISO]":
+  type: "app"
+  title: "Some Title"
+  platform: "Windows"
+  year: 2019
+  language: "MULTi"
+  container: "ISO"
+  group: "GROUP"
+  unused: "Full"
 "35MM_Update_v1.0.2_NSW-LiGHTFORCE":
   type: "game"
   title: "35MM"
@@ -6646,6 +6717,15 @@
   version: "v1.2"
   language: "MULTi9"
   group: "PROPHET"
+"Some.Game-CODEX (2019) [Windows / Multi-Language / Full ISO]":
+  type: "game"
+  title: "Some Game"
+  platform: "Windows"
+  year: 2019
+  language: "MULTi"
+  container: "ISO"
+  group: "CODEX"
+  unused: "Full"
 "Some.Title-GROUP (2019) [PS4]":
   type: "game"
   title: "Some Title"

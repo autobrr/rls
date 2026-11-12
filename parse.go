@@ -908,6 +908,7 @@ func afterBracket(tag Tag) bool {
 
 // init fixes the initial tag set.
 func (b *TagBuilder) init(r *Release) {
+	b.fixWindows(r)
 	b.fixHalfEpisode(r)
 	b.fixTitleRange(r)
 	b.fixFirstDate(r)
@@ -946,6 +947,66 @@ func (b *TagBuilder) init(r *Release) {
 	b.fixIsolated(r)
 	b.fixWords(r)
 	b.fixMusic(r)
+}
+
+// fixWindows reads a bare 'Windows' as a word, unless it is an item of a list
+// of tags in the brackets that close the name, which is where a tracker names
+// the platform ('Some.Title-GROUP (2019) [Windows / Multi-Language / Full
+// ISO]'). Anywhere else it is a word of the title ('Broken.Windows.2020',
+// 'Artist - Open Windows (2019) [FLAC]', '(Windows Edition)'). So is it in a
+// name with a video or an audio tag, which a film, an episode or a record has
+// ('Movie.2019.1080p.WEB.H264-GRP [Windows]'). It goes back to plain text,
+// which no later step restores as a platform.
+func (b *TagBuilder) fixWindows(r *Release) {
+	media := slices.ContainsFunc(r.tags, func(tag Tag) bool {
+		return tag.Is(
+			TagTypeSeries,
+			TagTypeSource,
+			TagTypeResolution,
+			TagTypeFrameRate,
+			TagTypeCodec,
+			TagTypeHDR,
+			TagTypeBitDepth,
+			TagTypeAudio,
+			TagTypeChannels,
+		)
+	})
+	for i, depth := 0, 0; i < len(r.tags); i++ {
+		tag := r.tags[i]
+		switch {
+		case tag.Is(TagTypeDelim):
+			depth = bracketDepth(tag.Delim(), depth)
+		case tag.Is(TagTypePlatform) && tag.Platform() == "Windows" &&
+			(media || depth == 0 || !listItem(r.tags, i) || !closingBrackets(r.tags, i, depth)):
+			r.tags[i] = NewTag(TagTypeText, nil, []byte(tag.v[0]), []byte(tag.v[0]))
+		}
+	}
+}
+
+// listItem reports whether the tag at i is a whole item of a list in brackets,
+// with a bracket, a '/' or a ',' on either side of it ('[Windows / English]').
+func listItem(tags []Tag, i int) bool {
+	if !peek(tags, i-1, TagTypeDelim) || !peek(tags, i+1, TagTypeDelim) {
+		return false
+	}
+	prev, next := strings.TrimRight(tags[i-1].Delim(), " "), strings.TrimLeft(tags[i+1].Delim(), " ")
+	return prev != "" && strings.IndexByte("[(/,", prev[len(prev)-1]) != -1 &&
+		next != "" && strings.IndexByte("])/,", next[0]) != -1
+}
+
+// closingBrackets reports whether nothing but brackets follows the tag at i,
+// which depth brackets hold.
+func closingBrackets(tags []Tag, i, depth int) bool {
+	for i++; i < len(tags); i++ {
+		switch {
+		case tags[i].Is(TagTypeDelim):
+			depth = bracketDepth(tags[i].Delim(), depth)
+		case tags[i].Is(TagTypeWhitespace, TagTypeExt):
+		case depth == 0:
+			return false
+		}
+	}
+	return true
 }
 
 // fixHalfEpisode joins the half of an episode back onto it when a video tag
