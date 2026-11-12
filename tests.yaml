@@ -20,6 +20,10 @@
   meta: "key1:value1"
 "A.DOCUMENTARY":
   title: "A DOCUMENTARY"
+"Bakemonogatari Limited Edition [BDMV]":
+  title: "Bakemonogatari"
+  other: "BDMV"
+  edition: "Limited.Edition"
 "foo\nbar":
   title: "foo bar"
 "[Commie] Hataraku Maou-sama!":
@@ -3383,6 +3387,11 @@
   audio: "AAC"
   group: "Commie"
   site: "Commie"
+"[BDMV] Hana-Kimi Season 1":
+  type: "series"
+  title: "Hana-Kimi"
+  series: 1
+  other: "BDMV"
 "[SubsPlease]_Higurashi_no_Naku_Koro_ni_Sotsu_-_09_(1080p)_[C00D6C68]":
   type: "episode"
   title: "Higurashi no Naku Koro ni Sotsu"

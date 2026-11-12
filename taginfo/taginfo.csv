@@ -467,6 +467,7 @@ other,ADVANCE,Advance,adv(?:anced?)?,,music,1
 other,AI.Upscale,Upscaled (AI),ai[\-\._ ]upscaled?,,movie,
 other,All.Access.Cheat,All Access Cheat,all[\-\._ ]access[\-\._ ](?:cheats?|save),,game,1
 other,Audio.Description,Audio Description,(?:with[\-\._ ])?audio[\-\._ ]description,,movie,
+other,BDMV,Full disc (BDMV),,,,
 other,BONUS.TRACKS,Bonus Tracks,bonus[\-\._ ]tracks?,,music,1
 other,BONUS,Bonus,(?-i:BONUS),,,
 other,BOOKWARE,Bookware,,,education,1
