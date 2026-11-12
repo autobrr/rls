@@ -106,6 +106,12 @@ func FuzzParseString(f *testing.F) {
 	// a range in the bracket that closes the name
 	f.Add("[Grp] Show [1-13]")
 	f.Add("Show (01-12).mkv")
+	// a list of seasons, whole, cut short and at the end of the name
+	f.Add("Show (Season 1+2+3) [1080p]")
+	f.Add("Show S01+02 & 03, 04")
+	f.Add("Seasons 1 &")
+	f.Add("S1+")
+	f.Add("S1 , 2")
 	// the edges of the lexers that read the start and the end of a name
 	for _, s := range []string{
 		" ", "...", "-", "[]", "[[", "\x00", "\xff\xfe", "-GROUP", ".mkv",

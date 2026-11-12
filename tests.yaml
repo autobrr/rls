@@ -2891,6 +2891,19 @@
   audio: "DDP"
   channels: "5.1"
   group: "BTN"
+"[Anime Time] Black Lagoon (Complete Series) (Season 01+02+03+OST) [BD] [Dual Audio] [1080p][HEVC 10bit x265][AC3][Eng Sub] [Batch]":
+  type: "series"
+  title: "Black Lagoon"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "DUAL.AUDIO DD"
+  language: "ENGLiSH"
+  group: "Anime Time"
+  site: "Anime Time"
+  unused: "Complete Series OST Sub Batch"
 "Black White S01 2xDVD9 NTSC MPEG-2 DD2.0":
   type: "series"
   title: "Black White"
@@ -2901,6 +2914,19 @@
   audio: "DD"
   channels: "2.0"
   size: "DVD9"
+"[Anime Time] Blue Lock (Season 01 & 02) [Dual Audio] [BD] [1080p][HEVC 10bit x265][AAC][Eng Sub] [Batch]":
+  type: "series"
+  title: "Blue Lock"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "DUAL.AUDIO AAC"
+  language: "ENGLiSH"
+  group: "Anime Time"
+  site: "Anime Time"
+  unused: "Sub Batch"
 "[Suki Desu] Boku no Hero Academia (Season 1 - 3) [BD 1080p x265 HEVC 10bit][Eng-Sub][Judas] (My Hero Academia)":
   type: "series"
   title: "Boku no Hero Academia"
@@ -2963,6 +2989,20 @@
   day: 4
   codec: "H.264"
   group: "B0UNCE"
+"[Trix] Cat's Eye (1983) S01+02 (COMPLETE) (BD 1080p AV1 Opus) [Dual Subs] - Cats Eye キャッツ・アイ Season 1 & 2 (VOSTFR)":
+  type: "series"
+  title: "Cat's Eye"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1983
+  series: 1
+  codec: "AV1"
+  audio: "OPUS DUAL.AUDIO"
+  other: "COMPLETE"
+  language: "VOSTFR"
+  group: "Trix"
+  site: "Trix"
+  unused: "Subs Cats Eye キャッツ・アイ"
 "Cells.at.Work.S01.1080p.BluRay.FLAC2.0x265-Main10p-CTR":
   type: "series"
   title: "Cells at Work"
@@ -3555,6 +3595,17 @@
   other: "REMUX"
   group: "EPSiLON"
   ext: "mkv"
+"[Tenma] Major Henshū - Seasons 1 & 2 V2 - 1080p.AV1[Multiple Subtitle] [ENG][FRE-ADN][FRE-FANSUB]":
+  type: "series"
+  title: "Major Henshū"
+  resolution: "1080p"
+  series: 1
+  version: "v2"
+  codec: "AV1"
+  language: "MULTiSUB ENGLiSH FRENCH FANSUB"
+  group: "Tenma"
+  site: "Tenma"
+  unused: "ADN"
 "Married At First Sight AU S13E02 1080p AV1 10bit-MeGusta":
   type: "episode"
   title: "Married At First Sight AU"
@@ -4852,6 +4903,20 @@
   channels: "5.1"
   group: "NTb"
   ext: "mkv"
+"[EMBER] Solo Leveling (2024-2025) (Season 1 + 2) [BDRip] [1080p Dual Audio HEVC 10 bits DDP] (Ore dake Level Up na Ken) (Batch)":
+  type: "series"
+  title: "Solo Leveling"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 2024
+  yearend: 2025
+  series: 1
+  codec: "HEVC"
+  bitdepth: "10BIT"
+  audio: "DUAL.AUDIO DDP"
+  group: "EMBER"
+  site: "EMBER"
+  unused: "Ore dake Level Up na Ken Batch"
 "Sons.of.Anarchy.S01E03":
   type: "episode"
   title: "Sons of Anarchy"

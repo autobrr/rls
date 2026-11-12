@@ -387,6 +387,149 @@ func TestSeasonRange(t *testing.T) {
 	}
 }
 
+// TestSeasonList checks that the seasons of a list are all read when only the
+// first is written with a season word or an 'S', and that what looks like a
+// list and is not one keeps to the first season.
+func TestSeasonList(t *testing.T) {
+	tests := []struct {
+		name    string
+		seasons []int
+	}{
+		// a plus, with and without spaces
+		{"[Grp] Show (Season 1 + 2) [BDRip] [1080p]", []int{1, 2}},
+		{"[Grp] Show (Season 1+2+3) (Uncensored) [1080p]", []int{1, 2, 3}},
+		{"[Grp] Show (Season 01+02+03+04+05+Movies) [BD] [1080p]", []int{1, 2, 3, 4, 5}},
+		{"[Grp] Show [Season 1 + 2 + OVA] [BD 1080p]", []int{1, 2}},
+		{"[Grp] Show (S01+02) [BD][1080p]", []int{1, 2}},
+		{"[Grp] Show S01+02 (COMPLETE) (BD 1080p)", []int{1, 2}},
+		{"[Grp] Show (S01+02+OVAs+Movie) (BD 1080p)", []int{1, 2}},
+		// an ampersand or a comma
+		{"[Grp] Show (Season 1 & 2) [BD] [1080p]", []int{1, 2}},
+		{"[Grp] Show (Season 01 & 02) [BD] [1080p]", []int{1, 2}},
+		{"[Grp] Show (Season 1 & 2 + Movie + NCOP) [BD]", []int{1, 2}},
+		{"[Grp] Show Season 1,2,3,4,5 - 1080p BluRay", []int{1, 2, 3, 4, 5}},
+		{"Show S01 & 02 1080p BluRay x264-GRP", []int{1, 2}},
+		// the plural, which is read in front of a list as in front of a range
+		{"[Grp] Show - Seasons 1 & 2 V2 - 1080p.AV1", []int{1, 2}},
+		{"[Grp] Show (Seasons 1+2) [BD 1080p]", []int{1, 2}},
+		{"Show.Seasons.1+2.1080p.BluRay.x264-GRP", []int{1, 2}},
+		// a space and a hyphen, a bracket or a resolution after the number
+		{"[Grp] Show Season 1 & 2 - Batch [1080p]", []int{1, 2}},
+		{"[Grp] Show Season 1 & 2 (Batch) [1080p]", []int{1, 2}},
+		{"[Grp] Show Season 1 & 2 1080p BluRay", []int{1, 2}},
+		// a word after the number: the number is tight to the list or
+		// padded, or the seasons are in the plural
+		{"[Grp] Show Season 1+2 Batch [1080p]", []int{1, 2}},
+		{"[Grp] Show Season 1 , 2 , 3 [1080p]", []int{1, 2, 3}},
+		{"[Grp] [Show Season 1 & 2 ] [1080p]", []int{1, 2}},
+		{"[Grp] Show Season 1,2,3 BluRay 1080p", []int{1, 2, 3}},
+		{"[Grp] Show S01 + 02 Batch [1080p]", []int{1, 2}},
+		{"[Grp] Show Seasons 1 & 2 Batch [1080p]", []int{1, 2}},
+		{"Show.S01+02.WEB.1080p.x264-GRP", []int{1, 2}},
+		// the end of the name
+		{"[Grp] Show Season 1 + 2", []int{1, 2}},
+		{"[Grp] Show S01+02.mkv", []int{1, 2}},
+		// a title that ends in a number
+		{"[Grp] Show 86 Season 1+2 [1080p]", []int{1, 2}},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
+		}
+		if r.Type != Series || r.Series != test.seasons[0] || !strings.HasPrefix(r.Title, "Show") {
+			t.Errorf("%q: expected series %d of Show, got: %s %d of %q", test.name, test.seasons[0], r.Type, r.Series, r.Title)
+		}
+		if r.HasEpisode() {
+			t.Errorf("%q: expected no episode, got: %q", test.name, r.EpisodeSpans())
+		}
+		for _, tag := range r.Unused() {
+			if s := tag.Text(); s == "&" || strings.Trim(s, "0123456789") == "" {
+				t.Errorf("%q: expected no number left over, got: %q", test.name, s)
+			}
+		}
+		if strings.ContainsAny(r.Subtitle, "0123456789&") {
+			t.Errorf("%q: expected no number in the subtitle, got: %q", test.name, r.Subtitle)
+		}
+		if s := fmt.Sprintf("%o", r); s != test.name {
+			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
+	}
+	// the number after the season is not a season: it may count the word
+	// after it, it is measured in a unit, it is not the higher one, it is
+	// padded where the one before it is not, it is 90 or more, or it goes on
+	// as another number or tag. And a number or a number word in front makes
+	// the season word part of a title
+	for _, test := range []struct {
+		name    string
+		seasons []int
+	}{
+		{"[Grp] Show Season 1 + 2 OVAs [1080p]", []int{1}},
+		{"[Grp] Show Season 1 & 2 Movies [1080p]", []int{1}},
+		{"[Grp] Show Season 1 & 2 BluRay 1080p", []int{1}},
+		{"[Grp] Show S01, 10 Bit HEVC [1080p]", []int{1}},
+		{"[Grp] Show S01, 12 GB [1080p]", []int{1}},
+		{"[Grp] Show S1,12 GB [1080p]", []int{1}},
+		{"[Grp] Show S01, 2,5 GB [1080p]", []int{1}},
+		{"[Grp] Show S01+24.MB [1080p]", []int{1}},
+		{"[Grp] Show S01 + 25 fps [1080p]", []int{1}},
+		{"[Grp] Show S01+2 TiB [1080p]", []int{1}},
+		{"[Grp] Show S01 & 02 KiB [1080p]", []int{1}},
+		{"[Grp] Show S01+2 Episodes [1080p]", []int{1}},
+		{"[Grp] Show Season 1+2 OVAs [1080p]", []int{1}},
+		{"[Grp] Show S01,2 Specials [1080p]", []int{1}},
+		{"[Grp] Show S01 + 02 Discs [1080p]", []int{1}},
+		{"[Grp] Show Season 01&45 OVA [1080p]", []int{1}},
+		{"[Grp] Show S08,25 Part 2 [1080p]", []int{8}},
+		{"Show.S01+02-GRP", []int{1}},
+		{"[Grp] Show S1,45 Hours [1080p]", []int{1}},
+		{"[Grp] Show S01, 12.2020 [1080p]", []int{1}},
+		{"[Grp] Show S01 & 2.5000 [1080p]", []int{1}},
+		{"[Grp] Show S01, 24 12 2020 [1080p]", []int{1}},
+		{"[Grp] Show S1+2-12", []int{1}},
+		{"[Grp] Show Season 1+2-Batch", []int{1}},
+		{"[Grp] Show S01+2+03 [1080p]", []int{1, 2}},
+		{"[Grp] Show Season 2 + 1 [1080p]", []int{2}},
+		{"[Grp] Show S2+04 [1080p]", []int{2}},
+		{"[Grp] Show S0+01 [1080p]", []int{0}},
+		{"[Grp] Show S01+99 [1080p]", []int{1}},
+		{"[Grp] Show S01 + 5.1 [1080p]", []int{1}},
+		{"[Grp] Show S1, 10bit [1080p]", []int{1}},
+		{"[Grp] Show S01+02-12 [1080p]", []int{1}},
+		{"[Grp] Show S01 + 13.95GB [1080p]", []int{1}},
+		{"[Grp] Show S01 + 12,5GB [1080p]", []int{1}},
+		{"[Grp] Show S01, 25.976fps [1080p]", []int{1}},
+		{"[Grp] Show S01 + 2.35:1 [1080p]", []int{1}},
+		{"[Grp] Show S01 & 2/3 [1080p]", []int{1}},
+		{"Show.S01.1080p.BluRay.x264-GRP", []int{1}},
+		{"[Grp] Show Second Season 1+2 [1080p]", []int{2}},
+		{"The Four Seasons 1 & 2 1080p BluRay x264-GRP", nil},
+		{"The Four-Seasons 1 & 2 1080p BluRay x264-GRP", nil},
+		{"The 4 Seasons 1 & 2 1080p BluRay x264-GRP", nil},
+		{"The (Four) Seasons 1 & 2 1080p BluRay x264-GRP", nil},
+		{"Show.Seasons.1080p.BluRay.x264-GRP", nil},
+		{"Artist-Seasons_1_&_2-WEB-FLAC-2020-GRP", nil},
+	} {
+		r := ParseString(test.name)
+		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
+		}
+		if s := fmt.Sprintf("%o", r); s != test.name {
+			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
+	}
+	// a date after the season keeps its day and month
+	for _, name := range []string{
+		"Show S01, 24.12.2020 1080p WEB",
+		"Show.S01,24.12.2020.1080p.WEB.H264-GRP",
+		"Show S01 & 24.12.2020",
+	} {
+		if r := ParseString(name); r.Year != 2020 || r.Month != 12 || r.Day != 24 || !slices.Equal(r.Seasons(), []int{1}) {
+			t.Errorf("%q: expected season 1 and 2020-12-24, got: %v and %d-%d-%d", name, r.Seasons(), r.Year, r.Month, r.Day)
+		}
+	}
+}
+
 // TestSeasonZeroFirst checks that Series is the first season the name writes
 // when that season is 0, and not the season of a second numbering after it.
 func TestSeasonZeroFirst(t *testing.T) {

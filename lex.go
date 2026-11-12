@@ -416,18 +416,60 @@ func NewSeriesLexer(strs ...string) Lexer {
 				// or a tilde are the ends of a range of seasons ('S01-03',
 				// 'Season 1-3', 'Seasons 1~7', '(Season 1 - 3)'), written as
 				// two tags the way 'S01-S03' is, for Release.Seasons to fill
-				// in. The plural is read in front of a range and nowhere else
+				// in.
+				//
+				// Higher numbers after a plus, an ampersand or a comma are the
+				// other seasons of a list ('Season 1+2+3', 'S01+02', 'Seasons
+				// 1 & 2'). Each is a tag of its own, and the text of a tag
+				// runs up to the next number, so that it ends in what sets
+				// the two apart.
+				//
+				// The plural is read in front of a range or a list and
+				// nowhere else
 				if len(series) != 0 && len(episode) == 0 && len(version) == 0 && len(disc) == 0 && len(multi) == 0 {
-					sep, last := seasonRangeEnd(src, s, series, i, n)
-					switch {
-					case last != 0:
+					plural := len(s) > 7 && (s[6] == 's' || s[6] == 'S') && (s[1] == 'e' || s[1] == 'E')
+					if sep, last := seasonRangeEnd(src, s, series, i, n); last != 0 {
 						tags = append(
 							tags,
 							newTag(src, buf, TagTypeSeries, nil, src[i-len(s):i+sep], series, nil),
 							newTag(src, buf, TagTypeSeries, nil, src[i+sep:i+sep+last], src[i+sep:i+sep+last], nil),
 						)
 						return append(start, tags...), end, i + sep + last, n, true
-					case len(s) > 7 && (s[6] == 's' || s[6] == 'S') && (s[1] == 'e' || s[1] == 'E'):
+					}
+					// from is where the tag at hand starts, and j where its
+					// number ends
+					from, j, num := i-len(s), i, series
+					if c := src[j-1]; c < '0' || c > '9' {
+						j--
+					}
+					for {
+						a, b := seasonListNext(src, num, j, n, plural)
+						if b == 0 {
+							break
+						}
+						// a number or a number word in front of the season
+						// word makes it a season of its own or a title
+						// ('Second Season 1+2', 'The Four Seasons 1 & 2', 'The
+						// 4 Seasons 1 & 2'), which is looked at once, when a
+						// list follows. A title can end in a number in front
+						// of the singular ('Show 86 Season 1+2')
+						if len(tags) == 0 {
+							l := from
+							for l > 0 && strings.IndexByte(" _.-)]", src[l-1]) != -1 {
+								l--
+							}
+							if afterNumberWord(src, l) || plural && l > 0 && src[l-1] >= '0' && src[l-1] <= '9' {
+								break
+							}
+						}
+						tags = append(tags, newTag(src, buf, TagTypeSeries, nil, src[from:a], num, nil))
+						from, j, num = a, b, src[a:b]
+					}
+					switch {
+					case len(tags) != 0:
+						tags = append(tags, newTag(src, buf, TagTypeSeries, nil, src[from:j], num, nil))
+						return append(start, tags...), end, j, n, true
+					case plural:
 						return start, end, i - len(s), n, false
 					}
 				}
@@ -611,17 +653,198 @@ func seasonRangeEnd(src, s, series []byte, i, n int) (int, int) {
 			return 0, 0
 		}
 	}
-	// the word in front of the season
+	if afterNumberWord(src, l) {
+		return 0, 0
+	}
+	return j - i, k - j
+}
+
+// afterNumberWord reports whether the word that ends at l in src is a number
+// or an ordinal, which makes the season after it a season of its own or a
+// title ('Second Season', 'The Four Seasons').
+func afterNumberWord(src []byte, l int) bool {
 	m := l
 	for m > 0 && src[m-1]|0x20 >= 'a' && src[m-1]|0x20 <= 'z' {
 		m--
 	}
-	switch strings.ToLower(string(src[m:l])) {
-	case "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "final",
-		"two", "three", "four", "five", "six", "seven", "eight", "nine", "ten":
+	// the longest of the words has seven letters
+	if l-m < 3 || l-m > 7 {
+		return false
+	}
+	for _, w := range [...]string{
+		"first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "final",
+		"two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+	} {
+		if len(w) == l-m && strings.EqualFold(w, string(src[m:l])) {
+			return true
+		}
+	}
+	return false
+}
+
+// seasonListNext looks for the next season of a list after a season whose
+// number prev ends at j, and returns where the next number starts and ends in
+// src, or 0 and 0 when the list does not go on. plural is whether the season
+// the list starts with was written 'Seasons'.
+//
+// A plus, an ampersand or a comma sets the two apart, with or without spaces,
+// and the next season is the higher number, below 90 as a season is. It is
+// read when the list plainly goes on or ends after it:
+//
+//   - at a closing bracket, at the next plus, ampersand or comma, or at the
+//     end of the name ('(Season 1 + 2)', 'Season 1+2+3', 'Season 1 & 2 +
+//     Movie')
+//   - in front of spaces or a dot and then one of those, an opening bracket, a
+//     hyphen with a space after it or a resolution ('Season 1 + 2 + OVA',
+//     'S01+02 (Complete)', 'Season 1 & 2 - Batch', 'Season 1 & 2 1080p')
+//   - in front of spaces or a dot and then a word, when no space stands on
+//     either side of what sets the number apart, or the number is padded with
+//     a zero, and the word is not one it would count ('Season 1,2,3 Batch',
+//     'S01 + 02 Batch', 'S01+02.WEB'), or when the seasons are in the plural
+//     ('Seasons 1 & 2 Batch')
+//
+// Anything else after the number leaves it alone, since it may count the word
+// after it or be the start of another number: 'Season 1 + 2 OVAs', 'S01+2
+// Episodes', 'S01, 10 Bit', 'S01, 24.12.2020', 'S01+02-12', 'S01 & 5.1'. A
+// unit in the place of the word does too ('S1,12 GB', 'Seasons 1+4 TiB'), and
+// so does a zero in front of the number when the one before it has a single
+// digit ('S2+04').
+//
+// When the rest of the name was read already and starts with a hyphen, the
+// number is left alone as well ('S01+02-GRP'), as the season in front of a
+// range is.
+//
+// A number word in front of the first season makes it no list at all ('The
+// Four Seasons 1 & 2'), which is the caller's to check.
+func seasonListNext(src, prev []byte, j, n int, plural bool) (int, int) {
+	end := len(src)
+	space := func(k int) bool { return k < end && (src[k] == ' ' || src[k] == '_') }
+	digit := func(k int) bool { return k < end && src[k] >= '0' && src[k] <= '9' }
+	letter := func(k int) bool { return k < end && (src[k]|0x20 >= 'a' && src[k]|0x20 <= 'z' || src[k] >= 0x80) }
+	// resolution reports whether three or four digits and a 'p' or an 'i'
+	// start at k
+	resolution := func(k int) bool {
+		m := k
+		for digit(m) {
+			m++
+		}
+		return (m-k == 3 || m-k == 4) && m < end && (src[m]|0x20 == 'p' || src[m]|0x20 == 'i')
+	}
+	k := j
+	for space(k) {
+		k++
+	}
+	if k >= n || src[k] != '+' && src[k] != '&' && src[k] != ',' {
 		return 0, 0
 	}
-	return j - i, k - j
+	// tight is whether no space stands on either side of it
+	tight := k == j && !space(k+1)
+	for k++; space(k); k++ {
+	}
+	a := k
+	for k < n && digit(k) {
+		k++
+	}
+	if k == a || k-a > 2 || k-a == 2 && src[a] == '9' || atoi(string(src[a:k])) <= atoi(string(prev)) || src[a] == '0' && len(prev) != 2 {
+		return 0, 0
+	}
+	// m is where what follows the number starts
+	m := k
+	switch {
+	case k == end:
+		return a, k
+	case k == n:
+		// the rest of the name is read already, as the group when a hyphen
+		// starts it ('S1+2-12')
+		if src[k] == '-' {
+			return 0, 0
+		}
+		return a, k
+	case src[k] == ')', src[k] == ']', src[k] == '}', src[k] == '+', src[k] == '&':
+		return a, k
+	case src[k] == ',':
+		// a comma and digits in front of a unit are the decimals of a size
+		// ('12,5GB', '2,5 GB')
+		for m++; digit(m); m++ {
+		}
+		if m == k+1 {
+			return a, k
+		}
+		for space(m) {
+			m++
+		}
+		if e := wordEnd(src, m); e != m && isUnit(src[m:e]) || m < end && letter(m) && m > 0 && digit(m-1) {
+			return 0, 0
+		}
+		return a, k
+	case src[k] == '.':
+		m++
+	case space(k):
+		for space(m) {
+			m++
+		}
+	default:
+		return 0, 0
+	}
+	switch {
+	case m == end, strings.IndexByte("()[]{}+&,", src[m]) != -1, src[m] == '-' && space(m+1), resolution(m):
+		return a, k
+	case !letter(m):
+		return 0, 0
+	}
+	// a word: the number may count it
+	word := src[m:wordEnd(src, m)]
+	switch {
+	case isUnit(word):
+		return 0, 0
+	case plural:
+		return a, k
+	case !tight && src[a] != '0', isCounted(word):
+		return 0, 0
+	}
+	return a, k
+}
+
+// isCounted reports whether the word is one that a number in front of it
+// counts, in a name that lists what a batch holds: a word in the plural ('2
+// OVAs', '24 Episodes'), or one of those that are written in the singular too
+// ('2 OVA', '25 Part 2').
+func isCounted(word []byte) bool {
+	if n := len(word); n > 2 && word[n-1]|0x20 == 's' {
+		return true
+	}
+	for _, w := range [...]string{"ova", "oad", "ona", "oav", "movie", "film", "special", "episode", "ep", "part", "disc", "cd", "dvd", "bd", "pv"} {
+		if len(w) == len(word) && strings.EqualFold(w, string(word)) {
+			return true
+		}
+	}
+	return false
+}
+
+// wordEnd returns the end of the run of ASCII letters that starts at i in
+// src.
+func wordEnd(src []byte, i int) int {
+	for i < len(src) && src[i]|0x20 >= 'a' && src[i]|0x20 <= 'z' {
+		i++
+	}
+	return i
+}
+
+// isUnit reports whether the word is a unit that a number in front of it is
+// measured in, ie the 'GB' of '12 GB' or the 'bit' of '10 bit'.
+func isUnit(word []byte) bool {
+	if len(word) < 2 || len(word) > 7 {
+		return false
+	}
+	for _, u := range [...]string{
+		"gb", "mb", "kb", "tb", "gib", "mib", "kib", "tib", "bit", "bits", "fps", "hz", "khz", "kbps", "mbps", "ch",
+		"min", "mins", "minutes", "hr", "hrs", "hour", "hours",
+	} {
+		if len(u) == len(word) && strings.EqualFold(u, string(word)) {
+			return true
+		}
+	}
+	return false
 }
 
 // NewIDLexer creates a tag lexer for a music id.

@@ -278,8 +278,9 @@ func (r Release) HasEpisode() bool {
 // Seasons returns the seasons the name gives, each once and in order. Two
 // seasons written with no episode and a hyphen or a tilde between them are a
 // range ('S01-S03', 'S01-03', 'Seasons 1~7', '(Season 1 - 3)'), and the
-// seasons in between are included, up to maxRangeFill of them. A Release
-// built by hand with a Series and no tags gives that season.
+// seasons in between are included, up to maxRangeFill of them. The seasons of
+// a list are those it writes ('S01+S02', 'Season 1+2+3', 'Seasons 1 & 2'). A
+// Release built by hand with a Series and no tags gives that season.
 func (r Release) Seasons() []int {
 	var v []int
 	fill := maxRangeFill
