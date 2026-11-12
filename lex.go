@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
+	"regexp/syntax"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/autobrr/rls/reutil"
 	"github.com/autobrr/rls/taginfo"
@@ -1677,8 +1679,17 @@ func NewMetaLexer(strs ...string) Lexer {
 		}
 		openFirst[l], closer[l] = op[0], []byte(cl)
 	}
-	var delim *regexp.Regexp
+	// delim is the delimiter regexp of the parser as a table of the bytes it
+	// matches, since it is only ever asked about one byte
+	var delim [256]bool
 	var shortTags map[string]bool
+	// narrow is whether the suffix of a pattern can be searched for from its
+	// last opening literal on, and never the bytes that cannot stand between
+	// that and the closing literal: see suffixFrom
+	narrow, never := make([]bool, o), make([][256]bool, o)
+	for l := 0; l < o; l++ {
+		narrow[l], never[l] = metaNever(strs[l*4+1], strs[l*4+2], strs[l*4+3])
+	}
 	// lead matches a leading bracket whose contents contain a space or a
 	// plus. fansub release groups regularly do ('[Anime Time]', '[Mad Le
 	// Zisell]', '[SubsPlus+]'), but the general site pattern disallows both
@@ -1744,7 +1755,13 @@ func NewMetaLexer(strs ...string) Lexer {
 	}
 	return TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, re *regexp.Regexp, short map[string]bool) {
-			delim, shortTags = re, short
+			shortTags = short
+			for c := range delim {
+				delim[c] = re != nil && re.Match([]byte{byte(c)})
+			}
+			if noGates {
+				clear(narrow)
+			}
 			for typ, v := range infos {
 				for _, info := range v {
 					// a group's name is what the site may well be
@@ -1785,7 +1802,7 @@ func NewMetaLexer(strs ...string) Lexer {
 				prev[k] = true
 			}
 			// leading bracket release group containing a space
-			if i == 0 {
+			if i == 0 && n != 0 && src[0] == '[' {
 				if g := lead.FindSubmatch(src[i:n]); g != nil {
 					// the value is the trimmed contents; an internal space or
 					// a plus is what distinguishes a group from a padded
@@ -1856,7 +1873,7 @@ func NewMetaLexer(strs ...string) Lexer {
 					}
 					start = append(start, newTag(src, buf, TagTypeMeta, nil, m[0], []byte(k), v))
 					i = i + len(m[0]) - 1
-				} else if !delim.Match(src[i : i+1]) {
+				} else if !delim[src[i]] {
 					break
 				} else {
 					d = append(d, src[i])
@@ -1877,7 +1894,13 @@ func NewMetaLexer(strs ...string) Lexer {
 					if gate && !bytes.HasSuffix(tail, closer[l]) {
 						continue
 					}
-					if m = suffix[l].FindSubmatch(src[lo:n]); m != nil {
+					from := lo
+					if gate && narrow[l] {
+						if from = suffixFrom(src, lo, lo+len(tail)-len(closer[l]), openFirst[l], &never[l]); from == -1 {
+							continue
+						}
+					}
+					if m = suffix[l].FindSubmatch(src[from:n]); m != nil {
 						if k, v = strs[l*4], m[1]; hasTwo[l] {
 							k, v = string(m[1]), m[2]
 						}
@@ -1897,7 +1920,7 @@ func NewMetaLexer(strs ...string) Lexer {
 					}
 					end = append(end, newTag(src, buf, TagTypeMeta, nil, m[0], []byte(k), v))
 					n = n - len(m[0]) + 1
-				} else if !delim.Match(src[n-1:n]) || src[n-1] == '+' && plusTag(src[i:n]) {
+				} else if !delim[src[n-1]] || src[n-1] == '+' && plusTag(src[i:n]) {
 					break
 				} else {
 					// the pending delimiters are the bytes right after n, so
@@ -1913,6 +1936,124 @@ func NewMetaLexer(strs ...string) Lexer {
 		},
 		Once: true,
 	}
+}
+
+// metaNever returns the bytes that cannot stand between the opening literal
+// of a meta pattern and its closing literal: those that are no whitespace, no
+// byte of the opening literal and nothing the value regexp can match. ok is
+// false when that cannot be said: when the value has an assertion in it,
+// which reads the text around a match, and when the value is not a regexp by
+// itself, so that the pattern is not the literals with the value in between
+// ('a|b' makes it one half or the other).
+func metaNever(open, cl, value string) (ok bool, never [256]bool) {
+	tree, err := syntax.Parse(value, syntax.Perl)
+	if err != nil || open == "" || cl == "" {
+		return false, never
+	}
+	// the value means the same in the pattern with a group around it: the
+	// two compile to the same program
+	whole := func(value string) string {
+		re, err := syntax.Parse(`\s*\Q`+open+`\E\s*`+value+`\s*\Q`+cl+`\E\s*$`, syntax.Perl)
+		if err != nil {
+			return ""
+		}
+		prog, err := syntax.Compile(re.Simplify())
+		if err != nil {
+			return ""
+		}
+		return prog.String()
+	}
+	if s := whole(value); s == "" || s != whole(`(?:`+value+`)`) {
+		return false, never
+	}
+	var can [256]bool
+	// a rune outside ASCII is any of the bytes outside it
+	high := func() {
+		for c := 0x80; c < len(can); c++ {
+			can[c] = true
+		}
+	}
+	ok = true
+	var walk func(*syntax.Regexp)
+	walk = func(re *syntax.Regexp) {
+		switch re.Op {
+		case syntax.OpLiteral:
+			for _, r := range re.Rune {
+				if r >= 0x80 {
+					high()
+					continue
+				}
+				can[r] = true
+				if re.Flags&syntax.FoldCase == 0 {
+					continue
+				}
+				for f := unicode.SimpleFold(r); f != r; f = unicode.SimpleFold(f) {
+					if f >= 0x80 {
+						high()
+						continue
+					}
+					can[f] = true
+				}
+			}
+		case syntax.OpCharClass:
+			for k := 0; k+1 < len(re.Rune); k += 2 {
+				for r := re.Rune[k]; r <= re.Rune[k+1] && r < 0x80; r++ {
+					can[r] = true
+				}
+				if re.Rune[k+1] >= 0x80 {
+					high()
+				}
+			}
+		case syntax.OpAnyChar, syntax.OpAnyCharNotNL:
+			for c := range can {
+				can[c] = true
+			}
+		case syntax.OpEmptyMatch, syntax.OpNoMatch:
+		case syntax.OpCapture, syntax.OpStar, syntax.OpPlus, syntax.OpQuest, syntax.OpRepeat, syntax.OpConcat, syntax.OpAlternate:
+			for _, sub := range re.Sub {
+				walk(sub)
+			}
+		default:
+			// an assertion
+			ok = false
+		}
+	}
+	walk(tree)
+	for c := range never {
+		never[c] = !can[c] && !metaSpace(byte(c)) && strings.IndexByte(open, byte(c)) == -1
+	}
+	return ok, never
+}
+
+// suffixFrom returns where a search for the suffix of a meta pattern in
+// src[lo:] can begin and still find what a search of all of it finds, or -1
+// when it finds nothing. cl is where the closing literal begins that the
+// suffix ends in, open the first byte of the opening literal, which is no
+// whitespace, and never what cannot stand between the two.
+//
+// A match is whitespace, the opening literal, whitespace, the value,
+// whitespace and the closing literal at cl. So it begins after the last byte
+// before cl that none of those can hold, and its opening literal begins at or
+// after the first byte from there on that is the first of that literal. The
+// leftmost match then begins no earlier than the whitespace in front of that
+// byte, and without such a byte there is no match.
+func suffixFrom(src []byte, lo, cl int, open byte, never *[256]bool) int {
+	from := lo
+	for k := cl - 1; k >= lo; k-- {
+		if never[src[k]] {
+			from = k + 1
+			break
+		}
+	}
+	p := bytes.IndexByte(src[from:cl], open)
+	if p == -1 {
+		return -1
+	}
+	p += from
+	for p > from && metaSpace(src[p-1]) {
+		p--
+	}
+	return p
 }
 
 // metaSpace reports whether c is matched by \s.
