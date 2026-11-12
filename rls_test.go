@@ -1280,3 +1280,29 @@ func groupInfos() map[string][]*taginfo.Taginfo {
 		"group": groups,
 	}
 }
+
+// TestLeadingGroupMark checks that a hyphenated word after the last bracket
+// gives way to the group in the leading bracket only when it begins with the
+// initials of that group, and is a tag and the group in any other name.
+func TestLeadingGroupMark(t *testing.T) {
+	tests := []struct {
+		s     string
+		group string
+		other []string
+	}{
+		{"[Hakata Ramen] High Score Girl (S2) 02 [1080p HEVC Sub-1x] HR-DR", "Hakata Ramen", nil},
+		{"[TGx] Movie (2020) [1080p] REPACK-GRP", "GRP", []string{"REPACK"}},
+		{"[TGx] Show S01E02 [1080p WEB-DL] PROPER-NTb", "NTb", []string{"PROPER"}},
+		{"[TGx] Movie (2020) [2160p UHD BluRay] REMUX-FraMeSToR", "FraMeSToR", []string{"REMUX"}},
+		{"[Group] Movie (2010) [1080p] HR-GRP", "GRP", []string{"HR"}},
+	}
+	for _, test := range tests {
+		r := ParseString(test.s)
+		if r.Group != test.group {
+			t.Errorf("%q: expected group %q, got: %q", test.s, test.group, r.Group)
+		}
+		if !slices.Equal(r.Other, test.other) {
+			t.Errorf("%q: expected other %q, got: %q", test.s, test.other, r.Other)
+		}
+	}
+}

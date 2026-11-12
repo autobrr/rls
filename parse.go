@@ -650,6 +650,15 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 		switch {
 		case r.tags[p].Is(TagTypeText), spaced && r.tags[p].Is(TagTypeSeries, TagTypeEdition):
 			tag = NewTag(TagTypeText, nil, []byte(s[len(d)-1:]), []byte(grp))
+		case len(d) == 1 && p == g-2 && r.tags[p].Is(TagTypeOther) && afterBracket(r.tags[p-1]) && isInitials(r.tags[p].v[0], r.tags[i]):
+			// a hyphenated word alone after the last bracket is the mark
+			// of the group in the leading bracket when it begins with the
+			// initials of that group ('[Hakata Ramen] Show (S2) 02 [1080p
+			// HEVC] HR-DR'). Its first half only looks like an other tag.
+			// Any other word there is the tag it looks like, with the
+			// group after it ('[TGx] Movie (2020) [1080p] REPACK-GRP')
+			r.tags[p] = r.tags[p].As(TagTypeText, nil)
+			tag = NewTag(TagTypeText, nil, []byte(s), []byte(grp))
 		case spaced || r.tags[p].Is(TagTypeLanguage):
 			// a builder that was not initialized has no language rows
 			if b.languagef == nil {
@@ -668,6 +677,35 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 			r.end = g + 1
 		}
 	}
+}
+
+// isInitials reports whether s is the first letters of the words of the site
+// that the meta tag site holds, without regard to case ('HR' of 'Hakata
+// Ramen'). A site of one word has no initials to speak of.
+func isInitials(s string, site Tag) bool {
+	_, v := site.Meta()
+	words := strings.FieldsFunc(v, func(r rune) bool {
+		return r == ' ' || r == '_' || r == '.' || r == '-'
+	})
+	if len(words) < 2 || len(words) != len(s) {
+		return false
+	}
+	for i, word := range words {
+		if !strings.EqualFold(word[:1], s[i:i+1]) {
+			return false
+		}
+	}
+	return true
+}
+
+// afterBracket reports whether tag is a delimiter that closes a bracket and
+// then a space ('] ', ') ').
+func afterBracket(tag Tag) bool {
+	if !tag.Is(TagTypeDelim) {
+		return false
+	}
+	d := strings.TrimRight(tag.Delim(), " \t")
+	return d != "" && len(d) < len(tag.Delim()) && strings.IndexByte("])}", d[len(d)-1]) != -1
 }
 
 // init fixes the initial tag set.

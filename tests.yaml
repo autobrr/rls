@@ -1237,6 +1237,16 @@
   codec: "x264"
   group: "GRP"
   site: "TGx"
+"[TGx] Movie.2020.1080p.WEB.x264.REPACK-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  other: "REPACK"
+  group: "GRP"
+  site: "TGx"
 "Movie (2020) [2160p HDR10+]":
   type: "movie"
   title: "Movie"
@@ -3439,6 +3449,16 @@
   title: "Hana-Kimi"
   series: 1
   other: "BDMV"
+"[Hakata Ramen] High Score Girl (Season 2) (Complete) [1080p HEVC] HR-DR":
+  type: "series"
+  title: "High Score Girl"
+  resolution: "1080p"
+  series: 2
+  codec: "HEVC"
+  other: "COMPLETE"
+  group: "Hakata Ramen"
+  site: "Hakata Ramen"
+  unused: "HR DR"
 "[SubsPlease]_Higurashi_no_Naku_Koro_ni_Sotsu_-_09_(1080p)_[C00D6C68]":
   type: "episode"
   title: "Higurashi no Naku Koro ni Sotsu"
