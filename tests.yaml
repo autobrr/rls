@@ -2061,6 +2061,11 @@
   channels: "5.1"
   other: "REMUX"
   group: "FraMeSToR"
+"Spider-Man (2002) [1080p]":
+  type: "movie"
+  title: "Spider-Man"
+  resolution: "1080p"
+  year: 2002
 "Spider-Man.No.Way.Home.Extras.Only.2022.1080p.Blu-Ray-NOGRP":
   type: "movie"
   title: "Spider-Man No Way Home"
@@ -5911,6 +5916,12 @@
   year: 2022
   audio: "FLAC LOSSLESS"
   group: "Single"
+"Artist-Album (2019) [FLAC]":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  year: 2019
+  audio: "FLAC"
 "[Sub] Artist-Album-2020":
   type: "music"
   artist: "Artist"
@@ -6438,6 +6449,11 @@
   title: "Final Draft 11"
   version: "v11.1.1"
   group: "TNT"
+"Half-Life (1998) [Linux]":
+  type: "app"
+  title: "Half-Life"
+  platform: "Linux"
+  year: 1998
 "Microsoft.Office.16.30.19101301.MAC-PTM":
   type: "app"
   title: "Microsoft Office"
@@ -6462,6 +6478,25 @@
   version: "v22.0.316"
   other: "REPACK"
   group: "me"
+"Some.Title-GROUP [macOS]":
+  type: "app"
+  title: "Some Title"
+  platform: "MacOS"
+  group: "GROUP"
+"Some Title-GROUP (2019) [Linux]":
+  type: "app"
+  title: "Some Title"
+  platform: "Linux"
+  year: 2019
+  group: "GROUP"
+"Some Title-GROUP (2019) [macOS / English / DMG]":
+  type: "app"
+  title: "Some Title"
+  platform: "MacOS"
+  year: 2019
+  language: "ENGLiSH"
+  group: "GROUP"
+  unused: "DMG"
 "35MM_Update_v1.0.2_NSW-LiGHTFORCE":
   type: "game"
   title: "35MM"
@@ -6611,6 +6646,12 @@
   version: "v1.2"
   language: "MULTi9"
   group: "PROPHET"
+"Some.Title-GROUP (2019) [PS4]":
+  type: "game"
+  title: "Some Title"
+  platform: "PS4"
+  year: 2019
+  group: "GROUP"
 "Super_Mario_3D_World_plus_Bowsers_Fury_Update_v1.1.0_NSW-VENOM":
   type: "game"
   title: "Super Mario 3D World plus Bowsers Fury"

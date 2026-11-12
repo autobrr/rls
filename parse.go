@@ -527,6 +527,8 @@ type TagBuilder struct {
 	resolutionf *finder
 	// languagef is the language find func.
 	languagef *finder
+	// groupf is the group find func.
+	groupf *finder
 }
 
 // NewTagBuilder creates a new release builder.
@@ -558,6 +560,7 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		audiof:      newFinder(TagTypeAudio, infos["audio"]...),
 		resolutionf: newFinder(TagTypeResolution, infos["resolution"]...),
 		languagef:   newFinder(TagTypeLanguage, infos["language"]...),
+		groupf:      newFinder(TagTypeGroup, infos["group"]...),
 	}
 }
 
@@ -601,6 +604,7 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	// initialize / fix tags
 	b.init(r)
 	b.fixTailGroup(r)
+	b.fixBracketGroup(r)
 	// collect tags into release
 	b.collect(r)
 	// guess type. The type the caller gave replaces the guess, which is still
@@ -815,6 +819,63 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 		}
 	}
 }
+
+// fixBracketGroup reads the group of a scene name that a tracker wrote out
+// with brackets of tags after it, ie 'Some.Title-GROUP (2019) [Windows /
+// Multi-Language / Full ISO]'. The group lexer reads no group in front of a
+// bracket, nor in front of the first year, as a hyphen there is part of the
+// title ('Spider-Man (2002) [1080p]', 'Artist-Album (2019) [FLAC]'). A
+// platform or an arch in the brackets is what sets the scene name apart, as a
+// film or a record names neither. A known group gives its type ('-CODEX').
+//
+// A game can still end its title in a hyphenated word ('Half-Life (1998)
+// [Windows]'), so the word is the group only when it is a known group, when
+// the name joins its words with dots or underscores as a scene name does, or
+// when it is not written as a word is ('GROUP', 'TiNYiSO', not 'Life').
+func (b *TagBuilder) fixBracketGroup(r *Release) {
+	if slices.ContainsFunc(r.tags, func(tag Tag) bool { return tag.Is(TagTypeGroup) }) {
+		return
+	}
+	o := slices.IndexFunc(r.tags, func(tag Tag) bool {
+		return tag.Is(TagTypeDelim) && strings.ContainsAny(tag.Delim(), "()[]{}")
+	})
+	if o < 3 || !r.tags[o-1].Is(TagTypeText) || r.tags[o-1].Retyped() ||
+		!r.tags[o-2].Is(TagTypeDelim) || r.tags[o-2].Delim() != "-" || r.tags[o-3].Is(TagTypeDelim, TagTypeWhitespace) {
+		return
+	}
+	if s := strings.TrimLeft(r.tags[o].Delim(), " ._"); s == "" || (s[0] != '(' && s[0] != '[') {
+		return
+	}
+	// only tags in brackets after it, one of which names what it runs on.
+	// One in front of the year was reset, and may yet be restored
+	var platform bool
+	for i, depth := o, 0; i < len(r.tags); i++ {
+		switch {
+		case r.tags[i].Is(TagTypeDelim):
+			depth = bracketDepth(r.tags[i].Delim(), depth)
+		case r.tags[i].Is(TagTypeWhitespace):
+		case depth == 0:
+			return
+		default:
+			platform = platform || r.tags[i].Is(TagTypePlatform, TagTypeArch) || r.tags[i].Was(TagTypePlatform, TagTypeArch)
+		}
+	}
+	if !platform {
+		return
+	}
+	tag := r.tags[o-1].as(TagTypeGroup, b.groupf)
+	dotted := slices.ContainsFunc(r.tags[:o-2], func(tag Tag) bool {
+		return tag.Is(TagTypeDelim) && (tag.Delim() == "." || tag.Delim() == "_")
+	})
+	if tag.Info() == nil && !dotted && plainWord.MatchString(tag.Group()) {
+		return
+	}
+	r.tags[o-1] = tag
+}
+
+// plainWord matches a word written as words are, in lower case after its
+// first letter.
+var plainWord = regexp.MustCompile(`^[A-Za-z][a-z]*$`)
 
 // isInitials reports whether s is the first letters of the words of the site
 // that the meta tag site holds, without regard to case ('HR' of 'Hakata
