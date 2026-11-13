@@ -385,8 +385,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 				// 1080p'). Right after the episode ('S01E01-E10.Season.1'),
 				// after a plus ('S01E01 Title + Season 2') or in a bracket
 				// ('S01E02 Title (Season 1)') it is a season
-				if len(series) != 0 && len(episode) == 0 && len(disc) == 0 && (s[0] == 's' || s[0] == 'S') && (s[1]|0x20 >= 'a' && s[1]|0x20 <= 'z') &&
-					inEpisodeTitle(start) {
+				if len(series) != 0 && len(episode) == 0 && len(disc) == 0 && seasonWord(s) && inEpisodeTitle(start) {
 					return start, end, i - len(s), n, false
 				}
 				// 'EP1168' is an episode, but 'EP2004' is a music release and
@@ -2164,6 +2163,12 @@ func tight(s, v []byte) bool {
 		a+len(v) < len(s) && strings.IndexByte("])}", s[a+len(v)]) != -1
 }
 
+// seasonWord reports whether s, the text of a series tag, writes the season as
+// a word ('Season 1', 'Series.2', 'Staffel_3') rather than as 'S01'.
+func seasonWord[T string | []byte](s T) bool {
+	return len(s) > 1 && s[0]|0x20 == 's' && s[1]|0x20 >= 'a' && s[1]|0x20 <= 'z'
+}
+
 // episodeTitleReach is how many tags in front of a season word inEpisodeTitle
 // looks through for the episode, which is a title of 32 words. It keeps a
 // name that repeats 'a Season 1' from taking time in the square of its length.
@@ -2175,7 +2180,8 @@ const episodeTitleReach = 64
 // wrote an episode ('S01E00 Meet the Queens of '), and no bracket opened after
 // that tag is still open. A plus lists what else the release holds ('S01E01
 // Title + Season 2'), and a bracket holds tags or a note ('S01E01 Title
-// (Includes Season 2)').
+// (Includes Season 2)'). After a date the season word is the season of a daily
+// episode, which episodeTitles also reads into its title.
 func inEpisodeTitle(start []Tag) bool {
 	k := len(start) - 1
 	if k < 1 || !start[k].Is(TagTypeDelim) || strings.ContainsAny(start[k].Delim(), "[](){}+") || !start[k-1].Is(TagTypeText) {

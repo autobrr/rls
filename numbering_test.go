@@ -769,6 +769,16 @@ func TestSeasonInEpisodeTitle(t *testing.T) {
 		{"Show S01E01 Title (Includes Season 2) 1080p WEB h264-GRP", "Title", []int{1, 2}},
 		{"Show.S01E01.Title.(Includes.Season.2).1080p.WEB.h264-GRP", "Title", []int{1, 2}},
 		{"Show.Season.1.S01E01.Pilot.1080p.WEB.h264-GRP", "Pilot", []int{1}},
+		// after the date of a daily episode the season stays one and is also
+		// a word of the title, where a range or a list ends the title
+		{"Show.2024.05.06.Title.Season.1.1080p.WEB.h264-GRP", "Title Season 1", []int{1}},
+		{"Show 2024-05-06 Title Season 1 1080p WEB h264-GRP", "Title Season 1", []int{1}},
+		{"Show.2024.05.06.Tournament.Season.40.720p.HDTV.x264-GRP", "Tournament Season 40", []int{40}},
+		{"Show.2024.05.06.The.Season.1.Recap.720p.HDTV.x264-GRP", "The Season 1 Recap", []int{1}},
+		{"Show.2024.05.06.Recap.Seasons.1-2.720p.HDTV.x264-GRP", "Recap", []int{1, 2}},
+		{"Show.2024.05.06.Season.1.720p.HDTV.x264-GRP", "", []int{1}},
+		{"Show.2024.05.06.Title.Season.1.Episode.5.720p.HDTV.x264-GRP", "Title", []int{1}},
+		{"Show.2024.05.06.Title.Season.1.Season.2.720p.HDTV.x264-GRP", "Title", []int{1, 2}},
 		{"Show.S01E01." + strings.Repeat("Word.", 20) + "Season.2.1080p.WEB.h264-GRP", strings.TrimSpace(strings.Repeat("Word ", 20)) + " Season 2", []int{1}},
 		{"Show.S01E01." + strings.Repeat("Word.", 40) + "Season.2.1080p.WEB.h264-GRP", strings.TrimSpace(strings.Repeat("Word ", 40)), []int{1, 2}},
 	}
