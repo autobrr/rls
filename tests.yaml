@@ -3427,6 +3427,18 @@
   codec: "x264"
   group: "FoV"
   site: "eztv"
+"Drag Race Philippines: Slaysian Royale S01E00 Meet the Queens of Season 1 1080p WOWP WEB-DL AAC 2.0 H.264-Kitsune":
+  type: "episode"
+  title: "Drag Race Philippines: Slaysian Royale"
+  subtitle: "Meet the Queens of Season 1"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "WOWP"
+  series: 1
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "Kitsune"
 "Drunk.History.(UK).S01.1080p.AMZN.WEB-DL.DD+2.0.H.264-Cinefeel":
   type: "series"
   title: "Drunk History"
