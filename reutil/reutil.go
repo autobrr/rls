@@ -15,7 +15,7 @@ func Join(quote bool, strs ...string) string {
 	if !quote {
 		copy(v, strs)
 	} else {
-		for i := 0; i < len(v); i++ {
+		for i := range v {
 			v[i] = `\Q` + strs[i] + `\E`
 		}
 	}

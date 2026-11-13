@@ -353,7 +353,7 @@ func eventWord(pw, w string) (int, bool) {
 // the vocabulary writes a word with a number in it ('r09' is "r#", '3rd' is
 // "#rd", 'r3g5' is "r#g#").
 func eventShape(w string) string {
-	if strings.IndexAny(w, "0123456789") == -1 {
+	if !strings.ContainsAny(w, "0123456789") {
 		return w
 	}
 	b := make([]byte, 0, len(w))

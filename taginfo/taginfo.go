@@ -262,7 +262,7 @@ type FindFunc func(string) *Taginfo
 func Find(infos ...*Taginfo) FindFunc {
 	n := len(infos)
 	return func(s string) *Taginfo {
-		for i := 0; i < n; i++ {
+		for i := range n {
 			if infos[i].Match(s) {
 				return infos[i]
 			}

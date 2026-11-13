@@ -2,11 +2,13 @@ package rls
 
 import (
 	"bufio"
+	"cmp"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -201,12 +203,7 @@ func TestAccuracyLabelled(t *testing.T) {
 					get("episodeTitle").add(MustNormalize(r.Subtitle) == MustNormalize(s))
 				}
 			}
-			keys := make([]string, 0, len(m))
-			for k := range m {
-				keys = append(keys, k)
-			}
-			sort.Strings(keys)
-			for _, k := range keys {
+			for _, k := range slices.Sorted(maps.Keys(m)) {
 				v := *m[k]
 				t.Logf("%-13s %4d/%-4d %5.1f%%", k, v.ok, v.total, v.pct())
 				if floor, ok := floors[name][k]; ok && v.pct() < floor {
@@ -266,11 +263,7 @@ func TestCorpusStructural(t *testing.T) {
 			}
 			t.Logf("%d names: no title %d (%.1f%%), no group/site %d (%.1f%%), checksum %d, hdr %d",
 				n, noTitle, 100*float64(noTitle)/float64(n), noGroup, 100*float64(noGroup)/float64(n), hasSum, hasHDR)
-			keys := make([]string, 0, len(typ))
-			for k := range typ {
-				keys = append(keys, k)
-			}
-			sort.Slice(keys, func(i, j int) bool { return typ[keys[i]] > typ[keys[j]] })
+			keys := slices.SortedFunc(maps.Keys(typ), func(a, b string) int { return cmp.Compare(typ[b], typ[a]) })
 			var b strings.Builder
 			for _, k := range keys {
 				if k == "" {

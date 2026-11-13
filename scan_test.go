@@ -3,13 +3,14 @@ package rls
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -53,8 +54,7 @@ func scan(t *testing.T, scanner Scanner, opts ...ReleaseScannerOption) {
 		}
 		prev = n
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	unused := struct {
 		count map[string]uint64
 		items map[string][]string
@@ -100,12 +100,12 @@ loop:
 			v: unused.count[k],
 		})
 	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].v > keys[j].v
+	slices.SortFunc(keys, func(a, b kv) int {
+		return cmp.Compare(b.v, a.v)
 	})
-	for i := 0; i < 2000 && i < len(keys); i++ {
+	for i := range min(2000, len(keys)) {
 		t.Logf("TOP %02d: %q %d", 2000-i, keys[i].k, keys[i].v)
-		for j := uint64(0); j < 10 && j < keys[i].v; j++ {
+		for j := range min(10, keys[i].v) {
 			t.Logf("    %02d: % 2d: %q", 2000-i, j, unused.items[keys[i].k][j])
 		}
 	}
@@ -178,8 +178,7 @@ func TestScanner(t *testing.T) {
 	const n = 50
 	lines := strings.Repeat("The.Matrix.1999.1080p.BluRay.x264-GRP\n", n)
 	s := NewScanner(WithWorkers(4))
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	if v := collect(t, s.ScanReader(ctx, strings.NewReader(lines)), 10*time.Second); len(v) != n {
 		t.Errorf("expected %d results, got: %d", n, len(v))
 	}
@@ -217,24 +216,22 @@ func TestScanner_panic(t *testing.T) {
 			const good = 100
 			// one more panicking line than there are workers
 			var buf strings.Builder
-			for i := 0; i <= workers; i++ {
+			for range workers + 1 {
 				buf.WriteString("BOOM.line\n")
 			}
-			for i := 0; i < good; i++ {
+			for range good {
 				buf.WriteString("The.Matrix.1999.1080p.BluRay.x264-GRP\n")
 			}
 			s := NewReleaseScanner(panicParser{DefaultParser}, WithWorkers(workers))
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			v := collect(t, s.ScanReader(ctx, strings.NewReader(buf.String())), 10*time.Second)
 			if len(v) != good {
 				t.Errorf("expected %d good results to survive, got: %d", good, len(v))
 			}
 			// the panics are reported, not swallowed
-			var err *ScanRecoverError
 			if e := s.Err(); e == nil {
 				t.Error("expected a ScanRecoverError, got nil")
-			} else if !errors.As(e, &err) {
+			} else if _, ok := errors.AsType[*ScanRecoverError](e); !ok {
 				t.Errorf("expected a *ScanRecoverError, got: %T", e)
 			}
 		})
@@ -244,7 +241,7 @@ func TestScanner_panic(t *testing.T) {
 func TestScanner_cancel(t *testing.T) {
 	lines := strings.Repeat("The.Matrix.1999.1080p.BluRay.x264-GRP\n", 10000)
 	s := NewScanner(WithWorkers(2))
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	ch := s.ScanReader(ctx, strings.NewReader(lines))
 	<-ch
 	cancel()
@@ -292,7 +289,7 @@ func TestScanner_reuse(t *testing.T) {
 		if len(v) != len(lines) {
 			t.Fatalf("run %d: expected %d results, got: %d", run, len(lines), len(v))
 		}
-		sort.Slice(v, func(i, j int) bool { return v[i].ID < v[j].ID })
+		slices.SortFunc(v, func(a, b *Scan) int { return cmp.Compare(a.ID, b.ID) })
 		for i, scan := range v {
 			if want := int64(i + 1); scan.ID != want {
 				t.Errorf("run %d: expected ID %d, got: %d", run, want, scan.ID)
@@ -338,7 +335,7 @@ func TestScanner_order(t *testing.T) {
 			}
 			seen[scan.ID] = true
 		}
-		sort.Slice(v, func(i, j int) bool { return v[i].ID < v[j].ID })
+		slices.SortFunc(v, func(a, b *Scan) int { return cmp.Compare(a.ID, b.ID) })
 		for i, scan := range v {
 			if scan.ID != int64(i+1) || scan.Line != lines[i] {
 				t.Fatalf("sorted position %d: expected ID %d and line %q, got: %d %q", i, i+1, lines[i], scan.ID, scan.Line)

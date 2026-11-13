@@ -8,7 +8,6 @@ import (
 	"math"
 	"regexp"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -233,11 +232,8 @@ func (r Release) SeriesEpisodes() [][]int {
 			}
 		}
 	}
-	sort.Slice(v, func(i, j int) bool {
-		if v[i][0] == v[j][0] {
-			return v[i][1] < v[j][1]
-		}
-		return v[i][0] < v[j][0]
+	slices.SortFunc(v, func(a, b []int) int {
+		return cmp.Or(cmp.Compare(a[0], b[0]), cmp.Compare(a[1], b[1]))
 	})
 
 	return slices.CompactFunc(v, slices.Equal[[]int])
@@ -709,7 +705,7 @@ func NewTag(typ TagType, f taginfo.FindFunc, b ...[]byte) Tag {
 		panic("must provide at least 2 values to NewTag")
 	}
 	v := make([]string, len(b))
-	for i := 0; i < len(b); i++ {
+	for i := range b {
 		// text and delimiter tags pass the same bytes as the original and the
 		// value; share the one string rather than copying it twice
 		if i > 0 && len(b[i]) == len(b[i-1]) && len(b[i]) > 1 && &b[i][0] == &b[i-1][0] {
@@ -821,12 +817,7 @@ func (tag Tag) Revert() Tag {
 
 // Is returns true when tag is of a type.
 func (tag Tag) Is(types ...TagType) bool {
-	for _, typ := range types {
-		if tag.typ == typ {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(types, tag.typ)
 }
 
 // Was returns true when the tag's previous type is one of types. A tag that
@@ -834,12 +825,7 @@ func (tag Tag) Is(types ...TagType) bool {
 // the two apart.
 func (tag Tag) Was(types ...TagType) bool {
 	prev := tag.Prev()
-	for _, typ := range types {
-		if prev == typ {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(types, prev)
 }
 
 // Info retrieves the tag's tag info.
@@ -1403,12 +1389,7 @@ const (
 
 // Is returns true when tag type is in types.
 func (typ TagType) Is(types ...TagType) bool {
-	for _, t := range types {
-		if typ == t {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(types, typ)
 }
 
 // Type is a release type.
@@ -1490,12 +1471,7 @@ func (typ Type) String() string {
 
 // Is returns true when the type is in types.
 func (typ Type) Is(types ...Type) bool {
-	for _, t := range types {
-		if typ == t {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(types, typ)
 }
 
 // Builder is the interface for release builders.
@@ -1668,7 +1644,7 @@ func compareTitle(a, b string) func() int {
 		a, b := MustNormalize(a), MustNormalize(b)
 		av, bv := strings.FieldsFunc(strings.ToLower(a), isBreakDelim), strings.FieldsFunc(strings.ToLower(b), isBreakDelim)
 		start, min := 0, 3
-		if len(av) > 0 && len(bv) > 0 && av[0] == bv[0] && contains([]string{"a", "an", "the"}, av[0]) {
+		if len(av) > 0 && len(bv) > 0 && av[0] == bv[0] && slices.Contains([]string{"a", "an", "the"}, av[0]) {
 			start, min = 1, 1
 		}
 		// compare fields up to a prefix length
