@@ -11,6 +11,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"regexp/syntax"
+	"strings"
+	"sync"
 )
 
 // columns is the columns count.
@@ -36,7 +39,13 @@ type Taginfo struct {
 	other  string
 	typ    int
 	excl   bool
-	re     *regexp.Regexp
+	// re compiles the regexp of the tag info when it is first asked for. A
+	// set of tag infos has hundreds of rows and a parse matches against few
+	// of them one by one, so compiling them all when they are loaded was
+	// most of the load.
+	re func() *regexp.Regexp
+	// vars is true when the tag or title holds a $1 to $9 placeholder.
+	vars bool
 }
 
 // New creates a new tag info.
@@ -49,10 +58,10 @@ func New(strs ...string) (*Taginfo, error) {
 	switch {
 	case tag == "":
 		return nil, errors.New("must define tag")
-	case title == "":
-		title = tag
 	case !ok:
 		return nil, fmt.Errorf("invalid type %q", typstr)
+	case title == "":
+		title = tag
 	}
 	info := &Taginfo{
 		tag:    tag,
@@ -61,11 +70,17 @@ func New(strs ...string) (*Taginfo, error) {
 		other:  other,
 		excl:   excl,
 		typ:    typ,
+		vars:   strings.Contains(tag, "$") || strings.Contains(title, "$"),
 	}
-	var err error
-	if info.re, err = regexp.Compile(`(?i)^(?:` + info.RE() + `)$`); err != nil {
+	// the regexp is checked here, where the error can be given, and compiled
+	// later
+	expr := `(?i)^(?:` + info.RE() + `)$`
+	if _, err := syntax.Parse(expr, syntax.Perl); err != nil {
 		return nil, fmt.Errorf("tag %q has invalid regexp %q", tag, re)
 	}
+	info.re = sync.OnceValue(func() *regexp.Regexp {
+		return regexp.MustCompile(expr)
+	})
 	return info, nil
 }
 
@@ -210,9 +225,34 @@ func (info *Taginfo) RE() string {
 	return `\Q` + info.tag + `\E`
 }
 
+// Expand returns the tag and title with $1 to $9 replaced by the capture
+// groups of the tag info's own regexp for s, which is a spelling it matches
+// (ie, 'MULTi$1' with 'multi5' is 'MULTi5'). A placeholder with no group is
+// dropped. Without placeholders, or when s does not match, the tag and title
+// are returned as they are.
+func (info *Taginfo) Expand(s string) (string, string) {
+	if !info.vars {
+		return info.tag, info.title
+	}
+	m := info.re().FindStringSubmatch(s)
+	if m == nil {
+		return info.tag, info.title
+	}
+	tag, title := info.tag, info.title
+	for i := 9; i > 0; i-- {
+		var v string
+		if i < len(m) {
+			v = m[i]
+		}
+		k := "$" + string(rune('0'+i))
+		tag, title = strings.ReplaceAll(tag, k, v), strings.ReplaceAll(title, k, v)
+	}
+	return tag, title
+}
+
 // Match matches the tag info to s.
 func (info *Taginfo) Match(s string) bool {
-	return info.re.MatchString(s)
+	return info.re().MatchString(s)
 }
 
 // FindFunc is the find signature..
