@@ -36,10 +36,10 @@ type release struct {
 type releaseOutput struct {
 	Type string `json:"type"`
 
-	Artist   string `json:"artist"`
-	Title    string `json:"title"`
-	Subtitle string `json:"subtitle"`
-	Alt      string `json:"alt"`
+	Artist   string   `json:"artist"`
+	Title    string   `json:"title"`
+	Subtitle string   `json:"subtitle"`
+	Alt      []string `json:"alt"`
 
 	Platform string `json:"platform"`
 	Arch     string `json:"arch"`
@@ -95,7 +95,7 @@ func rlsToOutput(rls rls.Release) releaseOutput {
 		Type:       rls.Type.String(),
 		Title:      rls.Title,
 		Subtitle:   rls.Subtitle,
-		Alt:        rls.Alt,
+		Alt:        orEmpty(rls.Alt),
 		Platform:   rls.Platform,
 		Arch:       rls.Arch,
 		Source:     rls.Source,

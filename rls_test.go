@@ -1147,7 +1147,8 @@ func buildRls(r Release) rls {
 		Artist:   r.Artist,
 		Title:    r.Title,
 		Subtitle: r.Subtitle,
-		Alt:      r.Alt,
+		// An element never holds the word AKA, so the join keeps the names apart.
+		Alt: strings.Join(r.Alt, " AKA "),
 
 		Platform: r.Platform,
 		Arch:     r.Arch,
@@ -1315,32 +1316,53 @@ func TestLeadingGroupMark(t *testing.T) {
 	}
 }
 
-// TestSplitAKA checks that a title splits on an all upper or all lower case
-// 'AKA' into the first name and the other names, that empty names are
-// dropped, and that a title with one or two names does not allocate.
-func TestSplitAKA(t *testing.T) {
+// TestAlt checks that each other name of a release is its own element of
+// Alt, which tests.yaml does not show because it joins them.
+func TestAlt(t *testing.T) {
 	tests := []struct {
-		s, title, alt string
-		allocs        float64
+		s   string
+		alt []string
 	}{
-		{"Alpha Film", "Alpha Film", "", 0},
-		{"Wakanda Osaka", "Wakanda Osaka", "", 0},
-		{"Mister Aka Manson", "Mister Aka Manson", "", 0},
-		{"Alpha aKa Beta", "Alpha aKa Beta", "", 0},
-		{"Alpha AKAs Beta", "Alpha AKAs Beta", "", 0},
-		{"Alpha Film AKA Beta Film", "Alpha Film", "Beta Film", 0},
-		{"Alpha Film aka Beta Film", "Alpha Film", "Beta Film", 0},
-		{"Alpha AKA Beta AKA Gamma", "Alpha", "Beta AKA Gamma", 1},
-		{"Alpha aka Beta aka Gamma", "Alpha", "Beta AKA Gamma", 1},
-		{"Alpha AKA AKA Beta", "Alpha", "Beta", 0},
-		{"AKA Alpha AKA Beta", "Alpha", "Beta", 0},
-		{"AKA Alpha", "AKA Alpha", "", 0},
-		{"Alpha AKA", "Alpha AKA", "", 0},
-		{"AKA AKA", "AKA AKA", "", 0},
-		{"AKA", "AKA", "", 0},
+		{"Alpha.Film.1999.1080p.BluRay.x264-GRP", nil},
+		{"Alpha.Film.AKA.Beta.Film.1999.1080p.BluRay.x264-GRP", []string{"Beta Film"}},
+		{"Alpha.Film.AKA.Beta.Film.AKA.Gamma.Film.1999.1080p.BluRay.REMUX.AVC.FLAC.1.0-GRP.mkv", []string{"Beta Film", "Gamma Film"}},
+		{"Alpha Film aka Beta Film aka Gamma Film 1999 1080p BluRay x264-GRP", []string{"Beta Film", "Gamma Film"}},
+		{"[港灯].Harbor.Lights.2022.S01.Complete.1080p.WEB-DL.HEVC.DDP5.1-GRP", []string{"港灯"}},
 	}
 	for _, test := range tests {
-		if title, alt := splitAKA(test.s); title != test.title || alt != test.alt {
+		if r := ParseString(test.s); !slices.Equal(r.Alt, test.alt) {
+			t.Errorf("%q: expected alt %q, got: %q", test.s, test.alt, r.Alt)
+		}
+	}
+}
+
+// TestSplitAKA checks that a title splits on an all upper or all lower case
+// 'AKA' into the first name and one element per other name, that empty names
+// are dropped, and that a title that does not split does not allocate.
+func TestSplitAKA(t *testing.T) {
+	tests := []struct {
+		s, title string
+		alt      []string
+		allocs   float64
+	}{
+		{"Alpha Film", "Alpha Film", nil, 0},
+		{"Wakanda Osaka", "Wakanda Osaka", nil, 0},
+		{"Mister Aka Manson", "Mister Aka Manson", nil, 0},
+		{"Alpha aKa Beta", "Alpha aKa Beta", nil, 0},
+		{"Alpha AKAs Beta", "Alpha AKAs Beta", nil, 0},
+		{"Alpha Film AKA Beta Film", "Alpha Film", []string{"Beta Film"}, 1},
+		{"Alpha Film aka Beta Film", "Alpha Film", []string{"Beta Film"}, 1},
+		{"Alpha AKA Beta AKA Gamma", "Alpha", []string{"Beta", "Gamma"}, 1},
+		{"Alpha aka Beta aka Gamma", "Alpha", []string{"Beta", "Gamma"}, 1},
+		{"Alpha AKA AKA Beta", "Alpha", []string{"Beta"}, 1},
+		{"AKA Alpha AKA Beta", "Alpha", []string{"Beta"}, 1},
+		{"AKA Alpha", "AKA Alpha", nil, 0},
+		{"Alpha AKA", "Alpha AKA", nil, 0},
+		{"AKA AKA", "AKA AKA", nil, 0},
+		{"AKA", "AKA", nil, 0},
+	}
+	for _, test := range tests {
+		if title, alt := splitAKA(test.s); title != test.title || !slices.Equal(alt, test.alt) {
 			t.Errorf("%q: expected %q and %q, got: %q and %q", test.s, test.title, test.alt, title, alt)
 		}
 		if n := testing.AllocsPerRun(100, func() { _, _ = splitAKA(test.s) }); n > test.allocs {

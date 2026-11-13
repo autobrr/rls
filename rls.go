@@ -32,10 +32,10 @@ type Release struct {
 	Title    string
 	Subtitle string
 	// Alt is the other names of a movie or series given with 'AKA' or 'aka'
-	// in the title, joined with ' AKA ' when there are two or more, or the
-	// title in CJK script from a leading bracket in front of a scene name
-	// ('[港灯].Harbor.Lights.S01-GRP').
-	Alt string
+	// in the title, one name per element ('A.aka.B.aka.C.2001' gives 'B' and
+	// 'C'), or the title in CJK script from a leading bracket in front of a
+	// scene name ('[港灯].Harbor.Lights.S01-GRP').
+	Alt []string
 
 	Platform string
 	Arch     string
@@ -1549,7 +1549,7 @@ func Compare(a, b Release) int {
 		compareInt(a.Series, b.Series),
 		compareInt(a.Episode, b.Episode),
 		compareTitle(a.Subtitle, b.Subtitle),
-		compareTitle(a.Alt, b.Alt),
+		compareTitles(a.Alt, b.Alt),
 		compareIntString(a.Resolution, b.Resolution),
 		compareString(a.Version, b.Version),
 		compareString(a.Group, b.Group),
@@ -1663,6 +1663,19 @@ func compareTitle(a, b string) func() int {
 			}
 		}
 		return 0
+	}
+}
+
+// compareTitles compares a and b name by name with compareTitle, then by
+// the number of names.
+func compareTitles(a, b []string) func() int {
+	return func() int {
+		for i := range min(len(a), len(b)) {
+			if c := compareTitle(a[i], b[i])(); c != 0 {
+				return c
+			}
+		}
+		return compareInt(len(a), len(b))()
 	}
 }
 
