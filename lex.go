@@ -2164,22 +2164,28 @@ func tight(s, v []byte) bool {
 		a+len(v) < len(s) && strings.IndexByte("])}", s[a+len(v)]) != -1
 }
 
+// episodeTitleReach is how many tags in front of a season word inEpisodeTitle
+// looks through for the episode, which is a title of 32 words. It keeps a
+// name that repeats 'a Season 1' from taking time in the square of its length.
+const episodeTitleReach = 64
+
 // inEpisodeTitle reports whether what the tags in start read is inside the
 // title of an episode: a word of text and a delimiter with no bracket or plus
-// in it end start, a series tag in front of them wrote an episode ('S01E00
-// Meet the Queens of '), and no bracket opened after that series tag is still
-// open. A plus lists what else the release holds ('S01E01 Title + Season 2'),
-// and a bracket holds tags or a note ('S01E01 Title (Includes Season 2)').
+// in it end start, within episodeTitleReach tags in front of them a series tag
+// wrote an episode ('S01E00 Meet the Queens of '), and no bracket opened after
+// that tag is still open. A plus lists what else the release holds ('S01E01
+// Title + Season 2'), and a bracket holds tags or a note ('S01E01 Title
+// (Includes Season 2)').
 func inEpisodeTitle(start []Tag) bool {
 	k := len(start) - 1
 	if k < 1 || !start[k].Is(TagTypeDelim) || strings.ContainsAny(start[k].Delim(), "[](){}+") || !start[k-1].Is(TagTypeText) {
 		return false
 	}
-	e := k - 2
-	for e >= 0 && !(start[e].Is(TagTypeSeries) && start[e].wroteEpisode()) {
+	e, stop := k-2, max(k-episodeTitleReach, 0)
+	for e >= stop && !(start[e].Is(TagTypeSeries) && start[e].wroteEpisode()) {
 		e--
 	}
-	if e < 0 {
+	if e < stop {
 		return false
 	}
 	var depth int

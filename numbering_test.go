@@ -751,7 +751,8 @@ func TestGermanSeason(t *testing.T) {
 
 // TestSeasonInEpisodeTitle checks that a season word written after an episode
 // and a word of its title is a word of that title, and that one right after
-// the episode, in a bracket or in front of the episode is still a season.
+// the episode, in a bracket, in front of the episode or too far from it is
+// still a season.
 func TestSeasonInEpisodeTitle(t *testing.T) {
 	tests := []struct {
 		name, subtitle string
@@ -768,6 +769,8 @@ func TestSeasonInEpisodeTitle(t *testing.T) {
 		{"Show S01E01 Title (Includes Season 2) 1080p WEB h264-GRP", "Title", []int{1, 2}},
 		{"Show.S01E01.Title.(Includes.Season.2).1080p.WEB.h264-GRP", "Title", []int{1, 2}},
 		{"Show.Season.1.S01E01.Pilot.1080p.WEB.h264-GRP", "Pilot", []int{1}},
+		{"Show.S01E01." + strings.Repeat("Word.", 20) + "Season.2.1080p.WEB.h264-GRP", strings.TrimSpace(strings.Repeat("Word ", 20)) + " Season 2", []int{1}},
+		{"Show.S01E01." + strings.Repeat("Word.", 40) + "Season.2.1080p.WEB.h264-GRP", strings.TrimSpace(strings.Repeat("Word ", 40)), []int{1, 2}},
 	}
 	for _, test := range tests {
 		r := ParseString(test.name)
