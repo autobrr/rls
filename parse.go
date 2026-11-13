@@ -2498,6 +2498,24 @@ func beforeTag(tags []Tag, i int) bool {
 	return false
 }
 
+// amidTags reports whether the text at i sits inside the run of tags: a tag
+// before it, an audio or video tag after it, and a single dot, underscore or
+// space on each side ('TrueHD Audio.1080p', '1080p IT BD'). Such a word is a
+// tag the vocabulary lacks, not the group, which comes after the tags
+// ('H264.GRP', 'H264 GRP') or after a hyphen ('x264 - BTN 4K').
+func amidTags(tags []Tag, i int) bool {
+	if i < 2 || i+2 >= len(tags) {
+		return false
+	}
+	for _, tag := range []Tag{tags[i-1], tags[i+1]} {
+		if !tag.Is(TagTypeDelim, TagTypeWhitespace) || len(tag.Text()) != 1 || !strings.Contains("._ ", tag.Text()) {
+			return false
+		}
+	}
+	return !tags[i-2].Is(TagTypeText, TagTypeDelim, TagTypeWhitespace) &&
+		tags[i+2].Is(TagTypeSource, TagTypeResolution, TagTypeCodec, TagTypeHDR, TagTypeAudio, TagTypeChannels)
+}
+
 // plusList reports whether the text at i is in a list that a '+' joins on,
 // ie the 'Specials' in 'S01 + Specials' and in 'S01 + Movies & Specials', or
 // the 'Movie' in '[720p] + Movie'. Such a word is not the group. A '+' with no
@@ -2541,7 +2559,7 @@ func (b *TagBuilder) unused(r *Release, i int) {
 		switch s := r.tags[r.unused[n-1]].Text(); {
 		case r.Sum == "" && b.sum.MatchString(s) && strings.ContainsAny(s, "0123456789"):
 			r.Sum, r.unused = s, r.unused[:n-1]
-		case r.Group == "" && strings.ContainsFunc(s, unicode.IsLetter) && !beforeTag(r.tags, r.unused[n-1]) && !plusList(r.tags, r.unused[n-1]):
+		case r.Group == "" && strings.ContainsFunc(s, unicode.IsLetter) && !beforeTag(r.tags, r.unused[n-1]) && !plusList(r.tags, r.unused[n-1]) && !amidTags(r.tags, r.unused[n-1]):
 			last := r.unused[n-1]
 			r.Group, r.unused = s, r.unused[:n-1]
 			b.widenGroup(r, last)
