@@ -110,7 +110,7 @@ func newPrefilterRE(res []string, ci bool) (*prefilter, bool) {
 				return nil, false
 			}
 			row := patterned{}
-			for c := 0; c < 256; c++ {
+			for c := range 256 {
 				if lead[c] {
 					pf.lead[c], pf.hasLead, row.lead[c] = true, true, true
 					// a lead byte is only consulted for runs, so fold case
@@ -279,7 +279,7 @@ func hasLiteral(b, lit []byte, fold bool) bool {
 		return true
 	}
 	c0 := lit[0]
-	for i := 0; i < len(b); i++ {
+	for i := range b {
 		c := b[i]
 		if c >= 0x80 {
 			return true
@@ -463,7 +463,7 @@ func leadSet(re string) ([256]bool, bool) {
 		return lead, false
 	}
 	n := 0
-	for c := 0; c < 256; c++ {
+	for c := range 256 {
 		if !lead[c] {
 			continue
 		}
@@ -818,9 +818,9 @@ func newPairSet(re string) *pairSet {
 	if match {
 		return nil // matches the empty string: nothing to rule out
 	}
-	for a := 0; a < 128; a++ {
+	for a := range 128 {
 		s1, match := closure(step(s0, byte(a)))
-		for b := 0; b < 128; b++ {
+		for b := range 128 {
 			if match || len(step(s1, byte(b))) != 0 {
 				k := uint(a)<<7 | uint(b)
 				ps[k>>6] |= 1 << (k & 63)

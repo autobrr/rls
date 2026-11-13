@@ -55,7 +55,7 @@ func NewTagParser(infos map[string][]*taginfo.Taginfo, lexers ...Lexer) Parser {
 func newTagParser(builder Builder, infos map[string][]*taginfo.Taginfo, lexers ...Lexer) *TagParser {
 	// delims
 	var v []string
-	for r := rune(0); r < 255; r++ {
+	for r := range rune(255) {
 		if isAnyDelim(r) {
 			v = append(v, string(r))
 		}
@@ -128,7 +128,7 @@ func newTagParser(builder Builder, infos map[string][]*taginfo.Taginfo, lexers .
 		dispatch: newDispatch(gates),
 		pooled:   pooled,
 	}}
-	for c := 0; c < 255; c++ {
+	for c := range 255 {
 		p.isDelim[c] = isAnyDelim(rune(c))
 	}
 	return p
@@ -683,7 +683,7 @@ func leadingFlags(tags []Tag, end int) int {
 // title in CJK script follows it.
 func leadingAlt(r *Release) {
 	if len(r.Alt) != 0 || r.Site == "" || r.Group == "" || r.Group == r.Site ||
-		strings.IndexFunc(r.Title, isCJK) != -1 || !cjkOnly(r.Site) || fansubMark(r.Site) {
+		strings.ContainsFunc(r.Title, isCJK) || !cjkOnly(r.Site) || fansubMark(r.Site) {
 		return
 	}
 	i := 0
@@ -714,9 +714,9 @@ func isCJK(c rune) bool {
 // cjkOnly reports whether s is written in CJK script, with spaces and CJK
 // punctuation ('港灯', 'ハーバー・ライツ', '항구의 불빛').
 func cjkOnly(s string) bool {
-	return strings.IndexFunc(s, isCJK) != -1 && strings.IndexFunc(s, func(c rune) bool {
+	return strings.ContainsFunc(s, isCJK) && !strings.ContainsFunc(s, func(c rune) bool {
 		return !isCJK(c) && c != ' ' && c != '·' && !('　' <= c && c <= '〿') && c != '・' && c != 'ー'
-	}) == -1
+	})
 }
 
 // fansubMark reports whether s names a fansub group: subtitles (字幕),
@@ -756,15 +756,15 @@ func (b *TagBuilder) trailingGroup(r *Release) {
 	if r.Group != "" || r.Site == "" {
 		return
 	}
-	for i := len(r.tags) - 1; i >= 0; i-- {
+	for _, tag := range slices.Backward(r.tags) {
 		switch {
-		case r.tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeExt):
+		case tag.Is(TagTypeWhitespace, TagTypeDelim, TagTypeExt):
 			continue
-		case r.tags[i].Is(TagTypeMeta):
+		case tag.Is(TagTypeMeta):
 			// a site given by name ('[[site:name]]', '-={name}=-') is not
 			// a group
-			if k, v := r.tags[i].Meta(); k == "site" && v == r.Site {
-				if s := strings.TrimSpace(r.tags[i].v[0]); strings.HasPrefix(s, "[") && !strings.HasPrefix(s, "[[") {
+			if k, v := tag.Meta(); k == "site" && v == r.Site {
+				if s := strings.TrimSpace(tag.v[0]); strings.HasPrefix(s, "[") && !strings.HasPrefix(s, "[[") {
 					r.Group = v
 				}
 				return
@@ -1348,7 +1348,7 @@ func (b *TagBuilder) fixNoText(r *Release, end int) {
 		}
 	}
 	// reset
-	for i = 0; i < n; i++ {
+	for i = range n {
 		if r.tags[i].Is(TagTypeCollection) {
 			r.tags[i] = r.tags[i].As(TagTypeText, nil)
 		}
@@ -1755,7 +1755,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			}
 			return typ
 		case Series, Episode:
-			if r.Episode != 0 || episode || (r.Series == 0 && r.Episode == 0 && !series) && !contains(r.Other, "BOXSET") {
+			if r.Episode != 0 || episode || (r.Series == 0 && r.Episode == 0 && !series) && !slices.Contains(r.Other, "BOXSET") {
 				return Episode
 			}
 			return Series
@@ -1913,7 +1913,7 @@ func (b *TagBuilder) unset(r *Release) {
 			TagTypeExt,
 		) && r.tags[i].InfoExcl() {
 			switch typ, s := r.tags[i].TagType(), r.tags[i].Normalize(); {
-			case typ == TagTypePlatform && r.Platform == s && !contains(r.Other, "Strategy.Guide"):
+			case typ == TagTypePlatform && r.Platform == s && !slices.Contains(r.Other, "Strategy.Guide"):
 				r.Platform, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeArch && r.Arch == s:
 				r.Arch, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
@@ -1924,23 +1924,23 @@ func (b *TagBuilder) unset(r *Release) {
 				r.Resolution, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeCollection && r.Collection == s:
 				r.Collection, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeCodec && contains(r.Codec, s):
+			case typ == TagTypeCodec && slices.Contains(r.Codec, s):
 				r.Codec, r.tags[i] = remove(r.Codec, s), r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeHDR && contains(r.HDR, s):
+			case typ == TagTypeHDR && slices.Contains(r.HDR, s):
 				r.HDR, r.tags[i] = remove(r.HDR, s), r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeBitDepth && r.BitDepth == s:
 				r.BitDepth, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeAudio && contains(r.Audio, s):
+			case typ == TagTypeAudio && slices.Contains(r.Audio, s):
 				r.Audio, r.tags[i] = remove(r.Audio, s), r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeChannels && r.Channels == s:
 				r.Channels, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeOther && contains(r.Other, s):
+			case typ == TagTypeOther && slices.Contains(r.Other, s):
 				r.Other, r.tags[i] = remove(r.Other, s), r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeCut && contains(r.Cut, s):
+			case typ == TagTypeCut && slices.Contains(r.Cut, s):
 				r.Cut, r.tags[i] = remove(r.Cut, s), r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeEdition && contains(r.Edition, s):
+			case typ == TagTypeEdition && slices.Contains(r.Edition, s):
 				r.Edition, r.tags[i] = remove(r.Edition, s), r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeLanguage && contains(r.Language, s):
+			case typ == TagTypeLanguage && slices.Contains(r.Language, s):
 				r.Language, r.tags[i] = remove(r.Language, s), r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeSize && r.Size == s:
 				r.Size, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
@@ -2519,16 +2519,16 @@ func (b *TagBuilder) bookTitles(r *Release) int {
 	}
 	if r.Artist == "" {
 		for _, s := range []string{" - ", "--", "~"} {
-			if i := strings.Index(r.Title, s); i != -1 {
-				r.Artist, r.Title = strings.TrimRightFunc(r.Title[:i], isTitleTrimDelim), strings.TrimLeftFunc(r.Title[i+len(s):], isBreakDelim)
+			if before, after, ok := strings.Cut(r.Title, s); ok {
+				r.Artist, r.Title = strings.TrimRightFunc(before, isTitleTrimDelim), strings.TrimLeftFunc(after, isBreakDelim)
 				break
 			}
 		}
 	}
 	if r.Subtitle == "" {
 		for _, s := range []string{" - ", "--", "~"} {
-			if i := strings.Index(r.Title, s); i != -1 {
-				r.Title, r.Subtitle = strings.TrimRightFunc(r.Title[:i], isBreakDelim), strings.TrimLeftFunc(r.Title[i+len(s):], isTitleTrimDelim)
+			if before, after, ok := strings.Cut(r.Title, s); ok {
+				r.Title, r.Subtitle = strings.TrimRightFunc(before, isBreakDelim), strings.TrimLeftFunc(after, isTitleTrimDelim)
 				break
 			}
 		}
@@ -2572,9 +2572,9 @@ func (b *TagBuilder) defaultTitle(r *Release) int {
 // name does not change how it writes its spaces at a slash. In a release name
 // the slash is part of the title ('Fate/Zero S01 1080p', 'Face/Off 1997').
 func isPath(tags []Tag) bool {
-	for i := len(tags) - 1; i >= 0; i-- {
-		if !tags[i].Is(TagTypeWhitespace) {
-			if tags[i].Is(TagTypeExt) {
+	for _, tag := range slices.Backward(tags) {
+		if !tag.Is(TagTypeWhitespace) {
+			if tag.Is(TagTypeExt) {
 				return true
 			}
 			break
@@ -2585,8 +2585,8 @@ func isPath(tags []Tag) bool {
 			return tag.Is(TagTypeDelim, TagTypeWhitespace) && strings.ContainsRune(tag.v[0], ' ')
 		})
 	}
-	for i := len(tags) - 1; i >= 0; i-- {
-		if tags[i].Is(TagTypeDelim) && strings.ContainsRune(tags[i].v[0], '/') {
+	for i, tag := range slices.Backward(tags) {
+		if tag.Is(TagTypeDelim) && strings.ContainsRune(tag.v[0], '/') {
 			return space(tags[:i]) && !space(tags[i+1:])
 		}
 	}
@@ -2821,8 +2821,7 @@ func (b *TagBuilder) bracketedGroup(r *Release) {
 	if r.Group != "" {
 		return
 	}
-	for k := len(r.unused) - 1; k >= 0; k-- {
-		i := r.unused[k]
+	for k, i := range slices.Backward(r.unused) {
 		if i < 2 || !r.tags[i-1].Is(TagTypeDelim) {
 			continue
 		}
@@ -3022,16 +3021,6 @@ func isDigit(r []rune) bool {
 	switch len(r) {
 	case 1:
 		return unicode.IsDigit(r[0])
-	}
-	return false
-}
-
-// contains returns if v contains str.
-func contains(v []string, str string) bool {
-	for _, s := range v {
-		if str == s {
-			return true
-		}
 	}
 	return false
 }

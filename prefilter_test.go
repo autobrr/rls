@@ -117,7 +117,7 @@ func TestPrefilterRejectSound(t *testing.T) {
 // only runes outside ASCII it matches an ASCII byte with, and that foldRune
 // knows the two by their bytes and nothing else.
 func TestFoldRunes(t *testing.T) {
-	for c := rune(0); c < utf8.RuneSelf; c++ {
+	for c := range rune(utf8.RuneSelf) {
 		for r := unicode.SimpleFold(c); r != c; r = unicode.SimpleFold(r) {
 			if r >= utf8.RuneSelf && r != '\u017f' && r != '\u212a' {
 				t.Errorf("%q folds to %q, which the gates do not know", c, r)
@@ -178,7 +178,7 @@ func TestPrefilterSameParse(t *testing.T) {
 		if strings.ContainsAny(name, "\u017f\u212a") {
 			continue
 		}
-		if strings.IndexFunc(name, func(r rune) bool { return r >= 0x80 || strings.ContainsRune("!&#'@\"", r) }) != -1 {
+		if strings.ContainsFunc(name, func(r rune) bool { return r >= 0x80 || strings.ContainsRune("!&#'@\"", r) }) {
 			names = append(names, name)
 		}
 	}

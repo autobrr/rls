@@ -947,6 +947,14 @@
   other: "PROPER"
   language: "ENGLiSH"
   group: "Kyo Mura"
+"Face/Off 1997 1080p BluRay x264-GRP":
+  type: "movie"
+  title: "Face/Off"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1997
+  codec: "x264"
+  group: "GRP"
 "Fargo.1996.SF.20th.Anniversary.Edition.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-RU4HD":
   type: "movie"
   title: "Fargo"
@@ -3853,6 +3861,36 @@
   audio: "FLAC"
   group: "UTW"
   site: "UTW"
+"Fate strange Fake/Fate.strange.Fake.S01E06.1080p.BluRay.x265-Grp.mkv":
+  type: "episode"
+  title: "Fate strange Fake"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  episode: 6
+  codec: "x265"
+  group: "Grp"
+  ext: "mkv"
+  unused: "Fate strange Fake"
+"[Erai-raws] Fate/strange Fake - 06 [1080p][Multiple Subtitle]":
+  type: "episode"
+  title: "Fate/strange Fake"
+  resolution: "1080p"
+  episode: 6
+  absolute: 6
+  language: "MULTiSUB"
+  group: "Erai-raws"
+  site: "Erai-raws"
+"Fate/strange Fake S01 1080p BluRay Dual-Audio Opus 2.0 x265-Headpatter":
+  type: "series"
+  title: "Fate/strange Fake"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  codec: "x265"
+  audio: "DUAL.AUDIO OPUS"
+  channels: "2.0"
+  group: "Headpatter"
 "Formula.E.DRIVER.S02E01.Episode.1.1080p.AMZN.WEB-DL.DDP2.0.H.264-FFG.mkv":
   type: "episode"
   title: "Formula E DRIVER"
@@ -5076,6 +5114,14 @@
   codec: "HEVC"
   group: "GRP"
   site: "桜都字幕组"
+"Show.S01E02.DVB.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "DVB"
+  series: 1
+  episode: 2
+  codec: "x264"
+  group: "GRP"
 "Show.S01E02.720p.HDTV.x264-ABC":
   type: "episode"
   title: "Show"
@@ -5085,14 +5131,6 @@
   episode: 2
   codec: "x264"
   group: "ABC"
-"Show.S01E02.DVB.x264-GRP":
-  type: "episode"
-  title: "Show"
-  source: "DVB"
-  series: 1
-  episode: 2
-  codec: "x264"
-  group: "GRP"
 "Show S01E02 1080p WEB":
   type: "episode"
   title: "Show"
@@ -5447,6 +5485,16 @@
   type: "episode"
   title: "Show"
   subtitle: "AKA Other Title"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  group: "GRP"
+"Show.S01E02.Him/Her.1080p.WEB.H264-GRP":
+  type: "episode"
+  title: "Show"
+  subtitle: "Him/Her"
   source: "WEB"
   resolution: "1080p"
   series: 1
@@ -6698,6 +6746,12 @@
   artist: "a"
   title: "(b) c"
   ext: "mp3"
+"AC/DC - Back in Black (1980) [FLAC]":
+  type: "music"
+  artist: "AC/DC"
+  title: "Back in Black"
+  year: 1980
+  audio: "FLAC"
 "Airdream_and_Calvin_OCommor_-_Rescue_Me_(Extended_Mix)-(NRG112)-SINGLE-WEB-2022-JUSTiFY_iNT":
   type: "music"
   artist: "Airdream and Calvin OCommor"
@@ -7832,57 +7886,3 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
-"Fate/strange Fake S01 1080p BluRay Dual-Audio Opus 2.0 x265-Headpatter":
-  type: "series"
-  title: "Fate/strange Fake"
-  source: "BluRay"
-  resolution: "1080p"
-  series: 1
-  codec: "x265"
-  audio: "DUAL.AUDIO OPUS"
-  channels: "2.0"
-  group: "Headpatter"
-"Face/Off 1997 1080p BluRay x264-GRP":
-  type: "movie"
-  title: "Face/Off"
-  source: "BluRay"
-  resolution: "1080p"
-  year: 1997
-  codec: "x264"
-  group: "GRP"
-"AC/DC - Back in Black (1980) [FLAC]":
-  type: "music"
-  artist: "AC/DC"
-  title: "Back in Black"
-  year: 1980
-  audio: "FLAC"
-"[Erai-raws] Fate/strange Fake - 06 [1080p][Multiple Subtitle]":
-  type: "episode"
-  title: "Fate/strange Fake"
-  resolution: "1080p"
-  episode: 6
-  absolute: 6
-  language: "MULTiSUB"
-  group: "Erai-raws"
-  site: "Erai-raws"
-"Show.S01E02.Him/Her.1080p.WEB.H264-GRP":
-  type: "episode"
-  title: "Show"
-  subtitle: "Him/Her"
-  source: "WEB"
-  resolution: "1080p"
-  series: 1
-  episode: 2
-  codec: "H.264"
-  group: "GRP"
-"Fate strange Fake/Fate.strange.Fake.S01E06.1080p.BluRay.x265-Grp.mkv":
-  type: "episode"
-  title: "Fate strange Fake"
-  source: "BluRay"
-  resolution: "1080p"
-  series: 1
-  episode: 6
-  codec: "x265"
-  group: "Grp"
-  ext: "mkv"
-  unused: "Fate strange Fake"

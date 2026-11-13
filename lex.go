@@ -566,7 +566,7 @@ func NewSeriesLexer(strs ...string) Lexer {
 				}
 				// S01S02S03 ...
 				if m := mlt.FindAllSubmatch(multi, -1); m != nil {
-					for j := 0; j < len(m); j++ {
+					for j := range m {
 						tags = append(tags, newTag(src, buf, TagTypeSeries, nil, append(m[j], nil)...))
 					}
 				}
@@ -1216,7 +1216,7 @@ func NewAudioLexer() Lexer {
 				var cl [256]bool
 				if a, b := leadSet(reutil.Taginfo(``, channels...)); b {
 					if c, d := leadSet(reutil.Taginfo(``, attached...)); d {
-						for x := 0; x < 256; x++ {
+						for x := range 256 {
 							cl[x] = a[x] || c[x]
 						}
 						pf, next = p, cl
@@ -1681,7 +1681,7 @@ func NewMetaLexer(strs ...string) Lexer {
 	o := len(strs) / 4
 	// build prefix, suffix
 	prefix, suffix, hasTwo := make([]*regexp.Regexp, o), make([]*regexp.Regexp, o), make([]bool, o)
-	for l := 0; l < o; l++ {
+	for l := range o {
 		s := `\s*\Q` + strs[l*4+1] + `\E\s*` + strs[l*4+3] + `\s*\Q` + strs[l*4+2] + `\E\s*`
 		prefix[l], suffix[l] = regexp.MustCompile(`^`+s), regexp.MustCompile(s+`$`)
 		if n := prefix[l].NumSubexp(); n != 1 && n != 2 {
@@ -1694,7 +1694,7 @@ func NewMetaLexer(strs ...string) Lexer {
 	// the trailing spaces ends in its closer. Checking that first keeps all
 	// eight regexps out of the common case of a name with no brackets.
 	openFirst, closer, gate := make([]byte, o), make([][]byte, o), true
-	for l := 0; l < o; l++ {
+	for l := range o {
 		op, cl := strs[l*4+1], strs[l*4+2]
 		if op == "" || cl == "" || metaSpace(op[0]) || metaSpace(cl[len(cl)-1]) {
 			gate = false
@@ -1710,7 +1710,7 @@ func NewMetaLexer(strs ...string) Lexer {
 	// last opening literal on, and never the bytes that cannot stand between
 	// that and the closing literal: see suffixFrom
 	narrow, never := make([]bool, o), make([][256]bool, o)
-	for l := 0; l < o; l++ {
+	for l := range o {
 		narrow[l], never[l] = metaNever(strs[l*4+1], strs[l*4+2], strs[l*4+3])
 	}
 	// lead matches a leading bracket whose contents contain a space or a
@@ -1968,7 +1968,7 @@ func NewMetaLexer(strs ...string) Lexer {
 						// bracket after it is the title ('[A][Show][01]') and
 						// one of digits a year or an episode ('[A] [2003]')
 						second := k == "site" && prev[k] && i+len(m[0]) < n && src[i+len(m[0])] != '[' &&
-							bytes.IndexFunc(v, func(r rune) bool { return r < '0' || r > '9' }) != -1
+							bytes.ContainsFunc(v, func(r rune) bool { return r < '0' || r > '9' })
 						matched = (!prev[k] || second) && !short && !bytes.ContainsAny(v, "\t\r\n\f +")
 						seen(k)
 					}
@@ -1978,12 +1978,12 @@ func NewMetaLexer(strs ...string) Lexer {
 						start, d = append(start, newTag(src, buf, TagTypeDelim, nil, d, d)), d[:0]
 					}
 					if flagged {
-						a := bytes.Index(m[0], v)
-						if open := m[0][:a]; len(open) != 0 {
+						open, cl, _ := bytes.Cut(m[0], v)
+						if len(open) != 0 {
 							start = append(start, newTag(src, buf, TagTypeDelim, nil, open, open))
 						}
 						start = append(start, newTag(src, buf, TagTypeOther, flagf, v, v))
-						if cl := m[0][a+len(v):]; len(cl) != 0 {
+						if len(cl) != 0 {
 							start = append(start, newTag(src, buf, TagTypeDelim, nil, cl, cl))
 						}
 						flagged = false
@@ -2541,7 +2541,7 @@ type namedCapture struct {
 func newNamedCapture(strs ...string) *namedCapture {
 	nc := &namedCapture{}
 	var kept []string
-	for l := 0; l < len(strs); l++ {
+	for l := range strs {
 		// build regexp and collect subexp indexes
 		re := regexp.MustCompile(strs[l])
 		var idx []int

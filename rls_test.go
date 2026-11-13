@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"regexp"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -515,12 +514,10 @@ func TestCompare(t *testing.T) {
 		releases[i], releases[j] = releases[j], releases[i]
 	})
 	// sort
-	sort.Slice(releases, func(i, j int) bool {
-		return Compare(releases[i], releases[j]) < 0
-	})
+	slices.SortFunc(releases, Compare)
 	// check
 	v := make([]string, len(releases))
-	for i := 0; i < len(releases); i++ {
+	for i := range releases {
 		v[i] = fmt.Sprintf("%o", releases[i])
 	}
 	if !cmp.Equal(v, exp) {
@@ -727,12 +724,7 @@ func TestTagInfo_regexp(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
-	var types []string
-	for k := range infos {
-		types = append(types, k)
-	}
-	sort.Strings(types)
-	for _, typ := range types {
+	for _, typ := range slices.Sorted(maps.Keys(infos)) {
 		for i, info := range infos[typ] {
 			tag := info.Tag()
 			if strings.Contains(tag, "$") {
@@ -767,9 +759,8 @@ func TestExport_tests(t *testing.T) {
 		}
 		keys, m[test.s] = append(keys, test.s), test.exp
 	}
-	sort.SliceStable(keys, func(i, j int) bool {
-		var cmp int
-		a, b := m[keys[i]], m[keys[j]]
+	slices.SortStableFunc(keys, func(ka, kb string) int {
+		a, b := m[ka], m[kb]
 		for _, f := range []func() int{
 			compareInt(CompareMap[ParseType(a.Type)], CompareMap[ParseType(b.Type)]),
 			compareTitle(a.Artist, b.Artist),
@@ -785,13 +776,13 @@ func TestExport_tests(t *testing.T) {
 			compareString(a.Version, b.Version),
 			compareString(a.Group, b.Group),
 			compareString(a.Title, b.Title),
-			compareString(keys[i], keys[j]),
+			compareString(ka, kb),
 		} {
-			if cmp = f(); cmp != 0 {
-				break
+			if c := f(); c != 0 {
+				return c
 			}
 		}
-		return cmp < 0
+		return 0
 	})
 	buf := new(bytes.Buffer)
 	fmt.Fprintf(buf, "# add tests to bottom of this file then run `TESTS=export go test` to order.\n")
@@ -892,9 +883,7 @@ func exportTaginfo(file string) ([]byte, error) {
 			})
 		}
 	}
-	sort.SliceStable(all, func(i, j int) bool {
-		var cmp int
-		a, b := all[i], all[j]
+	slices.SortStableFunc(all, func(a, b []string) int {
 		for _, f := range []func() int{
 			compareString(a[0], b[0]),
 			compareHasDollar(a[1], b[1]),
@@ -911,11 +900,11 @@ func exportTaginfo(file string) ([]byte, error) {
 			compareString(strings.ToLower(a[1]), strings.ToLower(b[1])),
 			compareString(a[1], b[1]),
 		} {
-			if cmp = f(); cmp != 0 {
-				break
+			if c := f(); c != 0 {
+				return c
 			}
 		}
-		return cmp < 0
+		return 0
 	})
 	buf := new(bytes.Buffer)
 	_, _ = buf.WriteString("Type,Tag,Title,Regexp,Other,ReleaseType,TypeExclusive\n")
