@@ -9,43 +9,54 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// result holds the fields of a parse line that the tests check.
 type result struct {
-	Input      string
-	Type       string
-	Artist     string
-	Title      string
-	Resolution string
-	Year       int
-	Series     int
-	Episode    int
-	Group      string
+	Input  string `json:"input"`
+	Output output `json:"output"`
+}
+
+type output struct {
+	Type       string `json:"type"`
+	Artist     string `json:"artist"`
+	Title      string `json:"title"`
+	Resolution string `json:"resolution"`
+	Year       int    `json:"year"`
+	Series     int    `json:"series"`
+	Episode    int    `json:"episode"`
+	Group      string `json:"group"`
 }
 
 var (
 	music = result{
-		Input:  "The_Velvet_Underground-The_Complete_Matrix_Tapes-Reissue_Limited_Edition_Boxset-8LP-2019-NOiR",
-		Type:   "music",
-		Artist: "The Velvet Underground",
-		Title:  "The Complete Matrix Tapes",
-		Year:   2019,
-		Group:  "NOiR",
+		Input: "The_Velvet_Underground-The_Complete_Matrix_Tapes-Reissue_Limited_Edition_Boxset-8LP-2019-NOiR",
+		Output: output{
+			Type:   "music",
+			Artist: "The Velvet Underground",
+			Title:  "The Complete Matrix Tapes",
+			Year:   2019,
+			Group:  "NOiR",
+		},
 	}
 	movie = result{
-		Input:      "Mr..&.Mrs..Smith-2005(720p)-NOGROUP[ettv]",
-		Type:       "movie",
-		Title:      "Mr. & Mrs. Smith",
-		Resolution: "720p",
-		Year:       2005,
-		Group:      "NOGROUP",
+		Input: "Mr..&.Mrs..Smith-2005(720p)-NOGROUP[ettv]",
+		Output: output{
+			Type:       "movie",
+			Title:      "Mr. & Mrs. Smith",
+			Resolution: "720p",
+			Year:       2005,
+			Group:      "NOGROUP",
+		},
 	}
 	episode = result{
-		Input:      "Doctor.Who.S02E05.The.Web.Planet.1080p.WEB-DL.AAC2.0.H.264-GROUP",
-		Type:       "episode",
-		Title:      "Doctor Who",
-		Resolution: "1080p",
-		Series:     2,
-		Episode:    5,
-		Group:      "GROUP",
+		Input: "Doctor.Who.S02E05.The.Web.Planet.1080p.WEB-DL.AAC2.0.H.264-GROUP",
+		Output: output{
+			Type:       "episode",
+			Title:      "Doctor Who",
+			Resolution: "1080p",
+			Series:     2,
+			Episode:    5,
+			Group:      "GROUP",
+		},
 	}
 )
 
@@ -130,7 +141,60 @@ func TestRunEscape(t *testing.T) {
 	if err := run(&buf, nil, []string{movie.Input}); err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
-	if s := `"Title":"Mr. & Mrs. Smith"`; !strings.Contains(buf.String(), s) {
+	if s := `"title":"Mr. & Mrs. Smith"`; !strings.Contains(buf.String(), s) {
 		t.Errorf("expected output to contain %s, got: %s", s, buf.String())
+	}
+}
+
+func execute(t *testing.T, stdin string, args ...string) string {
+	t.Helper()
+	cmd := newRootCmd()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetIn(strings.NewReader(stdin))
+	cmd.SetArgs(args)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("expected no error, got: %v\n%s", err, out.String())
+	}
+	return out.String()
+}
+
+func TestParseCmd(t *testing.T) {
+	tests := []struct {
+		name  string
+		stdin string
+		args  []string
+		exp   string
+	}{
+		{name: "args", args: []string{"parse", episode.Input}, exp: `"input":"` + episode.Input + `"`},
+		{name: "stdin", stdin: episode.Input + "\n", args: []string{"parse"}, exp: `"input":"` + episode.Input + `"`},
+		{name: "dash", args: []string{"parse", "--", "-GROUP"}, exp: `"input":"-GROUP"`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if out := execute(t, tt.stdin, tt.args...); !strings.Contains(out, tt.exp) {
+				t.Errorf("expected output to contain %s, got: %s", tt.exp, out)
+			}
+		})
+	}
+}
+
+func TestVersionCmd(t *testing.T) {
+	out := execute(t, "", "version")
+	for _, s := range []string{"rls ", "commit: ", "built at: ", "built by: "} {
+		if !strings.Contains(out, s) {
+			t.Errorf("expected output to contain %q, got: %s", s, out)
+		}
+	}
+}
+
+func TestRunEmptyLists(t *testing.T) {
+	var buf bytes.Buffer
+	if err := run(&buf, nil, []string{"The.Matrix.1999-GROUP"}); err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+	if strings.Contains(buf.String(), "null") {
+		t.Errorf("expected empty lists as [], got: %s", buf.String())
 	}
 }

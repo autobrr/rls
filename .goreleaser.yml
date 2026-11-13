@@ -26,12 +26,17 @@ builds:
         goarch: arm
       - goos: freebsd
         goarch: arm64
-    main: ./cmd/rls
+    dir: cmd/rls
+    main: .
     binary: rls
     flags:
       - -trimpath
     ldflags:
       - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
 
 archives:
   - format_overrides:
