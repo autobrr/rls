@@ -635,6 +635,7 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	// unset tags
 	b.unset(r)
 	b.titleMusicSource(r)
+	b.titleCollection(r)
 	b.fixBracketTagGroup(r)
 	b.fixTrailingGroup(r)
 	b.remuxSource(r)
@@ -2012,6 +2013,47 @@ loop:
 	for _, tag := range r.tags {
 		if tag.Is(TagTypeSource) && preciser(r.Source, tag.Source()) {
 			r.Source = tag.Source()
+		}
+	}
+}
+
+// titleCollection gives back to the title of a video a collection that opens
+// it, as a show or a film named after a channel is not taken from it
+// ('CNBC.Titans.S01E01', 'NOW.Apocalypse.S01E01', 'ESPN.30.for.30.S01E01',
+// 'BBC.The.Hunt.2015'). The collection is then the next one in the name
+// ('CNBC.Titans.S01E01.1080p.AMZN.WEB-DL'). The words start after the bracket
+// that opens the name ('[Group] CNBC Titans - 01 [1080p]'), and the code must
+// be followed by a word across a plain delimiter: a code set off from the
+// title is a label ('IMAX.-.Journey.to.the.South.Pacific.2013'), and one
+// followed by other tags is no title ('AMZN.S01E01'). An F1 broadcaster is
+// never a word ('F1TV.Formula1.2024.Round19'). A publisher of a tutorial or a
+// book is not a video, and stays its collection ('Lynda.com.Setting.Up.MySQL').
+func (b *TagBuilder) titleCollection(r *Release) {
+	if !r.Type.Is(Movie, Series, Episode) {
+		return
+	}
+	// the bracket is a meta tag, or delimiters around a word that is a tag
+	// ('[DSD] Show - 01')
+	i := 0
+	for i < len(r.tags) && r.tags[i].Is(TagTypeMeta) {
+		i++
+	}
+	if i < len(r.tags) && r.tags[i].Is(TagTypeDelim) && strings.HasPrefix(r.tags[i].Delim(), "[") {
+		for i++; i < len(r.tags) && !(r.tags[i].Is(TagTypeDelim) && strings.Contains(r.tags[i].Delim(), "]")); i++ {
+		}
+		i++
+	}
+	for ; i < len(r.tags) && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim) && strings.Trim(r.tags[i].Delim(), " ._") == ""; i++ {
+	}
+	if i+2 >= len(r.tags) || !r.tags[i].Is(TagTypeCollection) || service(r.tags[i]) || !r.tags[i+1].Is(TagTypeDelim) ||
+		strings.Trim(r.tags[i+1].Delim(), " ._") != "" || !r.tags[i+2].Is(TagTypeText) {
+		return
+	}
+	r.tags[i], r.Collection = r.tags[i].As(TagTypeText, nil), ""
+	for _, tag := range r.tags {
+		if tag.Is(TagTypeCollection) {
+			r.Collection = tag.Collection()
+			break
 		}
 	}
 }

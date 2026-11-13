@@ -2728,10 +2728,9 @@
   ext: "mkv"
 "BBC.The.Hunt.2015.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR":
   type: "movie"
-  title: "The Hunt"
+  title: "BBC The Hunt"
   source: "BluRay"
   resolution: "1080p"
-  collection: "BBC"
   year: 2015
   codec: "AVC"
   audio: "DTS-HD.MA"
@@ -7886,3 +7885,76 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
+"CNBC.Titans.S01E01.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "CNBC Titans"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
+"NOW.Apocalypse.S01E01.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "NOW Apocalypse"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
+"PBS.Kids.S01E01.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "PBS Kids"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
+"ESPN.30.for.30.S01E01.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "ESPN 30 for 30"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
+"Espn 30 for 30 S01E01 1080p WEB h264-GRP":
+  type: "episode"
+  title: "Espn 30 for 30"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
+"CNBC.Titans.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "CNBC Titans"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"[Group] CNBC Titans - 01 [1080p]":
+  type: "episode"
+  title: "CNBC Titans"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Group"
+  site: "Group"
+"Amazon.Women.on.the.Moon.1987.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Amazon Women on the Moon"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1987
+  codec: "x264"
+  group: "GRP"
