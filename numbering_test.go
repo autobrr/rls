@@ -285,6 +285,9 @@ func TestSeriesEpisodesSecondNumbering(t *testing.T) {
 		// the second numbering disagrees, and the season's episode is the one
 		{"Show.S02E01.Episode.3.1080p.WEB.h264-GRP", [][]int{{2, 1}}, 1},
 		{"[Group] Show (2024) - 05 (S01E05) (BD 1080p x264 8-bit EAC-3) [Dual Audio]", [][]int{{1, 5}}, 5},
+		{"Fairy Tail - S06E32 - Tartaros Arc Iron Fist of the Fire Dragon [Episode 83]", [][]int{{6, 32}}, 32},
+		// a second numbering starts no range
+		{"Show.S01E01.Episode.5-E07.1080p.WEB.h264-GRP", [][]int{{1, 1}, {1, 7}}, 1},
 		// the same episode written twice
 		{"Show.S01E01.S01E01.1080p.WEB.h264-GRP", [][]int{{1, 1}}, 1},
 		{"Show.S11E11-GRP/Show.S11E11-GRP.mkv", [][]int{{11, 11}}, 11},
