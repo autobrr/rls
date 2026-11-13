@@ -3780,6 +3780,13 @@
   size: "DVDR"
   container: "ISO"
   group: "FTPM"
+"Fairy Tail - S06E32 - Tartaros Arc Iron Fist of the Fire Dragon [Episode 83]":
+  type: "episode"
+  title: "Fairy Tail"
+  subtitle: "Tartaros Arc Iron Fist of the Fire Dragon"
+  series: 6
+  episode: 32
+  absolute: 83
 "Fairy.Tail.E009.Natsu.verschlingt.ein.Dorf.German.2009.ANiME.DL.BDRiP.x264-STARS":
   type: "episode"
   title: "Fairy Tail"
@@ -3822,6 +3829,19 @@
   audio: "FLAC"
   group: "UTW"
   site: "UTW"
+"Formula.E.DRIVER.S02E01.Episode.1.1080p.AMZN.WEB-DL.DDP2.0.H.264-FFG.mkv":
+  type: "episode"
+  title: "Formula E DRIVER"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  series: 2
+  episode: 1
+  codec: "H.264"
+  audio: "DDP"
+  channels: "2.0"
+  group: "FFG"
+  ext: "mkv"
 "Formula1.2024x05.Miami.Grand.Prix.Race.1080p.WEB.h264-GRP":
   type: "episode"
   title: "Formula1"
@@ -7762,23 +7782,3 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
-"Formula.E.DRIVER.S02E01.Episode.1.1080p.AMZN.WEB-DL.DDP2.0.H.264-FFG.mkv":
-  type: "episode"
-  title: "Formula E DRIVER"
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "AMZN"
-  series: 2
-  episode: 1
-  codec: "H.264"
-  audio: "DDP"
-  channels: "2.0"
-  group: "FFG"
-  ext: "mkv"
-"Fairy Tail - S06E32 - Tartaros Arc Iron Fist of the Fire Dragon [Episode 83]":
-  type: "episode"
-  title: "Fairy Tail"
-  subtitle: "Tartaros Arc Iron Fist of the Fire Dragon"
-  series: 6
-  episode: 32
-  absolute: 83

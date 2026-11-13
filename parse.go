@@ -1772,7 +1772,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			}
 			// the disc is then the only source: a music source beside
 			// another one is a word of the title ('The.Cassette.2020.1080p.WEB',
-			// 'The.CD.2020.1080p.WEB')
+			// 'The.Vinyl.2020.1080p.WEB')
 			if r.Resolution != "" && r.tags[i-1].Is(TagTypeSource) && slices.ContainsFunc(r.tags, func(tag Tag) bool {
 				return tag.Is(TagTypeSource) && tag.InfoType() != Music
 			}) {
