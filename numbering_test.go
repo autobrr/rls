@@ -297,8 +297,10 @@ func TestSeriesEpisodesSecondNumbering(t *testing.T) {
 		{"Show.S01E01.S01E02.1080p.WEB.h264-GRP", [][]int{{1, 1}, {1, 2}}, 1},
 		{"Show.S01E05.E06.1080p.WEB.h264-GRP", [][]int{{1, 5}, {1, 6}}, 5},
 		{"[Group] Show - S04E29 (WEB 1080p) | Other Name - E88 - S00E36", [][]int{{0, 36}, {4, 29}, {4, 88}}, 29},
-		// a season with no episode leaves the episode after it in the season
+		// a season with no episode leaves the episode after it in the season,
+		// unless the name writes that season's episode too
 		{"[Grp] Show S2 - 04 [1080p].mkv", [][]int{{2, 4}}, 4},
+		{"Show.S01E01.S02.Episode.2.1080p.WEB.h264-GRP", [][]int{{1, 1}, {2, 2}}, 1},
 		// no season written
 		{"Show.Episode.1.1080p.WEB.h264-GRP", [][]int{{0, 1}}, 1},
 		// a part is not an episode
@@ -313,6 +315,12 @@ func TestSeriesEpisodesSecondNumbering(t *testing.T) {
 		if r.Episode != test.episode {
 			t.Errorf("%q: expected episode %d, got: %d", test.name, test.episode, r.Episode)
 		}
+	}
+	// season 2 writes its episode in '(S02E01)', so the 13 after 'S2' is a
+	// second numbering
+	name := "[Grp] Show S2 - 13 (S02E01) [1080p].mkv"
+	if v, exp := ParseString(name).SeriesEpisodes(), [][]int{{2, 1}}; !slices.EqualFunc(v, exp, slices.Equal[[]int]) {
+		t.Errorf("%q: expected series episodes %v, got: %v", name, exp, v)
 	}
 }
 

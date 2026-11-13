@@ -189,20 +189,15 @@ const maxRangeFill = 10000
 // SeriesEpisodes returns all series and episodes. The episodes inside a range
 // are included, up to maxRangeFill of them. A written episode 0 is an episode
 // ('S01E00', '[Grp] Show - 00-12'), and a season with no episode gives no
-// pair ('S01'). As in EpisodeRange, when a tag writes a season and an episode
-// together, an episode written without a season is a second numbering of it
-// unless it is an 'E06' continuation: 'S02E01.Episode.1' and
-// 'S23E19.Episode.1174' each give one pair. An episode written twice gives
-// one pair ('S11E11-GRP/S11E11-GRP.mkv').
+// pair ('S01'). As in EpisodeRange, an episode that is a second numbering
+// gives no pair of its own, so 'S02E01.Episode.1' and 'S23E19.Episode.1174'
+// each give one pair. An episode written twice gives one pair
+// ('S11E11-GRP/S11E11-GRP.mkv').
 func (r Release) SeriesEpisodes() [][]int {
 	var v [][]int
-	scheme := r.writesSeasonEpisode()
-	second := func(tag Tag) bool {
-		return scheme && tag.val(1) == "" && !tag.continuation()
-	}
 	last, fill, none := -1, maxRangeFill, 0
 	for i, tag := range r.tags {
-		if !tag.Is(TagTypeSeries) || second(tag) {
+		if !tag.Is(TagTypeSeries) || r.secondNumbering(i) {
 			continue
 		}
 		series, _ := tag.Series()
@@ -218,7 +213,7 @@ func (r Release) SeriesEpisodes() [][]int {
 			// makes a range ('E02-E04', 'S00E02-S00E04', 'E29~E31'), which
 			// runs from the last episode of the tag before it, unless that
 			// tag is a second numbering ('S01E01.Episode.5-E07')
-			if k == 0 && i >= 2 && r.tags[i-2].Is(TagTypeSeries) && !second(r.tags[i-2]) && (bare || tag.val(1) == r.tags[i-2].val(1)) && r.tags[i-1].rangeDelim() {
+			if k == 0 && i >= 2 && r.tags[i-2].Is(TagTypeSeries) && !r.secondNumbering(i-2) && (bare || tag.val(1) == r.tags[i-2].val(1)) && r.tags[i-1].rangeDelim() {
 				if prev := r.tags[i-2].episodes(&none); len(prev) != 0 {
 					if first := prev[len(prev)-1] + 1; episode-first <= fill {
 						for j := first; j < episode; j++ {
@@ -248,13 +243,27 @@ func (r Release) SeriesEpisodes() [][]int {
 	return slices.CompactFunc(v, slices.Equal[[]int])
 }
 
-// writesSeasonEpisode reports whether a series tag writes a season and an
-// episode together ('S23E19', '1x01'). An episode written without a season in
-// such a name is then a second numbering of it ('Episode.1174') or an 'E06'
-// continuation.
-func (r Release) writesSeasonEpisode() bool {
-	for _, tag := range r.tags {
-		if tag.typ == TagTypeSeries && tag.val(1) != "" && tag.wroteEpisode() {
+// secondNumbering reports whether the series tag at i writes an episode
+// without a season that numbers an episode of the name a second way, ie the
+// 'Episode.1174' of 'S23E19.Episode.1174' and the '1174' of '1174 (S23E19)'.
+// The episode is in the season written nearest before it, and is a second
+// numbering when the name writes that season's episode too: the '13' of 'S2 -
+// 13 (S02E01)' is, and the 'Episode.2' of 'S01E01.S02.Episode.2' is episode 2
+// of season 2. With no season before it, any season written with an episode
+// makes it one. An 'E06' continuation is another episode, and not one.
+func (r Release) secondNumbering(i int) bool {
+	tag := r.tags[i]
+	if tag.typ != TagTypeSeries || tag.val(1) != "" || tag.continuation() {
+		return false
+	}
+	season := ""
+	for j := i - 1; j >= 0 && season == ""; j-- {
+		if r.tags[j].typ == TagTypeSeries {
+			season = r.tags[j].val(1)
+		}
+	}
+	for _, t := range r.tags {
+		if t.typ == TagTypeSeries && t.val(1) != "" && t.wroteEpisode() && (season == "" || atoi(t.val(1)) == atoi(season)) {
 			return true
 		}
 	}
@@ -406,13 +415,11 @@ func (r Release) seasonList(i int) int {
 // EpisodeRange returns the first and last episode when the name gives more
 // than one ('S01E05E06', 'S01E02-04', '01-12'). The episodes are those of the
 // first season the name gives, the one in Series: 'S01E01.S02E01' is not a
-// range. When a tag writes a season and an episode together ('S23E19'), an
-// episode written without a season counts only as an 'E06' continuation, so
+// range. An episode that is a second numbering is not counted, so
 // 'S23E19.Episode.1174' is one episode under two numberings. The same episode
 // written twice is one episode. The ends of a range come back however wide it
 // is.
 func (r Release) EpisodeRange() (first, last int, ok bool) {
-	scheme := r.writesSeasonEpisode()
 	// cur is the season the nearest earlier tag wrote, which an episode
 	// written without one is in
 	cur, season, found := 0, 0, false
@@ -427,7 +434,7 @@ func (r Release) EpisodeRange() (first, last int, ok bool) {
 			if cur = s; r.seasonRange(i) != -1 || r.seasonList(i) != -1 {
 				cur = 0
 			}
-		case scheme && !tag.continuation():
+		case r.secondNumbering(i):
 			continue
 		}
 		for _, b := range tag.rest(2) {
