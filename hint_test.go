@@ -91,19 +91,19 @@ func extraCollections(t *testing.T, collections ...[]string) map[string][]*tagin
 
 func TestNewParserWithTaginfo(t *testing.T) {
 	t.Parallel()
-	abema := []string{"ABEMA", "Abema", "(?-i:ABEMA)", "", "", ""}
-	hidive := []string{"HIDIVE", "HIDIVE", "(?-i:HIDIVE)", "", "", ""}
-	const name = "Show.S01E02.1080p.ABEMA.WEB-DL.AAC2.0.H.264-GRP"
-	const other = "Show.S01E02.1080p.HIDIVE.WEB-DL.AAC2.0.H.264-GRP"
+	footv := []string{"FOOTV", "Foo TV", "(?-i:FOOTV)", "", "", ""}
+	bartv := []string{"BARTV", "Bar TV", "(?-i:BARTV)", "", "", ""}
+	const name = "Show.S01E02.1080p.FOOTV.WEB-DL.AAC2.0.H.264-GRP"
+	const other = "Show.S01E02.1080p.BARTV.WEB-DL.AAC2.0.H.264-GRP"
 	// the default parser does not know either service
 	for _, s := range []string{name, other} {
 		if r := ParseString(s); r.Collection != "" {
 			t.Fatalf("%q: the default parser knows collection %q, pick another for this test", s, r.Collection)
 		}
 	}
-	one := NewParser(WithTaginfo(extraCollections(t, abema)))
-	if r := one.ParseRelease([]byte(name)); r.Collection != "ABEMA" {
-		t.Errorf("%q: expected collection %q, got: %q", name, "ABEMA", r.Collection)
+	one := NewParser(WithTaginfo(extraCollections(t, footv)))
+	if r := one.ParseRelease([]byte(name)); r.Collection != "FOOTV" {
+		t.Errorf("%q: expected collection %q, got: %q", name, "FOOTV", r.Collection)
 	}
 	// the name without the service reads the same with either parser
 	const without = "Show.S01E02.1080p.WEB-DL.AAC2.0.H.264-GRP"
@@ -111,8 +111,8 @@ func TestNewParserWithTaginfo(t *testing.T) {
 		t.Errorf("%q: differs from the default parser:%s", without, diffRelease(r, exp))
 	}
 	// two options add up
-	two := NewParser(WithTaginfo(extraCollections(t, abema)), WithTaginfo(extraCollections(t, hidive)))
-	for s, c := range map[string]string{name: "ABEMA", other: "HIDIVE"} {
+	two := NewParser(WithTaginfo(extraCollections(t, footv)), WithTaginfo(extraCollections(t, bartv)))
+	for s, c := range map[string]string{name: "FOOTV", other: "BARTV"} {
 		if r := two.ParseRelease([]byte(s)); r.Collection != c {
 			t.Errorf("%q: expected collection %q, got: %q", s, c, r.Collection)
 		}
@@ -123,7 +123,7 @@ func TestNewParserWithTaginfo(t *testing.T) {
 	// every name that carries neither service reads as the default parser
 	// reads it
 	for i, test := range rlsTests(t) {
-		if strings.Contains(test.s, "ABEMA") || strings.Contains(test.s, "HIDIVE") {
+		if strings.Contains(test.s, "FOOTV") || strings.Contains(test.s, "BARTV") {
 			continue
 		}
 		src := []byte(test.s)
@@ -313,11 +313,11 @@ func TestNewParserNilTaginfo(t *testing.T) {
 	if err == nil || bad != nil {
 		t.Fatalf("expected taginfo.New to fail on the regexp '(', got: %v, %v", bad, err)
 	}
-	extra := extraCollections(t, []string{"ABEMA", "ABEMA", "", "", "", ""})
+	extra := extraCollections(t, []string{"FOOTV", "FOOTV", "", "", "", ""})
 	extra["collection"] = append(extra["collection"], nil)
-	const name = "Show.S01E02.1080p.ABEMA.WEB-DL.AAC2.0.H.264-GRP"
-	if r := NewParser(WithTaginfo(extra)).ParseRelease([]byte(name)); r.Collection != "ABEMA" {
-		t.Errorf("expected collection ABEMA, got: %q", r.Collection)
+	const name = "Show.S01E02.1080p.FOOTV.WEB-DL.AAC2.0.H.264-GRP"
+	if r := NewParser(WithTaginfo(extra)).ParseRelease([]byte(name)); r.Collection != "FOOTV" {
+		t.Errorf("expected collection FOOTV, got: %q", r.Collection)
 	}
 }
 

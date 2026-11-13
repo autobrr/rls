@@ -1501,7 +1501,7 @@ func NewGroupLexer() Lexer {
 				s := src[l+j+1 : n]
 				if grp := bytes.Trim(s, " \t_"); len(grp) != 0 &&
 					(!bytes.ContainsAny(s, invalid) || (len(s) <= 14 && (spacedGroup.Match(grp) || dottedGroup.Match(grp)))) &&
-					!shortTags[string(grp)] && !(lowerCase(grp) && shortTags[strings.ToUpper(string(grp))]) &&
+					!isShort(shortTags, grp) && !(lowerCase(grp) && shortTags[strings.ToUpper(string(grp))]) &&
 					(len(end) == 0 || !bracket.MatchString(end[len(end)-1].Text())) &&
 					!inTag(src[:n], l+j) {
 					return start, append(
@@ -1572,6 +1572,13 @@ func repostSuffix(s []byte) (int, string) {
 		}
 	}
 	return 0, ""
+}
+
+// isShort reports whether b is a short tag as it is written. A tag of any case
+// is also looked up in upper case, see newTagParser.
+func isShort(short map[string]bool, b []byte) bool {
+	_, ok := short[string(b)]
+	return ok
 }
 
 // lowerCase reports whether b has no upper case ASCII letter. The short tags
@@ -1955,7 +1962,7 @@ func NewMetaLexer(strs ...string) Lexer {
 							onlyResolution.Match(v) && !(i+len(m[0]) < n && src[i+len(m[0])] == '[')) {
 							continue
 						}
-						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]
+						short = len(strs[l*4+1]) == 1 && (shortTags[strings.ToUpper(string(v))] || isShort(shortTags, v))
 						// a second bracket with text after it names a second
 						// group ('[A] [B] Show - 01'), where one with a
 						// bracket after it is the title ('[A][Show][01]') and
@@ -2020,7 +2027,7 @@ func NewMetaLexer(strs ...string) Lexer {
 						if k == "site" && notSite(v) {
 							continue
 						}
-						short = len(strs[l*4+1]) == 1 && shortTags[strings.ToUpper(string(v))]
+						short = len(strs[l*4+1]) == 1 && (shortTags[strings.ToUpper(string(v))] || isShort(shortTags, v))
 						matched = !prev[k] && !short && !bytes.ContainsAny(v, "\t\r\n\f +")
 						seen(k)
 					}

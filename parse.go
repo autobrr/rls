@@ -61,7 +61,10 @@ func newTagParser(builder Builder, infos map[string][]*taginfo.Taginfo, lexers .
 		}
 	}
 	delim := regexp.MustCompile(`^((?:` + reutil.Join(true, v...) + ")+)")
-	// build short tags
+	// build short tags. A word that is a tag in any case is stored in upper
+	// case as true. A tag of one word whose regexp matches it only as written
+	// ('(?-i:MAX)') is stored as written, and in upper case when that matches,
+	// as false: the word in another case is a group ('[Max] Show - 01')
 	short := make(map[string]bool)
 	hdr := strings.ToLower(TagTypeHDR.String())
 	for typ, v := range infos {
@@ -69,9 +72,20 @@ func newTagParser(builder Builder, infos map[string][]*taginfo.Taginfo, lexers .
 			continue
 		}
 		for _, info := range v {
-			for _, field := range strings.FieldsFunc(info.Tag(), isAnyDelim) {
-				if len(field) < 5 && !strings.Contains(field, "$") {
-					short[strings.ToUpper(field)] = true
+			fields := strings.FieldsFunc(info.Tag(), isAnyDelim)
+			for _, field := range fields {
+				if len(field) >= 5 || strings.Contains(field, "$") {
+					continue
+				}
+				u := strings.ToUpper(field)
+				if len(fields) != 1 || info.Match(strings.ToLower(field)) {
+					short[u] = true
+					continue
+				}
+				for _, w := range []string{field, u} {
+					if _, ok := short[w]; !ok && info.Match(w) {
+						short[w] = false
+					}
 				}
 			}
 		}
@@ -619,7 +633,7 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	b.specialDate(r)
 	// unset tags
 	b.unset(r)
-	b.fixSourceGroup(r)
+	b.fixTrailingGroup(r)
 	b.remuxSource(r)
 	// read titles
 	i := b.titles(r)
@@ -1924,30 +1938,34 @@ func (b *TagBuilder) unset(r *Release) {
 	}
 }
 
-// fixSourceGroup reads a source after the last hyphen of a video name as its
-// group ('Movie 1954 2160p Remux HEVC DTS-HD MA 5.1-VHS',
-// 'Movie.1985.DVDRip.XviD-DVD'). The group lexer leaves a word that is a short
-// tag to its tag, and a source written last does not describe the video: a
-// video name writes its source in front of the codec and the audio. A codec
-// or a resolution in front of the hyphen is what makes it a video name. A
-// record ends in its source ('Artist-Title-(ID).2019-WEB'), and so does a
-// name with nothing in front of the source ('Movie.1985-VHS').
-func (b *TagBuilder) fixSourceGroup(r *Release) {
+// fixTrailingGroup reads a source or a collection after the last hyphen of a
+// video name as its group ('Movie 1954 2160p Remux HEVC DTS-HD MA 5.1-VHS',
+// 'Movie.1985.DVDRip.XviD-DVD', 'Show.S25.720p.WEB-DL.x264-TBS'). The group
+// lexer leaves a word that is a short tag to its tag, and a source or a
+// streaming service written last does not describe the video: a video name
+// writes them in front of the codec and the audio. A codec or a resolution in
+// front of the hyphen is what makes it a video name. A record ends in its
+// source ('Artist-Title-(ID).2019-WEB'), and so does a name with nothing in
+// front of the source ('Movie.1985-VHS').
+func (b *TagBuilder) fixTrailingGroup(r *Release) {
 	if r.Group != "" || !r.Type.Is(Movie, Series, Episode) {
 		return
 	}
 	i := len(r.tags) - 1
 	for ; i > 1 && r.tags[i].Is(TagTypeWhitespace, TagTypeExt); i-- {
 	}
-	if i < 2 || !r.tags[i].Is(TagTypeSource) || !r.tags[i-1].Is(TagTypeDelim) || r.tags[i-1].Delim() != "-" ||
+	if i < 2 || !r.tags[i].Is(TagTypeSource, TagTypeCollection) || !r.tags[i-1].Is(TagTypeDelim) || r.tags[i-1].Delim() != "-" ||
 		!slices.ContainsFunc(r.tags[:i-1], func(tag Tag) bool { return tag.Is(TagTypeCodec, TagTypeResolution) }) {
 		return
 	}
 	r.tags[i] = r.tags[i].as(TagTypeGroup, nil)
-	r.Group, r.Source = r.tags[i].Group(), ""
+	r.Group, r.Source, r.Collection = r.tags[i].Group(), "", ""
 	for _, tag := range r.tags {
-		if tag.Is(TagTypeSource) && preciser(r.Source, tag.Source()) {
+		switch {
+		case tag.Is(TagTypeSource) && preciser(r.Source, tag.Source()):
 			r.Source = tag.Source()
+		case tag.Is(TagTypeCollection) && r.Collection == "":
+			r.Collection = tag.Collection()
 		}
 	}
 }
