@@ -324,6 +324,49 @@ func TestSeriesEpisodesSecondNumbering(t *testing.T) {
 	}
 }
 
+// TestAbsoluteSecondNumbering checks that an episode written without a season
+// beside one written with a season and an episode is the absolute episode,
+// and that Episode is the season's episode wherever the two are written.
+func TestAbsoluteSecondNumbering(t *testing.T) {
+	tests := []struct {
+		name     string
+		episode  int
+		absolute int
+		ok       bool
+	}{
+		{"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP", 19, 1174, true},
+		{"Fairy Tail - S06E32 - Tartaros Arc Iron Fist of the Fire Dragon [Episode 83]", 32, 83, true},
+		{"[Grp] Show - 1174 (S23E19) [1080p]", 19, 1174, true},
+		{"[Group] Show (2024) - 13 (S02E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]", 1, 13, true},
+		{"[Grp] Show S2 - 13 (S02E01) [1080p].mkv", 1, 13, true},
+		// the season's episode written again is no absolute number
+		{"Formula.E.DRIVER.S02E01.Episode.1.1080p.AMZN.WEB-DL.DDP2.0.H.264-FFG.mkv", 1, 0, false},
+		{"Noragami - S02E06 - What Must Be Done [Episode 6]", 6, 0, false},
+		{"[Group] Show (2024) - 01 (S01E01) (BD 1080p x264 8-bit EAC-3) [Dual Audio]", 1, 0, false},
+		// a special is qualified by its season 0
+		{"Show.S00E05.Episode.12.1080p.WEB.h264-GRP", 5, 0, false},
+		// a continuation is another episode, and a range or half an episode
+		// has no absolute number
+		{"Show.S01E05.E06.1080p.WEB.h264-GRP", 5, 0, false},
+		{"Show.S01E01.Episode.5-7.1080p.WEB.h264-GRP", 1, 0, false},
+		{"Show.S01E01.Episode.5.5.1080p.WEB.h264-GRP", 1, 0, false},
+		// a season with no episode leaves the episode after it in the season
+		{"[Grp] Show S2 - 04 [1080p].mkv", 4, 0, false},
+		{"Show.S01E01.S02.Episode.2.1080p.WEB.h264-GRP", 1, 0, false},
+		// no season written
+		{"[Group] One Piece - 1169 [1080p].mkv", 1169, 1169, true},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if r.Episode != test.episode {
+			t.Errorf("%q: expected episode %d, got: %d", test.name, test.episode, r.Episode)
+		}
+		if absolute, ok := r.Absolute(); absolute != test.absolute || ok != test.ok {
+			t.Errorf("%q: expected absolute %d %t, got: %d %t", test.name, test.absolute, test.ok, absolute, ok)
+		}
+	}
+}
+
 // TestSeasonRange checks a range of seasons written with one season word:
 // Series is the first season, Seasons gives every season of the range, the
 // release is a pack, and the last season is neither the subtitle nor a
