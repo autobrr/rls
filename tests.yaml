@@ -2643,6 +2643,14 @@
   year: 2020
   codec: "H.264"
   group: "GRP"
+"The.CD.2020.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "The CD"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "H.264"
+  group: "GRP"
 "The.Creator.2023.PROPER.UHD.WEB-DL.2160p.HEVC.DV.HDR.EAC3.7.1.DL.Remux-TvR":
   type: "movie"
   title: "The Creator"
@@ -2663,6 +2671,14 @@
   resolution: "1080p"
   year: 2020
   codec: "H.264"
+  group: "GRP"
+"The.DVB.2020.720p.BluRay.x264-GRP":
+  type: "movie"
+  title: "The DVB"
+  source: "BluRay"
+  resolution: "720p"
+  year: 2020
+  codec: "x264"
   group: "GRP"
 "The.English.Patient.BluRay.1996.German.DTS":
   type: "movie"
@@ -2724,6 +2740,14 @@
   audio: "AAC"
   other: "3D SBS"
   group: "ETRG"
+"The.Last.CD.Shop.2020.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "The Last CD Shop"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "H.264"
+  group: "GRP"
 "The.Man.from.U.N.C.L.E.2015.1080p.BluRay.x264-GRP":
   type: "movie"
   title: "The Man from U.N.C.L.E."
@@ -5061,6 +5085,14 @@
   episode: 2
   codec: "x264"
   group: "ABC"
+"Show.S01E02.DVB.x264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "DVB"
+  series: 1
+  episode: 2
+  codec: "x264"
+  group: "GRP"
 "Show S01E02 1080p WEB":
   type: "episode"
   title: "Show"
@@ -6165,6 +6197,24 @@
   codec: "XViD"
   group: "LOL"
   site: "eztv"
+"[Group] The CD - 01 [1080p WEB-DL]":
+  type: "episode"
+  title: "The CD"
+  source: "WEB-DL"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Group"
+  site: "Group"
+"The.CD.Shop.S01E02.720p.HDTV.x264-GRP":
+  type: "episode"
+  title: "The CD Shop"
+  source: "HDTV"
+  resolution: "720p"
+  series: 1
+  episode: 2
+  codec: "x264"
+  group: "GRP"
 "The.Dark.Web.S01E01.Pilot.1080p.AMZN.WEB.DDP5.1.H.264-NTb":
   type: "episode"
   title: "The Dark Web"
