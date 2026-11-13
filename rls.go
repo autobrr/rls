@@ -189,9 +189,14 @@ const maxRangeFill = 10000
 // SeriesEpisodes returns all series and episodes. The episodes inside a range
 // are included, up to maxRangeFill of them. A written episode 0 is an episode
 // ('S01E00', '[Grp] Show - 00-12'), and a season with no episode gives no
-// pair ('S01').
+// pair ('S01'). As in EpisodeRange, when a tag writes a season and an episode
+// together, an episode written without a season is a second numbering of it
+// unless it is an 'E06' continuation: 'S02E01.Episode.1' and
+// 'S23E19.Episode.1174' each give one pair. An episode written twice gives
+// one pair ('S11E11-GRP/S11E11-GRP.mkv').
 func (r Release) SeriesEpisodes() [][]int {
 	var v [][]int
+	scheme := r.writesSeasonEpisode()
 	last, fill, none := -1, maxRangeFill, 0
 	for i, tag := range r.tags {
 		if !tag.Is(TagTypeSeries) {
@@ -201,6 +206,9 @@ func (r Release) SeriesEpisodes() [][]int {
 		// a tag that writes no season is in the season written before it,
 		// which a written season 0 is not ('S04E29 ... S00E36')
 		bare := tag.val(1) == ""
+		if bare && scheme && !tag.continuation() {
+			continue
+		}
 		for k, episode := range tag.episodes(&fill) {
 			s := series
 			if bare && last != -1 {
@@ -235,7 +243,21 @@ func (r Release) SeriesEpisodes() [][]int {
 		}
 		return v[i][0] < v[j][0]
 	})
-	return v
+
+	return slices.CompactFunc(v, slices.Equal[[]int])
+}
+
+// writesSeasonEpisode reports whether a series tag writes a season and an
+// episode together ('S23E19', '1x01'). An episode written without a season in
+// such a name is then a second numbering of it ('Episode.1174') or an 'E06'
+// continuation.
+func (r Release) writesSeasonEpisode() bool {
+	for _, tag := range r.tags {
+		if tag.typ == TagTypeSeries && tag.val(1) != "" && tag.wroteEpisode() {
+			return true
+		}
+	}
+	return false
 }
 
 // Absolute returns the episode when the name numbers its episodes absolutely
@@ -389,13 +411,7 @@ func (r Release) seasonList(i int) int {
 // written twice is one episode. The ends of a range come back however wide it
 // is.
 func (r Release) EpisodeRange() (first, last int, ok bool) {
-	scheme := false
-	for _, tag := range r.tags {
-		if tag.typ == TagTypeSeries && tag.val(1) != "" && tag.wroteEpisode() {
-			scheme = true
-			break
-		}
-	}
+	scheme := r.writesSeasonEpisode()
 	// cur is the season the nearest earlier tag wrote, which an episode
 	// written without one is in
 	cur, season, found := 0, 0, false
@@ -449,9 +465,9 @@ type EpisodeSpan struct {
 // season pack gives no span.
 //
 // An episode written with no season is in the season written before it, as in
-// SeriesEpisodes: the '04' of 'S2 - 04', and also a second numbering of the
-// same episode ('S23E19.Episode.1174' gives 1174 in season 23). An episode
-// written twice is listed twice. A hyphen or a tilde inside a tag makes a
+// SeriesEpisodes: the '04' of 'S2 - 04'. Unlike SeriesEpisodes, a second
+// numbering of the same episode is listed too ('S23E19.Episode.1174' gives
+// 1174 in season 23), and an episode written twice is listed twice. A hyphen or a tilde inside a tag makes a
 // range ('S01E02-04', '01 ~ 12'), and so does a bare hyphen or tilde between
 // two tags of one season when the end is the higher number ('E02-E04',
 // 'E29~E31'). A Release built by hand with an Episode and no episode in its
