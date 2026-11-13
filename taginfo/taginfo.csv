@@ -121,6 +121,7 @@ collection,FE,Freeform,,,,
 collection,3FM,NPO 3FM,,,music,1
 collection,FOX,Fox Broadcasting Company,(?-i:FOX),,,
 collection,FREEWEB,Freeweb,,,music,1
+collection,F1TV,F1 TV,(?-i:F1TV),,,
 collection,FUNi,Funimation,,,,
 collection,GOG,Good Old Games,gog(?:[\-\._ ]?(?:edition|classic))?,,game,1
 collection,Gumroad,,gum[\-\._ ]?road(?:[\-\._ ]?com)?,,education,1
@@ -165,6 +166,8 @@ collection,SF,Shout! Factory,(?-i:SF),,,
 collection,SiriusXM,Sirius XM,sirius[\-\._ ]?xm,,music,1
 collection,Skillfeed,,,,education,1
 collection,Skillshare,,skillshare(?:[\-\._ ]?com)?,,education,1
+collection,SkyF1UHD,Sky Sports F1 UHD,(?-i:S[kK][yY]F1UHD),,,
+collection,SkyF1,Sky Sports F1,(?-i:S[kK][yY]F1(?:HD)?),,,
 collection,Sonic.Academy,Sonic Academy,sonic[\-\._ ]?academy(?:[\-\._ ]?com)?,,education,1
 collection,STAN,Stan,(?-i:STAN),,,
 collection,STV,Straight-to-Video,,,movie,
@@ -491,6 +494,7 @@ other,EAC,Exact Audio Copy,(?-i:EAC),,music,1
 other,EXTRAS,Extras,(?:(?:plus|including|incl|inc)[\-\._ ]?)?extras(?:[\-\._ ]?only)?,,,
 other,FiNAL,Final,(?-i:F[iI]N[aA]L),,,
 other,FiX,Fix,(?-i:F[iI]X),,,
+other,F1LIVE,F1 Live,(?-i:F1LIVE),,,
 other,FS,Fullscreen,(?-i:FS),,,
 other,Half-SBS,3D (half side-by-side),h(?:alf)?[\-\._ ]?sbs,,movie,1
 other,HAPPY.NEW.YEAR,Holiday (new year),(?-i:HAPPY[\-\._ ]NEW[\-\._ ]YEARS?),,,

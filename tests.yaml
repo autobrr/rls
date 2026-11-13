@@ -93,15 +93,6 @@
   cut: "Uncut"
   language: "GERMAN DL"
   group: "ETM"
-"[test]50.50.2011.BluRay.1080p.DTS-HD":
-  type: "movie"
-  title: "50 50"
-  source: "BluRay"
-  resolution: "1080p"
-  year: 2011
-  audio: "DTS-HD"
-  group: "test"
-  site: "test"
 "50.50.2011.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR.mkv":
   type: "movie"
   title: "50 50"
@@ -114,6 +105,15 @@
   other: "REMUX"
   group: "FraMeSToR"
   ext: "mkv"
+"[test]50.50.2011.BluRay.1080p.DTS-HD":
+  type: "movie"
+  title: "50 50"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2011
+  audio: "DTS-HD"
+  group: "test"
+  site: "test"
 "1492.Conquest.of.Paradise.1992.SWEDiSH.SUBPACK.BluRay-SiN_iNT":
   type: "movie"
   title: "1492 Conquest of Paradise"
@@ -122,14 +122,14 @@
   other: "INTERNAL"
   language: "SWEDiSH SUBPACK"
   group: "SiN"
+"2001: A Space Odyssey.mkv":
+  type: "movie"
+  title: "2001: A Space Odyssey"
+  ext: "mkv"
 "(2001)A Space Odyssey(1961).mkv":
   type: "movie"
   title: "2001 A Space Odyssey"
   year: 1961
-  ext: "mkv"
-"2001: A Space Odyssey.mkv":
-  type: "movie"
-  title: "2001: A Space Odyssey"
   ext: "mkv"
 "(2001) A Space Odyssey (1968).mkv":
   type: "movie"
@@ -754,17 +754,6 @@
   audio: "DDP"
   group: "ZQ"
   ext: "mkv"
-"Der.Denver.Clan.Staffel4.DVD7.German.FS.PAL.DVDR-RSG":
-  type: "series"
-  title: "Der Denver Clan"
-  source: "DVD"
-  resolution: "576p"
-  series: 4
-  disc: "DVD7"
-  other: "FS"
-  language: "GERMAN"
-  size: "DVDR"
-  group: "RSG"
 "Dinosaur 13 2014 WEBrip XviD AC3 MiLLENiUM":
   type: "movie"
   title: "Dinosaur 13"
@@ -1004,6 +993,29 @@
   title: "foo bar"
   source: "BluRay"
   resolution: "1080p"
+"Formula.1.2026.Australia.Grand.Prix.Race.HLG.2160p.F1TV.WEB-DL.AAC2.0.H.265-MWR":
+  type: "movie"
+  title: "Formula 1"
+  subtitle: "Australia Grand Prix Race"
+  source: "WEB-DL"
+  resolution: "2160p"
+  collection: "F1TV"
+  year: 2026
+  codec: "H.265"
+  hdr: "HLG"
+  audio: "AAC"
+  channels: "2.0"
+  group: "MWR"
+"Formula1 2023 Round03 Australia Full Event SkyF1 1080p H264 English-egortech":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round03 Australia Full Event"
+  resolution: "1080p"
+  collection: "SkyF1"
+  year: 2023
+  codec: "H.264"
+  language: "ENGLiSH"
+  group: "egortech"
 "Formula1.2024.Round19.USA.Austin.Race.1080p.WEB.h264-GRP":
   type: "movie"
   title: "Formula1"
@@ -1013,6 +1025,67 @@
   year: 2024
   codec: "H.264"
   group: "GRP"
+"Formula1 2025 Round03 Japan Race SkyF1HD 1080p HDTV AAC2 0 H 264 English-smcgill1969":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round03 Japan Race"
+  source: "HDTV"
+  resolution: "1080p"
+  collection: "SkyF1"
+  year: 2025
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  language: "ENGLiSH"
+  group: "smcgill1969"
+"Formula1.2025.Round04.Bahrain.FP2.F1TV.WEB-DL.2160p.HLG.H265.Multi-MWR":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round04 Bahrain FP2"
+  source: "WEB-DL"
+  resolution: "2160p"
+  collection: "F1TV"
+  year: 2025
+  codec: "H.265"
+  hdr: "HLG"
+  group: "MWR"
+  unused: "Multi"
+"Formula1.2025.Round09.Spain.Race.SKY.F1TV.WEB-DL.1080p.h264.English-MWR":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round09 Spain Race SKY"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "F1TV"
+  year: 2025
+  codec: "H.264"
+  language: "ENGLiSH"
+  group: "MWR"
+"Formula1 2025 Round22 USA Las Vegas Race F1LIVE F1TV WEB-DL 1080p h264 English-MWR":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round22 USA Las Vegas Race"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "F1TV"
+  year: 2025
+  codec: "H.264"
+  other: "F1LIVE"
+  language: "ENGLiSH"
+  group: "MWR"
+"Formula1.2026.China.Grand.Prix.Sprint.Qualifying.2160p.SkyF1UHD.HDTV.DDP5.1.Atmos.HDR.H.265-egortech":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "China Grand Prix Sprint Qualifying"
+  source: "HDTV"
+  resolution: "2160p"
+  collection: "SkyF1UHD"
+  year: 2026
+  codec: "H.265"
+  hdr: "HDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "egortech"
 "Formula1.2026.Hungarian.Grand.Prix.Practice.One.1080p.AHDTV.x264-DARKSPORT":
   type: "movie"
   title: "Formula1"
@@ -1127,14 +1200,6 @@
   cut: "Extended.Cut"
   group: "juggs"
   site: "ETRG"
-"Hercules (2014) 1080p BrRip H264 - YIFY":
-  type: "movie"
-  title: "Hercules"
-  source: "BDRiP"
-  resolution: "1080p"
-  year: 2014
-  codec: "H.264"
-  group: "YIFY"
 "Hercules.2014.EXTENDED.1080p.WEB-DL.DD5.1.H264-RARBG":
   type: "movie"
   title: "Hercules"
@@ -1146,6 +1211,14 @@
   channels: "5.1"
   cut: "Extended.Cut"
   group: "RARBG"
+"Hercules (2014) 1080p BrRip H264 - YIFY":
+  type: "movie"
+  title: "Hercules"
+  source: "BDRiP"
+  resolution: "1080p"
+  year: 2014
+  codec: "H.264"
+  group: "YIFY"
 "Ice.Age.Collision.Course.2016.READNFO.720p.HDRIP.BD5.X264.AC3.TiTAN":
   type: "movie"
   title: "Ice Age Collision Course"
@@ -1916,15 +1989,6 @@
   group: "Commie"
   site: "Commie"
   unused: "Unofficial Batch"
-"Show.2023.02.29.1080p.HDTV.x264-GRP":
-  type: "movie"
-  title: "Show"
-  source: "HDTV"
-  resolution: "1080p"
-  year: 2023
-  codec: "x264"
-  group: "GRP"
-  unused: "02 29"
 "Shiki The Complete TV Series (2010–2011) 1080p WEB-DL AAC.2.0 H.264 UNCUT":
   type: "movie"
   title: "Shiki The Complete TV Series"
@@ -1940,6 +2004,15 @@
   type: "movie"
   title: "Show"
   source: "HDTV"
+  year: 2023
+  codec: "x264"
+  group: "GRP"
+  unused: "02 29"
+"Show.2023.02.29.1080p.HDTV.x264-GRP":
+  type: "movie"
+  title: "Show"
+  source: "HDTV"
+  resolution: "1080p"
   year: 2023
   codec: "x264"
   group: "GRP"
@@ -3312,6 +3385,17 @@
   episode: 21
   codec: "x264"
   group: "PLUTONiUM"
+"Der.Denver.Clan.Staffel4.DVD7.German.FS.PAL.DVDR-RSG":
+  type: "series"
+  title: "Der Denver Clan"
+  source: "DVD"
+  resolution: "576p"
+  series: 4
+  disc: "DVD7"
+  other: "FS"
+  language: "GERMAN"
+  size: "DVDR"
+  group: "RSG"
 "[HorribleSubs] Detective Conan - 862 [1080p].mkv":
   type: "episode"
   title: "Detective Conan"
@@ -3573,6 +3657,37 @@
   episode: 5
   codec: "H.264"
   group: "GRP"
+"Formula1 S2026E19 Round02 China Race F1TV Live+International 2160p WEB-DL DD 5.1 H265 HLG-F1Carreras":
+  type: "episode"
+  title: "Formula1"
+  subtitle: "Round02 China Race"
+  source: "WEB-DL"
+  resolution: "2160p"
+  collection: "F1TV"
+  year: 2026
+  series: 2026
+  episode: 19
+  codec: "H.265"
+  hdr: "HLG"
+  audio: "DD"
+  channels: "5.1"
+  group: "F1Carreras"
+  unused: "Live International"
+"Formula1 S2026E23 Round03 Japan Qualifying F1TV Live 1080p WEB-DL DD 5.1 H265-F1Carreras":
+  type: "episode"
+  title: "Formula1"
+  subtitle: "Round03 Japan Qualifying"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "F1TV"
+  year: 2026
+  series: 2026
+  episode: 23
+  codec: "H.265"
+  audio: "DD"
+  channels: "5.1"
+  group: "F1Carreras"
+  unused: "Live"
 "Game of Thrones - 4x03 - Breaker of Chains":
   type: "episode"
   title: "Game of Thrones"
@@ -6171,19 +6286,19 @@
   year: 2020
   codec: "x264"
   group: "SRPx"
-"Michael Jackson - Discography (2009) [FLAC]":
-  type: "music"
-  artist: "Michael Jackson"
-  title: "Discography"
-  year: 2009
-  audio: "FLAC"
-  other: "Discography"
 "Michael Jackson - Discography (1967-2009) [FLAC]":
   type: "music"
   artist: "Michael Jackson"
   title: "Discography"
   year: 1967
   yearend: 2009
+  audio: "FLAC"
+  other: "Discography"
+"Michael Jackson - Discography (2009) [FLAC]":
+  type: "music"
+  artist: "Michael Jackson"
+  title: "Discography"
+  year: 2009
   audio: "FLAC"
   other: "Discography"
 "Miles_Davis-Kind_Of_Blue-REMASTERED-(24BiT-192kHz)-WEB-FLAC-2013-OBZEN":

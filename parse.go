@@ -1260,7 +1260,7 @@ func (b *TagBuilder) fixEpisodeTitle(r *Release, i int) {
 		if year && (prev != i || strings.HasPrefix(r.tags[k].Language(), "MULTi")) {
 			break
 		}
-		if r.tags[k].Is(TagTypeLanguage, TagTypeCollection, TagTypeRegion) && prev == k-2 && plain(k-1) &&
+		if r.tags[k].Is(TagTypeLanguage, TagTypeCollection, TagTypeRegion) && !service(r.tags[k]) && prev == k-2 && plain(k-1) &&
 			(prev == i || r.tags[prev].Is(TagTypeText)) &&
 			plain(k+1) && r.tags[k+2].Is(TagTypeText) && plain(k+3) && r.tags[k+4].Is(TagTypeText) {
 			r.tags[k] = r.tags[k].As(TagTypeText, nil)
@@ -1345,7 +1345,7 @@ func (b *TagBuilder) fixIsolated(r *Release) {
 		dual := r.tags[i-1].Is(TagTypeAudio) && strings.EqualFold(r.tags[i-1].v[0], "dual") &&
 			r.tags[i-2].Is(TagTypeDelim) && strings.Trim(r.tags[i-2].Delim(), "._ ") == "" &&
 			r.tags[i].Is(TagTypeDelim) && strings.Trim(r.tags[i].Delim(), "._ ") == ""
-		if (dual || r.tags[i-1].Is(
+		if !service(r.tags[i-1]) && (dual || r.tags[i-1].Is(
 			TagTypeCollection,
 			TagTypeLanguage,
 			TagTypeOther,
@@ -2052,8 +2052,16 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 	}
 	// tags in front of the resolution end the subtitle, where tags inside it
 	// rule it out ('Semi.Final.England.vs.Argentina.HLG.2160p'). not past an
-	// episode, as the text in front of that is not its title
+	// episode, as the text in front of that is not its title. An F1
+	// broadcaster ends it as the resolution does, leaving the words after it
+	// unused ('Japan.Race.F1TV.Live.1080p')
 	end := resolution
+	for k := date + 1; k < resolution; k++ {
+		if service(r.tags[k]) {
+			end = k
+			break
+		}
+	}
 	for ; end > date+1 && !r.tags[end-1].Is(TagTypeText, TagTypeCut, TagTypeEdition, TagTypeSeries); end-- {
 	}
 	if end == date+1 || r.tags[end-1].Is(TagTypeSeries) {
@@ -2803,6 +2811,21 @@ func isolated(tags []Tag, i, inc int) bool {
 	// 'MiniMeters v0 8 4 Beta MacOS BTCR' treat the trailing group BTCR as
 	// title text and lose the MacOS platform.
 	return 0 <= i && i < len(tags)-1 && tags[i].Is(TagTypeText)
+}
+
+// service returns true when tag is the collection of an F1 broadcaster, which
+// is not a word of a title, so it stays a collection between words ('Japan
+// Qualifying F1TV Live 1080p', 'Race F1TV Live+International 2160p'). Other
+// services are words when between words ('Show.S01E02.Watch.on.ZEE5.Today').
+func service(tag Tag) bool {
+	if !tag.Is(TagTypeCollection) {
+		return false
+	}
+	switch tag.Collection() {
+	case "F1TV", "SkyF1", "SkyF1UHD":
+		return true
+	}
+	return false
 }
 
 // nextSource returns the index and value of the source tag next to i in the
