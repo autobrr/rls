@@ -50,5 +50,13 @@ jobs:
       - name: Test (race)
         run: go test -race ./...
 
+      - name: Vet (cli)
+        working-directory: cmd/rls
+        run: go vet ./...
+
+      - name: Test (cli)
+        working-directory: cmd/rls
+        run: go test -race ./...
+
       - name: Fuzz (smoke)
         run: go test -run XXX -fuzz FuzzParseString -fuzztime 60s .

@@ -41,3 +41,28 @@ func main() {
 	//   group: NOiR
 }
 ```
+
+## Command line
+
+`rls parse` parses release names and writes each result to standard
+output as a JSON object on its own line ([JSON Lines](https://jsonlines.org)).
+Names are read from the arguments or, when there are none, from standard input,
+one per line.
+
+Prebuilt binaries for Linux, macOS, Windows and FreeBSD are attached to each
+[release](https://github.com/autobrr/rls/releases).
+
+```sh
+$ rls parse The.Matrix.1999.1080p.BluRay.x264-GROUP
+$ rls parse < names.txt
+$ rls version
+```
+
+```powershell
+Get-Content names.txt | rls.exe parse | ConvertFrom-Json
+```
+
+Windows PowerShell 5.1 sends ASCII to native commands by default, which turns
+non-ASCII characters into `?`. Run
+`$OutputEncoding = [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)`
+first, or use PowerShell 7.
