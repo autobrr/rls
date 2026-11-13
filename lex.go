@@ -382,8 +382,9 @@ func NewSeriesLexer(strs ...string) Lexer {
 				}
 				// 'Season 1' written after an episode and a word of its title
 				// goes on with that title ('S01E00 Meet the Queens of Season 1
-				// 1080p'). Right after the episode ('S01E01-E10.Season.1') or
-				// in a bracket ('S01E02 Title (Season 1)') it is a season
+				// 1080p'). Right after the episode ('S01E01-E10.Season.1'),
+				// after a plus ('S01E01 Title + Season 2') or in a bracket
+				// ('S01E02 Title (Season 1)') it is a season
 				if len(series) != 0 && len(episode) == 0 && len(disc) == 0 && (s[0] == 's' || s[0] == 'S') && (s[1]|0x20 >= 'a' && s[1]|0x20 <= 'z') &&
 					inEpisodeTitle(start) {
 					return start, end, i - len(s), n, false
@@ -2164,15 +2165,30 @@ func tight(s, v []byte) bool {
 }
 
 // inEpisodeTitle reports whether what the tags in start read is inside the
-// title of an episode: a word of text and a delimiter with no bracket in it
-// end start, and a series tag in front of them wrote an episode ('S01E00 Meet
-// the Queens of ').
+// title of an episode: a word of text and a delimiter with no bracket or plus
+// in it end start, a series tag in front of them wrote an episode ('S01E00
+// Meet the Queens of '), and no bracket opened after that series tag is still
+// open. A plus lists what else the release holds ('S01E01 Title + Season 2'),
+// and a bracket holds tags or a note ('S01E01 Title (Includes Season 2)').
 func inEpisodeTitle(start []Tag) bool {
 	k := len(start) - 1
-	if k < 1 || !start[k].Is(TagTypeDelim) || strings.ContainsAny(start[k].Delim(), "[](){}") || !start[k-1].Is(TagTypeText) {
+	if k < 1 || !start[k].Is(TagTypeDelim) || strings.ContainsAny(start[k].Delim(), "[](){}+") || !start[k-1].Is(TagTypeText) {
 		return false
 	}
-	return slices.ContainsFunc(start[:k-1], func(tag Tag) bool { return tag.Is(TagTypeSeries) && tag.wroteEpisode() })
+	e := k - 2
+	for e >= 0 && !(start[e].Is(TagTypeSeries) && start[e].wroteEpisode()) {
+		e--
+	}
+	if e < 0 {
+		return false
+	}
+	var depth int
+	for _, tag := range start[e+1 : k-1] {
+		if tag.Is(TagTypeDelim) {
+			depth = bracketDepth(tag.Delim(), depth)
+		}
+	}
+	return depth == 0
 }
 
 // opensName reports whether what the tags in start read opens the name: there

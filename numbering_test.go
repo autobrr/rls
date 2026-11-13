@@ -765,6 +765,8 @@ func TestSeasonInEpisodeTitle(t *testing.T) {
 		{"Show.S02E01.Season.2.Premiere.1080p.WEB.h264-GRP", "Premiere", []int{2}},
 		{"Show S01E02 Title (Season 1) 1080p WEB h264-GRP", "Title", []int{1}},
 		{"Show S01E01 + Season 2 1080p WEB h264-GRP", "", []int{1, 2}},
+		{"Show S01E01 Title (Includes Season 2) 1080p WEB h264-GRP", "Title", []int{1, 2}},
+		{"Show.S01E01.Title.(Includes.Season.2).1080p.WEB.h264-GRP", "Title", []int{1, 2}},
 		{"Show.Season.1.S01E01.Pilot.1080p.WEB.h264-GRP", "Pilot", []int{1}},
 	}
 	for _, test := range tests {
@@ -777,6 +779,20 @@ func TestSeasonInEpisodeTitle(t *testing.T) {
 		}
 		if s := fmt.Sprintf("%o", r); s != test.name {
 			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
+	}
+	// a season after a plus that follows the title is still one. The plus
+	// stays in the subtitle ('Title +'), which this rule does not decide
+	for _, name := range []string{
+		"Show S01E01 Title + Season 2 1080p WEB h264-GRP",
+		"Show.S01E01.Title+Season.2.1080p.WEB.h264-GRP",
+	} {
+		r := ParseString(name)
+		if v := r.Seasons(); !slices.Equal(v, []int{1, 2}) {
+			t.Errorf("%q: expected seasons [1 2], got: %v", name, v)
+		}
+		if s := fmt.Sprintf("%o", r); s != name {
+			t.Errorf("%q: expected the name back, got: %q", name, s)
 		}
 	}
 }
