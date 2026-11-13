@@ -628,6 +628,7 @@ platform,WinME,Windows ME,(for[\-\._ ])?(?:windows|win)[\-\._ ]?me,,app,
 platform,WinNT,Windows NT,(for[\-\._ ])?(?:windows|win)[\-\._ ]?nt,,app,
 platform,WinPE,Windows PE,(based[\-\._ ]on[\-\._ ])?(?:windows|win)[\-\._ ]?pe,,app,
 platform,Win9x,Windows 9x,(for[\-\._ ])?(?:windows|win)[\-\._ ]?9x,,app,
+platform,Windows,,,,app,
 platform,XBOX360,Xbox 360,xbox[\-\._ ]?360,,game,1
 platform,XBOXONE,Xbox One,xbox[\-\._ ]?one,,game,1
 platform,XBOX,Xbox,xbox(?:rip)?,,game,1
