@@ -267,6 +267,63 @@ func TestSeriesEpisodesSeasonZero(t *testing.T) {
 	}
 }
 
+// TestSeriesEpisodesSecondNumbering checks that an episode written without a
+// season beside one written with a season and an episode is a second
+// numbering of that episode and not another episode, and that an episode
+// written twice is listed once.
+func TestSeriesEpisodesSecondNumbering(t *testing.T) {
+	tests := []struct {
+		name    string
+		exp     [][]int
+		episode int
+	}{
+		{"Formula.E.DRIVER.S02E01.Episode.1.1080p.AMZN.WEB-DL.DDP2.0.H.264-FFG.mkv", [][]int{{2, 1}}, 1},
+		{"Show S01E01 Episode 1 1080p WEB H264-GRP", [][]int{{1, 1}}, 1},
+		{"Show.S01E01.Ep.1.1080p.WEB.h264-GRP", [][]int{{1, 1}}, 1},
+		{"Show.1x01.Episode.1.HDTV.x264-GRP", [][]int{{1, 1}}, 1},
+		{"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP", [][]int{{23, 19}}, 19},
+		// the second numbering disagrees, and the season's episode is the one
+		{"Show.S02E01.Episode.3.1080p.WEB.h264-GRP", [][]int{{2, 1}}, 1},
+		{"[Group] Show (2024) - 05 (S01E05) (BD 1080p x264 8-bit EAC-3) [Dual Audio]", [][]int{{1, 5}}, 5},
+		{"Fairy Tail - S06E32 - Tartaros Arc Iron Fist of the Fire Dragon [Episode 83]", [][]int{{6, 32}}, 32},
+		// a second numbering starts no range
+		{"Show.S01E01.Episode.5-E07.1080p.WEB.h264-GRP", [][]int{{1, 1}, {1, 7}}, 1},
+		// the same episode written twice
+		{"Show.S01E01.S01E01.1080p.WEB.h264-GRP", [][]int{{1, 1}}, 1},
+		{"Show.S11E11-GRP/Show.S11E11-GRP.mkv", [][]int{{11, 11}}, 11},
+		// episodes that are distinct
+		{"Show.S01E01E02.1080p.WEB.h264-GRP", [][]int{{1, 1}, {1, 2}}, 1},
+		{"Show.S01E01-E03.1080p.WEB.h264-GRP", [][]int{{1, 1}, {1, 2}, {1, 3}}, 1},
+		{"Show.S01E01.S01E02.1080p.WEB.h264-GRP", [][]int{{1, 1}, {1, 2}}, 1},
+		{"Show.S01E05.E06.1080p.WEB.h264-GRP", [][]int{{1, 5}, {1, 6}}, 5},
+		{"[Group] Show - S04E29 (WEB 1080p) | Other Name - E88 - S00E36", [][]int{{0, 36}, {4, 29}, {4, 88}}, 29},
+		// a season with no episode leaves the episode after it in the season,
+		// unless the name writes that season's episode too
+		{"[Grp] Show S2 - 04 [1080p].mkv", [][]int{{2, 4}}, 4},
+		{"Show.S01E01.S02.Episode.2.1080p.WEB.h264-GRP", [][]int{{1, 1}, {2, 2}}, 1},
+		// no season written
+		{"Show.Episode.1.1080p.WEB.h264-GRP", [][]int{{0, 1}}, 1},
+		// a part is not an episode
+		{"Show.S01E01.Part.1.1080p.WEB.h264-GRP", [][]int{{1, 1}}, 1},
+		{"Show.S01E02.Part.2.1080p.WEB.h264-GRP", [][]int{{1, 2}}, 2},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if v := r.SeriesEpisodes(); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
+			t.Errorf("%q: expected series episodes %v, got: %v", test.name, test.exp, v)
+		}
+		if r.Episode != test.episode {
+			t.Errorf("%q: expected episode %d, got: %d", test.name, test.episode, r.Episode)
+		}
+	}
+	// season 2 writes its episode in '(S02E01)', so the 13 after 'S2' is a
+	// second numbering
+	name := "[Grp] Show S2 - 13 (S02E01) [1080p].mkv"
+	if v, exp := ParseString(name).SeriesEpisodes(), [][]int{{2, 1}}; !slices.EqualFunc(v, exp, slices.Equal[[]int]) {
+		t.Errorf("%q: expected series episodes %v, got: %v", name, exp, v)
+	}
+}
+
 // TestSeasonRange checks a range of seasons written with one season word:
 // Series is the first season, Seasons gives every season of the range, the
 // release is a pack, and the last season is neither the subtitle nor a

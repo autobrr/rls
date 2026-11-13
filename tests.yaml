@@ -5105,7 +5105,6 @@
   year: 2024
   series: 1
   episode: 1
-  seriesEpisodes: "S00E01 S01E01"
   codec: "x264"
   bitdepth: "8BIT"
   audio: "DDP DUAL.AUDIO"
@@ -7159,3 +7158,16 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
+"Formula.E.DRIVER.S02E01.Episode.1.1080p.AMZN.WEB-DL.DDP2.0.H.264-FFG.mkv":
+  type: "episode"
+  title: "Formula E DRIVER"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  series: 2
+  episode: 1
+  codec: "H.264"
+  audio: "DDP"
+  channels: "2.0"
+  group: "FFG"
+  ext: "mkv"
