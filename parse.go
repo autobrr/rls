@@ -633,6 +633,7 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	b.specialDate(r)
 	// unset tags
 	b.unset(r)
+	b.fixBracketTagGroup(r)
 	b.fixTrailingGroup(r)
 	b.remuxSource(r)
 	// read titles
@@ -1453,8 +1454,9 @@ func isVersus(s string) bool {
 }
 
 // fixMusic fixes music tags. Changes single cbr audio tag to the cbr container
-// (ie, a comic) tag, changes 16bit arch tag to audio tag, and converts
-// 'bootleg' tag not surrounded by '-' or '()' back to text.
+// (ie, a comic) tag, changes 16bit arch tag to audio tag, converts 'bootleg'
+// tag not surrounded by '-' or '()' back to text, and a single episode in a
+// name with a music exclusive audio tag and no resolution to text.
 func (b *TagBuilder) fixMusic(r *Release) {
 	// when only one music tag of `cbr`, change to container `cbr` (comic)
 	countCbr, posCbr, hasCbr, musicExcl := 0, 0, false, false
@@ -1487,7 +1489,10 @@ func (b *TagBuilder) fixMusic(r *Release) {
 			}
 			scanned = true
 			switch {
-			case musicExcl && singleEp:
+			// a record numbers its tracks and has no resolution, so a single
+			// episode in a name with one is the episode ('[DSD] Show - 01
+			// [1080p]')
+			case musicExcl && singleEp && !slices.ContainsFunc(r.tags[:r.end], func(tag Tag) bool { return tag.Is(TagTypeResolution) }):
 				r.tags[i] = r.tags[i].As(TagTypeText, nil)
 			case musicExcl && sbBit:
 				r.tags[i] = r.tags[i].as(TagTypeAudio, b.audiof)
@@ -1765,6 +1770,14 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			if series && r.Resolution != "" || video && (series || r.Resolution != "" && !r.tags[i-1].Is(TagTypeSource, TagTypeSize)) {
 				continue
 			}
+			// the disc is then the only source: a music source beside
+			// another one is a word of the title ('The.Cassette.2020.1080p.WEB',
+			// 'The.Vinyl.2020.1080p.WEB')
+			if r.Resolution != "" && r.tags[i-1].Is(TagTypeSource) && slices.ContainsFunc(r.tags, func(tag Tag) bool {
+				return tag.Is(TagTypeSource) && tag.InfoType() != Music
+			}) {
+				continue
+			}
 			// and 'SP' between a title and an episode marks a special. An
 			// audio tag or a year in the name is what a record has ('Album
 			// SP Episode 1 FLAC')
@@ -1950,6 +1963,20 @@ func (b *TagBuilder) unset(r *Release) {
 			r.tags[i], r.Channels = r.tags[i].As(TagTypeText, nil), ""
 		}
 	}
+}
+
+// fixBracketTagGroup reads the word alone in the bracket that opens an episode
+// or a series as its group, when unset gave it back as text ('[DSD] Show - 01
+// [1080p]', '[VBR] Show - 01 [1080p]'). The meta lexer leaves a word that is
+// a short tag to its tag, and a tag of a record does not describe a video.
+func (b *TagBuilder) fixBracketTagGroup(r *Release) {
+	if r.Group != "" || !r.Type.Is(Series, Episode) || len(r.tags) < 4 ||
+		!r.tags[0].Is(TagTypeDelim) || r.tags[0].Delim() != "[" || !r.tags[1].Is(TagTypeText) ||
+		!r.tags[2].Is(TagTypeDelim) || !strings.HasPrefix(r.tags[2].Delim(), "]") {
+		return
+	}
+	r.tags[1] = r.tags[1].as(TagTypeGroup, nil)
+	r.Group = r.tags[1].Group()
 }
 
 // fixTrailingGroup reads a source or a collection after the last hyphen of a

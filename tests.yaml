@@ -1495,6 +1495,14 @@
   year: 2020
   codec: "x264"
   unused: "Bonus"
+"Movie.2020.1080p.BluRay.x264-DSD":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "DSD"
 "Movie.2020.1080p.BDRemux.AVC.DTS-HD.MA.5.1-GRP":
   type: "movie"
   title: "Movie"
@@ -2627,6 +2635,14 @@
   audio: "DTS-X"
   channels: "7.1"
   other: "REMUX"
+"The.Cassette.2020.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "The Cassette"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "H.264"
+  group: "GRP"
 "The.Creator.2023.PROPER.UHD.WEB-DL.2160p.HEVC.DV.HDR.EAC3.7.1.DL.Remux-TvR":
   type: "movie"
   title: "The Creator"
@@ -2640,6 +2656,14 @@
   other: "PROPER REMUX"
   language: "DL"
   group: "TvR"
+"The.Digipak.2020.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "The Digipak"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "H.264"
+  group: "GRP"
 "The.English.Patient.BluRay.1996.German.DTS":
   type: "movie"
   title: "The English Patient"
@@ -2747,6 +2771,14 @@
   channels: "1.0"
   other: "REMUX"
   group: "FraMeSToR"
+"The.Vinyl.2020.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "The Vinyl"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "H.264"
+  group: "GRP"
 "The.Wizard.of.Oz.1939.70th.Anniversary.Ultimate.Collectors.Edition.1080p.BluRay.REMUX.VC-1.TrueHD.5.1-TL":
   type: "movie"
   title: "The Wizard of Oz"
@@ -3748,6 +3780,13 @@
   size: "DVDR"
   container: "ISO"
   group: "FTPM"
+"Fairy Tail - S06E32 - Tartaros Arc Iron Fist of the Fire Dragon [Episode 83]":
+  type: "episode"
+  title: "Fairy Tail"
+  subtitle: "Tartaros Arc Iron Fist of the Fire Dragon"
+  series: 6
+  episode: 32
+  absolute: 83
 "Fairy.Tail.E009.Natsu.verschlingt.ein.Dorf.German.2009.ANiME.DL.BDRiP.x264-STARS":
   type: "episode"
   title: "Fairy Tail"
@@ -3790,6 +3829,19 @@
   audio: "FLAC"
   group: "UTW"
   site: "UTW"
+"Formula.E.DRIVER.S02E01.Episode.1.1080p.AMZN.WEB-DL.DDP2.0.H.264-FFG.mkv":
+  type: "episode"
+  title: "Formula E DRIVER"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  series: 2
+  episode: 1
+  codec: "H.264"
+  audio: "DDP"
+  channels: "2.0"
+  group: "FFG"
+  ext: "mkv"
 "Formula1.2024x05.Miami.Grand.Prix.Race.1080p.WEB.h264-GRP":
   type: "episode"
   title: "Formula1"
@@ -4667,6 +4719,13 @@
   resolution: "1080p"
   episode: 1
   absolute: 1
+"[DSD] Show - 01 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "DSD"
 "[REPACK3][Erai-raws] Show - 01 [1080p][Multiple Subtitle]":
   type: "episode"
   title: "Show"
@@ -4770,6 +4829,13 @@
   site: "SubsPlease"
   sum: "ABCD1234"
   ext: "mkv"
+"[VBR] Show - 01 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "VBR"
 "[桜都字幕组] Show - 01 [1080p][简体内嵌].mp4":
   type: "episode"
   title: "Show"
@@ -5336,6 +5402,15 @@
   codec: "H.264"
   other: "REPACK"
   group: "GRP"
+"Show.S01E02.1080p.WEB.H264-SACD":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  group: "SACD"
 "Show.S01E02.AKA.Other.Title.1080p.WEB.H264-GRP":
   type: "episode"
   title: "Show"
@@ -6624,12 +6699,58 @@
   year: 2022
   audio: "FLAC LOSSLESS"
   group: "Single"
+"Artist-Album-(Cassette)-1995-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "Cassette"
+  year: 1995
+  group: "GRP"
+"Artist-Album-CASSETTE-FLAC-1995-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "Cassette"
+  year: 1995
+  audio: "FLAC"
+  group: "GRP"
+"Artist-Album-(SACD)-2003-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "SACD"
+  year: 2003
+  group: "GRP"
 "Artist-Album (2019) [FLAC]":
   type: "music"
   artist: "Artist"
   title: "Album"
   year: 2019
   audio: "FLAC"
+"Artist-Album-(DSD64)-WEB-2020-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2020
+  audio: "DSD64"
+  group: "GRP"
+"Artist-Album-SACD-DSD64-2020-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "SACD"
+  year: 2020
+  audio: "DSD64"
+  group: "GRP"
+"Artist-Album-SACD-FLAC-2020-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "SACD"
+  year: 2020
+  audio: "FLAC"
+  group: "GRP"
 "[Sub] Artist-Album-2020":
   type: "music"
   artist: "Artist"
@@ -6637,6 +6758,38 @@
   year: 2020
   group: "Sub"
   site: "Sub"
+"Artist-Album-WEB-DSD128-2021-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2021
+  audio: "DSD128"
+  group: "GRP"
+"Artist-Album-(DSD512)-WEB-2022-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2022
+  audio: "DSD512"
+  group: "GRP"
+"Artist-Album-DSD-WEB-2022-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2022
+  audio: "DSD"
+  group: "GRP"
+"Artist-Album-DSD256-WEB-2022-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2022
+  audio: "DSD256"
+  group: "GRP"
 "Artist - Open Windows (2019) [FLAC]":
   type: "music"
   artist: "Artist"
@@ -7281,6 +7434,11 @@
   resolution: "576p"
   other: "RETAiL COVER"
   group: "DiMiTRY"
+"Cassette.Beasts.v1.0-RUNE":
+  type: "game"
+  title: "Cassette Beasts"
+  version: "v1.0"
+  group: "RUNE"
 "Chrome.SpecForce.CD2.PROPER.iNCL.PATCHTOOL.READ.NFO.SFClone-MiRROR":
   type: "game"
   title: "Chrome SpecForce"
@@ -7624,23 +7782,3 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
-"Formula.E.DRIVER.S02E01.Episode.1.1080p.AMZN.WEB-DL.DDP2.0.H.264-FFG.mkv":
-  type: "episode"
-  title: "Formula E DRIVER"
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "AMZN"
-  series: 2
-  episode: 1
-  codec: "H.264"
-  audio: "DDP"
-  channels: "2.0"
-  group: "FFG"
-  ext: "mkv"
-"Fairy Tail - S06E32 - Tartaros Arc Iron Fist of the Fire Dragon [Episode 83]":
-  type: "episode"
-  title: "Fairy Tail"
-  subtitle: "Tartaros Arc Iron Fist of the Fire Dragon"
-  series: 6
-  episode: 32
-  absolute: 83

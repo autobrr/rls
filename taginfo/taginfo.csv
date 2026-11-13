@@ -20,6 +20,11 @@ audio,CBR,Constant Bit Rate,,,,
 audio,DDPA,Dolby Digital+ Atmos (E-AC-3+Atmos),dd[p\+]a,,movie,
 audio,DDP,Dolby Digital+ (E-AC-3),dd[p\+]|e[\-\._ ]?ac[\-\._ ]?3,,movie,
 audio,DD,Dolby Digital (AC-3),dd|ac3|dolby[\-\._ ]?digital,,movie,
+audio,DSD512,DSD (512x oversampling),dsd[\-\._ ]?512,,music,1
+audio,DSD256,DSD (256x oversampling),dsd[\-\._ ]?256,,music,1
+audio,DSD128,DSD (128x oversampling),dsd[\-\._ ]?128,,music,1
+audio,DSD64,DSD (64x oversampling),dsd[\-\._ ]?64,,music,1
+audio,DSD,Direct Stream Digital,,,music,1
 audio,DTS-HD.HRA,DTS (HD HRA),dts[\-\._ ]?hd[\-\._ ]?hra,,movie,
 audio,DTS-HD.HR,DTS (HD HR),dts[\-\._ ]?hd[\-\._ ]?hr,,movie,
 audio,DTS-HD.MA,DTS (HD MA),dts[\-\._ ]?hd[\-\._ ]?ma,,movie,
@@ -862,6 +867,7 @@ source,BRDRip,BluRay Disc (rip),,,movie,
 source,CABLE,Radio (cable),(?-i:CABLE),,music,1
 source,CAMRiP,CAM (rip),cam[\-\._ ]?rip,,movie,
 source,CAM,,(?-i:CAM),,movie,
+source,Cassette,,,,music,1
 source,CDA,Audio CD,,,music,1
 source,CDEP,Extended Play (CD),cdep|epcd,,music,1
 source,CDLP,Limited Play (CD),,,music,1
@@ -927,6 +933,7 @@ source,PS2CD,PlayStation 2 (CD),,,game,1
 source,PS2DVD,PlayStation 2 (DVD),,,game,1
 source,PSXPSP,PlayStation 1 to PlayStation Portable Backup,,,game,1
 source,RADIO,Radio,(?-i:R[aA]D[iI][oO]),,music,1
+source,SACD,Super Audio Compact Disc,,,music,1
 source,SATRiP,Satellite (rip),sat[\-\._ ]?rip,,,
 source,SAT,Satellite Radio,(?-i:SAT),,music,
 source,SBD,Soundboard,(?-i:SBD|DAB),,music,1
