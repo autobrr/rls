@@ -1187,15 +1187,25 @@ func NewAudioLexer() Lexer {
 	var gated bool
 	var pf *prefilter
 	// next holds the bytes that can follow the audio tag's first run inside
-	// the same run: a channel digit or the start of an attached codec
+	// the same run: a channel digit or the start of an attached codec or Atmos
 	var next [256]bool
 	return withGate(TagLexer{
 		Init: func(infos map[string][]*taginfo.Taginfo, _ *regexp.Regexp, _ map[string]bool) {
 			audio, channels := infos["audio"], infos["channels"]
+			// Atmos is written onto the audio it extends, after the channels or
+			// in place of them ('DDP5.1Atmos', 'DD+5.1Atmos', 'TrueHD7.1Atmos',
+			// 'DDPAtmos'), so it ends the audio tag as an attached codec does
+			var atmos []*taginfo.Taginfo
+			for _, info := range audio {
+				if info.Tag() == "Atmos" {
+					atmos = append(atmos, info)
+				}
+			}
+			attached := append(slices.Clone(infos["codec"]), atmos...)
 			if p, ok := newPrefilter(audio, true); ok && !p.hasLead {
 				var cl [256]bool
 				if a, b := leadSet(reutil.Taginfo(``, channels...)); b {
-					if c, d := leadSet(reutil.Taginfo(``, infos["codec"]...)); d {
+					if c, d := leadSet(reutil.Taginfo(``, attached...)); d {
 						for x := 0; x < 256; x++ {
 							cl[x] = a[x] || c[x]
 						}
@@ -1207,8 +1217,7 @@ func NewAudioLexer() Lexer {
 			for _, info := range channels {
 				v = append(v, strings.ReplaceAll(info.Tag(), `.`, `[\._ ]?`))
 			}
-			codec := reutil.Taginfo(``, infos["codec"]...)
-			re = regexp.MustCompile(reutil.Taginfo(`^i`, audio...) + `(?:[\-\._ ]?(` + strings.Join(v, "|") + `))?(?:\b|[\-\._ ]|(` + codec + `(?:\b|[\-\._ ]))` + plusEnd + `)`)
+			re = regexp.MustCompile(reutil.Taginfo(`^i`, audio...) + `(?:[\-\._ ]?(` + strings.Join(v, "|") + `))?(?:\b|[\-\._ ]|(` + reutil.Taginfo(``, attached...) + `(?:\b|[\-\._ ]))` + plusEnd + `)`)
 			audiof, channelsf = newFinder(TagTypeAudio, audio...), newFinder(TagTypeChannels, channels...)
 			lead, gated = leadSet(re.String())
 		},
@@ -1235,7 +1244,8 @@ func NewAudioLexer() Lexer {
 						return start, end, i, n, false
 					}
 				}
-				// Leave an attached codec and its delimiter for the next lexer.
+				// Leave an attached codec or Atmos and its delimiter for the
+				// next lexer.
 				if len(m[3]) != 0 {
 					m[0] = bytes.TrimSuffix(m[0], m[3])
 				}

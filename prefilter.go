@@ -309,9 +309,9 @@ func hasLiteral(b, lit []byte, fold bool) bool {
 
 // maybePrefix is maybe for a lexer whose match may run on past the first run of
 // its alternation without a boundary, as the audio lexer's does into channel
-// digits ('DDP5.1') or an attached codec ('AACx264'). The run at i then only
-// has to begin with one of the type's first runs, and continue with a byte from
-// next.
+// digits ('DDP5.1'), an attached codec ('AACx264') or Atmos ('DDPAtmos'). The
+// run at i then only has to begin with one of the type's first runs, and
+// continue with a byte from next.
 func (pf *prefilter) maybePrefix(buf []byte, i, n int, next *[256]bool) bool {
 	if pf == nil {
 		return true
