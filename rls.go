@@ -278,6 +278,12 @@ func (r Release) secondNumbering(i int) bool {
 // Mode S2 - 04') and for a special ('Show.S00E05'), both of which are already
 // qualified. A written episode 0 is absolute like any other: '[Group] Show -
 // 00' gives 0 and true, and a name with no episode 0 and false.
+//
+// A name may write the absolute episode beside the season and episode, as a
+// second numbering ('S23E19.Episode.1174', '[Group] One Piece - 1174
+// (S23E19)'). Absolute then gives it, 1174 and true, and Episode is the
+// season's episode, 19. The season's episode written again is no absolute
+// number ('S02E06 [Episode 6]').
 func (r Release) Absolute() (episode int, ok bool) {
 	return r.absolute, r.isAbsolute
 }

@@ -1549,12 +1549,18 @@ func (b *TagBuilder) collect(r *Release) {
 	// such episode. season is whether a season was written anywhere in the
 	// name, as a number ('S02E04', '2nd Season') or as the specials ('S00E04')
 	// seasoned is whether a tag before the one at hand wrote a season
-	var bareEp, season, seasoned bool
-	var bare int
+	// secondEp is whether one episode was written as a second numbering, ie
+	// the '1174' of 'S23E19.Episode.1174' or of '1174 (S23E19)', and second
+	// the first such episode
+	var bareEp, season, seasoned, secondEp bool
+	var bare, second int
 	for i := 0; i < len(r.tags); i++ {
 		// the first one that is not 0, as Episode is
 		if (!bareEp || bare == 0) && bareEpisode(r.tags, i) {
 			bareEp, bare = true, atoi(r.tags[i].v[2])
+		}
+		if !secondEp && bareEpisode(r.tags, i) && r.secondNumbering(i) {
+			secondEp, second = true, atoi(r.tags[i].v[2])
 		}
 		season = season || r.tags[i].Is(TagTypeSeries) && r.tags[i].v[1] != ""
 		switch r.tags[i].typ {
@@ -1588,7 +1594,9 @@ func (b *TagBuilder) collect(r *Release) {
 			if !seasoned {
 				r.Series, seasoned = series, r.tags[i].v[1] != ""
 			}
-			if r.Episode == 0 {
+			// the episode is the season's, wherever a second numbering is
+			// written ('1174 (S23E19)' is episode 19)
+			if r.Episode == 0 && !r.secondNumbering(i) {
 				r.Episode = episode
 			}
 		case TagTypeVersion:
@@ -1664,11 +1672,17 @@ func (b *TagBuilder) collect(r *Release) {
 			r.Ext = r.tags[i].Ext()
 		}
 	}
-	// a bare number is an absolute episode only when nothing qualified it: a
-	// season marker anywhere makes it season relative by fansub convention
-	// ('Hell Mode S2 - 04' is episode 4 of season 2, not absolute 4).
-	if bareEp && !season {
+	// a bare number is an absolute episode when nothing qualified it: a season
+	// marker anywhere makes it season relative by fansub convention ('Hell
+	// Mode S2 - 04' is episode 4 of season 2, not absolute 4). Beside a season
+	// and an episode it is a second numbering, and absolute unless it writes
+	// the season's episode again ('S02E06 [Episode 6]') or the season is the
+	// specials ('S00E05.Episode.12').
+	switch {
+	case bareEp && !season:
 		r.absolute, r.isAbsolute = bare, true
+	case secondEp && r.Series != 0 && second != r.Episode:
+		r.absolute, r.isAbsolute = second, true
 	}
 	// collect year, month, day from unset date tags
 	for i := len(r.dates); i > 0; i-- {

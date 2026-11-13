@@ -7171,3 +7171,10 @@
   channels: "2.0"
   group: "FFG"
   ext: "mkv"
+"Fairy Tail - S06E32 - Tartaros Arc Iron Fist of the Fire Dragon [Episode 83]":
+  type: "episode"
+  title: "Fairy Tail"
+  subtitle: "Tartaros Arc Iron Fist of the Fire Dragon"
+  series: 6
+  episode: 32
+  absolute: 83
