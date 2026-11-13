@@ -2635,6 +2635,14 @@
   audio: "DTS-X"
   channels: "7.1"
   other: "REMUX"
+"The.Cassette.2020.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "The Cassette"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "H.264"
+  group: "GRP"
 "The.Creator.2023.PROPER.UHD.WEB-DL.2160p.HEVC.DV.HDR.EAC3.7.1.DL.Remux-TvR":
   type: "movie"
   title: "The Creator"
@@ -2648,6 +2656,14 @@
   other: "PROPER REMUX"
   language: "DL"
   group: "TvR"
+"The.Digipak.2020.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "The Digipak"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "H.264"
+  group: "GRP"
 "The.English.Patient.BluRay.1996.German.DTS":
   type: "movie"
   title: "The English Patient"
@@ -2755,6 +2771,14 @@
   channels: "1.0"
   other: "REMUX"
   group: "FraMeSToR"
+"The.Vinyl.2020.1080p.WEB.H264-GRP":
+  type: "movie"
+  title: "The Vinyl"
+  source: "WEB"
+  resolution: "1080p"
+  year: 2020
+  codec: "H.264"
+  group: "GRP"
 "The.Wizard.of.Oz.1939.70th.Anniversary.Ultimate.Collectors.Edition.1080p.BluRay.REMUX.VC-1.TrueHD.5.1-TL":
   type: "movie"
   title: "The Wizard of Oz"
@@ -4675,6 +4699,13 @@
   resolution: "1080p"
   episode: 1
   absolute: 1
+"[DSD] Show - 01 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "DSD"
 "[REPACK3][Erai-raws] Show - 01 [1080p][Multiple Subtitle]":
   type: "episode"
   title: "Show"
@@ -4778,6 +4809,13 @@
   site: "SubsPlease"
   sum: "ABCD1234"
   ext: "mkv"
+"[VBR] Show - 01 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "VBR"
 "[桜都字幕组] Show - 01 [1080p][简体内嵌].mp4":
   type: "episode"
   title: "Show"
