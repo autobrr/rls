@@ -663,7 +663,7 @@ func leadingFlags(tags []Tag, end int) int {
 // ('[桜都字幕组] Show.S01E01.1080p.WEB-DL-GRP'), and when another bracket or a
 // title in CJK script follows it.
 func leadingAlt(r *Release) {
-	if r.Alt != "" || r.Site == "" || r.Group == "" || r.Group == r.Site ||
+	if len(r.Alt) != 0 || r.Site == "" || r.Group == "" || r.Group == r.Site ||
 		strings.IndexFunc(r.Title, isCJK) != -1 || !cjkOnly(r.Site) || fansubMark(r.Site) {
 		return
 	}
@@ -684,7 +684,7 @@ func leadingAlt(r *Release) {
 	if i == len(r.tags) || !r.tags[i].Is(TagTypeText) {
 		return
 	}
-	r.Alt, r.Site = r.Site, ""
+	r.Alt, r.Site = []string{r.Site}, ""
 }
 
 // isCJK reports whether c is a letter of a CJK script.
@@ -1942,8 +1942,8 @@ func (b *TagBuilder) titles(r *Release) int {
 		f = b.defaultTitle
 	}
 	i := f(r)
-	if aka && r.Alt == "" {
-		if title, alt := splitAKA(r.Title); alt != "" {
+	if aka && len(r.Alt) == 0 {
+		if title, alt := splitAKA(r.Title); len(alt) != 0 {
 			r.Title, r.Alt = title, alt
 		}
 	}
@@ -1951,13 +1951,12 @@ func (b *TagBuilder) titles(r *Release) int {
 }
 
 // splitAKA splits a title on the words 'AKA' and 'aka' into the first name
-// and the other names joined with ' AKA ', ie 'A aka B aka C' gives 'A' and
-// 'B AKA C'. A mixed case 'Aka' is a word of the title and does not split.
-// Empty names are dropped. It returns an empty alt when there are not two
-// names.
-func splitAKA(s string) (string, string) {
+// and the other names, ie 'A aka B aka C' gives 'A' and 'B', 'C'. A mixed
+// case 'Aka' is a word of the title and does not split. Empty names are
+// dropped. It returns no other names when there are not two names.
+func splitAKA(s string) (string, []string) {
 	if !strings.Contains(s, "AKA") && !strings.Contains(s, "aka") {
-		return s, ""
+		return s, nil
 	}
 	var buf [4]string
 	names, start := buf[:0], 0
@@ -1977,15 +1976,16 @@ func splitAKA(s string) (string, string) {
 		i = end + 1
 	}
 	if start == 0 {
-		return s, ""
+		return s, nil
 	}
 	if name := strings.TrimSpace(s[start:]); name != "" {
 		names = append(names, name)
 	}
 	if len(names) < 2 {
-		return s, ""
+		return s, nil
 	}
-	return names[0], strings.Join(names[1:], " AKA ")
+	// The clone keeps buf on the stack and sizes the result to the names.
+	return names[0], slices.Clone(names[1:])
 }
 
 // movieTitles sets the titles for movies.
