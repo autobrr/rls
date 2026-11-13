@@ -749,6 +749,38 @@ func TestGermanSeason(t *testing.T) {
 	}
 }
 
+// TestSeasonInEpisodeTitle checks that a season word written after an episode
+// and a word of its title is a word of that title, and that one right after
+// the episode, in a bracket or in front of the episode is still a season.
+func TestSeasonInEpisodeTitle(t *testing.T) {
+	tests := []struct {
+		name, subtitle string
+		seasons        []int
+	}{
+		{"Show.S01E00.Meet.the.Queens.of.Season.1.1080p.WEB.h264-GRP", "Meet the Queens of Season 1", []int{1}},
+		{"Show.S02E05.The.Season.1.Recap.1080p.WEB.h264-GRP", "The Season 1 Recap", []int{2}},
+		{"Show.S03E00.Road.to.Season.3.720p.HDTV.x264-GRP", "Road to Season 3", []int{3}},
+		{"Show.S01E01.Pilot.Series.2.1080p.WEB.h264-GRP", "Pilot Series 2", []int{1}},
+		{"Show.S01E05.Episode.Title.Staffel.1.German.1080p.WEB.h264-GRP", "Episode Title Staffel 1", []int{1}},
+		{"Show.S02E01.Season.2.Premiere.1080p.WEB.h264-GRP", "Premiere", []int{2}},
+		{"Show S01E02 Title (Season 1) 1080p WEB h264-GRP", "Title", []int{1}},
+		{"Show S01E01 + Season 2 1080p WEB h264-GRP", "", []int{1, 2}},
+		{"Show.Season.1.S01E01.Pilot.1080p.WEB.h264-GRP", "Pilot", []int{1}},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if r.Subtitle != test.subtitle {
+			t.Errorf("%q: expected subtitle %q, got: %q", test.name, test.subtitle, r.Subtitle)
+		}
+		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
+		}
+		if s := fmt.Sprintf("%o", r); s != test.name {
+			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
+	}
+}
+
 func TestEpisodeSpans(t *testing.T) {
 	tests := []struct {
 		name string

@@ -380,6 +380,14 @@ func NewSeriesLexer(strs ...string) Lexer {
 					slices.ContainsFunc(start, func(tag Tag) bool { return tag.Is(TagTypeSeries) }) {
 					return start, end, i - len(s), n, false
 				}
+				// 'Season 1' written after an episode and a word of its title
+				// goes on with that title ('S01E00 Meet the Queens of Season 1
+				// 1080p'). Right after the episode ('S01E01-E10.Season.1') or
+				// in a bracket ('S01E02 Title (Season 1)') it is a season
+				if len(series) != 0 && len(episode) == 0 && len(disc) == 0 && (s[0] == 's' || s[0] == 'S') && (s[1]|0x20 >= 'a' && s[1]|0x20 <= 'z') &&
+					inEpisodeTitle(start) {
+					return start, end, i - len(s), n, false
+				}
 				// 'EP1168' is an episode, but 'EP2004' is a music release and
 				// its year, which the disc source year lexer reads
 				if len(series) == 0 && len(episode) == 4 && len(s) > 5 && (s[1] == 'p' || s[1] == 'P') && s[2] == episode[0] &&
@@ -2153,6 +2161,18 @@ func tight(s, v []byte) bool {
 	a := bytes.Index(s, v)
 	return a > 0 && strings.IndexByte("[({", s[a-1]) != -1 &&
 		a+len(v) < len(s) && strings.IndexByte("])}", s[a+len(v)]) != -1
+}
+
+// inEpisodeTitle reports whether what the tags in start read is inside the
+// title of an episode: a word of text and a delimiter with no bracket in it
+// end start, and a series tag in front of them wrote an episode ('S01E00 Meet
+// the Queens of ').
+func inEpisodeTitle(start []Tag) bool {
+	k := len(start) - 1
+	if k < 1 || !start[k].Is(TagTypeDelim) || strings.ContainsAny(start[k].Delim(), "[](){}") || !start[k-1].Is(TagTypeText) {
+		return false
+	}
+	return slices.ContainsFunc(start[:k-1], func(tag Tag) bool { return tag.Is(TagTypeSeries) && tag.wroteEpisode() })
 }
 
 // opensName reports whether what the tags in start read opens the name: there
