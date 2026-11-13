@@ -2572,9 +2572,9 @@ func (b *TagBuilder) defaultTitle(r *Release) int {
 // name does not change how it writes its spaces at a slash. In a release name
 // the slash is part of the title ('Fate/Zero S01 1080p', 'Face/Off 1997').
 func isPath(tags []Tag) bool {
-	for i := len(tags) - 1; i >= 0; i-- {
-		if !tags[i].Is(TagTypeWhitespace) {
-			if tags[i].Is(TagTypeExt) {
+	for _, tag := range slices.Backward(tags) {
+		if !tag.Is(TagTypeWhitespace) {
+			if tag.Is(TagTypeExt) {
 				return true
 			}
 			break
@@ -2585,8 +2585,8 @@ func isPath(tags []Tag) bool {
 			return tag.Is(TagTypeDelim, TagTypeWhitespace) && strings.ContainsRune(tag.v[0], ' ')
 		})
 	}
-	for i := len(tags) - 1; i >= 0; i-- {
-		if tags[i].Is(TagTypeDelim) && strings.ContainsRune(tags[i].v[0], '/') {
+	for i, tag := range slices.Backward(tags) {
+		if tag.Is(TagTypeDelim) && strings.ContainsRune(tag.v[0], '/') {
 			return space(tags[:i]) && !space(tags[i+1:])
 		}
 	}
