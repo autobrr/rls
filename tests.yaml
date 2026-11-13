@@ -1495,6 +1495,14 @@
   year: 2020
   codec: "x264"
   unused: "Bonus"
+"Movie.2020.1080p.BluRay.x264-DSD":
+  type: "movie"
+  title: "Movie"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2020
+  codec: "x264"
+  group: "DSD"
 "Movie.2020.1080p.BDRemux.AVC.DTS-HD.MA.5.1-GRP":
   type: "movie"
   title: "Movie"
@@ -5336,6 +5344,15 @@
   codec: "H.264"
   other: "REPACK"
   group: "GRP"
+"Show.S01E02.1080p.WEB.H264-SACD":
+  type: "episode"
+  title: "Show"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  group: "SACD"
 "Show.S01E02.AKA.Other.Title.1080p.WEB.H264-GRP":
   type: "episode"
   title: "Show"
@@ -6624,12 +6641,58 @@
   year: 2022
   audio: "FLAC LOSSLESS"
   group: "Single"
+"Artist-Album-(Cassette)-1995-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "Cassette"
+  year: 1995
+  group: "GRP"
+"Artist-Album-CASSETTE-FLAC-1995-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "Cassette"
+  year: 1995
+  audio: "FLAC"
+  group: "GRP"
+"Artist-Album-(SACD)-2003-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "SACD"
+  year: 2003
+  group: "GRP"
 "Artist-Album (2019) [FLAC]":
   type: "music"
   artist: "Artist"
   title: "Album"
   year: 2019
   audio: "FLAC"
+"Artist-Album-(DSD64)-WEB-2020-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2020
+  audio: "DSD64"
+  group: "GRP"
+"Artist-Album-SACD-DSD64-2020-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "SACD"
+  year: 2020
+  audio: "DSD64"
+  group: "GRP"
+"Artist-Album-SACD-FLAC-2020-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "SACD"
+  year: 2020
+  audio: "FLAC"
+  group: "GRP"
 "[Sub] Artist-Album-2020":
   type: "music"
   artist: "Artist"
@@ -6637,6 +6700,38 @@
   year: 2020
   group: "Sub"
   site: "Sub"
+"Artist-Album-WEB-DSD128-2021-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2021
+  audio: "DSD128"
+  group: "GRP"
+"Artist-Album-(DSD512)-WEB-2022-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2022
+  audio: "DSD512"
+  group: "GRP"
+"Artist-Album-DSD-WEB-2022-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2022
+  audio: "DSD"
+  group: "GRP"
+"Artist-Album-DSD256-WEB-2022-GRP":
+  type: "music"
+  artist: "Artist"
+  title: "Album"
+  source: "WEB"
+  year: 2022
+  audio: "DSD256"
+  group: "GRP"
 "Artist - Open Windows (2019) [FLAC]":
   type: "music"
   artist: "Artist"
@@ -7281,6 +7376,11 @@
   resolution: "576p"
   other: "RETAiL COVER"
   group: "DiMiTRY"
+"Cassette.Beasts.v1.0-RUNE":
+  type: "game"
+  title: "Cassette Beasts"
+  version: "v1.0"
+  group: "RUNE"
 "Chrome.SpecForce.CD2.PROPER.iNCL.PATCHTOOL.READ.NFO.SFClone-MiRROR":
   type: "game"
   title: "Chrome SpecForce"
