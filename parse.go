@@ -846,14 +846,15 @@ func (b *TagBuilder) fixBracketGroup(r *Release) {
 	if s := strings.TrimLeft(r.tags[o].Delim(), " ._"); s == "" || (s[0] != '(' && s[0] != '[') {
 		return
 	}
-	// only tags in brackets after it, one of which names what it runs on.
-	// One in front of the year was reset, and may yet be restored
+	// only tags in brackets after it, and a file extension, one of which names
+	// what it runs on. One in front of the year was reset, and may yet be
+	// restored
 	var platform bool
 	for i, depth := o, 0; i < len(r.tags); i++ {
 		switch {
 		case r.tags[i].Is(TagTypeDelim):
 			depth = bracketDepth(r.tags[i].Delim(), depth)
-		case r.tags[i].Is(TagTypeWhitespace):
+		case r.tags[i].Is(TagTypeWhitespace, TagTypeExt):
 		case depth == 0:
 			return
 		default:

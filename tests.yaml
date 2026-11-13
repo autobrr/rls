@@ -6726,6 +6726,16 @@
   container: "ISO"
   group: "CODEX"
   unused: "Full"
+"Some.Game-CODEX (2019) [Windows / Multi-Language / Full ISO].torrent":
+  type: "game"
+  title: "Some Game"
+  platform: "Windows"
+  year: 2019
+  language: "MULTi"
+  container: "ISO"
+  group: "CODEX"
+  ext: "torrent"
+  unused: "Full"
 "Some.Title-GROUP (2019) [PS4]":
   type: "game"
   title: "Some Title"
