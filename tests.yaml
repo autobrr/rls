@@ -5011,6 +5011,30 @@
   episode: 2
   seriesEpisodes: "S01E02 S01E03 S01E04"
   group: "GRP"
+"Show.S01E02.1080p.AUViO.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AUViO"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.CRiT.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "CRIT"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
 "Show.S01E02.1080p.HBO.WEB-DL.DDP5.1.H.264-GRP":
   type: "episode"
   title: "Show"
@@ -5032,6 +5056,18 @@
   episode: 2
   codec: "AVC"
   other: "REMUX"
+  group: "GRP"
+"Show.S01E02.1080p.HOTSTAR.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "HTSR"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
   group: "GRP"
 "Show.S01E02.1080p.ITVX.WEB-DL.AAC2.0.H.264-GRP":
   type: "episode"
@@ -5081,12 +5117,48 @@
   audio: "DDP"
   channels: "5.1"
   group: "GRP"
+"Show.S01E02.1080p.MyCANAL.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "MyCanal"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
 "Show.S01E02.1080p.NOW.WEB-DL.DDP5.1.H.264-GRP":
   type: "episode"
   title: "Show"
   source: "WEB-DL"
   resolution: "1080p"
   collection: "NOW"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.OViD.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "OViD"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.Pathe.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "Pathe"
   series: 1
   episode: 2
   codec: "H.264"
@@ -5105,7 +5177,31 @@
   audio: "DDP"
   channels: "5.1"
   group: "GRP"
+"Show.S01E02.1080p.SALTO.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "SALTO"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
 "Show.S01E02.1080p.SHO.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "SHO"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.SHOWTIME.WEB-DL.DDP5.1.H.264-GRP":
   type: "episode"
   title: "Show"
   source: "WEB-DL"
@@ -5153,7 +5249,31 @@
   audio: "AAC"
   channels: "2.0"
   group: "GRP"
+"Show.S01E02.1080p.VDL.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "VDL"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
 "Show.S01E02.1080p.VIAP.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "VIAP"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.VIAPLAY.WEB-DL.DDP5.1.H.264-GRP":
   type: "episode"
   title: "Show"
   source: "WEB-DL"
