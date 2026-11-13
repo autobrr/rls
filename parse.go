@@ -2203,6 +2203,39 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	}
 	var offset int
 	r.Subtitle, offset = b.title(r.tags[pos:], TagTypeText)
+	// the title of a daily episode can name the season, which stays the
+	// season and is also a word of the title ('Show.2024.05.06.Tournament.
+	// Season.40.720p' is 'Tournament Season 40' of season 40). A range or a
+	// list of seasons ('Seasons.1-2'), or a season with another series tag
+	// after it ('Season.1.Episode.5'), is numbering and ends the title
+	for typ == TagTypeDate && r.Subtitle != "" {
+		j := pos + offset
+		if j >= len(r.tags) || !r.tags[j].Is(TagTypeSeries) || r.tags[j].wroteEpisode() {
+			break
+		}
+		v := r.tags[j].val(0)
+		if !seasonWord(v) || v[len(v)-1] < '0' || v[len(v)-1] > '9' {
+			break
+		}
+		k := j + 1
+		for k < len(r.tags) && r.tags[k].Is(TagTypeDelim) {
+			k++
+		}
+		if k < len(r.tags) && r.tags[k].Is(TagTypeSeries) {
+			break
+		}
+		rest, n := b.title(r.tags[j+1:], TagTypeText)
+		r.Subtitle += " " + strings.Map(func(c rune) rune {
+			if c == '.' || c == '_' || c == '-' {
+				return ' '
+			}
+			return c
+		}, v)
+		if offset = j + 1 - pos; !slices.ContainsFunc(r.tags[j+1:j+1+n], func(tag Tag) bool { return tag.Is(TagTypeText) }) {
+			break
+		}
+		r.Subtitle, offset = r.Subtitle+" "+rest, j+1+n-pos
+	}
 	return pos + offset
 }
 

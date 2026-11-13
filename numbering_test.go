@@ -749,6 +749,71 @@ func TestGermanSeason(t *testing.T) {
 	}
 }
 
+// TestSeasonInEpisodeTitle checks that a season word written after an episode
+// and a word of its title is a word of that title, and that one right after
+// the episode, in a bracket, in front of the episode or too far from it is
+// still a season.
+func TestSeasonInEpisodeTitle(t *testing.T) {
+	tests := []struct {
+		name, subtitle string
+		seasons        []int
+	}{
+		{"Show.S01E00.Meet.the.Queens.of.Season.1.1080p.WEB.h264-GRP", "Meet the Queens of Season 1", []int{1}},
+		{"Show.S02E05.The.Season.1.Recap.1080p.WEB.h264-GRP", "The Season 1 Recap", []int{2}},
+		{"Show.S03E00.Road.to.Season.3.720p.HDTV.x264-GRP", "Road to Season 3", []int{3}},
+		{"Show.S01E01.Pilot.Series.2.1080p.WEB.h264-GRP", "Pilot Series 2", []int{1}},
+		{"Show.S01E05.Episode.Title.Staffel.1.German.1080p.WEB.h264-GRP", "Episode Title Staffel 1", []int{1}},
+		{"Show.S02E01.Season.2.Premiere.1080p.WEB.h264-GRP", "Premiere", []int{2}},
+		{"Show S01E02 Title (Season 1) 1080p WEB h264-GRP", "Title", []int{1}},
+		{"Show S01E01 + Season 2 1080p WEB h264-GRP", "", []int{1, 2}},
+		{"Show S01E01 Title (Includes Season 2) 1080p WEB h264-GRP", "Title", []int{1, 2}},
+		{"Show.S01E01.Title.(Includes.Season.2).1080p.WEB.h264-GRP", "Title", []int{1, 2}},
+		{"Show.Season.1.S01E01.Pilot.1080p.WEB.h264-GRP", "Pilot", []int{1}},
+		// a range or a list after the title is the numbering
+		{"Show.S01E01.Pilot.Seasons.2-3.1080p.WEB.h264-GRP", "Pilot", []int{1, 2, 3}},
+		{"Show.S01E01.Pilot.Season.2-3.1080p.WEB.h264-GRP", "Pilot", []int{1, 2, 3}},
+		{"Show.S01E01.Pilot.Season.2+3.1080p.WEB.h264-GRP", "Pilot", []int{1, 2, 3}},
+		// after the date of a daily episode the season stays one and is also
+		// a word of the title, where a range or a list ends the title
+		{"Show.2024.05.06.Title.Season.1.1080p.WEB.h264-GRP", "Title Season 1", []int{1}},
+		{"Show 2024-05-06 Title Season 1 1080p WEB h264-GRP", "Title Season 1", []int{1}},
+		{"Show.2024.05.06.Tournament.Season.40.720p.HDTV.x264-GRP", "Tournament Season 40", []int{40}},
+		{"Show.2024.05.06.The.Season.1.Recap.720p.HDTV.x264-GRP", "The Season 1 Recap", []int{1}},
+		{"Show.2024.05.06.Recap.Seasons.1-2.720p.HDTV.x264-GRP", "Recap", []int{1, 2}},
+		{"Show.2024.05.06.Season.1.720p.HDTV.x264-GRP", "", []int{1}},
+		{"Show.2024.05.06.Title.Season.1.Episode.5.720p.HDTV.x264-GRP", "Title", []int{1}},
+		{"Show.2024.05.06.Title.Season.1.Season.2.720p.HDTV.x264-GRP", "Title", []int{1, 2}},
+		{"Show.S01E01." + strings.Repeat("Word.", 20) + "Season.2.1080p.WEB.h264-GRP", strings.TrimSpace(strings.Repeat("Word ", 20)) + " Season 2", []int{1}},
+		{"Show.S01E01." + strings.Repeat("Word.", 40) + "Season.2.1080p.WEB.h264-GRP", strings.TrimSpace(strings.Repeat("Word ", 40)), []int{1, 2}},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if r.Subtitle != test.subtitle {
+			t.Errorf("%q: expected subtitle %q, got: %q", test.name, test.subtitle, r.Subtitle)
+		}
+		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
+		}
+		if s := fmt.Sprintf("%o", r); s != test.name {
+			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
+	}
+	// a season after a plus that follows the title is still one. The plus
+	// stays in the subtitle ('Title +'), which this rule does not decide
+	for _, name := range []string{
+		"Show S01E01 Title + Season 2 1080p WEB h264-GRP",
+		"Show.S01E01.Title+Season.2.1080p.WEB.h264-GRP",
+	} {
+		r := ParseString(name)
+		if v := r.Seasons(); !slices.Equal(v, []int{1, 2}) {
+			t.Errorf("%q: expected seasons [1 2], got: %v", name, v)
+		}
+		if s := fmt.Sprintf("%o", r); s != name {
+			t.Errorf("%q: expected the name back, got: %q", name, s)
+		}
+	}
+}
+
 func TestEpisodeSpans(t *testing.T) {
 	tests := []struct {
 		name string
