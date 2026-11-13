@@ -619,6 +619,8 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	b.specialDate(r)
 	// unset tags
 	b.unset(r)
+	b.fixSourceGroup(r)
+	b.remuxSource(r)
 	// read titles
 	i := b.titles(r)
 	// fansub style names carry the release group in a leading bracket, which is
@@ -1566,8 +1568,7 @@ func (b *TagBuilder) collect(r *Release) {
 				r.Arch = r.tags[i].Arch()
 			}
 		case TagTypeSource:
-			// stomping allowed when more precise source available
-			if s := r.tags[i].Source(); r.Source == "" || r.Source == "CD" || (r.Source == "DVD" && s != "CD") {
+			if s := r.tags[i].Source(); preciser(r.Source, s) {
 				r.Source = s
 			}
 		case TagTypeResolution:
@@ -1920,6 +1921,58 @@ func (b *TagBuilder) unset(r *Release) {
 		} else if !movieSeriesEpisodeMusicGame && r.tags[i].Is(TagTypeChannels) {
 			r.tags[i], r.Channels = r.tags[i].As(TagTypeText, nil), ""
 		}
+	}
+}
+
+// fixSourceGroup reads a source after the last hyphen of a video name as its
+// group ('Movie 1954 2160p Remux HEVC DTS-HD MA 5.1-VHS',
+// 'Movie.1985.DVDRip.XviD-DVD'). The group lexer leaves a word that is a short
+// tag to its tag, and a source written last does not describe the video: a
+// video name writes its source in front of the codec and the audio. A codec
+// or a resolution in front of the hyphen is what makes it a video name. A
+// record ends in its source ('Artist-Title-(ID).2019-WEB'), and so does a
+// name with nothing in front of the source ('Movie.1985-VHS').
+func (b *TagBuilder) fixSourceGroup(r *Release) {
+	if r.Group != "" || !r.Type.Is(Movie, Series, Episode) {
+		return
+	}
+	i := len(r.tags) - 1
+	for ; i > 1 && r.tags[i].Is(TagTypeWhitespace, TagTypeExt); i-- {
+	}
+	if i < 2 || !r.tags[i].Is(TagTypeSource) || !r.tags[i-1].Is(TagTypeDelim) || r.tags[i-1].Delim() != "-" ||
+		!slices.ContainsFunc(r.tags[:i-1], func(tag Tag) bool { return tag.Is(TagTypeCodec, TagTypeResolution) }) {
+		return
+	}
+	r.tags[i] = r.tags[i].as(TagTypeGroup, nil)
+	r.Group, r.Source = r.tags[i].Group(), ""
+	for _, tag := range r.tags {
+		if tag.Is(TagTypeSource) && preciser(r.Source, tag.Source()) {
+			r.Source = tag.Source()
+		}
+	}
+}
+
+// preciser reports whether source s replaces the source collected so far,
+// which it does when there is none or when s is more precise than a CD or a
+// DVD.
+func preciser(cur, s string) bool {
+	return cur == "" || cur == "CD" || (cur == "DVD" && s != "CD")
+}
+
+// remuxSource gives a remux that names no source the disc it was taken from
+// ('Movie 1981 1080p Remux AVC DTS-HD MA 2.0-GRP' is a BluRay, 'Movie 1954
+// 2160p Remux DoVi HEVC-GRP' a UHD BluRay), as Radarr and Sonarr read a remux
+// as a BluRay. The other disc with a 1080p video, the HD DVD, is named as one
+// ('1080p HD-DVD Remux'), and a source written in the name is left as it is.
+func (b *TagBuilder) remuxSource(r *Release) {
+	if r.Source != "" || !r.Type.Is(Movie, Series, Episode) || !r.IsRemux() {
+		return
+	}
+	switch r.Resolution {
+	case "1080p":
+		r.Source = "BluRay"
+	case "2160p":
+		r.Source = "UHD.BluRay"
 	}
 }
 
