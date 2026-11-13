@@ -634,6 +634,7 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	b.specialDate(r)
 	// unset tags
 	b.unset(r)
+	b.titleMusicSource(r)
 	b.fixBracketTagGroup(r)
 	b.fixTrailingGroup(r)
 	b.remuxSource(r)
@@ -1962,6 +1963,55 @@ func (b *TagBuilder) unset(r *Release) {
 			r.tags[i], grabSource = r.tags[i].As(TagTypeText, nil), true
 		} else if !movieSeriesEpisodeMusicGame && r.tags[i].Is(TagTypeChannels) {
 			r.tags[i], r.Channels = r.tags[i].As(TagTypeText, nil), ""
+		}
+	}
+}
+
+// titleMusicSource gives back to the title of a video a music source written
+// among its words, when another source is the video's
+// ('The.CD.2020.1080p.WEB.H264-GRP', 'The.Last.CD.Shop.2020.1080p.WEB',
+// 'The.DVB.2020.720p.BluRay'). unset gives back only a source that is
+// exclusive to music ('The.Cassette.2020.1080p.WEB'). A music source alone in
+// the name stays its source, as a broadcast is one a video is taken from
+// ('Show.S01E02.DVB.x264-GRP', 'Show.Name.DVB.S01E01.720p.x264').
+// The words start after the brackets that open the name ('[Group] The CD - 01
+// [1080p WEB-DL]'), and end at a delimiter other than a separator: a source in
+// parentheses after the title is not one of them ('Artist - Live At Wembley
+// (CD) 2020 1080p WEB').
+func (b *TagBuilder) titleMusicSource(r *Release) {
+	if !r.Type.Is(Movie, Series, Episode) {
+		return
+	}
+	first, end, text := -1, len(r.tags), false
+loop:
+	for i, tag := range r.tags {
+		switch {
+		case tag.Is(TagTypeText):
+			text = true
+		case !text, tag.Is(TagTypeWhitespace):
+		case tag.Is(TagTypeSource) && tag.InfoType() == Music:
+			if first == -1 {
+				first = i
+			}
+		case !tag.Is(TagTypeDelim) || strings.Trim(tag.Delim(), " ._") != "":
+			end = i
+			break loop
+		}
+	}
+	if first == -1 || !slices.ContainsFunc(r.tags[end:], func(tag Tag) bool {
+		return tag.Is(TagTypeSource) && tag.InfoType() != Music
+	}) {
+		return
+	}
+	for i := first; i < end; i++ {
+		if r.tags[i].Is(TagTypeSource) {
+			r.tags[i] = r.tags[i].As(TagTypeText, nil)
+		}
+	}
+	r.Source = ""
+	for _, tag := range r.tags {
+		if tag.Is(TagTypeSource) && preciser(r.Source, tag.Source()) {
+			r.Source = tag.Source()
 		}
 	}
 }
