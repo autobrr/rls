@@ -600,6 +600,14 @@
   other: "REMUX"
   group: "FraMeSToR"
   ext: "mkv"
+"[rip] Cardcaptor Sakura Clear Card Arc Prologue - Sakura to Futatsu no Kuma [DVD][5C9D11F1].mkv":
+  type: "movie"
+  title: "Cardcaptor Sakura Clear Card Arc Prologue - Sakura to Futatsu no Kuma"
+  source: "DVD"
+  group: "rip"
+  site: "rip"
+  sum: "5C9D11F1"
+  ext: "mkv"
 "Cat.And.Mouse.2003.2Audio.DVDRip.XviD.AC3.iNT-io":
   type: "movie"
   title: "Cat And Mouse"
@@ -1430,6 +1438,18 @@
   codec: "XViD"
   group: "juggs"
   site: "ETRG"
+"[Sho] Little Witch Academia (2013) 1080p BluRay Remux AVC Dual-Audio Dolby True-HD 5.1":
+  type: "movie"
+  title: "Little Witch Academia"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2013
+  codec: "AVC"
+  audio: "DUAL.AUDIO TrueHD"
+  channels: "5.1"
+  other: "REMUX"
+  group: "Sho"
+  site: "Sho"
 "Lucy 2014 Dual-Audio 720p WEBRip 1400Mb":
   type: "movie"
   title: "Lucy"
@@ -1438,6 +1458,14 @@
   year: 2014
   audio: "DUAL.AUDIO"
   size: "1400MB"
+"Mad.Max.1979.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Mad Max"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1979
+  codec: "x264"
+  group: "GRP"
 "Mister.Aka.Manson.1999.1080p.BluRay.REMUX.AVC.FLAC.1.0-GRP.mkv":
   type: "movie"
   title: "Mister Aka Manson"
@@ -1861,6 +1889,17 @@
   audio: "FLAC"
   group: "Kawaiika-Raws"
   site: "Kawaiika-Raws"
+"[Feibanyama] One Piece Heroines [IQIYI WebRip 2160p HEVC AAC Multi-Subs]":
+  type: "movie"
+  title: "One Piece Heroines"
+  source: "WEBRiP"
+  resolution: "2160p"
+  collection: "iQIYI"
+  codec: "HEVC"
+  audio: "AAC"
+  language: "MULTiSUB"
+  group: "Feibanyama"
+  site: "Feibanyama"
 "One Shot [2014] DVDRip XViD-ViCKY":
   type: "movie"
   title: "One Shot"
@@ -2046,6 +2085,15 @@
   group: "Commie"
   site: "Commie"
   unused: "Unofficial Batch"
+"[Fox] Sewayaki Kitsune no Senko-san - NCOP (BD 1080p) [244C038F].mkv":
+  type: "movie"
+  title: "Sewayaki Kitsune no Senko-san - NCOP"
+  source: "BluRay"
+  resolution: "1080p"
+  group: "Fox"
+  site: "Fox"
+  sum: "244C038F"
+  ext: "mkv"
 "Shiki The Complete TV Series (2010–2011) 1080p WEB-DL AAC.2.0 H.264 UNCUT":
   type: "movie"
   title: "Shiki The Complete TV Series"
@@ -2417,6 +2465,7 @@
   title: "Stillwater Ridge"
   source: "WEB-DL"
   resolution: "1080p"
+  collection: "ATV"
   year: 2021
   codec: "x265"
   hdr: "SDR"
@@ -2424,12 +2473,12 @@
   channels: "5.1"
   language: "ENGLiSH"
   group: "Kyo Muramasa"
-  unused: "ATV"
 "Stillwater Ridge (2021) (1080p ATV WEB-DL x265 SDR DDP Atmos 5.1 English - Kyoshi Mura)":
   type: "movie"
   title: "Stillwater Ridge"
   source: "WEB-DL"
   resolution: "1080p"
+  collection: "ATV"
   year: 2021
   codec: "x265"
   hdr: "SDR"
@@ -2437,7 +2486,6 @@
   channels: "5.1"
   language: "ENGLiSH"
   group: "Kyoshi Mura"
-  unused: "ATV"
 "Stillwater.Ridge.2021.1080p.WEB-DL.DDP5.1.x265-Kyoshi_Mura":
   type: "movie"
   title: "Stillwater Ridge"
@@ -3363,6 +3411,20 @@
   channels: "2.0"
   group: "CTR"
   unused: "Main10p"
+"[Gecko] Chiikawa - S01E363 (ちいかわ) [TVER.WEB-DL 1080P AVC, AAC][B8DB7D54]":
+  type: "episode"
+  title: "Chiikawa"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "TVER"
+  series: 1
+  episode: 363
+  codec: "AVC"
+  audio: "AAC"
+  group: "Gecko"
+  site: "Gecko"
+  sum: "B8DB7D54"
+  unused: "ちいかわ"
 "Clickbait.2021.S01.2160p.NF.WEBRiP.DDPA5.1.HDR.x265-182K":
   type: "series"
   title: "Clickbait"
@@ -3887,6 +3949,19 @@
   channels: "5.1"
   group: "GRP"
   ext: "mkv"
+"[SubsPlus+] Hell Mode - S02E04 (ADN WEB-DL 1080p AVC AAC) | HELL MODE: The Hardcore Gamer Dominates in Another World with Garbage Balancing":
+  type: "episode"
+  title: "Hell Mode"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ADN"
+  series: 2
+  episode: 4
+  codec: "AVC"
+  audio: "AAC"
+  group: "SubsPlus+"
+  site: "SubsPlus+"
+  unused: "| HELL MODE: The Hardcore Gamer Dominates in Another World with Garbage Balancing"
 "[Hakata Ramen] High Score Girl (Season 2) (Complete) [1080p HEVC] HR-DR":
   type: "series"
   title: "High Score Girl"
@@ -3954,6 +4029,19 @@
   other: "AI.Upscale"
   group: "JBENT"
   site: "TAoE"
+"[Gecko] Infinite 48 - S01 (无限少女48; Infinite Girl 48; Wuxian Shaonu 48) [WETV.WEB-DL 1080P AVC, AAC, SUB, HARD SUB (ZH-HANS)][BATCH]":
+  type: "series"
+  title: "Infinite 48"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "WETV"
+  series: 1
+  codec: "AVC"
+  audio: "AAC"
+  language: "SUB"
+  group: "Gecko"
+  site: "Gecko"
+  unused: "无限少女48; Infinite Girl 48; Wuxian Shaonu 48 HARD SUB ZH HANS BATCH"
 "[R-Archive] Inuyasha Seasons 1~7 R1 DVD Remux 480p Eng Sub Dub Dual Audio":
   type: "series"
   title: "Inuyasha"
@@ -4045,6 +4133,20 @@
   absolute: 12
   group: "Group"
   site: "Group"
+"Kirio Fan Club S01E07 School Trip Magic 1080p HIDI WEB-DL DUAL AAC2.0 H 264-VARYG (Kirio Fanclub, Dual-Audio)":
+  type: "episode"
+  title: "Kirio Fan Club"
+  subtitle: "School Trip Magic"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "HIDI"
+  series: 1
+  episode: 7
+  codec: "H.264"
+  audio: "DUAL.AUDIO AAC"
+  channels: "2.0"
+  group: "VARYG"
+  unused: "Kirio Fanclub"
 "Looney.Tunes.S1958E13.Knighty.Knight.Bugs.1080p.BluRay.REMUX.AVC.DD.1.0-EPSiLON.mkv":
   type: "episode"
   title: "Looney Tunes"
@@ -4064,13 +4166,13 @@
   type: "series"
   title: "Major Henshū"
   resolution: "1080p"
+  collection: "ADN"
   series: 1
   version: "v2"
   codec: "AV1"
   language: "MULTiSUB ENGLiSH FRENCH FANSUB"
   group: "Tenma"
   site: "Tenma"
-  unused: "ADN"
 "Married At First Sight AU S13E02 1080p AV1 10bit-MeGusta":
   type: "episode"
   title: "Married At First Sight AU"
@@ -4144,6 +4246,20 @@
   codec: "x264"
   group: "THORA"
   ext: "mkv"
+"[Gecko] mofusand the animation - S01E29 (mofusand animation; Mofusand) [ABEMA.WEB-DL 1080P AVC, AAC][84695430]":
+  type: "episode"
+  title: "mofusand the animation"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ABEMA"
+  series: 1
+  episode: 29
+  codec: "AVC"
+  audio: "AAC"
+  group: "Gecko"
+  site: "Gecko"
+  sum: "84695430"
+  unused: "mofusand animation; Mofusand"
 "Monogatari.Series.Off.and.Monster.Season.S01E06.5.720p.CR.WEB-DL.AAC2.0.H.264-NanDesuKa.mkv":
   type: "episode"
   title: "Monogatari Series Off and Monster Season"
@@ -4283,6 +4399,20 @@
   channels: "2.0"
   group: "Group"
   site: "Group"
+"[ToonsHub] One Piece EP1170 1080p BILI WEB-DL AAC2.0 H.265 (Multi-Subs)":
+  type: "episode"
+  title: "One Piece"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "BILI"
+  episode: 1170
+  absolute: 1170
+  codec: "H.265"
+  audio: "AAC"
+  channels: "2.0"
+  language: "MULTiSUB"
+  group: "ToonsHub"
+  site: "ToonsHub"
 "Party.Planner.with.David.Tutera.S01E46.Dr..Zhivago-A-Go-Go.720p":
   type: "episode"
   title: "Party Planner with David Tutera"
@@ -4621,6 +4751,14 @@
   seriesEpisodes: "S00E01 S00E02 S00E03"
   group: "Group"
   site: "Group"
+"[Max] Show - 01 [1080p]":
+  type: "episode"
+  title: "Show"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Max"
+  site: "Max"
 "[REPACK] [SubsPlease] Show - 01 (1080p) [ABCD1234].mkv":
   type: "episode"
   title: "Show"
@@ -4848,6 +4986,15 @@
   codec: "HEVC"
   group: "GRP"
   site: "桜都字幕组"
+"Show.S01E02.720p.HDTV.x264-ABC":
+  type: "episode"
+  title: "Show"
+  source: "HDTV"
+  resolution: "720p"
+  series: 1
+  episode: 2
+  codec: "x264"
+  group: "ABC"
 "Show S01E02 1080p WEB":
   type: "episode"
   title: "Show"
@@ -4864,6 +5011,42 @@
   episode: 2
   seriesEpisodes: "S01E02 S01E03 S01E04"
   group: "GRP"
+"Show.S01E02.1080p.AUViO.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AUViO"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.CRiT.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "CRIT"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.HBO.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "HBO"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
 "Show.S01E02.1080p.HD-DVD.Remux.AVC-GRP":
   type: "episode"
   title: "Show"
@@ -4874,6 +5057,234 @@
   codec: "AVC"
   other: "REMUX"
   group: "GRP"
+"Show.S01E02.1080p.HOTSTAR.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "HTSR"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.ITVX.WEB-DL.AAC2.0.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ITVX"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "GRP"
+"Show.S01E02.1080p.KCW.WEB-DL.AAC2.0.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "KCW"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "GRP"
+"Show.S01E02.1080p.MAX.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "MAX"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.MGMP.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "MGMP"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.MyCANAL.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "MyCanal"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.NOW.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "NOW"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.OViD.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "OViD"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.Pathe.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "Pathe"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.RTLP.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "RTLP"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.SALTO.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "SALTO"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.SHO.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "SHO"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.SHOWTIME.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "SHO"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.SKST.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "SKST"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.STRP.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "STRP"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.TVING.WEB-DL.AAC2.0.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "TVING"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  group: "GRP"
+"Show.S01E02.1080p.VDL.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "VDL"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.VIAP.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "VIAP"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Show.S01E02.1080p.VIAPLAY.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "VIAP"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
 "Show.S01E02.1080p.WEB.H264-GRP":
   type: "episode"
   title: "Show"
@@ -4882,6 +5293,18 @@
   series: 1
   episode: 2
   codec: "H.264"
+  group: "GRP"
+"Show.S01E02.1080p.ZDF.WEB-DL.AAC2.0.H.264-GRP":
+  type: "episode"
+  title: "Show"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "ZDF"
+  series: 1
+  episode: 2
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
   group: "GRP"
 "Show.S01E02.GERMAN.1080p.WEB.h264-GRP":
   type: "episode"
@@ -5643,6 +6066,21 @@
   group: "Erai-raws"
   site: "Erai-raws"
   unused: "BATCH"
+"The Beginning After the End S02E08 The King Appears in Court 1080p BILI WEB-DL AAC2.0 H 264-VARYG (Saikyou no Ousama, Nidome no Jinsei wa Nani wo Suru?, Multi-Subs)":
+  type: "episode"
+  title: "The Beginning After the End"
+  subtitle: "The King Appears in Court"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "BILI"
+  series: 2
+  episode: 8
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  language: "MULTiSUB"
+  group: "VARYG"
+  unused: "Saikyou no Ousama Nidome no Jinsei wa Nani wo Suru?"
 "The Big Bang Theory S08E06 HDTV XviD-LOL [eztv]":
   type: "episode"
   title: "The Big Bang Theory"
@@ -5936,6 +6374,19 @@
   codec: "H.264"
   language: "GERMAN DUBBED DL"
   group: "pbw"
+"[Erai-raws] World Is Dancing - 04 [1080p HIDIVE WEB-DL AVC AAC][43775800]":
+  type: "episode"
+  title: "World Is Dancing"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "HIDI"
+  episode: 4
+  absolute: 4
+  codec: "AVC"
+  audio: "AAC"
+  group: "Erai-raws"
+  site: "Erai-raws"
+  sum: "43775800"
 "World's End Harem (Shuumatsu no Harem) S01E08 (2022 Airing) AT-X 2021 1080i HDTV AAC 2.0 English Subbed -ZR-.mkv":
   type: "episode"
   title: "World's End Harem"
@@ -6025,6 +6476,21 @@
   year: 2009
   codec: "x264"
   group: "group"
+"[Prejudice-Studio] 元祖！BanG Dream Chan Ganso! Bandori-chan - 42 [Bilibili WEB-DL 1080P AVC 8bit AAC MP4][简体内嵌]":
+  type: "episode"
+  title: "元祖！BanG Dream Chan Ganso! Bandori-chan"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "BILI"
+  episode: 42
+  absolute: 42
+  codec: "AVC"
+  bitdepth: "8BIT"
+  audio: "AAC"
+  container: "MP4"
+  group: "Prejudice-Studio"
+  site: "Prejudice-Studio"
+  unused: "简体内嵌"
 "AC.DC.Under.Review.Back.in.Black.2006.NTSC.MDVDR-MUSiQUE":
   type: "music"
   title: "AC DC Under Review Back in Black"
