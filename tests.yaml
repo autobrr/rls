@@ -1095,6 +1095,42 @@
   year: 2026
   codec: "x264"
   group: "DARKSPORT"
+"Formula1.2026.Round01.Australia.Teds.Qualifying.Notebook.2160p.SkyF1UHD.UHDTV.DDP5.1Atmos.HDR H.265":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round01 Australia Teds Qualifying Notebook"
+  source: "UHDTV"
+  resolution: "2160p"
+  collection: "SkyF1UHD"
+  year: 2026
+  codec: "H.265"
+  hdr: "HDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+"Formula1.2026.Round02.China.Drivers.Press.Conference.2160p.SkyF1UHD.UHDTV.DDP5.1Atmos.HDR.H.265-egor":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round02 China Drivers Press Conference"
+  source: "UHDTV"
+  resolution: "2160p"
+  collection: "SkyF1UHD"
+  year: 2026
+  codec: "H.265"
+  hdr: "HDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
+  group: "egor"
+"Formula1.2026.Round02.China.Team.Principals.Press.Conference.2160p.SkyF1UHD.UHDTV.DD+5.1Atmos.HDR":
+  type: "movie"
+  title: "Formula1"
+  subtitle: "Round02 China Team Principals Press Conference"
+  source: "UHDTV"
+  resolution: "2160p"
+  collection: "SkyF1UHD"
+  year: 2026
+  hdr: "HDR"
+  audio: "DDP Atmos"
+  channels: "5.1"
 "Formula1.2026.Round05.Miami.Grand.Prix.Race.UHD.2160p50.HLG.WEB.h265-GRP":
   type: "movie"
   title: "Formula1"
