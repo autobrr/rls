@@ -813,6 +813,16 @@
   codec: "XViD"
   audio: "DD"
   group: "MrSeeN-SiMPLE"
+"Dragon Ball Super Broly BluRay Color Corrected-Dual 5.1 TrueHD Audio.1080p.x264 V3":
+  type: "movie"
+  title: "Dragon Ball Super Broly"
+  source: "BluRay"
+  resolution: "1080p"
+  version: "v3"
+  codec: "x264"
+  audio: "DUAL.AUDIO TrueHD"
+  channels: "5.1"
+  unused: "Color Corrected Audio"
 "[Dekinai]_Dungeon_Ni_Deai_O_Motomeru_No_Wa_Machigatte_Iru_Darouka_~Familia_Myth~_(2015)_[BD_1080p_x264_10bit_-_FLAC_2_0]":
   type: "movie"
   title: "Dungeon Ni Deai O Motomeru No Wa Machigatte Iru Darouka"
