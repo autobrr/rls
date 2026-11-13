@@ -7958,3 +7958,28 @@
   year: 1987
   codec: "x264"
   group: "GRP"
+"[Group].[1080p].CNBC.Titans.-.01":
+  type: "episode"
+  title: "CNBC Titans"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Group"
+  site: "Group"
+"[Group]_[1080p]_CNBC_Titans_-_01":
+  type: "episode"
+  title: "CNBC Titans"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Group"
+  site: "Group"
+"[Group] [1080p] [WEB-DL] CNBC Titans - 01":
+  type: "episode"
+  title: "CNBC Titans"
+  source: "WEB-DL"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Group"
+  site: "Group"

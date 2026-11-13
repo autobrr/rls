@@ -2032,18 +2032,26 @@ func (b *TagBuilder) titleCollection(r *Release) {
 	if !r.Type.Is(Movie, Series, Episode) {
 		return
 	}
-	// the bracket is a meta tag, or delimiters around a word that is a tag
-	// ('[DSD] Show - 01')
-	i := 0
-	for i < len(r.tags) && r.tags[i].Is(TagTypeMeta) {
-		i++
-	}
-	if i < len(r.tags) && r.tags[i].Is(TagTypeDelim) && strings.HasPrefix(r.tags[i].Delim(), "[") {
-		for i++; i < len(r.tags) && !(r.tags[i].Is(TagTypeDelim) && strings.Contains(r.tags[i].Delim(), "]")); i++ {
+	// a bracket is a meta tag, or delimiters around tags ('[DSD] Show - 01',
+	// '[Group].[1080p].Show.-.01', '[Group] [1080p] [WEB-DL] Show - 01'). A
+	// delimiter that closes one bracket can open the next ('] [')
+	i, inside := 0, false
+loop:
+	for ; i < len(r.tags); i++ {
+		switch tag := r.tags[i]; {
+		case tag.Is(TagTypeMeta):
+		case tag.Is(TagTypeWhitespace, TagTypeDelim):
+			d := tag.Delim()
+			if !inside && strings.Trim(d, " ._[]") != "" {
+				return
+			}
+			if k := strings.LastIndexAny(d, "[]"); k != -1 {
+				inside = d[k] == '['
+			}
+		case inside:
+		default:
+			break loop
 		}
-		i++
-	}
-	for ; i < len(r.tags) && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim) && strings.Trim(r.tags[i].Delim(), " ._") == ""; i++ {
 	}
 	if i+2 >= len(r.tags) || !r.tags[i].Is(TagTypeCollection) || service(r.tags[i]) || !r.tags[i+1].Is(TagTypeDelim) ||
 		strings.Trim(r.tags[i+1].Delim(), " ._") != "" || !r.tags[i+2].Is(TagTypeText) {
