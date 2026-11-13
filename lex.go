@@ -380,14 +380,6 @@ func NewSeriesLexer(strs ...string) Lexer {
 					slices.ContainsFunc(start, func(tag Tag) bool { return tag.Is(TagTypeSeries) }) {
 					return start, end, i - len(s), n, false
 				}
-				// 'Season 1' written after an episode and a word of its title
-				// goes on with that title ('S01E00 Meet the Queens of Season 1
-				// 1080p'). Right after the episode ('S01E01-E10.Season.1'),
-				// after a plus ('S01E01 Title + Season 2') or in a bracket
-				// ('S01E02 Title (Season 1)') it is a season
-				if len(series) != 0 && len(episode) == 0 && len(disc) == 0 && seasonWord(s) && inEpisodeTitle(start) {
-					return start, end, i - len(s), n, false
-				}
 				// 'EP1168' is an episode, but 'EP2004' is a music release and
 				// its year, which the disc source year lexer reads
 				if len(series) == 0 && len(episode) == 4 && len(s) > 5 && (s[1] == 'p' || s[1] == 'P') && s[2] == episode[0] &&
@@ -473,6 +465,16 @@ func NewSeriesLexer(strs ...string) Lexer {
 						tags = append(tags, newTag(src, buf, TagTypeSeries, nil, src[from:j], num, nil))
 						return append(start, tags...), end, j, n, true
 					case plural:
+						return start, end, i - len(s), n, false
+					}
+					// 'Season 1' written after an episode and a word of its
+					// title goes on with that title ('S01E00 Meet the Queens of
+					// Season 1 1080p'). A range or a list of seasons, read
+					// above, is the numbering ('S01E01 Pilot Seasons 2-3'), and
+					// right after the episode ('S01E01-E10.Season.1'), after a
+					// plus ('S01E01 Title + Season 2') or in a bracket ('S01E02
+					// Title (Season 1)') it is a season
+					if seasonWord(s) && inEpisodeTitle(start) {
 						return start, end, i - len(s), n, false
 					}
 				}

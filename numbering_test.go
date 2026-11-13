@@ -769,6 +769,10 @@ func TestSeasonInEpisodeTitle(t *testing.T) {
 		{"Show S01E01 Title (Includes Season 2) 1080p WEB h264-GRP", "Title", []int{1, 2}},
 		{"Show.S01E01.Title.(Includes.Season.2).1080p.WEB.h264-GRP", "Title", []int{1, 2}},
 		{"Show.Season.1.S01E01.Pilot.1080p.WEB.h264-GRP", "Pilot", []int{1}},
+		// a range or a list after the title is the numbering
+		{"Show.S01E01.Pilot.Seasons.2-3.1080p.WEB.h264-GRP", "Pilot", []int{1, 2, 3}},
+		{"Show.S01E01.Pilot.Season.2-3.1080p.WEB.h264-GRP", "Pilot", []int{1, 2, 3}},
+		{"Show.S01E01.Pilot.Season.2+3.1080p.WEB.h264-GRP", "Pilot", []int{1, 2, 3}},
 		// after the date of a daily episode the season stays one and is also
 		// a word of the title, where a range or a list ends the title
 		{"Show.2024.05.06.Title.Season.1.1080p.WEB.h264-GRP", "Title Season 1", []int{1}},
