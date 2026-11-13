@@ -614,6 +614,7 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	r := &Release{
 		tags: tags,
 		end:  end,
+		path: isPath(tags),
 	}
 	// initialize / fix tags
 	b.init(r)
@@ -633,6 +634,8 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	b.specialDate(r)
 	// unset tags
 	b.unset(r)
+	b.titleMusicSource(r)
+	b.fixBracketTagGroup(r)
 	b.fixTrailingGroup(r)
 	b.remuxSource(r)
 	// read titles
@@ -1453,8 +1456,9 @@ func isVersus(s string) bool {
 }
 
 // fixMusic fixes music tags. Changes single cbr audio tag to the cbr container
-// (ie, a comic) tag, changes 16bit arch tag to audio tag, and converts
-// 'bootleg' tag not surrounded by '-' or '()' back to text.
+// (ie, a comic) tag, changes 16bit arch tag to audio tag, converts 'bootleg'
+// tag not surrounded by '-' or '()' back to text, and a single episode in a
+// name with a music exclusive audio tag and no resolution to text.
 func (b *TagBuilder) fixMusic(r *Release) {
 	// when only one music tag of `cbr`, change to container `cbr` (comic)
 	countCbr, posCbr, hasCbr, musicExcl := 0, 0, false, false
@@ -1487,7 +1491,10 @@ func (b *TagBuilder) fixMusic(r *Release) {
 			}
 			scanned = true
 			switch {
-			case musicExcl && singleEp:
+			// a record numbers its tracks and has no resolution, so a single
+			// episode in a name with one is the episode ('[DSD] Show - 01
+			// [1080p]')
+			case musicExcl && singleEp && !slices.ContainsFunc(r.tags[:r.end], func(tag Tag) bool { return tag.Is(TagTypeResolution) }):
 				r.tags[i] = r.tags[i].As(TagTypeText, nil)
 			case musicExcl && sbBit:
 				r.tags[i] = r.tags[i].as(TagTypeAudio, b.audiof)
@@ -1765,6 +1772,14 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			if series && r.Resolution != "" || video && (series || r.Resolution != "" && !r.tags[i-1].Is(TagTypeSource, TagTypeSize)) {
 				continue
 			}
+			// the disc is then the only source: a music source beside
+			// another one is a word of the title ('The.Cassette.2020.1080p.WEB',
+			// 'The.Vinyl.2020.1080p.WEB')
+			if r.Resolution != "" && r.tags[i-1].Is(TagTypeSource) && slices.ContainsFunc(r.tags, func(tag Tag) bool {
+				return tag.Is(TagTypeSource) && tag.InfoType() != Music
+			}) {
+				continue
+			}
 			// and 'SP' between a title and an episode marks a special. An
 			// audio tag or a year in the name is what a record has ('Album
 			// SP Episode 1 FLAC')
@@ -1952,6 +1967,69 @@ func (b *TagBuilder) unset(r *Release) {
 	}
 }
 
+// titleMusicSource gives back to the title of a video a music source written
+// among its words, when another source is the video's
+// ('The.CD.2020.1080p.WEB.H264-GRP', 'The.Last.CD.Shop.2020.1080p.WEB',
+// 'The.DVB.2020.720p.BluRay'). unset gives back only a source that is
+// exclusive to music ('The.Cassette.2020.1080p.WEB'). A music source alone in
+// the name stays its source, as a broadcast is one a video is taken from
+// ('Show.S01E02.DVB.x264-GRP', 'Show.Name.DVB.S01E01.720p.x264').
+// The words start after the brackets that open the name ('[Group] The CD - 01
+// [1080p WEB-DL]'), and end at a delimiter other than a separator: a source in
+// parentheses after the title is not one of them ('Artist - Live At Wembley
+// (CD) 2020 1080p WEB').
+func (b *TagBuilder) titleMusicSource(r *Release) {
+	if !r.Type.Is(Movie, Series, Episode) {
+		return
+	}
+	first, end, text := -1, len(r.tags), false
+loop:
+	for i, tag := range r.tags {
+		switch {
+		case tag.Is(TagTypeText):
+			text = true
+		case !text, tag.Is(TagTypeWhitespace):
+		case tag.Is(TagTypeSource) && tag.InfoType() == Music:
+			if first == -1 {
+				first = i
+			}
+		case !tag.Is(TagTypeDelim) || strings.Trim(tag.Delim(), " ._") != "":
+			end = i
+			break loop
+		}
+	}
+	if first == -1 || !slices.ContainsFunc(r.tags[end:], func(tag Tag) bool {
+		return tag.Is(TagTypeSource) && tag.InfoType() != Music
+	}) {
+		return
+	}
+	for i := first; i < end; i++ {
+		if r.tags[i].Is(TagTypeSource) {
+			r.tags[i] = r.tags[i].As(TagTypeText, nil)
+		}
+	}
+	r.Source = ""
+	for _, tag := range r.tags {
+		if tag.Is(TagTypeSource) && preciser(r.Source, tag.Source()) {
+			r.Source = tag.Source()
+		}
+	}
+}
+
+// fixBracketTagGroup reads the word alone in the bracket that opens an episode
+// or a series as its group, when unset gave it back as text ('[DSD] Show - 01
+// [1080p]', '[VBR] Show - 01 [1080p]'). The meta lexer leaves a word that is
+// a short tag to its tag, and a tag of a record does not describe a video.
+func (b *TagBuilder) fixBracketTagGroup(r *Release) {
+	if r.Group != "" || !r.Type.Is(Series, Episode) || len(r.tags) < 4 ||
+		!r.tags[0].Is(TagTypeDelim) || r.tags[0].Delim() != "[" || !r.tags[1].Is(TagTypeText) ||
+		!r.tags[2].Is(TagTypeDelim) || !strings.HasPrefix(r.tags[2].Delim(), "]") {
+		return
+	}
+	r.tags[1] = r.tags[1].as(TagTypeGroup, nil)
+	r.Group = r.tags[1].Group()
+}
+
 // fixTrailingGroup reads a source or a collection after the last hyphen of a
 // video name as its group ('Movie 1954 2160p Remux HEVC DTS-HD MA 5.1-VHS',
 // 'Movie.1985.DVDRip.XviD-DVD', 'Show.S25.720p.WEB-DL.x264-TBS'). The group
@@ -2098,13 +2176,13 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 	}
 	start := pos
 	var offset int
-	r.Title, offset = b.title(r.tags[start:], TagTypeText)
+	r.Title, offset = b.title(r.tags[start:], r.path, TagTypeText)
 	// a year in parentheses with the title after it is a word of the title
 	// ('(2001)A Space Odyssey(1961)', '(2001) A Space Odyssey (1968)',
 	// '(2001).A.Space.Odyssey.(1968)')
 	if offset == 1 && start+2 < len(r.tags) && r.tags[start].Retyped() && r.tags[start].Prev() == TagTypeDate &&
 		r.tags[start+1].Is(TagTypeDelim) && strings.TrimRight(r.tags[start+1].Delim(), "._ ") == ")" && r.tags[start+2].Is(TagTypeText) {
-		s, n := b.title(r.tags[start+2:], TagTypeText)
+		s, n := b.title(r.tags[start+2:], r.path, TagTypeText)
 		r.Title, offset = r.Title+" "+s, offset+1+n
 	}
 	// seek date
@@ -2176,7 +2254,7 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 			// does not exist ('Show.2023.02.29.HDTV'), and neither are cut
 			// and edition tags with no text beside them, which are in Cut
 			// and Edition ('Movie.2013.Extended.Cut.1080p')
-			if s, n := b.title(r.tags[pos:end-1], TagTypeText, TagTypeCut, TagTypeEdition); strings.ContainsFunc(s, unicode.IsLetter) &&
+			if s, n := b.title(r.tags[pos:end-1], r.path, TagTypeText, TagTypeCut, TagTypeEdition); strings.ContainsFunc(s, unicode.IsLetter) &&
 				slices.ContainsFunc(r.tags[pos:pos+n], func(tag Tag) bool { return tag.Is(TagTypeText) }) {
 				r.Subtitle, from, to = s, pos, pos+n
 			}
@@ -2198,9 +2276,9 @@ func (b *TagBuilder) boxTitle(r *Release, start, offset int) int {
 	// check previous 4 words for 'the' and where NOT start of last text block
 	for pos := n - 1; pos > start+1 && pos > n-8 && pos > 0; pos-- {
 		if MustNormalize(r.tags[pos-1].Text()) == "the" {
-			prefix, _ := b.title(r.tags[pos-1:n], TagTypeText)
+			prefix, _ := b.title(r.tags[pos-1:n], r.path, TagTypeText)
 			// consume remaining text, cut, edition
-			suffix, offset := b.title(r.tags[n:], TagTypeText, TagTypeCut, TagTypeEdition)
+			suffix, offset := b.title(r.tags[n:], r.path, TagTypeText, TagTypeCut, TagTypeEdition)
 			// reform title, subtitle
 			r.Title = strings.TrimRightFunc(strings.TrimSuffix(r.Title, prefix), isTitleTrimDelim)
 			r.Subtitle = prefix + " " + strings.TrimRightFunc(suffix, isBreakDelim)
@@ -2287,7 +2365,7 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 		return kept(pos)
 	}
 	var offset int
-	r.Subtitle, offset = b.title(r.tags[pos:], TagTypeText)
+	r.Subtitle, offset = b.title(r.tags[pos:], r.path, TagTypeText)
 	// the title of a daily episode can name the season, which stays the
 	// season and is also a word of the title ('Show.2024.05.06.Tournament.
 	// Season.40.720p' is 'Tournament Season 40' of season 40). A range or a
@@ -2309,7 +2387,7 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 		if k < len(r.tags) && r.tags[k].Is(TagTypeSeries) {
 			break
 		}
-		rest, n := b.title(r.tags[j+1:], TagTypeText)
+		rest, n := b.title(r.tags[j+1:], r.path, TagTypeText)
 		r.Subtitle += " " + strings.Map(func(c rune) rune {
 			if c == '.' || c == '_' || c == '-' {
 				return ' '
@@ -2389,7 +2467,7 @@ func (b *TagBuilder) mixTitle(r *Release, i int) (string, int) {
 			break
 		}
 	}
-	title, offset := b.title(r.tags[start:i], TagTypeText, TagTypeOther)
+	title, offset := b.title(r.tags[start:i], r.path, TagTypeText, TagTypeOther)
 	return title, start + offset
 }
 
@@ -2429,7 +2507,7 @@ func (b *TagBuilder) bookTitles(r *Release) int {
 		case isOther && r.tags[pos].Other() == "Strategy.Guide":
 			s, offset = strings.ReplaceAll(r.tags[pos].Text(), ".", " "), 2
 		default:
-			s, offset = b.title(r.tags[pos:], TagTypeText, TagTypePlatform, TagTypeArch, TagTypeRegion)
+			s, offset = b.title(r.tags[pos:], r.path, TagTypeText, TagTypePlatform, TagTypeArch, TagTypeRegion)
 		}
 		if r.Title != "" && s != "" {
 			r.Title += " "
@@ -2471,7 +2549,7 @@ func (b *TagBuilder) appTitle(r *Release) int {
 	for pos = 0; pos < len(r.tags) && !r.tags[pos].Is(TagTypeText, TagTypeDate); pos++ {
 	}
 	var offset int
-	r.Title, offset = b.title(r.tags[pos:], TagTypeText, TagTypeDate)
+	r.Title, offset = b.title(r.tags[pos:], r.path, TagTypeText, TagTypeDate)
 	return pos + offset
 }
 
@@ -2482,13 +2560,43 @@ func (b *TagBuilder) defaultTitle(r *Release) int {
 	for pos = 0; pos < len(r.tags) && !r.tags[pos].Is(TagTypeText); pos++ {
 	}
 	var offset int
-	r.Title, offset = b.title(r.tags[pos:], TagTypeText)
+	r.Title, offset = b.title(r.tags[pos:], r.path, TagTypeText)
 	return pos + offset
 }
 
+// isPath reports whether the name in tags is a file path, where a slash
+// separates folders. A file name cannot hold a slash, so a name is a path when
+// it ends in a file extension ('Show/Show.S01E06.1080p.BluRay.x265-Grp.mkv'),
+// or when the folder in front of its last slash has spaces and the name after
+// it has none ('Some Show/Some.Show.S01E01.1080p.WEB.x264-GRP'): a release
+// name does not change how it writes its spaces at a slash. In a release name
+// the slash is part of the title ('Fate/Zero S01 1080p', 'Face/Off 1997').
+func isPath(tags []Tag) bool {
+	for i := len(tags) - 1; i >= 0; i-- {
+		if !tags[i].Is(TagTypeWhitespace) {
+			if tags[i].Is(TagTypeExt) {
+				return true
+			}
+			break
+		}
+	}
+	space := func(tags []Tag) bool {
+		return slices.ContainsFunc(tags, func(tag Tag) bool {
+			return tag.Is(TagTypeDelim, TagTypeWhitespace) && strings.ContainsRune(tag.v[0], ' ')
+		})
+	}
+	for i := len(tags) - 1; i >= 0; i-- {
+		if tags[i].Is(TagTypeDelim) && strings.ContainsRune(tags[i].v[0], '/') {
+			return space(tags[:i]) && !space(tags[i+1:])
+		}
+	}
+	return false
+}
+
 // title finds all text in tags, stopping when encountering a non-space
-// delimiter, returning the title and ending position.
-func (b *TagBuilder) title(tags []Tag, types ...TagType) (string, int) {
+// delimiter, returning the title and ending position. path is whether the
+// name is a file path, where a slash separates folders.
+func (b *TagBuilder) title(tags []Tag, path bool, types ...TagType) (string, int) {
 	var v []string
 	var i int
 loop:
@@ -2497,9 +2605,19 @@ loop:
 		case tags[i].Is(types...):
 			v = append(v, tags[i].TextReplace(".", " ", -1))
 		case tags[i].Is(TagTypeDelim):
-			if s := tags[i].Delim(); !strings.ContainsAny(s, "()[]{}\\/") && s != "__" {
+			switch s := tags[i].Delim(); {
+			case s == "/" && !path && i != 0 && tags[i-1].Is(types...) && !tags[i-1].Was(TagTypeSource) && i+1 < len(tags) && tags[i+1].Is(types...):
+				// a slash between two words is part of the title of a release
+				// ('Fate/strange Fake S01', 'Face/Off 1997', 'AC/DC - Album'),
+				// and is kept as written. In a path it separates folders ('Show/Show.S01E06.mkv'), one
+				// with spaces separates the title from another name ('Show /
+				// Other Name S01'), and one after a special read back as text
+				// lists another label for it ('Show SP/OVA Episode 00'), so
+				// those end the title.
+				v = append(v, "/")
+			case !strings.ContainsAny(s, "()[]{}\\/") && s != "__":
 				v = append(v, b.delim(s, tags, i, types...))
-			} else {
+			default:
 				break loop
 			}
 		default:

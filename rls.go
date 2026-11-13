@@ -85,6 +85,9 @@ type Release struct {
 	// Event reads.
 	sports bool
 
+	// path is whether the name is a file path, which isPath reports.
+	path bool
+
 	tags   []Tag
 	dates  []int
 	unused []int

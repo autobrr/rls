@@ -159,6 +159,38 @@ func TestSpecialEpisode(t *testing.T) {
 	}
 }
 
+// TestTitleSlash checks that a slash between two words is part of the title of
+// a release, and that it ends the title in a path, where it separates folders,
+// with spaces around it, and after a special.
+func TestTitleSlash(t *testing.T) {
+	for _, test := range []struct {
+		name, title string
+	}{
+		{"Fate/strange Fake S01 1080p BluRay Dual-Audio Opus 2.0 x265-Headpatter", "Fate/strange Fake"},
+		{"Fate/Zero S01 1080p BluRay x264-GRP", "Fate/Zero"},
+		{"Face/Off 1997 1080p BluRay x264-GRP", "Face/Off"},
+		{"Ranma 1/2 S01E01 1080p WEB H264-GRP", "Ranma 1/2"},
+		{"[Erai-raws] Fate/strange Fake - 06 [1080p][Multiple Subtitle]", "Fate/strange Fake"},
+		// a path: a file extension, or a folder with spaces before a name
+		// with none
+		{"Fate strange Fake/Fate.strange.Fake.S01E06.1080p.BluRay.x265-Grp.mkv", "Fate strange Fake"},
+		{"Some Show/Some.Show.S01E01.1080p.WEB.x264-GRP", "Some Show"},
+		{"Some Show/Season 1/Some.Show.S01E01.1080p.WEB.x264-GRP.mkv", "Some Show"},
+		{"Fate/Zero.mkv", "Fate"},
+		// another name, a special, a slash with no word after it
+		{"Show / Other Name S01 1080p WEB H264-GRP", "Show"},
+		{"[Grp] Show SP/OVA Episode 00 - Prologue", "Show SP"},
+		{"Movie/2019 1080p BluRay x264-GRP", "Movie"},
+	} {
+		if r := ParseString(test.name); r.Title != test.title {
+			t.Errorf("%q: expected title %q, got: %q", test.name, test.title, r.Title)
+		}
+	}
+	if r := ParseString("VA - Album/01 - Track.flac"); r.Artist != "VA" || r.Title != "Album" {
+		t.Errorf("expected artist %q, title %q, got: %q, %q", "VA", "Album", r.Artist, r.Title)
+	}
+}
+
 // TestListValuesOnce checks that a value the name writes twice is in its
 // list field once, at the place it was first written.
 func TestListValuesOnce(t *testing.T) {
