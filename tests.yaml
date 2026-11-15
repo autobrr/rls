@@ -383,6 +383,14 @@
   source: "DVD"
   resolution: "720p"
   year: 1990
+"Amazon.Women.on.the.Moon.1987.1080p.BluRay.x264-GRP":
+  type: "movie"
+  title: "Amazon Women on the Moon"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1987
+  codec: "x264"
+  group: "GRP"
 "Annabelle.2014.HC.HDRip.XViD.AC3-juggs[ETRG]":
   type: "movie"
   title: "Annabelle"
@@ -479,6 +487,17 @@
   resolution: "2160p"
   year: 2019
   codec: "HEVC"
+  audio: "DTS-HD.MA"
+  channels: "5.1"
+  other: "REMUX"
+  group: "FraMeSToR"
+"BBC.The.Hunt.2015.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR":
+  type: "movie"
+  title: "BBC The Hunt"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2015
+  codec: "AVC"
   audio: "DTS-HD.MA"
   channels: "5.1"
   other: "REMUX"
@@ -2726,17 +2745,6 @@
   audio: "DTS"
   group: "deciBeL"
   ext: "mkv"
-"BBC.The.Hunt.2015.BluRay.1080p.DTS-HD.MA.5.1.AVC.REMUX-FraMeSToR":
-  type: "movie"
-  title: "BBC The Hunt"
-  source: "BluRay"
-  resolution: "1080p"
-  year: 2015
-  codec: "AVC"
-  audio: "DTS-HD.MA"
-  channels: "5.1"
-  other: "REMUX"
-  group: "FraMeSToR"
 "The.Jungle.Book.2016.3D.1080p.BRRip.SBS.x264.AAC-ETRG":
   type: "movie"
   title: "The Jungle Book"
@@ -3510,6 +3518,60 @@
   group: "HorribleSubs"
   site: "HorribleSubs"
   ext: "mkv"
+"[Group] CNBC Titans - 01 [1080p]":
+  type: "episode"
+  title: "CNBC Titans"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Group"
+  site: "Group"
+"[Group] [1080p] [WEB-DL] CNBC Titans - 01":
+  type: "episode"
+  title: "CNBC Titans"
+  source: "WEB-DL"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Group"
+  site: "Group"
+"[Group].[1080p].CNBC.Titans.-.01":
+  type: "episode"
+  title: "CNBC Titans"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Group"
+  site: "Group"
+"[Group]_[1080p]_CNBC_Titans_-_01":
+  type: "episode"
+  title: "CNBC Titans"
+  resolution: "1080p"
+  episode: 1
+  absolute: 1
+  group: "Group"
+  site: "Group"
+"CNBC.Titans.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP":
+  type: "episode"
+  title: "CNBC Titans"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"CNBC.Titans.S01E01.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "CNBC Titans"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Community.s02e20.rus.eng.720p.Kybik.v.Kybe":
   type: "episode"
   title: "Community"
@@ -3793,6 +3855,24 @@
   day: 10
   codec: "H.264"
   group: "ULTRAS"
+"ESPN.30.for.30.S01E01.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "ESPN 30 for 30"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
+"Espn 30 for 30 S01E01 1080p WEB h264-GRP":
+  type: "episode"
+  title: "Espn 30 for 30"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Exosquad.1993.S01S02.COMPLETE.x264-PTM":
   type: "series"
   title: "Exosquad"
@@ -4482,6 +4562,15 @@
   other: "COMPLETE"
   language: "ENGLiSH SUBBED"
   unused: "Special"
+"NOW.Apocalypse.S01E01.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "NOW Apocalypse"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "[SubsPlease] One Piece - 1125 (1080p) [7E631F90].mkv":
   type: "episode"
   title: "One Piece"
@@ -4533,6 +4622,15 @@
   resolution: "720p"
   series: 1
   episode: 46
+"PBS.Kids.S01E01.1080p.WEB.h264-GRP":
+  type: "episode"
+  title: "PBS Kids"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "GRP"
 "Peacemaker (2022) S01E08 It's Cow or Never (1080p HMAX Webrip x265 10 bit AC3 5.1 - JBENT)[TAoE].mkv":
   type: "episode"
   title: "Peacemaker"
@@ -5751,6 +5849,15 @@
   group: "Group"
   site: "Group"
   ext: "ts"
+"[Group] Show Name - 24-48 [BD 1080p FLAC]":
+  type: "series"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  seriesEpisodes: "S00E24 S00E25 S00E26 S00E27 S00E28 S00E29 S00E30 S00E31 S00E32 S00E33 S00E34 S00E35 S00E36 S00E37 S00E38 S00E39 S00E40 S00E41 S00E42 S00E43 S00E44 S00E45 S00E46 S00E47 S00E48"
+  audio: "FLAC"
+  group: "Group"
+  site: "Group"
 "[Group] Show Name 10-12 [BD 1080p]":
   type: "series"
   title: "Show Name"
@@ -7139,6 +7246,21 @@
   audio: "24BIT 192khz FLAC"
   other: "REMASTERED"
   group: "OBZEN"
+"Mira Calder - Beneath Quiet Skies (2002) (24-48) [WEB FLAC]":
+  type: "music"
+  artist: "Mira Calder"
+  title: "Beneath Quiet Skies"
+  source: "WEB"
+  year: 2002
+  audio: "FLAC"
+  unused: "24-48"
+"Mira Calder - Beneath Quiet Skies (2002) [FLAC 24-96]":
+  type: "music"
+  artist: "Mira Calder"
+  title: "Beneath Quiet Skies"
+  year: 2002
+  audio: "FLAC"
+  unused: "24-96"
 "Monica-Dont_Take_It_Personal_(Just_One_Of_Dem_Days)_Remix-Single-WEB-1995-UVU_INT":
   type: "music"
   artist: "Monica"
@@ -7885,101 +8007,3 @@
   other: "HYBRiD"
   language: "PORTUGUESE"
   group: "PAPERCLiPS"
-"CNBC.Titans.S01E01.1080p.WEB.h264-GRP":
-  type: "episode"
-  title: "CNBC Titans"
-  source: "WEB"
-  resolution: "1080p"
-  series: 1
-  episode: 1
-  codec: "H.264"
-  group: "GRP"
-"NOW.Apocalypse.S01E01.1080p.WEB.h264-GRP":
-  type: "episode"
-  title: "NOW Apocalypse"
-  source: "WEB"
-  resolution: "1080p"
-  series: 1
-  episode: 1
-  codec: "H.264"
-  group: "GRP"
-"PBS.Kids.S01E01.1080p.WEB.h264-GRP":
-  type: "episode"
-  title: "PBS Kids"
-  source: "WEB"
-  resolution: "1080p"
-  series: 1
-  episode: 1
-  codec: "H.264"
-  group: "GRP"
-"ESPN.30.for.30.S01E01.1080p.WEB.h264-GRP":
-  type: "episode"
-  title: "ESPN 30 for 30"
-  source: "WEB"
-  resolution: "1080p"
-  series: 1
-  episode: 1
-  codec: "H.264"
-  group: "GRP"
-"Espn 30 for 30 S01E01 1080p WEB h264-GRP":
-  type: "episode"
-  title: "Espn 30 for 30"
-  source: "WEB"
-  resolution: "1080p"
-  series: 1
-  episode: 1
-  codec: "H.264"
-  group: "GRP"
-"CNBC.Titans.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-GRP":
-  type: "episode"
-  title: "CNBC Titans"
-  source: "WEB-DL"
-  resolution: "1080p"
-  collection: "AMZN"
-  series: 1
-  episode: 1
-  codec: "H.264"
-  audio: "DDP"
-  channels: "5.1"
-  group: "GRP"
-"[Group] CNBC Titans - 01 [1080p]":
-  type: "episode"
-  title: "CNBC Titans"
-  resolution: "1080p"
-  episode: 1
-  absolute: 1
-  group: "Group"
-  site: "Group"
-"Amazon.Women.on.the.Moon.1987.1080p.BluRay.x264-GRP":
-  type: "movie"
-  title: "Amazon Women on the Moon"
-  source: "BluRay"
-  resolution: "1080p"
-  year: 1987
-  codec: "x264"
-  group: "GRP"
-"[Group].[1080p].CNBC.Titans.-.01":
-  type: "episode"
-  title: "CNBC Titans"
-  resolution: "1080p"
-  episode: 1
-  absolute: 1
-  group: "Group"
-  site: "Group"
-"[Group]_[1080p]_CNBC_Titans_-_01":
-  type: "episode"
-  title: "CNBC Titans"
-  resolution: "1080p"
-  episode: 1
-  absolute: 1
-  group: "Group"
-  site: "Group"
-"[Group] [1080p] [WEB-DL] CNBC Titans - 01":
-  type: "episode"
-  title: "CNBC Titans"
-  source: "WEB-DL"
-  resolution: "1080p"
-  episode: 1
-  absolute: 1
-  group: "Group"
-  site: "Group"

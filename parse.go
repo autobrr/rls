@@ -932,6 +932,7 @@ func (b *TagBuilder) init(r *Release) {
 	b.fixWindows(r)
 	b.fixHalfEpisode(r)
 	b.fixTitleRange(r)
+	b.fixAudioRange(r)
 	b.fixFirstDate(r)
 	// determine earliest pivot
 	m, pivot := b.pivots(r, TagTypeDate, TagTypeSource, TagTypeSeries, TagTypeResolution, TagTypeVersion)
@@ -1074,6 +1075,52 @@ func (b *TagBuilder) fixTitleRange(r *Release) {
 		}
 		r.tags[i] = tag.As(TagTypeText, nil)
 	}
+}
+
+// fixAudioRange makes a range of numbers plain text when it is the bit depth
+// and the sample rate of a record, ie the '24-96' of 'Artist - Album (2011)
+// [FLAC 24-96]', which is 24 bit at 96 kHz and not the episodes 24 to 96. The
+// first number is a bit depth and the second a sample rate in kHz ('16-44',
+// '24-48', '24-192').
+//
+// A name with a resolution is a video, where the same numbers are the episodes
+// of a batch ('[Grp] Show - 24-48 [1080p]'), unless the range follows an audio
+// tag, as the quality of a concert does ('Artist - Live (2011) [1080p FLAC
+// 24-96]').
+func (b *TagBuilder) fixAudioRange(r *Release) {
+	var scanned, video bool
+	for i := 0; i < r.end; i++ {
+		// the shape the episode range lexer gives
+		if r.tags[i].typ != TagTypeSeries || len(r.tags[i].v) != 6 {
+			continue
+		}
+		tag := r.tags[i]
+		if tag.v[1] != "" || tag.v[2] != "" || tag.v[4] != "-" || !isBitDepth(tag.v[3]) || !isSampleRate(tag.v[5]) {
+			continue
+		}
+		if !scanned {
+			scanned, video = true, slices.ContainsFunc(r.tags, func(tag Tag) bool { return tag.Is(TagTypeResolution) })
+		}
+		if video && !(i >= 2 && r.tags[i-2].Is(TagTypeAudio) && r.tags[i-1].Is(TagTypeDelim) && r.tags[i-1].v[0] == " ") {
+			continue
+		}
+		r.tags[i] = tag.As(TagTypeText, nil)
+	}
+}
+
+// isBitDepth reports whether s is a bit depth that audio is sampled at.
+func isBitDepth(s string) bool {
+	return s == "16" || s == "24" || s == "32"
+}
+
+// isSampleRate reports whether s is a sample rate of audio in kHz, with its
+// decimals cut off ('44' for 44.1 kHz, '88' for 88.2 kHz).
+func isSampleRate(s string) bool {
+	switch s {
+	case "44", "48", "88", "96", "176", "192", "352", "384":
+		return true
+	}
+	return false
 }
 
 // fixFirstDate fixes the special case of a date occuring before text, and

@@ -795,6 +795,48 @@ func TestBracketedRange(t *testing.T) {
 	}
 }
 
+// TestAudioRange checks that the bit depth and the sample rate of a record
+// are not a range of episodes, and that the same numbers are in a name with a
+// resolution.
+func TestAudioRange(t *testing.T) {
+	tests := []struct {
+		name          string
+		typ           Type
+		artist, title string
+		spans         []EpisodeSpan
+	}{
+		{"Mira Calder - Beneath Quiet Skies (2002) HDTracks 2011 [FLAC 24-96]", Music, "Mira Calder", "Beneath Quiet Skies", nil},
+		{"Mira Calder - Beneath Quiet Skies (2002) [FLAC 24-48]", Music, "Mira Calder", "Beneath Quiet Skies", nil},
+		{"Mira Calder - Beneath Quiet Skies (2002) [FLAC 16-44]", Music, "Mira Calder", "Beneath Quiet Skies", nil},
+		{"Mira Calder - Beneath Quiet Skies (2002) [WEB FLAC 24-96]", Music, "Mira Calder", "Beneath Quiet Skies", nil},
+		{"Mira Calder - Beneath Quiet Skies (2002) (24-192) [FLAC]", Music, "Mira Calder", "Beneath Quiet Skies", nil},
+		// with no audio tag that is known
+		{"Mira Calder - Beneath Quiet Skies (2002) [WAV 24-96]", Music, "Mira Calder", "Beneath Quiet Skies", nil},
+		{"Mira Calder - Beneath Quiet Skies (2002) [Vinyl 24-96]", Music, "Mira Calder", "Beneath Quiet Skies", nil},
+		// after the audio of a concert
+		{"Mira Calder - Live in Oslo (2011) [1080p FLAC 24-96]", Movie, "", "Mira Calder - Live in Oslo", nil},
+		// the episodes of a batch, in a name with a resolution
+		{"[Grp] Show Title - 24-48 [1080p]", Series, "", "Show Title", []EpisodeSpan{{"", "24", "48"}}},
+		{"[Grp] Show Title 24-48 [BD 1080p FLAC]", Series, "", "Show Title", []EpisodeSpan{{"", "24", "48"}}},
+		{"[Grp] Show Title (16-44) [720p]", Series, "", "Show Title", []EpisodeSpan{{"", "16", "44"}}},
+		// a range that is no bit depth and sample rate
+		{"[Grp] Show Title - 24-50 [FLAC]", Series, "", "Show Title", []EpisodeSpan{{"", "24", "50"}}},
+		{"[Grp] Show Title - 01-48 [FLAC]", Series, "", "Show Title", []EpisodeSpan{{"", "01", "48"}}},
+	}
+	for _, test := range tests {
+		r := ParseString(test.name)
+		if r.Type != test.typ || r.Artist != test.artist || r.Title != test.title {
+			t.Errorf("%q: expected type %s, artist %q and title %q, got: %s, %q and %q", test.name, test.typ, test.artist, test.title, r.Type, r.Artist, r.Title)
+		}
+		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
+			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		}
+		if s := fmt.Sprintf("%o", r); s != test.name {
+			t.Errorf("%q: expected the name back, got: %q", test.name, s)
+		}
+	}
+}
+
 // TestHalfEpisodeTags checks that joining the half onto its episode leaves
 // the tags the caller gave to Build as they were.
 func TestHalfEpisodeTags(t *testing.T) {
