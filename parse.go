@@ -1086,7 +1086,9 @@ func (b *TagBuilder) fixTitleRange(r *Release) {
 // A name with a resolution is a video, where the same numbers are the episodes
 // of a batch ('[Grp] Show - 24-48 [1080p]'), unless the range follows an audio
 // tag, as the quality of a concert does ('Artist - Live (2011) [1080p FLAC
-// 24-96]').
+// 24-96]'), in a bracket of its own or not ('[1080p FLAC (24-96)]'). A bracket
+// that closes between the two sets the range apart from the audio ('[Grp]
+// Show [BD 1080p FLAC] (24-48)').
 func (b *TagBuilder) fixAudioRange(r *Release) {
 	var scanned, video bool
 	for i := 0; i < r.end; i++ {
@@ -1101,7 +1103,8 @@ func (b *TagBuilder) fixAudioRange(r *Release) {
 		if !scanned {
 			scanned, video = true, slices.ContainsFunc(r.tags, func(tag Tag) bool { return tag.Is(TagTypeResolution) })
 		}
-		if video && !(i >= 2 && r.tags[i-2].Is(TagTypeAudio) && r.tags[i-1].Is(TagTypeDelim) && r.tags[i-1].v[0] == " ") {
+		if video && !(i >= 2 && r.tags[i-2].Is(TagTypeAudio) && r.tags[i-1].Is(TagTypeDelim) &&
+			(r.tags[i-1].v[0] == " " || r.tags[i-1].v[0] == " (" || r.tags[i-1].v[0] == "(")) {
 			continue
 		}
 		r.tags[i] = tag.As(TagTypeText, nil)
