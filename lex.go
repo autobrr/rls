@@ -30,6 +30,12 @@ import (
 //     give them slices it does not reuse or change afterwards.
 //
 // A lexer of a caller's that makes its tags with NewTag gets copies, as before.
+//
+// The text of a tag may hold the delimiters a lexer read to find where its
+// token ends ('S01 ', '.mkv'). When the lexers are done the parser cuts those
+// that the value of the tag does not hold off the tag, and gives them a
+// delimiter tag with the delimiters around them. The slices a lexer was
+// handed are not changed by that.
 type LexFunc func([]byte, []byte, []Tag, []Tag, int, int) ([]Tag, []Tag, int, int, bool)
 
 // Lexer is the interface for lexers.
@@ -416,8 +422,9 @@ func NewSeriesLexer(strs ...string) Lexer {
 				// Higher numbers after a plus, an ampersand or a comma are the
 				// other seasons of a list ('Season 1+2+3', 'S01+02', 'Seasons
 				// 1 & 2'). Each is a tag of its own, and the text of a tag
-				// runs up to the next number, so that it ends in what sets
-				// the two apart.
+				// runs up to the next number. The delimiters that set the
+				// two apart then get a tag of their own, see join, and an
+				// ampersand, which is none, stays the end of the text.
 				//
 				// The plural is read in front of a range or a list and
 				// nowhere else

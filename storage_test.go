@@ -112,6 +112,14 @@ func TestParseAllocs(t *testing.T) {
 	if n := testing.AllocsPerRun(100, func() { ParseString(name) }); n > 51 {
 		t.Errorf("expected at most 51 allocations for the release, got: %v", n)
 	}
+	// a name whose lexers took delimiters into their tags costs one more
+	// allocation than its tags do, for the values of the delimiter tags that
+	// join makes: 27 when this was written, 26 of them for the 11 tags lexed
+	const cut = "[SubsPlease] Show Title - 01 (1080p) [ABCD1234].mkv"
+	b = []byte(cut)
+	if n := testing.AllocsPerRun(100, func() { DefaultParser.Parse(b) }); n > 28 {
+		t.Errorf("expected at most 28 allocations for the tags of %q, got: %v", cut, n)
+	}
 }
 
 // scratchNames are names that leave the scratch of a parse in every state:
