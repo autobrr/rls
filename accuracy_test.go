@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/autobrr/rls/taginfo"
 )
 
 // The corpus under testdata/corpus is independent ground truth: it is labelled
@@ -251,13 +253,13 @@ func TestAccuracyLabelled(t *testing.T) {
 // percentage: a change that loses one name has to lower its floor and say why,
 // and one that gains a name raises it.
 var sampleFloors = map[string]map[string]int{
-	"nyaa-400.json":       {"names": 329, "title": 348, "group": 391, "type": 332, "season": 398, "episode": 375},
-	"nyaa-blind-140.json": {"names": 25, "title": 62, "group": 122, "type": 48, "season": 134, "episode": 101},
+	"nyaa-400.json":       {"names": 330, "title": 347, "group": 391, "type": 310, "season": 398, "episode": 375},
+	"nyaa-blind-140.json": {"names": 26, "title": 61, "group": 122, "type": 45, "season": 134, "episode": 101},
 }
 
 // episodes gives the episodes of r as a sample writes them: nothing for a
 // release with none, one number for one episode, the two ends of a range.
-// Half an episode keeps its fraction ('18.5', '11.5').
+// Half an episode keeps its fraction at either end ('18.5', '1-11.5').
 func episodes(r Release) []string {
 	first, last, ranged := r.EpisodeRange()
 	if !ranged {
@@ -266,21 +268,36 @@ func episodes(r Release) []string {
 		}
 		first, last = r.Episode, r.Episode
 	}
-	// the fraction is only in the digits the name wrote
-	frac := func(n int) string {
-		for _, span := range r.EpisodeSpans() {
-			for _, s := range []string{span.First, span.Last} {
-				if _, f, ok := strings.Cut(s, "."); ok && wholeEpisode(s) == n {
-					return "." + f
+	// the fraction is only in the digits the name wrote. The first span that
+	// writes the number has it, read from the end of the name for the end of
+	// a range, so that 'S01E12 + S01E12.5' is episode 12 and '1-11.5' ends
+	// at 11.5
+	frac := func(n int, end bool) string {
+		spans := r.EpisodeSpans()
+		if end {
+			slices.Reverse(spans)
+		}
+		for _, span := range spans {
+			ends := []string{span.First, span.Last}
+			if end {
+				slices.Reverse(ends)
+			}
+			for _, s := range ends {
+				if s != "" && wholeEpisode(s) == n {
+					_, f, _ := strings.Cut(s, ".")
+					if f = strings.TrimRight(f, "0"); f != "" {
+						return "." + f
+					}
+					return ""
 				}
 			}
 		}
 		return ""
 	}
 	if !ranged {
-		return []string{strconv.Itoa(first) + frac(first)}
+		return []string{strconv.Itoa(first) + frac(first, false)}
 	}
-	return []string{strconv.Itoa(first), strconv.Itoa(last) + frac(last)}
+	return []string{strconv.Itoa(first) + frac(first, false), strconv.Itoa(last) + frac(last, true)}
 }
 
 // sampleNums gives the numbers of a sample field without their zero padding,
@@ -288,13 +305,32 @@ func episodes(r Release) []string {
 func sampleNums(v []string) []string {
 	out := make([]string, 0, len(v))
 	for _, s := range v {
-		whole, frac, half := strings.Cut(s, ".")
-		if s = strconv.Itoa(fixtureNum(whole)); half {
+		whole, frac, _ := strings.Cut(s, ".")
+		s = strconv.Itoa(fixtureNum(whole))
+		if frac = strings.TrimRight(frac, "0"); frac != "" {
 			s += "." + frac
 		}
 		out = append(out, s)
 	}
 	return out
+}
+
+// sameTitle reports whether two titles are the same words. The spaces are
+// left out of the comparison, since a name that joins words with a colon or
+// a slash reads either way ('Re:Zero' and 'Re Zero', 'Fate/Zero').
+func sameTitle(a, b string) bool {
+	return strings.ReplaceAll(MustNormalize(a), " ", "") == strings.ReplaceAll(MustNormalize(b), " ", "")
+}
+
+// anyOf reports whether got is one of the values a sample accepts for a
+// field, without regard to case. A field with no value accepts an empty got
+// alone, and a list may hold the empty string beside other values, for a
+// name that may or may not give one ('[tags] WMD (1997)').
+func anyOf(v []string, got string, same func(a, b string) bool) bool {
+	if len(v) == 0 {
+		return got == ""
+	}
+	return slices.ContainsFunc(v, func(s string) bool { return same(got, s) })
 }
 
 // scoreSample compares r with a row of a hand-read sample, and returns whether
@@ -304,13 +340,13 @@ func sampleNums(v []string) []string {
 func scoreSample(c labelledCase, r Release) map[string]bool {
 	m := make(map[string]bool, 5)
 	if v, ok := values(c.AnimeTitle); ok {
-		m["title"] = slices.ContainsFunc(v, func(s string) bool { return MustNormalize(r.Title) == MustNormalize(s) })
+		m["title"] = anyOf(v, r.Title, sameTitle)
 	}
 	if v, ok := values(c.ReleaseGroup); ok {
-		m["group"] = strings.EqualFold(r.Group, strings.Join(v, ""))
+		m["group"] = anyOf(v, r.Group, strings.EqualFold)
 	}
 	if v, ok := values(c.Type); ok {
-		m["type"] = r.Type.String() == strings.Join(v, "")
+		m["type"] = anyOf(v, r.Type.String(), strings.EqualFold)
 	}
 	if v, ok := values(c.AnimeSeason); ok {
 		var got []string
@@ -325,6 +361,73 @@ func scoreSample(c labelledCase, r Release) map[string]bool {
 		m["episode"] = slices.Equal(episodes(r), sampleNums(v))
 	}
 	return m
+}
+
+// TestSampleScoring checks the comparisons scoreSample makes, on the cases
+// where a careless one would score a right reading wrong or a wrong one right.
+func TestSampleScoring(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		exp  []string
+	}{
+		{"[Grp] Show - 04 [1080p]", []string{"4"}},
+		{"[Grp] Show - 18.5 [1080p]", []string{"18.5"}},
+		{"[Grp] Show - 00 [1080p]", []string{"0"}},
+		{"[Grp] Show - 01 ~ 12 [1080p]", []string{"1", "12"}},
+		{"[Grp] Show S01E12 + S01E12.5 [1080p]", []string{"12"}},
+		{"Show.S01.1080p.WEB.H264-GRP", nil},
+	} {
+		if v := episodes(ParseString(test.name)); !slices.Equal(v, test.exp) {
+			t.Errorf("%q: expected episodes %q, got: %q", test.name, test.exp, v)
+		}
+	}
+	if v, exp := sampleNums([]string{"04", "18.50", "11.5", "000"}), []string{"4", "18.5", "11.5", "0"}; !slices.Equal(v, exp) {
+		t.Errorf("expected numbers %q, got: %q", exp, v)
+	}
+	for _, test := range []struct {
+		a, b string
+		exp  bool
+	}{
+		{"Re:Zero", "Re Zero", true},
+		{"Fate/Zero", "Fate Zero", true},
+		{"Kirei ni Shite Moraemasu ka.", "kirei ni shite moraemasu ka", true},
+		{"Bleach", "Bleach 225", false},
+	} {
+		if sameTitle(test.a, test.b) != test.exp {
+			t.Errorf("sameTitle(%q, %q): expected %t", test.a, test.b, test.exp)
+		}
+	}
+	for _, test := range []struct {
+		v   []string
+		got string
+		exp bool
+	}{
+		{nil, "", true},
+		{nil, "Dub", false},
+		{[]string{"WMD", ""}, "", true},
+		{[]string{"WMD", ""}, "wmd", true},
+		{[]string{"WMD", ""}, "P38", false},
+	} {
+		if anyOf(test.v, test.got, strings.EqualFold) != test.exp {
+			t.Errorf("anyOf(%q, %q): expected %t", test.v, test.got, test.exp)
+		}
+	}
+	// a field that is there and empty has no value, one that is left out is
+	// not judged, and a list keeps an empty string it holds
+	for _, test := range []struct {
+		raw string
+		exp []string
+		ok  bool
+	}{
+		{``, nil, false},
+		{`""`, nil, true},
+		{`"04"`, []string{"04"}, true},
+		{`["WMD", ""]`, []string{"WMD", ""}, true},
+	} {
+		if v, ok := values(json.RawMessage(test.raw)); !slices.Equal(v, test.exp) || ok != test.ok {
+			t.Errorf("values(%s): expected %q %t, got: %q %t", test.raw, test.exp, test.ok, v, ok)
+		}
+	}
 }
 
 // TestAccuracySample scores the parser against the hand-read samples of nyaa
@@ -405,6 +508,17 @@ var probeFailures = map[string][]string{
 	},
 }
 
+// vocabulary returns every value a row of the tag vocabulary gives.
+func vocabulary() map[string]bool {
+	m := make(map[string]bool)
+	for _, infos := range taginfo.All() {
+		for _, info := range infos {
+			m[info.Tag()] = true
+		}
+	}
+	return m
+}
+
 // tagValues returns the values r holds in the fields a vocabulary word can
 // land in.
 func tagValues(r Release) []string {
@@ -429,11 +543,18 @@ func TestProbes(t *testing.T) {
 			if err := json.Unmarshal(buf, &cases); err != nil {
 				t.Fatalf("%s: %v", name, err)
 			}
-			known := probeFailures[name]
+			known, vocab := probeFailures[name], vocabulary()
 			var passed int
 			for _, c := range cases {
 				r := ParseString(c.FileName)
 				noTag, _ := values(c.NoTag)
+				// a value the vocabulary does not have is in no field, and
+				// would make the probe check nothing
+				for _, s := range noTag {
+					if !vocab[s] {
+						t.Errorf("%q: no_tag %q is not a value of the vocabulary", c.FileName, s)
+					}
+				}
 				got := tagValues(r)
 				pass := r.Title == first(c.Title) && r.Type.String() == first(c.Type) &&
 					!slices.ContainsFunc(noTag, func(s string) bool { return slices.Contains(got, s) })
