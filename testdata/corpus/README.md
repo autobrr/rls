@@ -3,9 +3,11 @@
 Independent data for measuring parser accuracy.
 
 `labelled/anitomy.json` and `labelled/anitogo.json` are committed, each with the licence file of its
-project. **The other data files here are gitignored** (`.gitignore` excludes `*.txt` and `*.json`),
-so they live in your working tree and are not committed. `accuracy_test.go` skips the tests that
-read them when they are absent, so the package still builds and tests without them.
+project. So are our own fixtures: the two hand-read samples and the two probe sets described under
+[Our own fixtures](#our-own-fixtures). **The other data files here are gitignored** (`.gitignore`
+excludes `*.txt` and `*.json`), so they live in your working tree and are not committed.
+`accuracy_test.go` skips the tests that read them when they are absent, so the package still builds
+and tests without them.
 
 ## Why this exists
 
@@ -15,7 +17,10 @@ become the expectation and the parser passes it. That is not hypothetical — it
 be recorded as `HDR10`. (`TESTS=export go test` only sorts the stored expectations; it does not
 recompute them.)
 
-Everything here is labelled or collected by someone else, so it can disagree with us.
+The labelled sets and the corpora are labelled or collected by someone else, so they can disagree
+with us. The samples and the probe sets are ours. The probe sets were written by hand. In the
+samples a reader judged every value: a value the parser gave stays only where the reader found it
+right, and the others were written from the name.
 
 ## Contents
 
@@ -25,6 +30,10 @@ Everything here is labelled or collected by someone else, so it can disagree wit
 | `labelled/habari.json` | 218 | [5rahim/habari](https://github.com/5rahim/habari) `test/data.json` | yes |
 | `labelled/anitogo.json` | 184 | [nssteinbrenner/anitogo](https://github.com/nssteinbrenner/anitogo) `test/data.json` | yes |
 | `labelled/habari-known-failures.json` | 11 | habari `test/failing.json` | yes, with reasons |
+| `labelled/nyaa-400.json` | 400 | a random sample of `nyaa.txt`, read by hand | yes, by us |
+| `labelled/nyaa-blind-140.json` | 140 | names of `nyaa.txt` that two prototypes read differently, judged blind | yes, by us |
+| `labelled/probes-title.json` | 103 | scene names built by hand, a vocabulary word anywhere in the title | yes, by us |
+| `labelled/probes-title-end.json` | 60 | scene names built by hand, a vocabulary word as the last word of the title | yes, by us |
 | `nyaa.txt` | 13,215 | nyaa.si listing and search pages, categories 1_2 / 1_3 / 1_4 | no |
 | `sports.txt` | 2,505 | predb SPORTS and TV sections, plus documented tracker conventions | no |
 
@@ -51,10 +60,95 @@ repository.
 [5rahim/habari `2626d57`](https://github.com/5rahim/habari/blob/2626d57ad205a5ea41a5d060355e9314e0457c3e/test/data.json)
 to measure against it locally.
 
+## Our own fixtures
+
+Four files are ours. They use the field names of the labelled sets, so one loader reads them all.
+
+### The samples
+
+The two samples hold 535 names of `nyaa.txt`, which is otherwise not committed.
+
+`labelled/nyaa-400.json` is a random sample of 400 names from `nyaa.txt`. On 2026-11-12 an AI
+model read each name beside the parser's output at commit `03ac59b` and marked the fields that were
+wrong: title, season and episode, group, type. A field it accepted keeps the value the parser gave.
+A field it marked wrong has a value written from the name. The accepted titles were read a second
+time, and eleven that still carried a marker word were rewritten, such as the `- OVA` of `Aldnoah
+Zero - OVA`. The sample estimates how often the parser is wrong on what nyaa lists today.
+
+`labelled/nyaa-blind-140.json` is 140 names from `nyaa.txt` that the two anime prototypes of
+2026-11-12 read differently from master or from each other. A separate AI reader saw each name with
+the two or three outputs, shuffled and unnamed, and judged every field of every output as right,
+wrong or arguable. A label is the value of an output judged right. Where no output was right, the
+label is written from the name, or left out when the name does not settle it. These are hard names
+on purpose. Master had 26 of the 140 fully right when the file was made.
+
+No person has checked every row of either file. A label that looks wrong is a bug in the fixture.
+Fix it in a PR and say what the name means.
+
+In both files:
+
+| field | meaning |
+|---|---|
+| `type` | the release type as `Type.String()` gives it: `movie`, `series`, `episode` |
+| `anime_title` | the title. A list holds every title that is right, for a name that writes two side by side: `A / B`, `A \| B` |
+| `release_group` | the group. A list holds every reading that is right, and may hold the empty string for a name that may have no group |
+| `anime_season` | the season, or a list of seasons |
+| `episode_number` | one episode, or the two ends of a range. Half an episode keeps its fraction, `18.5` |
+| `anime_type` | the kind of an extra: `OVA`, `Special`, `NCOP`, `NCED`, `ED`, `Movie` |
+| `volume_number` | the volume or box, or the two ends of a range of them |
+
+A field that is there and empty says the name has none: `"release_group": ""` is a name with no
+group, and a parser that finds one is wrong. A field that is left out was not judged, because the
+name does not settle it. The type of `[Commie] Chihayafuru 2 [BD 720p AAC]` is one: nothing in the
+name says whether it is a film or a batch of a series. `type` is left out in three cases, the same
+in both files:
+
+- a name with no numbering, no year and no word such as `Movie` or `Batch`, even when the work is a
+  known film;
+- an extra with no regular episode beside it: an OVA, a numbered special, a creditless opening;
+- a range written with an episode marker and no word for a batch, `S00E20-E21` or `(E039-E058)`.
+  `tests.yaml` types `S01E01-E03` as an episode, the blind reader called such a range a pack, and
+  the name does not say which.
+
+A title written after the tags is not in the list of titles. The first title is the title there:
+`Show S2 (BD 1080p) | Other Name S2`.
+
+`anime_type` and `volume_number` are labels that nothing scores yet, since `Release` has no field
+for them. A numbered extra carries its number in `episode_number` with its kind beside it, so
+`- OVA 02` is episode 2 of kind `OVA`.
+
+`TestAccuracySample` scores both files and compares each field with `sampleFloors` in
+`accuracy_test.go`. A floor is the number of names that are right, not a percentage. The test fails
+below the floor, and above it too, so that the floor moves in the same diff as the change. Run it
+with `-v` to list every name that has a field wrong.
+
+### The probe sets
+
+`labelled/probes-title.json` and `labelled/probes-title-end.json` are scene names built by hand
+around one word of the vocabulary that is a word of the title in that name: `The.French.Dispatch.
+2021`, `Going.Dutch.S01E01`, `Pardon.My.French.2021`. The corpora are anime and sports names, and a
+rule that breaks scene names passes them unnoticed. In the first file the word stands anywhere in
+the title: first, inside or last. In the second it is always the last word in front of the year or
+the season, which is the place the parser gets wrong most.
+
+| field | meaning |
+|---|---|
+| `title`, `type` | what the name must give, compared exactly |
+| `no_tag` | the value the word would have as a tag, or a list of them. No field may hold it. Each is a value of `taginfo.csv`, which the test checks. It is left out when the name carries the same value as a real tag, as `French.Exit.2020.FRENCH` does |
+
+`TestProbes` runs them. A probe the parser gets wrong today is listed in `probeFailures` in
+`accuracy_test.go`. A probe that is not listed has to pass, and a listed one has to fail, so a
+change that fixes a probe takes it off the list.
+
+When you add a tag row or a rule that touches title words, add probes for it: movies, episodes,
+packs, with the word first, inside and last.
+
 ## Using it
 
 ```sh
 go test -run TestAccuracyLabelled -v .   # per-field accuracy against the labelled sets
+go test -run TestAccuracySample -v .     # the hand-read samples, with every wrong name
+go test -run TestProbes -v .             # the scene probe sets
 go test -run TestCorpusStructural -v .   # round trip + structural stats over the unlabelled corpora
 go test -short ./...                     # skips the corpus walk
 ```

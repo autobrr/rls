@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/autobrr/rls/taginfo"
 )
 
 // The corpus under testdata/corpus is independent ground truth: it is labelled
@@ -21,14 +23,21 @@ import (
 //
 // The anitomy and anitogo fixtures are committed with their licence files, as
 // the bytes of the upstream commits that testdata/corpus/README.md names. The
-// other data files are gitignored (*.txt, *.json), so the tests that read them
-// skip when they are not present and the package still builds and tests
-// without them.
+// other data files of other projects are gitignored (*.txt, *.json), so the
+// tests that read them skip when they are not present and the package still
+// builds and tests without them.
+//
+// The samples and the probe sets are our own: names read by hand, with the
+// value each field should have written down from what the name says, and not
+// from what the parser printed. They are committed, and their tests always
+// run.
 
 const corpusDir = "testdata/corpus"
 
-// labelledCase is one row of a third-party parser's test fixtures. The field
-// names are shared across anitomy, habari and anitogo.
+// labelledCase is one row of a labelled fixture. The field names are shared
+// across anitomy, habari and anitogo, and the samples and the probe sets use
+// the same names. Type and NoTag are fields of the samples and the probe sets
+// alone.
 type labelledCase struct {
 	FileName        string          `json:"file_name"`
 	AnimeTitle      json.RawMessage `json:"anime_title"`
@@ -42,6 +51,8 @@ type labelledCase struct {
 	FileExtension   json.RawMessage `json:"file_extension"`
 	ReleaseVersion  json.RawMessage `json:"release_version"`
 	EpisodeTitle    json.RawMessage `json:"episode_title"`
+	Type            json.RawMessage `json:"type"`
+	NoTag           json.RawMessage `json:"no_tag"`
 }
 
 // first returns the first value of a field that may be a string or a list of
@@ -59,6 +70,28 @@ func first(raw json.RawMessage) string {
 		return v[0]
 	}
 	return ""
+}
+
+// values returns every value of a field, which is a string or a list of them,
+// and whether the row has the field at all. In a sample a field that is there
+// and empty says the name has none ('"release_group": ""'), where a field that
+// is left out was not judged.
+func values(raw json.RawMessage) ([]string, bool) {
+	if len(raw) == 0 {
+		return nil, false
+	}
+	var s string
+	if json.Unmarshal(raw, &s) == nil {
+		if s == "" {
+			return nil, true
+		}
+		return []string{s}, true
+	}
+	var v []string
+	if json.Unmarshal(raw, &v) == nil {
+		return v, true
+	}
+	return nil, false
 }
 
 func loadLabelled(tb testing.TB, name string) []labelledCase {
@@ -210,6 +243,338 @@ func TestAccuracyLabelled(t *testing.T) {
 					t.Errorf("%s: %.1f%% is below the %.1f%% floor", k, v.pct(), floor)
 				}
 			}
+		})
+	}
+}
+
+// sampleFloors are the names each hand-read sample has right, per field, and
+// in every labelled field at once ("names"). The samples are small and every
+// row was read by hand, so the floor is the count itself and not a rounded
+// percentage: a change that loses one name has to lower its floor and say why,
+// and one that gains a name raises it.
+var sampleFloors = map[string]map[string]int{
+	"nyaa-400.json":       {"names": 330, "title": 347, "group": 391, "type": 310, "season": 398, "episode": 375},
+	"nyaa-blind-140.json": {"names": 26, "title": 61, "group": 122, "type": 45, "season": 134, "episode": 101},
+}
+
+// episodes gives the episodes of r as a sample writes them: nothing for a
+// release with none, one number for one episode, the two ends of a range.
+// Half an episode keeps its fraction at either end ('18.5', '1-11.5').
+func episodes(r Release) []string {
+	first, last, ranged := r.EpisodeRange()
+	if !ranged {
+		if !r.HasEpisode() {
+			return nil
+		}
+		first, last = r.Episode, r.Episode
+	}
+	// the fraction is only in the digits the name wrote. The first span that
+	// writes the number has it, read from the end of the name for the end of
+	// a range, so that 'S01E12 + S01E12.5' is episode 12 and '1-11.5' ends
+	// at 11.5
+	frac := func(n int, end bool) string {
+		spans := r.EpisodeSpans()
+		if end {
+			slices.Reverse(spans)
+		}
+		for _, span := range spans {
+			ends := []string{span.First, span.Last}
+			if end {
+				slices.Reverse(ends)
+			}
+			for _, s := range ends {
+				if s != "" && wholeEpisode(s) == n {
+					_, f, _ := strings.Cut(s, ".")
+					if f = strings.TrimRight(f, "0"); f != "" {
+						return "." + f
+					}
+					return ""
+				}
+			}
+		}
+		return ""
+	}
+	if !ranged {
+		return []string{strconv.Itoa(first) + frac(first, false)}
+	}
+	return []string{strconv.Itoa(first) + frac(first, false), strconv.Itoa(last) + frac(last, true)}
+}
+
+// sampleNums gives the numbers of a sample field without their zero padding,
+// so that '04' and '4' are the same episode and '11.5' keeps its half.
+func sampleNums(v []string) []string {
+	out := make([]string, 0, len(v))
+	for _, s := range v {
+		whole, frac, _ := strings.Cut(s, ".")
+		s = strconv.Itoa(fixtureNum(whole))
+		if frac = strings.TrimRight(frac, "0"); frac != "" {
+			s += "." + frac
+		}
+		out = append(out, s)
+	}
+	return out
+}
+
+// sameTitle reports whether two titles are the same words. The spaces are
+// left out of the comparison, since a name that joins words with a colon or
+// a slash reads either way ('Re:Zero' and 'Re Zero', 'Fate/Zero').
+func sameTitle(a, b string) bool {
+	return strings.ReplaceAll(MustNormalize(a), " ", "") == strings.ReplaceAll(MustNormalize(b), " ", "")
+}
+
+// anyOf reports whether got is one of the values a sample accepts for a
+// field, without regard to case. A field with no value accepts an empty got
+// alone, and a list may hold the empty string beside other values, for a
+// name that may or may not give one ('[tags] WMD (1997)').
+func anyOf(v []string, got string, same func(a, b string) bool) bool {
+	if len(v) == 0 {
+		return got == ""
+	}
+	return slices.ContainsFunc(v, func(s string) bool { return same(got, s) })
+}
+
+// scoreSample compares r with a row of a hand-read sample, and returns whether
+// each field the row labels is right. A title is right when it is any of the
+// titles the row accepts, since a name that gives two does not say which is
+// the main one ('Tonari no Totoro / My Neighbor Totoro').
+func scoreSample(c labelledCase, r Release) map[string]bool {
+	m := make(map[string]bool, 5)
+	if v, ok := values(c.AnimeTitle); ok {
+		m["title"] = anyOf(v, r.Title, sameTitle)
+	}
+	if v, ok := values(c.ReleaseGroup); ok {
+		m["group"] = anyOf(v, r.Group, strings.EqualFold)
+	}
+	if v, ok := values(c.Type); ok {
+		m["type"] = anyOf(v, r.Type.String(), strings.EqualFold)
+	}
+	if v, ok := values(c.AnimeSeason); ok {
+		var got []string
+		if r.HasSeason() {
+			for _, n := range r.Seasons() {
+				got = append(got, strconv.Itoa(n))
+			}
+		}
+		m["season"] = slices.Equal(got, sampleNums(v))
+	}
+	if v, ok := values(c.EpisodeNumber); ok {
+		m["episode"] = slices.Equal(episodes(r), sampleNums(v))
+	}
+	return m
+}
+
+// TestSampleScoring checks the comparisons scoreSample makes, on the cases
+// where a careless one would score a right reading wrong or a wrong one right.
+func TestSampleScoring(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		exp  []string
+	}{
+		{"[Grp] Show - 04 [1080p]", []string{"4"}},
+		{"[Grp] Show - 18.5 [1080p]", []string{"18.5"}},
+		{"[Grp] Show - 00 [1080p]", []string{"0"}},
+		{"[Grp] Show - 01 ~ 12 [1080p]", []string{"1", "12"}},
+		{"[Grp] Show S01E12 + S01E12.5 [1080p]", []string{"12"}},
+		{"Show.S01.1080p.WEB.H264-GRP", nil},
+	} {
+		if v := episodes(ParseString(test.name)); !slices.Equal(v, test.exp) {
+			t.Errorf("%q: expected episodes %q, got: %q", test.name, test.exp, v)
+		}
+	}
+	if v, exp := sampleNums([]string{"04", "18.50", "11.5", "000"}), []string{"4", "18.5", "11.5", "0"}; !slices.Equal(v, exp) {
+		t.Errorf("expected numbers %q, got: %q", exp, v)
+	}
+	for _, test := range []struct {
+		a, b string
+		exp  bool
+	}{
+		{"Re:Zero", "Re Zero", true},
+		{"Fate/Zero", "Fate Zero", true},
+		{"Kirei ni Shite Moraemasu ka.", "kirei ni shite moraemasu ka", true},
+		{"Bleach", "Bleach 225", false},
+	} {
+		if sameTitle(test.a, test.b) != test.exp {
+			t.Errorf("sameTitle(%q, %q): expected %t", test.a, test.b, test.exp)
+		}
+	}
+	for _, test := range []struct {
+		v   []string
+		got string
+		exp bool
+	}{
+		{nil, "", true},
+		{nil, "Dub", false},
+		{[]string{"WMD", ""}, "", true},
+		{[]string{"WMD", ""}, "wmd", true},
+		{[]string{"WMD", ""}, "P38", false},
+	} {
+		if anyOf(test.v, test.got, strings.EqualFold) != test.exp {
+			t.Errorf("anyOf(%q, %q): expected %t", test.v, test.got, test.exp)
+		}
+	}
+	// a field that is there and empty has no value, one that is left out is
+	// not judged, and a list keeps an empty string it holds
+	for _, test := range []struct {
+		raw string
+		exp []string
+		ok  bool
+	}{
+		{``, nil, false},
+		{`""`, nil, true},
+		{`"04"`, []string{"04"}, true},
+		{`["WMD", ""]`, []string{"WMD", ""}, true},
+	} {
+		if v, ok := values(json.RawMessage(test.raw)); !slices.Equal(v, test.exp) || ok != test.ok {
+			t.Errorf("values(%s): expected %q %t, got: %q %t", test.raw, test.exp, test.ok, v, ok)
+		}
+	}
+}
+
+// TestAccuracySample scores the parser against the hand-read samples of nyaa
+// names. With -v it logs every name that has a field wrong, so that two runs
+// can be compared name by name.
+func TestAccuracySample(t *testing.T) {
+	for _, name := range []string{"nyaa-400.json", "nyaa-blind-140.json"} {
+		t.Run(name, func(t *testing.T) {
+			buf, err := os.ReadFile(corpusDir + "/labelled/" + name)
+			if err != nil {
+				t.Fatalf("expected %s to be present: %v", name, err)
+			}
+			var cases []labelledCase
+			if err := json.Unmarshal(buf, &cases); err != nil {
+				t.Fatalf("%s: %v", name, err)
+			}
+			m := map[string]*tally{"names": {}}
+			for _, c := range cases {
+				score := scoreSample(c, ParseString(c.FileName))
+				var wrong []string
+				for _, k := range slices.Sorted(maps.Keys(score)) {
+					if m[k] == nil {
+						m[k] = &tally{}
+					}
+					m[k].add(score[k])
+					if !score[k] {
+						wrong = append(wrong, k)
+					}
+				}
+				m["names"].add(len(wrong) == 0)
+				if len(wrong) != 0 {
+					t.Logf("wrong %s: %s", strings.Join(wrong, ","), c.FileName)
+				}
+			}
+			for _, k := range slices.Sorted(maps.Keys(m)) {
+				v, floor := *m[k], sampleFloors[name][k]
+				t.Logf("%-8s %4d/%-4d %5.1f%%", k, v.ok, v.total, v.pct())
+				switch {
+				case v.ok < floor:
+					t.Errorf("%s: %d right is below the floor of %d", k, v.ok, floor)
+				case v.ok > floor:
+					t.Errorf("%s: %d right is above the floor of %d: raise the floor in sampleFloors", k, v.ok, floor)
+				}
+			}
+		})
+	}
+}
+
+// probeFailures are the probes the parser gets wrong today. A probe that is
+// not listed has to pass, and one that is listed has to fail: a change that
+// fixes one takes it off the list, in the same diff.
+var probeFailures = map[string][]string{
+	"probes-title.json": {
+		"Going.Dutch.S01E01.720p.HDTV.x264-GRP",
+		"Going.Dutch.S01E02.GERMAN.DL.1080p.WEB.h264-GRP",
+		"Made.in.USA.1966.1080p.BluRay.x264-GRP",
+		"The.Darjeeling.Limited.2007.1080p.BluRay.x264-GRP",
+		"The.Hybrid.2014.720p.BluRay.x264-GRP",
+		"Series.7.The.Contenders.2001.DVDRip.x264-GRP",
+	},
+	"probes-title-end.json": {
+		"Pardon.My.French.2021.1080p.WEB.h264-GRP",
+		"Excuse.My.French.2014.1080p.BluRay.x264-GRP",
+		"Double.Dutch.S01E01.720p.WEB.h264-GRP",
+		"The.Good.German.2006.1080p.BluRay.x264-GRP",
+		"Plain.English.S01E01.720p.HDTV.x264-GRP",
+		"The.Quiet.Italian.2010.720p.BluRay.x264-GRP",
+		"Miss.USA.2019.720p.HDTV.x264-GRP",
+		"Little.Britain.USA.S01E01.720p.HDTV.x264-GRP",
+		"Magnum.Opus.2017.1080p.WEB-DL.DD5.1.H264-GRP",
+		"Strictly.Limited.2019.720p.WEB.h264-GRP",
+		"The.Missing.Extras.S01E01.720p.WEB.h264-GRP",
+		"Blood.Remastered.2020.1080p.WEB.h264-GRP",
+		"Almost.Complete.2018.1080p.WEB.h264-GRP",
+		"Prim.and.Proper.S01E01.720p.WEB.h264-GRP",
+		"Family.Extended.2015.1080p.WEB.h264-GRP",
+		"Total.Internal.2016.720p.WEB.h264-GRP",
+	},
+}
+
+// vocabulary returns every value a row of the tag vocabulary gives.
+func vocabulary() map[string]bool {
+	m := make(map[string]bool)
+	for _, infos := range taginfo.All() {
+		for _, info := range infos {
+			m[info.Tag()] = true
+		}
+	}
+	return m
+}
+
+// tagValues returns the values r holds in the fields a vocabulary word can
+// land in.
+func tagValues(r Release) []string {
+	v := slices.Concat(r.Language, r.Other, r.Cut, r.Edition, r.Codec, r.HDR, r.Audio)
+	return append(v, r.Collection, r.Region, r.Source, r.Genre, r.Platform, r.Arch, r.Container)
+}
+
+// TestProbes checks the probe sets: scene names built by hand around a word of
+// the vocabulary that is a word of the title in that name ('The.French.
+// Dispatch.2021', 'Going.Dutch.S01E01'). A probe passes when the title and the
+// type are those of the row and no field holds a value of its no_tag, which is
+// what the word would be as a tag. The corpora are anime and sports names and
+// cannot catch a rule that breaks a scene name, which is what these are for.
+func TestProbes(t *testing.T) {
+	for _, name := range []string{"probes-title.json", "probes-title-end.json"} {
+		t.Run(name, func(t *testing.T) {
+			buf, err := os.ReadFile(corpusDir + "/labelled/" + name)
+			if err != nil {
+				t.Fatalf("expected %s to be present: %v", name, err)
+			}
+			var cases []labelledCase
+			if err := json.Unmarshal(buf, &cases); err != nil {
+				t.Fatalf("%s: %v", name, err)
+			}
+			known, vocab := probeFailures[name], vocabulary()
+			var passed int
+			for _, c := range cases {
+				r := ParseString(c.FileName)
+				noTag, _ := values(c.NoTag)
+				// a value the vocabulary does not have is in no field, and
+				// would make the probe check nothing
+				for _, s := range noTag {
+					if !vocab[s] {
+						t.Errorf("%q: no_tag %q is not a value of the vocabulary", c.FileName, s)
+					}
+				}
+				got := tagValues(r)
+				pass := r.Title == first(c.Title) && r.Type.String() == first(c.Type) &&
+					!slices.ContainsFunc(noTag, func(s string) bool { return slices.Contains(got, s) })
+				switch fails := slices.Contains(known, c.FileName); {
+				case pass && fails:
+					t.Errorf("%q passes now: take it out of probeFailures", c.FileName)
+				case !pass && !fails:
+					t.Errorf("%q\n  expected title %q, type %s, no tag of %q\n  got      title %q, type %s, tags %q",
+						c.FileName, first(c.Title), first(c.Type), noTag, r.Title, r.Type, slices.DeleteFunc(got, func(s string) bool { return s == "" }))
+				}
+				if pass {
+					passed++
+				}
+			}
+			for _, s := range known {
+				if !slices.ContainsFunc(cases, func(c labelledCase) bool { return c.FileName == s }) {
+					t.Errorf("%q is in probeFailures and not in %s", s, name)
+				}
+			}
+			t.Logf("%d of %d probes pass", passed, len(cases))
 		})
 	}
 }
