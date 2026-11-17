@@ -249,10 +249,11 @@ func (r Release) SeriesEpisodes() [][]int {
 // numbering when the name writes that season's episode too: the '13' of 'S2 -
 // 13 (S02E01)' is, and the 'Episode.2' of 'S01E01.S02.Episode.2' is episode 2
 // of season 2. With no season before it, any season written with an episode
-// makes it one. An 'E06' continuation is another episode, and not one.
+// makes it one. An 'E06' continuation is another episode, and not one, and
+// neither is the end of a range ('S04E29-31v2').
 func (r Release) secondNumbering(i int) bool {
 	tag := r.tags[i]
-	if tag.typ != TagTypeSeries || tag.val(1) != "" || tag.continuation() {
+	if tag.typ != TagTypeSeries || tag.val(1) != "" || tag.continuation() || r.rangeEnd(i) {
 		return false
 	}
 	season := ""
@@ -267,6 +268,21 @@ func (r Release) secondNumbering(i int) bool {
 		}
 	}
 	return false
+}
+
+// rangeEnd reports whether the series tag at i writes the end of a range that
+// the series tag before it starts, ie the '31' of 'S04E29-31v2': a bare hyphen
+// or tilde stands between the two, the tag before writes a season and an
+// episode, and the number at i is the higher one. The series lexer reads
+// 'S04E29-31' as one tag, and leaves the '31' to the next tag when a version
+// follows it.
+func (r Release) rangeEnd(i int) bool {
+	if i < 2 || !r.tags[i-1].rangeDelim() || r.tags[i-2].typ != TagTypeSeries || r.tags[i-2].val(1) == "" {
+		return false
+	}
+	_, first := r.tags[i-2].Series()
+	_, last := r.tags[i].Series()
+	return r.tags[i-2].wroteEpisode() && first < last
 }
 
 // Absolute returns the episode when the name numbers its episodes absolutely

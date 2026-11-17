@@ -334,7 +334,7 @@ func TestAbsoluteInvariants(t *testing.T) {
 	defer f.Close()
 	sc := bufio.NewScanner(f)
 	sc.Buffer(make([]byte, 1<<20), 1<<20)
-	var n, abs int
+	var n, abs, second int
 	for sc.Scan() {
 		line := strings.TrimSpace(sc.Text())
 		if line == "" {
@@ -342,15 +342,28 @@ func TestAbsoluteInvariants(t *testing.T) {
 		}
 		n++
 		r := ParseString(line)
-		switch absolute, ok := r.Absolute(); {
-		case !ok:
-		case absolute != r.Episode:
+		absolute, ok := r.Absolute()
+		if !ok {
+			continue
+		}
+		// with no season the absolute episode is the episode. Beside a season
+		// it is a second numbering, which is another number than the season's
+		// episode and no part of a range of them ('S04E29-31v2')
+		first, last, ranged := r.EpisodeRange()
+		switch {
+		case !r.HasSeason() && absolute != r.Episode:
 			t.Fatalf("%q: Absolute %d does not match Episode %d", line, absolute, r.Episode)
-		case r.Series != 0:
-			t.Fatalf("%q: Absolute %d set alongside season %d", line, absolute, r.Series)
-		default:
+		case !r.HasSeason():
 			abs++
+		case r.Series == 0:
+			t.Fatalf("%q: Absolute %d set alongside the specials", line, absolute)
+		case absolute == r.Episode:
+			t.Fatalf("%q: Absolute %d is the episode of season %d", line, absolute, r.Series)
+		case ranged && first <= absolute && absolute <= last:
+			t.Fatalf("%q: Absolute %d is in the episodes %d to %d of season %d", line, absolute, first, last, r.Series)
+		default:
+			second++
 		}
 	}
-	t.Logf("%d of %d names carry an absolute episode number", abs, n)
+	t.Logf("%d of %d names carry an absolute episode number, %d of them beside a season and an episode", abs+second, n, second)
 }

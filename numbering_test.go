@@ -350,6 +350,10 @@ func TestAbsoluteSecondNumbering(t *testing.T) {
 		{"Show.S01E05.E06.1080p.WEB.h264-GRP", 5, 0, false},
 		{"Show.S01E01.Episode.5-7.1080p.WEB.h264-GRP", 1, 0, false},
 		{"Show.S01E01.Episode.5.5.1080p.WEB.h264-GRP", 1, 0, false},
+		// the end of a range that a version follows
+		{"[Judas] Shingeki no Kyojin (Attack on Titan) - S04E29-31v2 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)", 29, 0, false},
+		{"Show.S04E29-31v2.1080p.WEB.H264-GRP", 29, 0, false},
+		{"Show.S04E29~31v2.1080p.WEB.H264-GRP", 29, 0, false},
 		// a season with no episode leaves the episode after it in the season
 		{"[Grp] Show S2 - 04 [1080p].mkv", 4, 0, false},
 		{"Show.S01E01.S02.Episode.2.1080p.WEB.h264-GRP", 1, 0, false},
