@@ -348,8 +348,12 @@ func TestAbsoluteInvariants(t *testing.T) {
 		}
 		// with no season the absolute episode is the episode. Beside a season
 		// it is a second numbering, which is another number than the season's
-		// episode and no part of a range of them ('S04E29-31v2')
-		first, last, ranged := r.EpisodeRange()
+		// episode and not inside a range the name writes ('S04E29-31v2').
+		// EpisodeSpans gives the ranges as written, whatever Absolute made
+		// of their ends
+		ranged := slices.ContainsFunc(r.EpisodeSpans(), func(span EpisodeSpan) bool {
+			return span.Last != "" && wholeEpisode(span.First) <= absolute && absolute <= wholeEpisode(span.Last)
+		})
 		switch {
 		case !r.HasSeason() && absolute != r.Episode:
 			t.Fatalf("%q: Absolute %d does not match Episode %d", line, absolute, r.Episode)
@@ -359,8 +363,8 @@ func TestAbsoluteInvariants(t *testing.T) {
 			t.Fatalf("%q: Absolute %d set alongside the specials", line, absolute)
 		case absolute == r.Episode:
 			t.Fatalf("%q: Absolute %d is the episode of season %d", line, absolute, r.Series)
-		case ranged && first <= absolute && absolute <= last:
-			t.Fatalf("%q: Absolute %d is in the episodes %d to %d of season %d", line, absolute, first, last, r.Series)
+		case ranged:
+			t.Fatalf("%q: Absolute %d is inside a range of episodes of season %d", line, absolute, r.Series)
 		default:
 			second++
 		}

@@ -354,6 +354,12 @@ func TestAbsoluteSecondNumbering(t *testing.T) {
 		{"[Judas] Shingeki no Kyojin (Attack on Titan) - S04E29-31v2 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)", 29, 0, false},
 		{"Show.S04E29-31v2.1080p.WEB.H264-GRP", 29, 0, false},
 		{"Show.S04E29~31v2.1080p.WEB.H264-GRP", 29, 0, false},
+		{"Show.S01E998-1002v2.1080p.WEB.H264-GRP", 998, 0, false},
+		// four digits after a lower episode are another number, as they are
+		// with no version after them, and so is an episode written with a word
+		{"Show.S23E19-1174v2.1080p.WEB.H264-GRP", 19, 1174, true},
+		{"Show.S01E05-2020v2.1080p.WEB.H264-GRP", 5, 2020, true},
+		{"Show.S01E05-Episode.10.1080p.WEB.H264-GRP", 5, 10, true},
 		// a season with no episode leaves the episode after it in the season
 		{"[Grp] Show S2 - 04 [1080p].mkv", 4, 0, false},
 		{"Show.S01E01.S02.Episode.2.1080p.WEB.h264-GRP", 1, 0, false},
@@ -1022,6 +1028,11 @@ func TestEpisodeSpans(t *testing.T) {
 		{"Show.S01E06.5.1.AAC.720p.WEB-GRP", []EpisodeSpan{{"01", "06", ""}}},
 		// a tilde makes a range as a hyphen does, inside a tag and between two
 		{"[Grp] Show S04E29~E31 1080p WEB H.264", []EpisodeSpan{{"04", "29", "31"}}},
+		// the end of a range that a version follows, and a second numbering
+		// after a hyphen, which is no range
+		{"Show.S04E29-31v2.1080p.WEB.H264-GRP", []EpisodeSpan{{"04", "29", "31"}}},
+		{"Show.S23E19-1174v2.1080p.WEB.H264-GRP", []EpisodeSpan{{"23", "19", ""}, {"23", "1174", ""}}},
+		{"Show.S01E05-Episode.10.1080p.WEB.H264-GRP", []EpisodeSpan{{"01", "05", ""}, {"01", "10", ""}}},
 		{"Show.S01E01~03.1080p.WEB.x264-GRP", []EpisodeSpan{{"01", "01", "03"}}},
 		// a range end of four digits after an episode of three or more
 		{"[Grp] Show EP1156-1170 [1080p]", []EpisodeSpan{{"", "1156", "1170"}}},
