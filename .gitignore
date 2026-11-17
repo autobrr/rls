@@ -14,3 +14,8 @@ dist/
 # labelled fixtures of other projects, committed with their licence files
 !/testdata/corpus/labelled/anitomy.json
 !/testdata/corpus/labelled/anitogo.json
+# our own hand-read samples and probe sets
+!/testdata/corpus/labelled/nyaa-400.json
+!/testdata/corpus/labelled/nyaa-blind-140.json
+!/testdata/corpus/labelled/probes-title.json
+!/testdata/corpus/labelled/probes-title-end.json

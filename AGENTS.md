@@ -44,7 +44,8 @@ go test -run XXX -fuzz FuzzParseString -fuzztime 60s .
 - Export only sorts; it never recomputes expectations. Write each expectation from what the name means, not from what the parser prints, or a wrong result becomes the test (that is how `Hi10` was once recorded as `HDR10`).
 - `fmt.Sprintf("%o", release)` must reproduce the input byte for byte. The round trip is checked over `tests.yaml` and the corpus.
 - `testdata/corpus/` measures accuracy against data labelled by other projects; read its `README.md` before using it. Most of the corpus files are gitignored and skipped when absent. `TestAccuracyLabelled` fails when a field drops below the floors in `accuracy_test.go`: raise a floor when a field improves, lower one only with a stated reason.
-- Anime corpora miss scene regressions. For a new rule or `taginfo.csv` row, also probe scene names that look like the target by hand (`Show.S01E02.1080p.WEB.H264-GRP` shapes).
+- `TestAccuracySample` scores two hand-read samples of nyaa names against exact counts in `sampleFloors`. It fails above a floor as well as below it, so move the floor in the same diff and say which names changed.
+- Anime corpora miss scene regressions. For a new rule or `taginfo.csv` row, also probe scene names that look like the target by hand (`Show.S01E02.1080p.WEB.H264-GRP` shapes), and add them to the probe sets that `TestProbes` runs. A probe the parser gets wrong is listed in `probeFailures`.
 - Data files from elsewhere (fixtures, corpora) are committed only with the maintainer's agreement and a compatible licence.
 
 ## Code style
