@@ -249,10 +249,11 @@ func (r Release) SeriesEpisodes() [][]int {
 // numbering when the name writes that season's episode too: the '13' of 'S2 -
 // 13 (S02E01)' is, and the 'Episode.2' of 'S01E01.S02.Episode.2' is episode 2
 // of season 2. With no season before it, any season written with an episode
-// makes it one. An 'E06' continuation is another episode, and not one.
+// makes it one. Two kinds of tag are another episode and never a second
+// numbering: an 'E06' continuation, and the end of a range ('S04E29-31v2').
 func (r Release) secondNumbering(i int) bool {
 	tag := r.tags[i]
-	if tag.typ != TagTypeSeries || tag.val(1) != "" || tag.continuation() {
+	if tag.typ != TagTypeSeries || tag.val(1) != "" || tag.continuation() || r.rangeEnd(i) {
 		return false
 	}
 	season := ""
@@ -269,6 +270,43 @@ func (r Release) secondNumbering(i int) bool {
 	return false
 }
 
+// rangeEnd reports whether the series tag at i writes the end of a range that
+// the series tag before it starts, ie the '31' of 'S04E29-31v2'. The series
+// lexer reads 'S04E29-31' as one tag, and leaves the '31' to the next tag when
+// a version follows it. The tag at i is a bare number, a bare hyphen or tilde
+// stands between the two, the tag before writes a season and an episode, and
+// the number at i is higher than the last episode it writes.
+//
+// As in the lexer, four digits after a lower episode are a year or another
+// number and not the end of a range ('S23E19-1174v2', 'S01E05-2020v2'), unless
+// the episodes are numbered that high ('S01E998-1002v2'). An episode written
+// with a word numbers the episode a second way, as it does after a dot
+// ('S01E05-Episode.10').
+func (r Release) rangeEnd(i int) bool {
+	if i < 2 || !r.tags[i-1].rangeDelim() {
+		return false
+	}
+	tag, prev := r.tags[i], r.tags[i-2]
+	if prev.typ != TagTypeSeries || prev.val(1) == "" {
+		return false
+	}
+	if s := tag.val(0); s == "" || s[0] < '0' || s[0] > '9' {
+		return false
+	}
+	var start string
+	for _, b := range prev.rest(2) {
+		if b != "" && b != "-" {
+			start = b
+		}
+	}
+	end := tag.val(2)
+	first, last := atoi(start), atoi(end)
+	if start == "" || len(end) >= 4 && (len(start) < 3 || last-first >= 1000) {
+		return false
+	}
+	return first < last
+}
+
 // Absolute returns the episode when the name numbers its episodes absolutely
 // and not within a season, ie '[Group] One Piece - 1169'. Episode carries the
 // same number. What Absolute adds is that no season qualifies it, so it is not
@@ -282,7 +320,8 @@ func (r Release) secondNumbering(i int) bool {
 // second numbering ('S23E19.Episode.1174', '[Group] One Piece - 1174
 // (S23E19)'). Absolute then gives it, 1174 and true, and Episode is the
 // season's episode, 19. The season's episode written again is no absolute
-// number ('S02E06 [Episode 6]').
+// number ('S02E06 [Episode 6]'), and neither is the end of a range of the
+// season's episodes ('S04E29-31v2').
 func (r Release) Absolute() (episode int, ok bool) {
 	return r.absolute, r.isAbsolute
 }
@@ -483,8 +522,9 @@ type EpisodeSpan struct {
 // 1174 in season 23), and an episode written twice is listed twice. A hyphen
 // or a tilde inside a tag makes a range ('S01E02-04', '01 ~ 12'), and so does
 // a bare hyphen or tilde between two tags of one season when the end is the
-// higher number ('E02-E04', 'E29~E31'). A Release built by hand with an
-// Episode and no episode in its tags gives that episode.
+// higher number ('E02-E04', 'E29~E31'), unless the second tag is a second
+// numbering ('S23E19-1174v2' gives 19 and 1174). A Release built by hand with
+// an Episode and no episode in its tags gives that episode.
 func (r Release) EpisodeSpans() []EpisodeSpan {
 	var v []EpisodeSpan
 	var season string
@@ -503,7 +543,7 @@ func (r Release) EpisodeSpans() []EpisodeSpan {
 		}
 		eps := tag.rest(2)
 		ranged := open && i >= 2 && r.tags[i-2].typ == TagTypeSeries && r.tags[i-1].rangeDelim() &&
-			(bare || tag.val(1) == r.tags[i-2].val(1))
+			(bare || tag.val(1) == r.tags[i-2].val(1)) && !r.secondNumbering(i)
 		open = false
 		for k, b := range eps {
 			switch b {
