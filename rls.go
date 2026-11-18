@@ -102,6 +102,10 @@ type Release struct {
 	// ('[Group][Title][01]').
 	shaped, boxed bool
 	first         int
+	// pack is whether the name lists what a pack holds ('TV+OVA+Movie',
+	// 'Complete Series'), which makes it a series, and single whether it is
+	// the name of one file, which the checksum of the file says.
+	pack, single bool
 
 	tags   []Tag
 	dates  []int
@@ -759,6 +763,11 @@ func (tag Tag) Normalize() string {
 		return tag.Ext()
 	case TagTypeFrameRate:
 		return tag.FrameRate()
+	case tagTypeUnit:
+		// the kind, and what it counts or names: 'ova 02', 'special 01 -
+		// 03', 'special 1 & 3', 'volume 06', 'contents Complete Series',
+		// 'batch'
+		return strings.Join(tag.rest(1), " ")
 	}
 	return ""
 }
@@ -835,14 +844,23 @@ func (tag Tag) Format(f fmt.State, verb rune) {
 	case 'o':
 		buf = append(buf, tag.val(0)...)
 	case 'v':
-		buf = append(buf, fmt.Sprintf("%s:%q", tag.typ, tag.rest(1))...)
+		buf = append(buf, fmt.Sprintf("%s:%q", tag.typeName(), tag.rest(1))...)
 	case 'e':
 		s := strconv.Quote(tag.Normalize())
-		buf = append(buf, "<"+tag.typ.String()+":"+s[1:len(s)-1]+">"...)
+		buf = append(buf, "<"+tag.typeName()+":"+s[1:len(s)-1]+">"...)
 	case 's', 'r':
 		buf = append(buf, tag.Normalize()...)
 	}
 	_, _ = f.Write(buf)
+}
+
+// typeName returns the name of the type of the tag as Format prints it,
+// which is 'Unit' for a tag of the structure stage, see tagTypeUnit.
+func (tag Tag) typeName() string {
+	if tag.typ == tagTypeUnit {
+		return "Unit"
+	}
+	return tag.typ.String()
 }
 
 // Whitespace normalizes the whitespace value.

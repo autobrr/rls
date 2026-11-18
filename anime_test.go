@@ -2,6 +2,7 @@ package rls
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"slices"
 	"strconv"
@@ -20,6 +21,7 @@ func TestBracketRoles(t *testing.T) {
 	}{
 		{"[SubsPlease] Show - 04 (1080p) [ABCD1234].mkv", "group tags sum"},
 		{"[YYQ][Youjo Senki S2][03][1080P][MP4]", "group words number tags tags"},
+		{"[ZG] Doraemon (2005) 068 (720p)", "group year tags"},
 		{"[Group] Show (S2) 06 [1080p HEVC]", "group number tags"},
 		{"[Group] Show (01-12) [English Dub] (Batch)", "group number tags words"},
 		{"[Judas] Title (Other Name of It) - SP01 [1080p][Multi-Subs] (Weekly)", "group words tags tags words"},
@@ -93,32 +95,94 @@ func structureRows() []structureRow {
 	return []structureRow{
 		// the roles of the brackets: the group, the title in a bracket of
 		// its own, the number alone, and another title
+		{"(CBB) Aoki Hagane no Arpeggio - The Complete Series (BD 1080p)(HEVC-x265-10bit)", Series, "Aoki Hagane no Arpeggio", "", "CBB", nil, "", 0, "Complete Series", false},
+		{"[AoJiaoZero][Mangaka-san to Assistant-san to the Animation] 02 [BIG][X264_AAC][720P].mp4", Episode, "Mangaka-san to Assistant-san to the Animation", "", "AoJiaoZero", nil, "2", 0, "", false},
+		{"[Judas] Koujo Denka no Kateikyoushi (Private Tutor to the Duke`s Daughter) - SP01 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)", Episode, "Koujo Denka no Kateikyoushi", "Private Tutor to the Duke`s Daughter", "Judas", nil, "1 special", 0, "", false},
 		{"[WBDP] [Vivid] Uchouten Kazoku / The Eccentric Family 2 [BD][1080p-AAC]", untold, "Uchouten Kazoku 2", "The Eccentric Family 2", "WBDP", nil, "", 0, "", false},
 		{"Gekkan Shoujo Nozaki-kun [HorribleSubs] (1080p)", untold, "Gekkan Shoujo Nozaki-kun", "", "HorribleSubs", nil, "", 0, "", false},
 		// units: an extra with its number is an episode of its kind
+		{"[Judas] Re:Zero Kara Hajimeru Isekai Seikatsu - OVA 02 (Frozen Bonds) [BD 1080p][HEVC x265 10bit][Eng-Subs]", Episode, "Re:Zero Kara Hajimeru Isekai Seikatsu", "", "Judas", nil, "2 ova", 0, "", false},
+		{"[MoarPower] Kage no Jitsuryokusha ni Naritakute! - SP01 (Web 1080p Opus) [ED6E9101].mkv (Kage-Jitsu!)", Episode, "Kage no Jitsuryokusha ni Naritakute!", "", "MoarPower", nil, "1 special", 0, "", false},
+		{"[Erai-raws] Lord of Mysteries - Special 01 (CA) [1080p CR WEBRip HEVC AAC][MultiSub][7F890283]", Episode, "Lord of Mysteries", "", "Erai-raws", nil, "1 special", 0, "", false},
+		{"[coldhell] KILL la KILL NCOP2+NCED2 [BD 720p][H264+FLAC]", Series, "KILL la KILL", "", "coldhell", nil, "2 op, 2 ed", 0, "", false},
+		{"Vivid Strike - ED1 - Starry Wish (Inori Minase) [English Sub][Baaro][EDE784E3].mkv", Episode, "Vivid Strike", "", "Baaro", nil, "1 ed", 0, "", false},
+		{"[Coalgirls]_Fate_Zero_OVA3.5_(1280x720_Blu-ray_FLAC)_[5F5AD026].mkv", Episode, "Fate Zero", "", "Coalgirls", nil, "3.5 ova", 0, "", false},
+		{"[Alex28] Yofukashi no Uta Mini / Call of the Night SP01-06 [1080p][mkv][Eng Sub] (Part 1/4)", Series, "Yofukashi no Uta Mini", "Call of the Night", "Alex28", nil, "1-6 special", 0, "", false},
 		// a range of extras and a list of them: a hyphen makes a range,
 		// tight or set off by spaces, and an ampersand a list
+		{"[Raze] Lord of Mysteries - Specials - 01 - 03 x265 10bit 1080p 150fps", Series, "Lord of Mysteries", "", "Raze", nil, "1-3 special", 0, "", false},
+		{"[FFF-Orphan] Akatsuki no Yona - OVA 01 - 03 [DVD]", Series, "Akatsuki no Yona", "", "FFF-Orphan", nil, "1-3 ova", 0, "", false},
+		{"[Grp] Show - SP01-SP03 [1080p]", Series, "Show", "", "Grp", nil, "1-3 special", 0, "", false},
+		{"[Grp] Show SP1&3 [1080p]", Series, "Show", "", "Grp", nil, "1 special, 3 special", 0, "", false},
+		{"[SoM] Dragon Ball Z - SP1&2 (TV Specials) v2 - Color Corrected Toei Remaster FRBD [1080p][x264]", Series, "Dragon Ball Z", "", "SoM", nil, "1 special, 2 special", 0, "", false},
+		{"[NoobSubs] Fate Zero S1 01-13 + SP01-03 (720p Blu-ray 8bit AAC MP4)", Series, "Fate Zero", "", "NoobSubs", []int{1}, "S1:1-13, 1-3 special", 0, "", false},
 		// a spaced hyphen between a marker and its number: every marker that
 		// names a kind counts the number, and behind a word that names none
 		// the number is the episode
+		{"[SubsPlease] Show - Specials - 03 (1080p) [6D01EE58].mkv", Episode, "Show", "", "SubsPlease", nil, "3 special", 0, "", false},
+		{"[SubsPlease] Show - Special - 03 (1080p) [6D01EE58].mkv", Episode, "Show", "", "SubsPlease", nil, "3 special", 0, "", false},
+		{"[SubsPlease] Show - OVA - 03 (1080p) [6D01EE58].mkv", Episode, "Show", "", "SubsPlease", nil, "3 ova", 0, "", false},
+		{"[SubsPlease] Show - OVAs - 03 (1080p) [6D01EE58].mkv", Episode, "Show", "", "SubsPlease", nil, "3 ova", 0, "", false},
+		{"[SubsPlease] Show - Movie - 03 (1080p) [6D01EE58].mkv", Episode, "Show", "", "SubsPlease", nil, "3", 0, "Movie", false},
+		{"[Anime Time] 91 Days Specials - 01 [1080p Dual Audio][HEVC 10bit x265][AAC].mkv", Episode, "91 Days", "", "Anime Time", nil, "1 special", 0, "", false},
+		{"[FFF] Hoozuki no Reitetsu OAD - 04 [DVD][576p-AC3][F996EBFC].mkv", Episode, "Hoozuki no Reitetsu", "", "FFF", nil, "4 ova", 0, "", false},
+		{"[WZF]Kure-nai_OVA_-_01~02[DVDRip][X264-AAC][1024x576][Sub_Esp][MP4]", Series, "Kure-nai", "", "WZF", nil, "1-2 ova", 0, "", false},
+		{"[Erai-raws] Shingeki no Kyojin OAD - 01 ~ 08 [1080p][BATCH][Multiple Subtitle] [ENG][POR-BR][SPA-LA][SPA][ARA][FRE][GER][ITA][RUS]", Series, "Shingeki no Kyojin", "", "Erai-raws", nil, "1-8 ova", 0, "", true},
 		// an extra with no number says what the release is
+		{"[SubsPlease] Aldnoah Zero - OVA (480p) [B23938CF].mkv", Movie, "Aldnoah Zero", "", "SubsPlease", nil, "", 0, "OVA", false},
+		{"[Credit-Less] Hidan no Aria NCOP & NCED", Series, "Hidan no Aria", "", "Credit-Less", nil, "", 0, "OP|ED", false},
+		{"[CH] Free! Eternal Summer NCOP/ED [BD1080p][H.264 + FLAC]", Series, "Free! Eternal Summer", "", "CH", nil, "", 0, "OP|ED", false},
+		{"[Erai-raws] Stand By Me Doraemon 2 - Movie [1080p][Multiple Subtitle]", Movie, "Stand By Me Doraemon 2", "", "Erai-raws", nil, "", 0, "Movie", false},
+		{"[Reaktor] Space Adventure Cobra - TV [1080p][BD][x265][10-bit]", Series, "Space Adventure Cobra", "", "Reaktor", nil, "", 0, "TV", false},
 		// a volume or a box
+		{"[FFF] ReLIFE - Vol.06 [BD][1080p-FLAC]", Series, "ReLIFE", "", "FFF", nil, "", 6, "", false},
+		{"[Commie] Natsume Yuujinchou Shichi - Volume 1 [BD 720p AAC]", Series, "Natsume Yuujinchou Shichi", "", "Commie", nil, "", 1, "", false},
+		{"[Beatrice-Raws] Darling in the Franxx (Vol.1-5) [BDRip 1920x1080 x264 FLAC]", Series, "Darling in the Franxx", "", "Beatrice-Raws", nil, "", 1, "", false},
+		{"[DBD-Raws][火影忍者 疾风传/Naruto Shippuuden][386-412TV][BOX7][美版/USA.Ver][1080P][BDRip][HEVC-10bit][FLACx2][MKV](NARUTO -ナルト- 疾風伝)", Series, "火影忍者 疾风传", "Naruto Shippuuden", "DBD-Raws", nil, "386-412", 7, "", false},
 		// what a pack holds, and a batch
+		{"[AI-Raws] TIGER&BUNNY TV+OVA+Movie Complete Series BDRip 1080p MKV", Series, "TIGER&BUNNY", "", "AI-Raws", nil, "", 0, "TV|OVA|Movie|Complete Series", false},
+		{"[DB] Non Non Biyori (Complete Series+OVAs+Movie) [10bit BD1080p][HEVC-x265]", Series, "Non Non Biyori", "", "DB", nil, "", 0, "Complete Series|OVA|Movie", false},
+		{"[Cleo] Honzuki no Gekokujou | Ascendance of a Bookworm + OVA [Dual Audio 10bit BD1080p][HEVC-x265]", Series, "Honzuki no Gekokujou", "Ascendance of a Bookworm", "Cleo", nil, "", 0, "OVA", false},
+		{"[ASW] Yofukashi no Uta [1080p HEVC x265 10Bit][AAC] (Batch)", Series, "Yofukashi no Uta", "", "ASW", nil, "", 0, "", true},
+		{"[Commie] Aldnoah.Zero (unofficial batch)", Series, "Aldnoah Zero", "", "Commie", nil, "", 0, "", true},
+		{"[ENORMITA] Gushing Over Magical Girls (2024) S01 E01-E13 UNCENSORED [BD Remux 1080p x264 DTS-HD MA 2.0] (Batch)", Series, "Gushing Over Magical Girls", "", "ENORMITA", []int{1}, "S1:1-13", 0, "", true},
+		{"[AnimeRG] Naruto Shippuden (Complete Series 001-500) Naruto Shippuuden [720p] [HEVC] [x265] [Batch] [pseudo]", Series, "Naruto Shippuden", "", "AnimeRG", nil, "1-500", 0, "Complete Series", true},
+		{"[MiraiAnime] In This Corner (and Other Corners) of the World (2019) [Extended Movie + NCED] [BD 1080p x265 HEVC OPUS] [ENG-SUB]", Movie, "In This Corner (and Other Corners) of the World", "", "MiraiAnime", nil, "", 0, "Movie|ED", false},
 		// the role of a bare number
+		{"[DB]_Bleach_225_[C63D149C].avi", Episode, "Bleach", "", "DB", nil, "225", 0, "", false},
+		{"[CameEsp] Fairy Tail - 100 Years Quest - 06 [1080p][ESP-ENG][mkv]", Episode, "Fairy Tail - 100 Years Quest", "", "CameEsp", nil, "6", 0, "", false},
+		{"[ASW] Gintama - 3-nen Z-gumi Ginpachi-sensei - 09 [1080p HEVC x265 10Bit][AAC]", Episode, "Gintama - 3-nen Z-gumi Ginpachi-sensei", "", "ASW", nil, "9", 0, "", false},
+		{"[Hatsuyuki]_One_Piece_807_-_815_[10bit][x265][1920x1080]", Series, "One Piece", "", "Hatsuyuki", nil, "807-815", 0, "", false},
+		{"[Hatsuyuki]_One_Piece_870_[10bit][x265][1920x1080][v2][EF0EC4EE]", Episode, "One Piece", "", "Hatsuyuki", nil, "870", 0, "", false},
+		{"[ZG] Doraemon (2005) 068 (720p)", Episode, "Doraemon", "", "ZG", nil, "68", 0, "", false},
+		{"[Hakata Ramen] High Score Girl (S2) 06 [1080p HEVC Sub-1x] HR-DR", Episode, "High Score Girl", "", "Hakata Ramen", []int{2}, "S2:6", 0, "", false},
+		{"[EroGaKi-Team]_Nurse_Witch_Komugi-chan_Magikarte_02.5_[902BB314].mkv", Episode, "Nurse Witch Komugi-chan Magikarte", "", "EroGaKi-Team", nil, "2.5", 0, "", false},
+		{"[Anime Time] 86 - Eighty Six (Season 1 - Special) (1-11.5) [Dual Audio][BD][1080p][HEVC 10bit x265][AAC][Eng Sub]", Series, "86 - Eighty Six", "", "Anime Time", []int{1}, "S1:1-11.5", 0, "", false},
+		{"[Ohys-Raws] To Love-Ru Trouble - Darkness 2nd EP 13 (BD 1280x720 x264 AAC)", Episode, "To Love-Ru Trouble - Darkness 2nd", "", "Ohys-Raws", nil, "13", 0, "", false},
 		// more than one episode in bare numbers is a pack, and one file with
 		// its checksum an episode that holds them
+		{"[HorribleSubs] Momokuri - 01+02 [720p]", Series, "Momokuri", "", "HorribleSubs", nil, "1, 2", 0, "", false},
+		{"[Tsundere] Hyouka - 01v2-04 [BDRip h264 1920x1080 10bit FLAC]", Series, "Hyouka", "", "Tsundere", nil, "1-4", 0, "", false},
+		{"Detective Conan - 316-317 [DCTP][2411959B].mkv", Episode, "Detective Conan", "", "DCTP", nil, "316-317", 0, "", false},
 		{"[shincaps] Crayon Shin-chan - 450-459 (CS-EX2 1440x1080 MPEG2 AAC).ts", Series, "Crayon Shin-chan", "", "shincaps", nil, "450-459", 0, "", false},
 		{"[Group] Show S01E01-E02 [1080p]", Episode, "Show", "", "Group", []int{1}, "S1:1-2", 0, "", false},
 		// two numbers joined by a spaced hyphen are a range
+		{"[FFA] Cardfight!! Vanguard Gaiden: If - 01 - 13 [1080p][HEVC][AAC]", Series, "Cardfight!! Vanguard Gaiden: If", "", "FFA", nil, "1-13", 0, "", false},
+		{"[BakedFish] ViVid Strike! - 01v2 - 06 - Batch [720p][MP4][AAC]", Series, "ViVid Strike!", "", "BakedFish", nil, "1-6", 0, "", true},
 		// 'Batch' outside a bracket is the mark where a hyphen sets it
 		// apart, and the last word of a title otherwise. In a bracket of its
 		// own it is the mark, at the end of the name as well
+		{"[Group] Show - Batch [1080p]", Series, "Show", "", "Group", nil, "", 0, "", true},
+		{"[Group] Star Wars - The Bad Batch [1080p] [Batch]", Series, "Star Wars - The Bad Batch", "", "Group", nil, "", 0, "", true},
 		{"[Group] Star Wars - The Bad Batch [1080p]", untold, "Star Wars - The Bad Batch", "", "Group", nil, "", 0, "", false},
 		{"[SubsPlease] Star Wars The Bad Batch - 05 (1080p) [ABCD1234].mkv", Episode, "Star Wars The Bad Batch", "", "SubsPlease", nil, "5", 0, "", false},
 		{"[Group] The Bad Batch - 05 [1080p]", Episode, "The Bad Batch", "", "Group", nil, "5", 0, "", false},
 		{"[Group] Gremlins 2 - The New Batch [1080p]", untold, "Gremlins 2 - The New Batch", "", "Group", nil, "", 0, "", false},
+		{"The Sopranos Complete Series 1080p BluRay x265 [Batch]", Series, "The Sopranos", "", "", nil, "", 0, "Complete Series", true},
 		// a collection is a pack and names no contents, and the number in
 		// front of it is a word of the title
+		{"[FacTory] Seitokai Yakuindomo - Complete Collection [Seasons 1-2 + OVAs + Movies]", Series, "Seitokai Yakuindomo", "", "FacTory", []int{1, 2}, "", 0, "OVA|Movie", false},
+		{"[Group] James Bond 007 - Complete Collection [1080p]", Series, "James Bond 007", "", "Group", nil, "", 0, "", false},
 		// numbers that are words of the title
 		{"[Commie] Chihayafuru 2 [BD 720p AAC]", untold, "Chihayafuru 2", "", "Commie", nil, "", 0, "", false},
 		{"[Group] Mob Psycho 100 [1080p]", untold, "Mob Psycho 100", "", "Group", nil, "", 0, "", false},
@@ -129,9 +193,19 @@ func structureRows() []structureRow {
 		// a name that no fansub group wrote is read where it sets a marker
 		// apart from its title: behind a hyphen, a plus, the year or the
 		// season, in a bracket, or with a word that only an anime release has
+		{"Queen's Blade - Utsukushiki Toushitachi - OVA_01 (BD 1280x720 AVC AAC).mp4", Episode, "Queen's Blade - Utsukushiki Toushitachi", "", "", nil, "1 ova", 0, "", false},
+		{"Hayate no Gotoku 2nd Season 24 (Blu-Ray 1080p) [Chihiro]", Episode, "Hayate no Gotoku", "", "Chihiro", []int{2}, "S2:24", 0, "", false},
+		{"SHIROBAKO - SP01 (BDRip 1920x1080 AVC AAC Hi10P) (eng sub)", Episode, "SHIROBAKO", "", "", nil, "1 special", 0, "", false},
+		{"Friends The Complete Series (1994-2004) [1080p BluRay x265]", Series, "Friends", "", "", nil, "", 0, "Complete Series", false},
+		{"Shiki The Complete TV Series (2010–2011) 1080p WEB-DL AAC.2.0 H.264 UNCUT", Series, "Shiki", "", "", nil, "", 0, "Complete Series|TV", false},
+		{"Show Name (2020) OVA [1080p]", Movie, "Show Name", "", "", nil, "", 0, "OVA", false},
+		{"Doctor Who 2023 Special 1 The Star Beast [1080p]", Episode, "Doctor Who", "", "", nil, "1 special", 0, "", false},
 		// and a word that only an anime release has in front of the year,
 		// in a name that a fansub group wrote
+		{"[izu] Weiss Kreuz OVA (1999) [R2JP DVD-Remux ENG]", Movie, "Weiss Kreuz", "", "izu", nil, "", 0, "OVA", false},
 		// a title that ends where a unit starts ends with no joiner
+		{"[Grp] Show Name: Vol. 1 [BD 1080p]", Series, "Show Name", "", "Grp", nil, "", 1, "", false},
+		{"[Patjantess] Ultra Maniac+OVA  Dvd Dual Audio_Eng Subs_2003", Series, "Ultra Maniac", "", "Patjantess", nil, "", 0, "OVA", false},
 		// another title in a bracket is one in another script or another
 		// language than the title
 		{"[Judas] Kimetsu no Yaiba (Demon Slayer) - S05E08 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)", Episode, "Kimetsu no Yaiba", "Demon Slayer", "Judas", []int{5}, "S5:8", 0, "", false},
@@ -145,6 +219,8 @@ func structureRows() []structureRow {
 		{"[Chihiro] Watashi ga Koibito ni Nareru Wake Nai jan, Muri Muri! (Muri ja Nakatta) - 05 [1080p HEVC EAC3][1B252D5B].mkv", Episode, "Watashi ga Koibito ni Nareru Wake Nai jan, Muri Muri!", "", "Chihiro", nil, "5", 0, "", false},
 		{"[Erai-raws] Heroine Seijo Iie All Works Maid desu (Hokori) - 05 [1080p CR WEBRip HEVC AAC][MultiSub][535EF1FB]", Episode, "Heroine Seijo Iie All Works Maid desu", "", "Erai-raws", nil, "5", 0, "", false},
 		{"[Kametsu] The Legend of Heroes - Trails in the Sky (The Animation) [2011] (BD 1080p x264 10-bit FLAC) [Dual-Audio]", untold, "The Legend of Heroes - Trails in the Sky", "", "Kametsu", nil, "", 0, "", false},
+		{"[BlurayDesuYo] Shingeki no Kyojin (The Final Season) - Part 1 (BD 1920x1080 x264 10bit FLAC)", Series, "Shingeki no Kyojin", "", "BlurayDesuYo", nil, "", 0, "", false},
+		{"[Group] Title (The Final Season) - Special 2 [1080p]", Episode, "Title", "", "Group", nil, "2 special", 0, "", false},
 		// a title written with a slash, and the same title twice
 		// a bare slash cuts where the script changes, and a list of what
 		// the release holds is no other title
@@ -165,8 +241,9 @@ func structureRows() []structureRow {
 
 // TestStructure checks what the structure stage reads from a name written
 // the way a fansub group writes one: the title and the other titles, the
-// group, and the numbering and the type that the lexers give with them.
-// Every name must print as it was written.
+// group, the numbering with its extras, its volume, its contents and its
+// batch, and the type that follows from them. Every name must print as it
+// was written.
 func TestStructure(t *testing.T) {
 	for _, test := range structureRows() {
 		r := ParseString(test.s)
@@ -184,6 +261,61 @@ func TestStructure(t *testing.T) {
 		}
 		if _, ok := n.Episode(); ok != slices.ContainsFunc(n.Episodes, func(e Ep) bool { return e.Kind == EpRegular }) {
 			t.Errorf("%q: expected Episode to give a regular episode alone, got: %t for %q", test.s, ok, epsOf(n))
+		}
+	}
+}
+
+// TestSpacedRange checks which two numbers with a spaced hyphen between them
+// are the two ends of a range. The ends are written alike: each stands behind
+// a spaced hyphen or its marker, they have the same number of digits, the
+// second is the higher, and neither is written onto a word. Anything else is
+// a number of the title, a season or an episode with a number behind it
+// ('Mobile Suit Gundam 00 - 12', '- 2 - 05', '- 366 - 1000-nen
+// Kessen-hen'), and makes no pack of the release.
+func TestSpacedRange(t *testing.T) {
+	for _, test := range []struct {
+		s, title string
+		eps      string
+	}{
+		// the real names with a range
+		{"Sentai Daishikkaku - 07 - 09 | Go! Go! Loser Ranger! [English Dub][1080p][DSNP]", "Sentai Daishikkaku", "7-9"},
+		{"[FFA] Cardfight!! Vanguard Gaiden: If - 01 - 13 [1080p][HEVC][AAC]", "Cardfight!! Vanguard Gaiden: If", "1-13"},
+		{"[BakedFish] ViVid Strike! - 01v2 - 06 - Batch [720p][MP4][AAC]", "ViVid Strike!", "1-6"},
+		{"[Raze] Lord of Mysteries - Specials - 01 - 03 x265 10bit 1080p 150fps", "Lord of Mysteries", "1-3 special"},
+		{"[FFF-Orphan] Akatsuki no Yona - OVA 01 - 03 [DVD]", "Akatsuki no Yona", "1-3 ova"},
+		{"[Group] Show - 001 - 100 [1080p]", "Show", "1-100"},
+		{"[Group] Show Season 2 - 05 - 07 [1080p]", "Show", "S2:5-7"},
+		// a range that starts where the title ends has no number that could
+		// be a word of the title in front of it
+		{"[Group] One Piece 807 - 815 [1080p]", "One Piece", "807-815"},
+		{"[Group] Great Pretender 01 - 14 [1080p]", "Great Pretender", "1-14"},
+		// a season or a title number in front of an episode
+		{"[Group] Show - 2 - 05 [1080p]", "Show", ""},
+		{"[Group] Code Geass - 2 - 25 [1080p]", "Code Geass", ""},
+		{"[Group] Golden Kamuy - 4 - 13 [1080p]", "Golden Kamuy", ""},
+		{"Fargo - 4 - 11 [1080p]", "Fargo", ""},
+		{"The 100 - 7 - 16 [1080p]", "The 100", ""},
+		{"Brooklyn Nine-Nine - 8 - 10 [1080p]", "Brooklyn Nine-Nine", ""},
+		{"[Group] Show - 99 - 100 [1080p]", "Show", ""},
+		// the second is not the higher
+		{"[Group] Show - 13 - 12 [1080p]", "Show", ""},
+		// the second is written onto a word
+		{"[Group] Bleach - 366 - 1000-nen Kessen-hen [1080p]", "Bleach", ""},
+		// the first is a word of the title
+		{"[Group] Mobile Suit Gundam 00 - 12 [1080p]", "Mobile Suit Gundam 00", ""},
+		{"[Group] Gundam 00 - 25 [BD 1080p][ABCD1234].mkv", "Gundam 00", ""},
+		{"[Group] Show 00 - 05 [1080p]", "Show 00", ""},
+		{"[Group] Mob Psycho 100 - 03 [1080p]", "Mob Psycho 100", ""},
+		{"[Group] 86 - 05 [1080p]", "86", ""},
+		{"[Group] Steins;Gate 0 - 05 [1080p]", "Steins;Gate 0", ""},
+	} {
+		r := ParseString(test.s)
+		var eps string
+		if i := slices.IndexFunc(r.Numbering.Episodes, func(e Ep) bool { return e.First != e.Last }); i != -1 {
+			eps = epsOf(Numbering{Episodes: r.Numbering.Episodes[i : i+1]})
+		}
+		if r.Title != test.title || eps != test.eps || (r.Type == Series) != (test.eps != "") {
+			t.Errorf("%q: expected the title %q and the range %q, got: %s %q with the episodes %q", test.s, test.title, test.eps, r.Type, r.Title, epsOf(r.Numbering))
 		}
 	}
 }
@@ -226,6 +358,7 @@ func TestLeadWord(t *testing.T) {
 		{"Rus Eng", false},
 		{"ENG SUB", false},
 		{"700MB", false},
+		{"Movies", false},
 		{"Comedy", false},
 		{"REQ", false},
 		// the checksum of a file names no maker, and says in its own way
@@ -291,6 +424,13 @@ func TestFlagsInFront(t *testing.T) {
 		{"[REPACK] [Beatrice-Raws] Evangelion 3.0+1.0 Thrice Upon a Time [BDRip 1920x816 HEVC TrueHD]", 9},
 		// a name that is read in place
 		{"(REPACK) [SubsPlease] Show - 05 (1080p) [ABCD1234].mkv", 9},
+		// tags that are joined, so that there are fewer of them
+		{"[REPACK] [FFF-Orphan] Akatsuki no Yona - OVA 01 - 03 [DVD]", 9},
+		// a batch mark in a bracket, which is cut in a copy. Its bracket
+		// goes to the delimiters around it, and the one in front may be the
+		// delimiter that closes the flags
+		{"[REPACK] The Sopranos Complete Series 1080p BluRay x265 [Batch]", 9},
+		{"[REPACK]([Batch]) Show 1080p", 8},
 	} {
 		r, alone := ParseString(test.s), ParseString(test.s[test.flags:])
 		checkNumbering(t, test.s, r)
@@ -364,6 +504,34 @@ func TestStructureLeaves(t *testing.T) {
 		r := ParseString(test.s)
 		if r.shaped || r.Title != test.title || r.Numbering.Contents != nil || r.Numbering.Volume != 0 || r.Numbering.Batch {
 			t.Errorf("%q: expected the stage to leave the name with the title %q, got: shaped %t, title %q and %+v", test.s, test.title, r.shaped, r.Title, r.Numbering)
+		}
+	}
+}
+
+// TestUnitFormat checks what a unit tag prints: its text as written, and the
+// type 'Unit' with the kind and the value.
+func TestUnitFormat(t *testing.T) {
+	for _, test := range []struct {
+		s, exp string
+	}{
+		{"[Grp] Show - OVA 02 [1080p]", "<Unit:ova> <Unit:ova 02>"},
+		{"[Grp] Show - SP01 [1080p]", "<Unit:special 01>"},
+		{"[Grp] Show - Vol.06 [1080p]", "<Unit:volume> <Unit:volume 06>"},
+		{"[Grp] Show - The Complete Series [1080p] (Batch)", "<Unit:note> <Unit:contents Complete Series> <Unit:note> <Unit:batch>"},
+		{"[Grp] Show Specials 01-02 [1080p]", "<Unit:special> <Unit:special 01 - 02>"},
+	} {
+		r := ParseString(test.s)
+		var v []string
+		for _, tag := range r.Tags() {
+			if tag.TagType() == tagTypeUnit {
+				v = append(v, fmt.Sprintf("%e", tag))
+			}
+		}
+		if s := strings.Join(v, " "); s != test.exp {
+			t.Errorf("%q: expected the unit tags %q, got: %q", test.s, test.exp, s)
+		}
+		if s := fmt.Sprintf("%o", r); s != test.s {
+			t.Errorf("%q: expected the name to print as written, got: %q", test.s, s)
 		}
 	}
 }
@@ -475,6 +643,16 @@ func TestStructureLinear(t *testing.T) {
 		t.Errorf("%q: %d of %q took %s and %d took %s, more than 24 times as long", shape[0]+shape[1]+shape[2], 8*n, shape[1], took[1], n, took[0])
 	}
 	for _, shape := range [][3]string{
+		{"[G] T ", "SP01 ", "[1080p]"},
+		{"[G] T ", "OVA 01 ", "[1080p]"},
+		{"[G] T ", "Vol.1 ", "[1080p]"},
+		{"[G] T ", "NCOP & ", "NCED [1080p]"},
+		{"[G] T ", "- 01 ", "[1080p]"},
+		{"[G] T ", "01 ", "[1080p]"},
+		{"[G] T ", "01-02 ", "[1080p]"},
+		{"[G] T ", "- 01 - 03 ", "[1080p]"},
+		{"[G] T ", "- 01v2 - 03 ", "[1080p]"},
+		{"[G] T ", "EP 1 ", "[1080p]"},
 		{"[G] T ", "1.0+", "x [1080p]"},
 		{"[G] T", " | A", " [1080p]"},
 		{"[G] T", " / A", " - 01 [1080p]"},
@@ -482,9 +660,19 @@ func TestStructureLinear(t *testing.T) {
 		{"[G] T ", "(a b) ", "- 01 [1080p]"},
 		{"[G] T ", "[01]", "[1080p]"},
 		{"[G][T", " a", "][01][1080p]"},
+		{"[G] T ", "+OVA", " [1080p]"},
+		{"[G] T ", "Complete Series ", "[1080p]"},
+		{"[G] T ", "Complete Collection ", "[1080p]"},
+		{"[G] T ", "- Batch ", "[1080p]"},
+		{"[G] T ", "unofficial batch ", "[1080p]"},
+		{"[G] T - 01 ", "(Batch) ", "[1080p]"},
+		{"T - 01 [1080p] ", "[Batch] ", ""},
 		// a run of merges, each of which join makes: a spaced range of
 		// extras, a range in the bracket of a complete series, and a range
 		// with the marker on both ends
+		{"[G] T ", "OVA 01 - 03 ", "[1080p]"},
+		{"[G] T ", "(Complete Series 001-500) ", "[1080p]"},
+		{"[G] T ", "SP01-SP03 ", "[1080p]"},
 		// runs of the square brackets of CJK text, which the lexers read as
 		// one word
 		{"", "】", ""},
@@ -559,6 +747,10 @@ func repeatTags(shape [3]string, n int) ([]Tag, int) {
 // tables of the stage, as what opens the name, what is repeated and what
 // ends it:
 //
+//   - every marker of markers, alone, with a number written onto it, apart
+//     from it and behind a spaced hyphen, as the two ends of a range and of
+//     a list, in a bracket, in a list joined by a plus, and in a name that no
+//     fansub group wrote
 //   - every joiner, which is any sign of ASCII that is no bracket, written
 //     tight and set off by spaces, between numbers, between a word and two
 //     numbers, and between words
@@ -569,6 +761,16 @@ func linearShapes() [][3]string {
 	var shapes [][3]string
 	add := func(head, unit, tail string) {
 		shapes = append(shapes, [3]string{head, unit, tail})
+	}
+	for _, w := range slices.Sorted(maps.Keys(markers)) {
+		w = strings.ToUpper(w)
+		for _, unit := range []string{
+			w + " ", w + "01 ", w + " 01 ", "- " + w + " - 01 ", w + "01-" + w + "03 ", w + " 01 - 03 ", w + "1&2 ",
+			"(" + w + " 001-500) ", "+ " + w + " ",
+		} {
+			add("[G] T ", unit, "[1080p]")
+		}
+		add("T ", "- "+w+" 01 ", "[1080p]")
 	}
 	for c := byte(' '); c < 0x7f; c++ {
 		if c >= '0' && c <= '9' || c|0x20 >= 'a' && c|0x20 <= 'z' || strings.IndexByte("()[]{}", c) != -1 {

@@ -1572,15 +1572,15 @@ func checkNumbering(tb testing.TB, name string, r Release) {
 		tb.Errorf("%.200q: %s\n  %+v", name, fmt.Sprintf(format, args...), n)
 	}
 	// the fields
-	for _, list := range [][]Ep{n.Episodes, n.Alt} {
+	for k, list := range [][]Ep{n.Episodes, n.Alt} {
 		for i, e := range list {
 			switch {
 			case e.First < 0 || e.First > e.Last:
 				fail("expected an episode from First up to Last, got: %+v", e)
 			case e.Season != NoSeason && e.Season < 0:
 				fail("expected a season or NoSeason, got: %+v", e)
-			case e.Kind != EpRegular || e.Frac > 99 || e.Frac != 0 && e.Frac%10 == 0:
-				fail("expected a regular episode with a fraction of two digits at most and no zero at its end, got: %+v", e)
+			case e.Kind > EpPV || e.Frac > 99 || e.Frac != 0 && e.Frac%10 == 0 || e.Kind != EpRegular && (e.Season != NoSeason || k == 1):
+				fail("expected a kind of episode with a fraction of two digits at most and no zero at its end, and an extra in Episodes with no season, got: %+v", e)
 			case e.Season != NoSeason && !slices.Contains(n.Seasons, e.Season):
 				fail("expected the season of %+v in Seasons", e)
 			case slices.Contains(list[:i], e):
@@ -1602,8 +1602,8 @@ func checkNumbering(tb testing.TB, name string, r Release) {
 	if slices.ContainsFunc(n.Alt, func(e Ep) bool { return e.Season != NoSeason }) || n.Alt != nil && (n.Episodes == nil || n.Seasons == nil) {
 		fail("expected a second numbering with no season, beside a season and an episode")
 	}
-	if n.Volume != 0 || n.Contents != nil || n.Batch {
-		fail("expected no volume, contents or batch")
+	if n.Volume < 0 || n.Contents != nil && (len(n.Contents) == 0 || slices.Contains(n.Contents, "")) {
+		fail("expected a volume from 0 on, and nil for no contents")
 	}
 	daily := n.Episodes == nil && r.Type == Episode && r.Year != 0 && r.Month != 0 && r.Day != 0
 	scheme := SchemeNone
@@ -1612,7 +1612,7 @@ func checkNumbering(tb testing.TB, name string, r Release) {
 		scheme = SchemeDaily
 	case n.Seasons != nil:
 		scheme = SchemeSeasoned
-	case n.Episodes != nil:
+	case slices.ContainsFunc(n.Episodes, func(e Ep) bool { return e.Kind == EpRegular }):
 		scheme = SchemeAbsolute
 	}
 	if n.Scheme != scheme {
@@ -1621,6 +1621,10 @@ func checkNumbering(tb testing.TB, name string, r Release) {
 	// the tags
 	var seasons, episodes bool
 	for _, tag := range r.tags {
+		// a numbered extra is an episode too
+		if _, extra := epKind(tag.val(1)); tag.typ == tagTypeUnit && extra && tag.val(2) != "" {
+			episodes = true
+		}
 		if !tag.Is(TagTypeSeries) {
 			continue
 		}
@@ -1634,7 +1638,7 @@ func checkNumbering(tb testing.TB, name string, r Release) {
 	if seasons != (n.Seasons != nil) || episodes != (n.Episodes != nil) {
 		fail("expected seasons %t and episodes %t by the tags", seasons, episodes)
 	}
-	if again, _ := r.numbering(); !reflect.DeepEqual(again, Numbering{Scheme: again.Scheme, Seasons: n.Seasons, Episodes: n.Episodes, Alt: n.Alt}) {
+	if again, _ := r.numbering(); !reflect.DeepEqual(again, Numbering{Scheme: again.Scheme, Seasons: n.Seasons, Episodes: n.Episodes, Alt: n.Alt, Volume: n.Volume, Contents: n.Contents, Batch: n.Batch}) {
 		fail("expected the tags to give the same numbering again, got: %+v", again)
 	}
 	// the methods
@@ -1643,14 +1647,17 @@ func checkNumbering(tb testing.TB, name string, r Release) {
 		fail("expected Season to give the first of Seasons, got: %d %t", season, seasoned)
 	}
 	episode, numbered := n.Episode()
-	if numbered != (n.Episodes != nil) || numbered && episode != n.Episodes[0].First || !numbered && episode != 0 {
-		fail("expected Episode to give the First of the first episode, got: %d %t", episode, numbered)
+	regular := slices.IndexFunc(n.Episodes, func(e Ep) bool { return e.Kind == EpRegular })
+	if numbered != (regular != -1) || numbered && episode != n.Episodes[regular].First || !numbered && episode != 0 {
+		fail("expected Episode to give the First of the first regular episode, got: %d %t", episode, numbered)
 	}
+	// the shape and All are those of the regular episodes
+	regulars := slices.DeleteFunc(slices.Clone(n.Episodes), func(e Ep) bool { return e.Kind != EpRegular })
 	shape := ShapeNone
 	switch {
-	case len(n.Episodes) == 1 && n.Episodes[0].First == n.Episodes[0].Last:
+	case len(regulars) == 1 && regulars[0].First == regulars[0].Last:
 		shape = ShapeEpisode
-	case n.Episodes != nil:
+	case len(regulars) != 0:
 		shape = ShapeEpisodes
 	case daily:
 		shape = ShapeDaily
@@ -1669,7 +1676,7 @@ func checkNumbering(tb testing.TB, name string, r Release) {
 		all = append(all, [2]int{season, episode})
 	}
 	var k, filled int
-	for _, e := range n.Episodes {
+	for _, e := range regulars {
 		if k == len(all) || all[k] != [2]int{e.Season, e.First} {
 			fail("expected All to yield the First of %+v as pair %d, got: %v", e, k, all[min(k, len(all)):min(k+1, len(all))])
 			break
@@ -1691,16 +1698,16 @@ func checkNumbering(tb testing.TB, name string, r Release) {
 	if k != len(all) || filled > maxRangeFill {
 		fail("expected All to yield the episodes and no more, and to fill at most %d, got: %d pairs, %d read and %d filled", maxRangeFill, len(all), k, filled)
 	}
-	// an absolute episode is one whole episode: the one episode of a name
-	// with no season anywhere, which Episode gives too, and else a second
-	// numbering that is not the season's episode again
+	// an absolute episode is one whole episode: the one regular episode of a
+	// name with no season anywhere, which Episode gives too, and else a
+	// second numbering that is not the season's episode again
 	absolute, ok := n.Absolute()
 	one := func(e Ep) bool { return e.First == absolute && e.Last == absolute && e.Frac == 0 }
 	switch {
 	case !ok && absolute != 0:
 		fail("expected no number with no absolute episode, got: %d", absolute)
 	case !ok:
-	case !seasoned && (len(n.Episodes) != 1 || !one(n.Episodes[0]) || absolute != episode):
+	case !seasoned && (len(regulars) != 1 || !one(regulars[0]) || absolute != episode):
 		fail("expected the absolute episode %d to be the one episode", absolute)
 	case seasoned && (season == 0 || absolute == episode || !slices.ContainsFunc(n.Alt, one)):
 		fail("expected the absolute episode %d to be a second numbering, and not of the specials or the episode again", absolute)

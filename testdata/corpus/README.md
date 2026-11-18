@@ -34,6 +34,7 @@ right, and the others were written from the name.
 | `labelled/nyaa-blind-140.json` | 140 | names of `nyaa.txt` that two prototypes read differently, judged blind | yes, by us |
 | `labelled/probes-title.json` | 103 | scene names built by hand, a vocabulary word anywhere in the title | yes, by us |
 | `labelled/probes-title-end.json` | 60 | scene names built by hand, a vocabulary word as the last word of the title | yes, by us |
+| `labelled/probes-brackets.json` | 368 | names with a bracket that no fansub group wrote, built by hand or real | yes, by us |
 | `nyaa.txt` | 13,215 | nyaa.si listing and search pages, categories 1_2 / 1_3 / 1_4 | no |
 | `sports.txt` | 2,505 | predb SPORTS and TV sections, plus documented tracker conventions | no |
 
@@ -94,7 +95,7 @@ In both files:
 | `release_group` | the group. A list holds every reading that is right, and may hold the empty string for a name that may have no group |
 | `anime_season` | the season, or a list of seasons |
 | `episode_number` | one episode, or the two ends of a range. Half an episode keeps its fraction, `18.5` |
-| `anime_type` | the kind of an extra: `OVA`, `Special`, `NCOP`, `NCED`, `ED`, `Movie` |
+| `anime_type` | the kind of an extra, or what the release holds beside it: `OVA`, `Special`, `NCOP`, `NCED`, `ED`, `Movie`, `Extra`. A list holds every kind the name states, all of them and no alternatives: `OVA + Movie` is `["OVA", "Movie"]` |
 | `volume_number` | the volume or box, or the two ends of a range of them |
 
 A field that is there and empty says the name has none: `"release_group": ""` is a name with no
@@ -113,9 +114,24 @@ in both files:
 A title written after the tags is not in the list of titles. The first title is the title there:
 `Show S2 (BD 1080p) | Other Name S2`.
 
-`anime_type` and `volume_number` are labels that nothing scores yet, since `Release` has no field
-for them. A numbered extra carries its number in `episode_number` with its kind beside it, so
-`- OVA 02` is episode 2 of kind `OVA`.
+`anime_type` and `volume_number` are scored against `Release.Numbering`, as the fields `kind` and
+`volume` of `sampleFloors`, on the rows that carry them:
+
+- `kind` is right when the numbering gives every kind the row names and no other. A numbered extra
+  gives its kind as the `Kind` of an `Ep` (`- OVA 02`, `SP01`), and an extra with no number gives it
+  in `Contents` (`Title - OVA`, `Title NCOP & NCED`). `NCOP` and `NCED` are an opening and an ending,
+  and `OAD` and `ONA` are scored as `OVA`.
+- `volume` is right when `Numbering.Volume` is the volume of the row, which is the first one for a
+  range (`Vol.1-5` is 1).
+
+A numbered extra carries its number in `episode_number` with its kind beside it, so `- OVA 02` is
+episode 2 of kind `OVA`. `Numbering.Episode()` gives regular episodes only, so on a row with an
+`anime_type` the `episode` score reads the numbers of the extras when the name gives no regular
+episode. A row gives one number, or the two ends of a range, which is every number between them,
+and the name has to give exactly those, of every kind it gives: `Specials - 01 - 03` and `SP1&2`
+are the rows `["01", "03"]` and `["1", "2"]`, and the extras 1 and 3 are not the row `["1", "3"]`.
+A row with no `anime_type` is scored on its regular episodes alone, so the specials a pack lists
+beside a season are not its episodes (`Title II + SP01 + SP02`).
 
 `TestAccuracySample` scores both files and compares each field with `sampleFloors` in
 `accuracy_test.go`. A floor is the number of names that are right, not a percentage. The test fails
@@ -137,11 +153,36 @@ the season, which is the place the parser gets wrong most.
 | `no_tag` | the value the word would have as a tag, or a list of them. No field may hold it. Each is a value of `taginfo.csv`, which the test checks. It is left out when the name carries the same value as a real tag, as `French.Exit.2020.FRENCH` does |
 
 `TestProbes` runs them. A probe the parser gets wrong today is listed in `probeFailures` in
-`accuracy_test.go`. A probe that is not listed has to pass, and a listed one has to fail, so a
-change that fixes a probe takes it off the list.
+`accuracy_test.go`, with the reading the parser gives. A probe that is not listed has to pass, and
+a listed one has to fail with that reading, so a change that fixes a probe takes it off the list,
+and one that reads it in another wrong way writes the new reading.
+
+A row says what the name means, whatever the parser reads. A row whose name does not say what the
+release is gives no `type`, and is then not judged on it: `Show Name (2020) OVA [1080p]` is one
+film or a set of episodes. A name whose meaning is open in more than that is no probe.
 
 When you add a tag row or a rule that touches title words, add probes for it: movies, episodes,
 packs, with the word first, inside and last.
+
+`labelled/probes-brackets.json` holds the look-alikes of a fansub name: names with a bracket that
+no fansub group wrote. They are films, shows, records, books, games and applications in the shapes
+of YTS, QxR, TGx, a Plex library and a tracker listing, with a word or a number that the structure
+stage reads in a fansub name: `Kill Bill: Vol. 1 (2003) [BluRay] [1080p] [YTS.AM]`, `The Specials
+(2019) [720p] [BluRay] [YTS.LT]`, `Movie 43 (2013) [1080p]`, `[FLAC] Artist - The Complete Series
+Box (2015)`. The nyaa corpus holds none of them, so a gate of the stage that is too wide passes it
+unnoticed. Beside `title` and `type` a row gives what the name holds, and the release must hold
+that and nothing more:
+
+| field | meaning |
+|---|---|
+| `anime_type` | the contents and the kinds of the extras the name gives. Left out: none |
+| `episode_number` | the number of an extra that `anime_type` names |
+| `volume_number` | the volume. Left out: none |
+| `batch` | `true` when the name says it is a batch |
+
+No probe has another title, so `Alt` must be empty. The two sets of scene names are checked the
+same way, and none of their names holds a unit. When you add a rule to the structure stage, or
+widen what its gate lets in, add the names of other kinds that look like its target.
 
 ## Using it
 

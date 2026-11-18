@@ -203,12 +203,14 @@ func TestZoneTable(t *testing.T) {
 		{"bracket, head", "Ten-The_Robe_(Japanese_Release_CDS)-1997-AMRC", "Japanese", TagTypeText},
 		{"bracket, head", "[NC-Raws] The Soul of Soldier Master - 14 (B-Global Donghua 1920x1080 HEVC AAC MKV)", "B-Global", TagTypeCollection},
 		{"bracket, head", "BEASTARS S03 1080p NF WEB-DL DUAL DDP5.1 H 264-VARYG (BEASTARS FINAL SEASON Part 2, Dual-Audio, Multi-Subs)", "FINAL", TagTypeText},
-		// what the bracket rules cost: a phrase that says the release is
-		// complete, and a language in a bracket of tags that says where a
-		// reissue is from, with nothing but tags behind the bracket
-		{"cost, bracket", "Death Note (Complete Series) [1080p] (Dual Audio)", "Complete", TagTypeText},
-		{"cost, bracket", "[RigAV1] Saenai Heroine no Sodatekata S01+S02+OVAs+Movie (COMPLETE Series) (BD 1080p AV1 Opus)", "COMPLETE", TagTypeText},
+		// what the bracket rules cost: a language in a bracket of tags that
+		// says where a reissue is from, with nothing but tags behind the
+		// bracket
 		{"cost, bracket", "Adolf_Castle-Really_Crazy_Germans-(Russian_Reissue)-1999-VERiTAS_INT", "Russian", TagTypeLanguage},
+		// a phrase that says what a pack holds is read in front of the zones,
+		// by the structure stage, in a name it reads
+		{"structure", "Death Note (Complete Series) [1080p] (Dual Audio)", "Complete", tagTypeUnit},
+		{"structure", "[RigAV1] Saenai Heroine no Sodatekata S01+S02+OVAs+Movie (COMPLETE Series) (BD 1080p AV1 Opus)", "COMPLETE", tagTypeUnit},
 		// with no word in front of the anchor, the collection that opens the
 		// name is its title
 		{"no title", "Hulu.2019.1080p.WEB.h264-GRP", "Hulu", TagTypeText},
@@ -387,8 +389,11 @@ func TestOneOwner(t *testing.T) {
 		"fixMusic":         "one episode in a name with a tag of a record is a track, which is a question of what a number counts",
 		"unset":            "a row of another release type is no tag of this one, which the type decides for the whole name and no zone does",
 		"handBack":         "a guess of the group lexer that is a word, which the owner of the group decides",
+		"handBackMarker":   "a guess of the group lexer that says what the release holds, which the owner of the group decides",
 		"settleGroupType":  "a known group of another release type, which the owner of the group decides",
+		"contents":         "a season in a list of names is a part of a name, which is a question of what a number counts",
 		"decimals":         "a channel layout between two words of a fansub title is a number with a point, which is a question of what a number counts",
+		"numbers":          "a number behind a hyphen that is written onto a word or counts the next is no episode, which is a question of what a number counts",
 	}
 	found := funcsWith(t, func(n ast.Node) bool {
 		if call, ok := n.(*ast.CallExpr); ok {

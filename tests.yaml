@@ -2144,33 +2144,15 @@
   codec: "H.264"
   other: "PROPER"
   group: "GRP"
-"[Commie] Senki Zesshou Symphogear XV [720p] (Unofficial Batch)":
-  type: "movie"
-  title: "Senki Zesshou Symphogear XV"
-  resolution: "720p"
-  group: "Commie"
-  site: "Commie"
-  unused: "Unofficial Batch"
 "[Fox] Sewayaki Kitsune no Senko-san - NCOP (BD 1080p) [244C038F].mkv":
   type: "movie"
-  title: "Sewayaki Kitsune no Senko-san - NCOP"
+  title: "Sewayaki Kitsune no Senko-san"
   source: "BluRay"
   resolution: "1080p"
   group: "Fox"
   site: "Fox"
   sum: "244C038F"
   ext: "mkv"
-"Shiki The Complete TV Series (2010–2011) 1080p WEB-DL AAC.2.0 H.264 UNCUT":
-  type: "movie"
-  title: "Shiki The Complete TV Series"
-  source: "WEB-DL"
-  resolution: "1080p"
-  year: 2010
-  yearend: 2011
-  codec: "H.264"
-  audio: "AAC"
-  channels: "2.0"
-  cut: "Uncut"
 "Show.2023.02.29.HDTV.x264-GRP":
   type: "movie"
   title: "Show"
@@ -2188,6 +2170,13 @@
   codec: "x264"
   group: "GRP"
   unused: "02 29"
+"[Group] Show Name - Special v3 (DVD)":
+  type: "movie"
+  title: "Show Name"
+  source: "DVD"
+  version: "v3"
+  group: "Group"
+  site: "Group"
 "[Group][Show_Name][BDRip][1080p]":
   type: "movie"
   title: "Show Name"
@@ -2221,13 +2210,6 @@
   year: 2014
   version: "v2"
   codec: "HEVC"
-"[Group] Show Name - Special v3 (DVD)":
-  type: "movie"
-  title: "Show Name - Special"
-  source: "DVD"
-  version: "v3"
-  group: "Group"
-  site: "Group"
 "[Group] Show: The Movie (2019) | Other Name (BD 1080p HEVC FLAC)":
   type: "movie"
   title: "Show: The Movie"
@@ -2338,6 +2320,13 @@
   year: 2022
   other: "EXTRAS"
   group: "NOGRP"
+"[Erai-raws] Stand By Me Doraemon 2 - Movie [1080p][Multiple Subtitle]":
+  type: "movie"
+  title: "Stand By Me Doraemon 2"
+  resolution: "1080p"
+  language: "MULTiSUB"
+  group: "Erai-raws"
+  site: "Erai-raws"
 "Star.Wars.Episode.VI.Return.of.the.Jedi.1983.4K83.minimalNR.v1.6.2160p.35mm.DD2.0.x265-TN1":
   type: "movie"
   title: "Star Wars Episode VI Return of the Jedi"
@@ -3051,7 +3040,7 @@
   group: "NBY"
 "[izu] Weiss Kreuz OVA (1999) [R2JP DVD-Remux ENG]":
   type: "movie"
-  title: "Weiss Kreuz OVA"
+  title: "Weiss Kreuz"
   source: "DVD"
   year: 1999
   other: "REMUX"
@@ -3319,7 +3308,6 @@
   audio: "FLAC"
   group: "Mecha"
   site: "Mecha"
-  unused: "OVA"
 "American Restoration S01 1080p AMZN WEB-DL DDP 2.0 H.264-T7ST":
   type: "series"
   title: "American Restoration"
@@ -3350,6 +3338,14 @@
   episode: 4
   absolute: 4
   codec: "HEVC"
+"(CBB) Aoki Hagane no Arpeggio - The Complete Series (BD 1080p)(HEVC-x265-10bit)":
+  type: "series"
+  title: "Aoki Hagane no Arpeggio"
+  source: "BluRay"
+  resolution: "1080p"
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  group: "CBB"
 "[Hikki] Arifureta Shokugyou de Sekai Saikyou SP/OVA Episode 00 - Prologue":
   type: "episode"
   title: "Arifureta Shokugyou de Sekai Saikyou SP"
@@ -3434,7 +3430,7 @@
   language: "ENGLiSH"
   group: "Anime Time"
   site: "Anime Time"
-  unused: "Complete Series OST Sub Batch"
+  unused: "Sub"
 "Black White S01 2xDVD9 NTSC MPEG-2 DD2.0":
   type: "series"
   title: "Black White"
@@ -3445,6 +3441,15 @@
   audio: "DD"
   channels: "2.0"
   size: "DVD9"
+"[DB]_Bleach_225_[C63D149C].avi":
+  type: "episode"
+  title: "Bleach"
+  episode: 225
+  absolute: 225
+  group: "DB"
+  site: "DB"
+  sum: "C63D149C"
+  ext: "avi"
 "[Anime Time] Blue Lock (Season 01 & 02) [Dual Audio] [BD] [1080p][HEVC 10bit x265][AAC][Eng Sub] [Batch]":
   type: "series"
   title: "Blue Lock"
@@ -3457,7 +3462,7 @@
   language: "ENGLiSH"
   group: "Anime Time"
   site: "Anime Time"
-  unused: "Sub Batch"
+  unused: "Sub"
 "[Suki Desu] Boku no Hero Academia (Season 1 - 3) [BD 1080p x265 HEVC 10bit][Eng-Sub][Judas] (My Hero Academia)":
   type: "series"
   title: "Boku no Hero Academia"
@@ -3716,6 +3721,15 @@
   language: "GERMAN"
   size: "DVDR"
   group: "RSG"
+"Detective Conan - 316-317 [DCTP][2411959B].mkv":
+  type: "episode"
+  title: "Detective Conan"
+  episode: 316
+  seriesEpisodes: "S00E316 S00E317"
+  group: "DCTP"
+  site: "DCTP"
+  sum: "2411959B"
+  ext: "mkv"
 "[HorribleSubs] Detective Conan - 862 [1080p].mkv":
   type: "episode"
   title: "Detective Conan"
@@ -3822,6 +3836,15 @@
   episode: 5
   codec: "XViD"
   group: "FFNDVD"
+"[ZG] Doraemon (2005) 068 (720p)":
+  type: "episode"
+  title: "Doraemon"
+  resolution: "720p"
+  year: 2005
+  episode: 68
+  absolute: 68
+  group: "ZG"
+  site: "ZG"
 "Downton Abbey 5x06 HDTV x264-FoV [eztv]":
   type: "episode"
   title: "Downton Abbey"
@@ -3867,7 +3890,6 @@
   language: "MULTiSUB"
   group: "Judas"
   site: "Judas"
-  unused: "Batch"
 "Dynasties.2018.S02E04.Hyena.2160p.iP.WEB-DL.AAC2.0.HLG.HEVC-WELP.mkv":
   type: "episode"
   title: "Dynasties"
@@ -3973,6 +3995,17 @@
   language: "GERMAN DL"
   genre: "Anime"
   group: "STARS"
+"[CameEsp] Fairy Tail - 100 Years Quest - 06 [1080p][ESP-ENG][mkv]":
+  type: "episode"
+  title: "Fairy Tail - 100 Years Quest"
+  resolution: "1080p"
+  episode: 6
+  absolute: 6
+  language: "ENGLiSH"
+  container: "MKV"
+  group: "CameEsp"
+  site: "CameEsp"
+  unused: "ESP"
 "Family.Guy.BOXSET.NORDiC.576p.1080p.WEB-DL.H.264.DD2.0-TWASERiES":
   type: "series"
   title: "Family Guy"
@@ -4014,6 +4047,19 @@
   group: "Grp"
   ext: "mkv"
   unused: "Fate strange Fake"
+"[NoobSubs] Fate Zero S1 01-13 + SP01-03 (720p Blu-ray 8bit AAC MP4)":
+  type: "series"
+  title: "Fate Zero"
+  source: "BluRay"
+  resolution: "720p"
+  series: 1
+  episode: 1
+  seriesEpisodes: "S01E01 S01E02 S01E03 S01E04 S01E05 S01E06 S01E07 S01E08 S01E09 S01E10 S01E11 S01E12 S01E13"
+  bitdepth: "8BIT"
+  audio: "AAC"
+  container: "MP4"
+  group: "NoobSubs"
+  site: "NoobSubs"
 "[Erai-raws] Fate/strange Fake - 06 [1080p][Multiple Subtitle]":
   type: "episode"
   title: "Fate/strange Fake"
@@ -4134,6 +4180,17 @@
   channels: "5.1"
   region: "USA"
   group: "FLUX"
+"[ASW] Gintama - 3-nen Z-gumi Ginpachi-sensei - 09 [1080p HEVC x265 10Bit][AAC]":
+  type: "episode"
+  title: "Gintama - 3-nen Z-gumi Ginpachi-sensei"
+  resolution: "1080p"
+  episode: 9
+  absolute: 9
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "AAC"
+  group: "ASW"
+  site: "ASW"
 "Going.Dutch.S01E01.1080p.WEB.h264-ETHEL":
   type: "episode"
   title: "Going Dutch"
@@ -4152,6 +4209,18 @@
   episode: 5
   codec: "x264"
   audio: "AAC"
+"[Trix] Grimgar: Ashes and Illusions S01+OVA (Batch) [BDRip 1080p AV1 Opus] (Dual Audio, Multi Subs, VOSTFR) | Hai to Gensou no Grimgar 灰と幻想のグリムガル Season S1 OAV Specials":
+  type: "series"
+  title: "Grimgar: Ashes and Illusions"
+  source: "BDRiP"
+  resolution: "1080p"
+  series: 1
+  codec: "AV1"
+  audio: "OPUS DUAL.AUDIO"
+  language: "MULTiSUB VOSTFR"
+  group: "Trix"
+  site: "Trix"
+  unused: "| Hai to Gensou no Grimgar 灰と幻想のグリムガル Season OAV Specials"
 "Gute.Zeiten.schlechte.Zeiten.S01E00493.German.FS.Webrip.x264.REAL.iNTERNAL.READNFO-TVARCHiV":
   type: "episode"
   title: "Gute Zeiten schlechte Zeiten"
@@ -4241,6 +4310,12 @@
   group: "SubsPlus+"
   site: "SubsPlus+"
   unused: "| HELL MODE: The Hardcore Gamer Dominates in Another World with Garbage Balancing"
+"[Credit-Less] Hidan no Aria NCOP & NCED":
+  type: "series"
+  title: "Hidan no Aria"
+  group: "Credit-Less"
+  site: "Credit-Less"
+  unused: "&"
 "[Hakata Ramen] High Score Girl (Season 2) (Complete) [1080p HEVC] HR-DR":
   type: "series"
   title: "High Score Girl"
@@ -4251,6 +4326,16 @@
   group: "Hakata Ramen"
   site: "Hakata Ramen"
   unused: "HR DR"
+"[Hakata Ramen] High Score Girl (S2) 06 [1080p HEVC Sub-1x] HR-DR":
+  type: "episode"
+  title: "High Score Girl"
+  resolution: "1080p"
+  series: 2
+  episode: 6
+  codec: "HEVC"
+  group: "Hakata Ramen"
+  site: "Hakata Ramen"
+  unused: "Sub 1x HR DR"
 "[SubsPlease]_Higurashi_no_Naku_Koro_ni_Sotsu_-_09_(1080p)_[C00D6C68]":
   type: "episode"
   title: "Higurashi no Naku Koro ni Sotsu"
@@ -4280,6 +4365,16 @@
   day: 9
   codec: "x264"
   group: "GAGViD"
+"[FFF] Hoozuki no Reitetsu OAD - 04 [DVD][576p-AC3][F996EBFC].mkv":
+  type: "episode"
+  title: "Hoozuki no Reitetsu"
+  source: "DVD"
+  resolution: "576p"
+  audio: "DD"
+  group: "FFF"
+  site: "FFF"
+  sum: "F996EBFC"
+  ext: "mkv"
 "Horrible.Histories.S09E07.Foul.Feasting.1080p.iP.WEB-DL.AAC2.0.H.264-NTb.mkv":
   type: "episode"
   title: "Horrible Histories"
@@ -4302,6 +4397,19 @@
   series: 1
   codec: "H.264"
   language: "DANiSH"
+"[Tsundere] Hyouka - 01v2-04 [BDRip h264 1920x1080 10bit FLAC]":
+  type: "series"
+  title: "Hyouka"
+  source: "BDRiP"
+  resolution: "1080p"
+  episode: 1
+  seriesEpisodes: "S00E01 S00E02 S00E03 S00E04"
+  version: "v2"
+  codec: "H.264"
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  group: "Tsundere"
+  site: "Tsundere"
 "Important Things With Demetri Martin (2009) S01 (1080p DVDRip AI Upscale x265 10bit AC3 2.0 - JBENT)[TAoE]":
   type: "series"
   title: "Important Things With Demetri Martin"
@@ -4328,7 +4436,7 @@
   language: "SUB"
   group: "Gecko"
   site: "Gecko"
-  unused: "无限少女48; Infinite Girl 48; Wuxian Shaonu 48 HARD ZH HANS BATCH"
+  unused: "无限少女48; Infinite Girl 48; Wuxian Shaonu 48 HARD ZH HANS"
 "[R-Archive] Inuyasha Seasons 1~7 R1 DVD Remux 480p Eng Sub Dub Dual Audio":
   type: "series"
   title: "Inuyasha"
@@ -4399,6 +4507,17 @@
   audio: "AAC"
   channels: "2.0"
   group: "BAE"
+"[MoarPower] Kage no Jitsuryokusha ni Naritakute! - SP01 (Web 1080p Opus) [ED6E9101].mkv (Kage-Jitsu!)":
+  type: "episode"
+  title: "Kage no Jitsuryokusha ni Naritakute!"
+  source: "WEB"
+  resolution: "1080p"
+  audio: "OPUS"
+  container: "MKV"
+  group: "MoarPower"
+  site: "MoarPower"
+  sum: "ED6E9101"
+  unused: "Kage Jitsu!"
 "[P9] Kaiji - Ultimate Survivor - S01E01 - Departure (VRV WEB-DL 1080p AAC).mkv":
   type: "episode"
   title: "Kaiji - Ultimate Survivor"
@@ -4434,6 +4553,17 @@
   channels: "2.0"
   group: "VARYG"
   unused: "Kirio Fanclub"
+"[Judas] Koujo Denka no Kateikyoushi (Private Tutor to the Duke`s Daughter) - SP01 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)":
+  type: "episode"
+  title: "Koujo Denka no Kateikyoushi"
+  alt: "Private Tutor to the Duke`s Daughter"
+  resolution: "1080p"
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  language: "MULTiSUB"
+  group: "Judas"
+  site: "Judas"
+  unused: "Weekly"
 "Looney.Tunes.S1958E13.Knighty.Knight.Bugs.1080p.BluRay.REMUX.AVC.DD.1.0-EPSiLON.mkv":
   type: "episode"
   title: "Looney Tunes"
@@ -4546,6 +4676,14 @@
   site: "Gecko"
   sum: "84695430"
   unused: "mofusand animation; Mofusand"
+"[HorribleSubs] Momokuri - 01+02 [720p]":
+  type: "series"
+  title: "Momokuri"
+  resolution: "720p"
+  episode: 1
+  seriesEpisodes: "S00E01 S00E02"
+  group: "HorribleSubs"
+  site: "HorribleSubs"
 "Monogatari.Series.Off.and.Monster.Season.S01E06.5.720p.CR.WEB-DL.AAC2.0.H.264-NanDesuKa.mkv":
   type: "episode"
   title: "Monogatari Series Off and Monster Season"
@@ -4663,7 +4801,6 @@
   series: 1
   other: "COMPLETE"
   language: "ENGLiSH SUBBED"
-  unused: "Special"
 "NOW.Apocalypse.S01E01.1080p.WEB.h264-GRP":
   type: "episode"
   title: "NOW Apocalypse"
@@ -4673,6 +4810,16 @@
   episode: 1
   codec: "H.264"
   group: "GRP"
+"[Hatsuyuki]_One_Piece_807_-_815_[10bit][x265][1920x1080]":
+  type: "series"
+  title: "One Piece"
+  resolution: "1080p"
+  episode: 807
+  seriesEpisodes: "S00E807 S00E808 S00E809 S00E810 S00E811 S00E812 S00E813 S00E814 S00E815"
+  codec: "x265"
+  bitdepth: "10BIT"
+  group: "Hatsuyuki"
+  site: "Hatsuyuki"
 "[SubsPlease] One Piece - 1125 (1080p) [7E631F90].mkv":
   type: "episode"
   title: "One Piece"
@@ -4803,7 +4950,7 @@
   ext: "mkv"
 "[Anime Time] Pokemon Complete Series (Season 01-25+Movies+Specials+Shorts+OST) [Eng Dub] [DVD+Web-Dl][1080p][HEVC 10bit x265][AAC] [Batch]":
   type: "series"
-  title: "Pokemon Complete Series"
+  title: "Pokemon"
   source: "WEB-DL"
   resolution: "1080p"
   series: 1
@@ -4813,7 +4960,7 @@
   language: "ENGLiSH"
   group: "Anime Time"
   site: "Anime Time"
-  unused: "Movies Specials Shorts OST Dub Batch"
+  unused: "Shorts Dub"
 "Power.On.The.Story.Of.Xbox.S01.1080p.AMZN.WEB-DL.DDP2.0.H.264-WELP":
   type: "series"
   title: "Power On The Story Of Xbox"
@@ -4834,7 +4981,6 @@
   seriesEpisodes: "S02E01 S02E02 S02E03 S02E04 S02E05 S02E06 S02E07 S02E08 S02E09 S02E10 S02E11 S02E12 S02E13"
   group: "HorribleSubs"
   site: "HorribleSubs"
-  unused: "OVAs"
 "RealityLovers.17.04.01.Arya.Fae.Aryas.Pool.Day.XXX.VR180.1920p.MP4-GUSH":
   type: "episode"
   title: "RealityLovers"
@@ -4847,6 +4993,14 @@
   other: "VR180"
   container: "MP4"
   group: "GUSH"
+"[FFF] ReLIFE - Vol.06 [BD][1080p-FLAC]":
+  type: "series"
+  title: "ReLIFE"
+  source: "BluRay"
+  resolution: "1080p"
+  audio: "FLAC"
+  group: "FFF"
+  site: "FFF"
 "Restoration Garage S08E02 Social Upshift 1080p AMZN WEB-DL DDP 2.0 H.264-NTb":
   type: "episode"
   title: "Restoration Garage"
@@ -4860,6 +5014,17 @@
   audio: "DDP"
   channels: "2.0"
   group: "NTb"
+"[Judas] Re:Zero Kara Hajimeru Isekai Seikatsu - OVA 02 (Frozen Bonds) [BD 1080p][HEVC x265 10bit][Eng-Subs]":
+  type: "episode"
+  title: "Re:Zero Kara Hajimeru Isekai Seikatsu"
+  source: "BluRay"
+  resolution: "1080p"
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  language: "ENGLiSH"
+  group: "Judas"
+  site: "Judas"
+  unused: "Frozen Bonds Subs"
 "Rugrats.S04E03.Vacation.NTSC.DVD.DD2.0.MPEG2.REMUX.mkv":
   type: "episode"
   title: "Rugrats"
@@ -4936,6 +5101,12 @@
   site: "chibi-Doki"
   sum: "988DB090"
   ext: "mkv"
+"[Commie] Senki Zesshou Symphogear XV [720p] (Unofficial Batch)":
+  type: "series"
+  title: "Senki Zesshou Symphogear XV"
+  resolution: "720p"
+  group: "Commie"
+  site: "Commie"
 "Severance.S01.with.Audio.Description.1080p.ATVP.WEB-DL.DDP5.1.Atmos.H.264-NTb":
   type: "series"
   title: "Severance"
@@ -4961,6 +5132,28 @@
   channels: "5.1"
   other: "Audio.Description"
   group: "NTb"
+"Shiki The Complete TV Series (2010–2011) 1080p WEB-DL AAC.2.0 H.264 UNCUT":
+  type: "series"
+  title: "Shiki"
+  source: "WEB-DL"
+  resolution: "1080p"
+  year: 2010
+  yearend: 2011
+  codec: "H.264"
+  audio: "AAC"
+  channels: "2.0"
+  cut: "Uncut"
+"[BlurayDesuYo] Shingeki no Kyojin (The Final Season) - Part 1 (BD 1920x1080 x264 10bit FLAC)":
+  type: "series"
+  title: "Shingeki no Kyojin"
+  source: "BluRay"
+  resolution: "1080p"
+  codec: "x264"
+  bitdepth: "10BIT"
+  audio: "FLAC"
+  group: "BlurayDesuYo"
+  site: "BlurayDesuYo"
+  unused: "The Final Season Part 1"
 "[Judas] Shingeki no Kyojin (Attack on Titan) - S04E29-31v2 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)":
   type: "episode"
   title: "Shingeki no Kyojin"
@@ -5948,7 +6141,6 @@
   seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
   group: "Group"
   site: "Group"
-  unused: "Batch"
 "[Group] Show Name - 01 ~ 12 [1080p][BATCH]":
   type: "series"
   title: "Show Name"
@@ -5957,7 +6149,6 @@
   seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
   group: "Group"
   site: "Group"
-  unused: "BATCH"
 "[Group] Show Name - 01-12 (AT-X 1440x1080 MPEG2 AAC).ts":
   type: "series"
   title: "Show Name"
@@ -6265,7 +6456,7 @@
   audio: "DUAL.AUDIO DDP"
   group: "EMBER"
   site: "EMBER"
-  unused: "Ore dake Level Up na Ken Batch"
+  unused: "Ore dake Level Up na Ken"
 "Sons.of.Anarchy.S01E03":
   type: "episode"
   title: "Sons of Anarchy"
@@ -6377,7 +6568,6 @@
   language: "MULTiSUB"
   group: "Judas"
   site: "Judas"
-  unused: "OVA Movie Batch"
 "Stillwater Ridge S01E01 WEB-DL x264":
   type: "episode"
   title: "Stillwater Ridge"
@@ -6462,7 +6652,6 @@
   language: "MULTiSUB"
   group: "Erai-raws"
   site: "Erai-raws"
-  unused: "BATCH"
 "The Beginning After the End S02E08 The King Appears in Court 1080p BILI WEB-DL AAC2.0 H 264-VARYG (Saikyou no Ousama, Nidome no Jinsei wa Nani wo Suru?, Multi-Subs)":
   type: "episode"
   title: "The Beginning After the End"
@@ -6695,6 +6884,14 @@
   group: "w4f"
   site: "eztv"
   ext: "mkv"
+"[AI-Raws] TIGER&BUNNY TV+OVA+Movie Complete Series BDRip 1080p MKV":
+  type: "series"
+  title: "TIGER&BUNNY"
+  source: "BDRiP"
+  resolution: "1080p"
+  container: "MKV"
+  group: "AI-Raws"
+  site: "AI-Raws"
 "Toast.of.London.S00E01.Pilot.The.Unspeakable.Play.1080p.NF.WEB-DL.DD+2.0.x264-AJP69.mkv":
   type: "episode"
   title: "Toast of London"
@@ -6758,6 +6955,16 @@
   group: "Vivid-Asenshi"
   site: "Vivid-Asenshi"
   ext: "mkv"
+"Vivid Strike - ED1 - Starry Wish (Inori Minase) [English Sub][Baaro][EDE784E3].mkv":
+  type: "episode"
+  title: "Vivid Strike"
+  subtitle: "Starry Wish"
+  language: "ENGLiSH"
+  group: "Baaro"
+  site: "Baaro"
+  sum: "EDE784E3"
+  ext: "mkv"
+  unused: "Inori Minase Sub"
 "VTC.S01E01.FRENCH.1080p.WEB.H264-PROPJOE":
   type: "episode"
   title: "VTC"
@@ -6882,6 +7089,15 @@
   channels: "5.1"
   group: "FLUX"
   ext: "mkv"
+"[ASW] Yofukashi no Uta [1080p HEVC x265 10Bit][AAC] (Batch)":
+  type: "series"
+  title: "Yofukashi no Uta"
+  resolution: "1080p"
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  audio: "AAC"
+  group: "ASW"
+  site: "ASW"
 "ZDFzeit.S2022E23.Die.Kraft.der.Koenigin.-.Schwedens.starke.Frauen.GERMAN.DOKU.720.WEB.H264-KUO":
   type: "episode"
   title: "ZDFzeit"
@@ -6916,6 +7132,21 @@
   group: "Prejudice-Studio"
   site: "Prejudice-Studio"
   unused: "简体内嵌"
+"[DBD-Raws][火影忍者 疾风传/Naruto Shippuuden][386-412TV][BOX7][美版/USA.Ver][1080P][BDRip][HEVC-10bit][FLACx2][MKV](NARUTO -ナルト- 疾風伝)":
+  type: "series"
+  title: "火影忍者 疾风传"
+  alt: "Naruto Shippuuden"
+  source: "BDRiP"
+  resolution: "1080p"
+  episode: 386
+  seriesEpisodes: "S00E386 S00E387 S00E388 S00E389 S00E390 S00E391 S00E392 S00E393 S00E394 S00E395 S00E396 S00E397 S00E398 S00E399 S00E400 S00E401 S00E402 S00E403 S00E404 S00E405 S00E406 S00E407 S00E408 S00E409 S00E410 S00E411 S00E412"
+  codec: "HEVC"
+  bitdepth: "10BIT"
+  region: "USA"
+  container: "MKV"
+  group: "DBD-Raws"
+  site: "DBD-Raws"
+  unused: "美版 Ver FLACx2 NARUTO ナルト 疾風伝"
 "AC.DC.Under.Review.Back.in.Black.2006.NTSC.MDVDR-MUSiQUE":
   type: "music"
   title: "AC DC Under Review Back in Black"

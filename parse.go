@@ -614,7 +614,8 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 		// ('] [1080p]', '] (2019)'), and the rest is read with what is left
 		// of that delimiter
 		closer, from := tags[k], k+1
-		if d := closer.Delim(); cut < len(d) {
+		d := closer.Delim()
+		if cut < len(d) {
 			tags[k], from = NewTag(TagTypeDelim, nil, []byte(d[cut:]), []byte(d[cut:])), k
 		}
 		r := b.build(tags[from:], end-from, h)
@@ -629,6 +630,13 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 		if len(r.tags) != len(tags)-from || len(r.tags) != 0 && &r.tags[0] != &tags[from] {
 			tags, end = slices.Concat(tags[:from], r.tags), r.end+from
 			if from == k {
+				// the build was given what the flags left of the delimiter
+				// that closes them, and may have written onto it: the
+				// bracket of a batch mark goes to the delimiters around it
+				// ('[REPACK]([Batch]) Show')
+				if rest := tags[k].Delim(); tags[k].Is(TagTypeDelim) && rest != d[cut:] {
+					closer = NewTag(TagTypeDelim, nil, []byte(d[:cut]+rest), []byte(d[:cut]+rest))
+				}
 				tags[k] = closer
 			}
 		}
@@ -666,7 +674,7 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	// made: inspect restores a platform or an arch that was reset when it
 	// finds no other sign of the type, and a hint that agrees with the guess
 	// has to give the same release
-	r.Type = b.inspect(r, true)
+	r.Type = b.packType(r, b.inspect(r, true))
 	if Unknown < h.Type && h.Type <= Series {
 		r.Type = h.Type
 	}
@@ -1391,7 +1399,7 @@ func splitAKA(s string) (string, []string) {
 func (b *TagBuilder) movieTitles(r *Release) int {
 	i, from, to := b.yearTitles(r)
 	if from == to {
-		return i
+		return b.unitTitle(r, i)
 	}
 	// the subtitle is used. any text passed over in front of it is not
 	for ; i < from; i++ {
@@ -1532,6 +1540,11 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	if r.Month != 0 && r.Day != 0 {
 		typ = TagTypeDate
 	}
+	// an episode that is an extra and nothing else has its title behind the
+	// word that says so ('Title - ED1 - Starry Wish')
+	if typ == TagTypeSeries && !slices.ContainsFunc(r.tags, func(tag Tag) bool { return tag.Is(TagTypeSeries) }) {
+		return b.unitTitle(r, pos)
+	}
 	// seek text after date/series, collecting any skipped text
 	for ; pos < len(r.tags) && !r.tags[pos].Is(typ); pos++ {
 		if r.tags[pos].Is(TagTypeText) {
@@ -1590,7 +1603,7 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	// the first text after a '+' lists what else the release holds ('S01-04 +
 	// OVAs', 'Season 01-25+Movies+Specials', 'S01 1080p + Specials'), and is
 	// not a title
-	if r.tags[pos-1].Is(TagTypeDelim) && strings.Contains(r.tags[pos-1].Delim(), "+") && !seasonPlus(r.tags, pos-1) {
+	if r.tags[pos-1].Is(TagTypeDelim) && strings.Contains(r.tags[pos-1].Delim(), "+") {
 		return kept(pos)
 	}
 	// text inside a bracket that opened after the episode is a block of tags
@@ -1636,22 +1649,6 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 		r.Subtitle, offset = r.Subtitle+" "+rest, j+1+n-pos
 	}
 	return pos + offset
-}
-
-// seasonPlus reports whether the delimiter at i is a plus alone between a
-// season written as 'S01' and a word ('S01+OVA', 'S01+S02+Movie'). The word
-// after such a plus is read as the title of an episode, where one after a
-// plus set off by spaces is not ('S01 + OVA').
-func seasonPlus(tags []Tag, i int) bool {
-	if tags[i].Delim() != "+" || !peek(tags, i-1, TagTypeSeries) || !peek(tags, i+1, TagTypeText) {
-		return false
-	}
-	s, next := tags[i-1].val(0), tags[i+1].val(0)
-	if len(s) < 2 || len(s) > 3 || s[0]|0x20 != 's' || strings.Trim(s[1:], "0123456789") != "" || next == "" {
-		return false
-	}
-	c := next[0]
-	return c >= '0' && c <= '9' || c|0x20 >= 'a' && c|0x20 <= 'z'
 }
 
 // musicTitles sets the titles for music.
