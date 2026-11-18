@@ -44,3 +44,16 @@ func ExampleDynamicRange() {
 	// true
 	// false
 }
+
+func ExampleFlags() {
+	r := rls.ParseString("Movie.2020.REAL.PROPER.REPACK2.1080p.BluRay.x264-GRP")
+	fmt.Printf("%q\n", r.Other)
+	fmt.Println(r.Flags)
+	fmt.Println(r.Flags.Has(rls.FlagProper))
+	fmt.Println(r.Repack)
+	// Output:
+	// ["REAL.PROPER" "REREPACK"]
+	// PROPER,REAL
+	// true
+	// 2
+}

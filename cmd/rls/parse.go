@@ -75,20 +75,22 @@ type releaseOutput struct {
 	Edition      []string         `json:"edition"`
 	Language     []string         `json:"language"`
 
-	Size      string   `json:"size"`
-	Region    string   `json:"region"`
-	Container string   `json:"container"`
-	Genre     string   `json:"genre"`
-	ID        string   `json:"id"`
-	Group     string   `json:"group"`
-	Meta      []string `json:"meta"`
-	Site      string   `json:"site"`
-	Sum       string   `json:"sum"`
-	Pass      string   `json:"pass"`
-	Req       bool     `json:"req"`
-	Ext       string   `json:"ext"`
-	IsProper  bool     `json:"is_proper"`
-	IsRepack  bool     `json:"is_repack"`
+	Size      string    `json:"size"`
+	Region    string    `json:"region"`
+	Container string    `json:"container"`
+	Genre     string    `json:"genre"`
+	ID        string    `json:"id"`
+	Group     string    `json:"group"`
+	Meta      []string  `json:"meta"`
+	Site      string    `json:"site"`
+	Sum       string    `json:"sum"`
+	Pass      string    `json:"pass"`
+	Req       bool      `json:"req"`
+	Ext       string    `json:"ext"`
+	Flags     rls.Flags `json:"flags"`
+	Repack    int       `json:"repack"`
+	IsProper  bool      `json:"is_proper"`
+	IsRepack  bool      `json:"is_repack"`
 }
 
 // numberingOutput is the JSON form of the numbering of a release, field by
@@ -154,57 +156,59 @@ func episodes(n rls.Numbering) [][]int {
 	return slices.CompactFunc(v, slices.Equal[[]int])
 }
 
-func rlsToOutput(rls rls.Release) releaseOutput {
-	series, hasSeason := rls.Numbering.Season()
-	episode, hasEpisode := rls.Numbering.Episode()
+func rlsToOutput(rel rls.Release) releaseOutput {
+	series, hasSeason := rel.Numbering.Season()
+	episode, hasEpisode := rel.Numbering.Episode()
 	return releaseOutput{
-		Artist:       rls.Artist,
-		Type:         rls.Type.String(),
-		Title:        rls.Title,
-		Subtitle:     rls.Subtitle,
-		Alt:          orEmpty(rls.Alt),
-		Platform:     rls.Platform,
-		Arch:         rls.Arch,
-		Source:       rls.Source,
-		Resolution:   rls.Resolution,
-		FrameRate:    rls.FrameRate,
-		Collection:   rls.Collection,
-		Year:         rls.Year,
-		Month:        rls.Month,
-		Day:          rls.Day,
-		YearEnd:      rls.YearEnd,
+		Artist:       rel.Artist,
+		Type:         rel.Type.String(),
+		Title:        rel.Title,
+		Subtitle:     rel.Subtitle,
+		Alt:          orEmpty(rel.Alt),
+		Platform:     rel.Platform,
+		Arch:         rel.Arch,
+		Source:       rel.Source,
+		Resolution:   rel.Resolution,
+		FrameRate:    rel.FrameRate,
+		Collection:   rel.Collection,
+		Year:         rel.Year,
+		Month:        rel.Month,
+		Day:          rel.Day,
+		YearEnd:      rel.YearEnd,
 		HasSeason:    hasSeason,
 		Series:       series,
-		Seasons:      orEmpty(seasons(rls.Numbering)),
+		Seasons:      orEmpty(seasons(rel.Numbering)),
 		HasEpisode:   hasEpisode,
 		Episode:      episode,
-		Episodes:     orEmpty(episodes(rls.Numbering)),
-		Numbering:    numberingToOutput(rls.Numbering),
-		Version:      rls.Version,
-		Disc:         rls.Disc,
-		Codec:        orEmpty(rls.Codec),
-		DynamicRange: rls.DynamicRange,
-		BitDepth:     rls.BitDepth,
-		Audio:        orEmpty(rls.Audio),
-		Channels:     rls.Channels,
-		Other:        orEmpty(rls.Other),
-		Cut:          orEmpty(rls.Cut),
-		Edition:      orEmpty(rls.Edition),
-		Language:     orEmpty(rls.Language),
-		Size:         rls.Size,
-		Region:       rls.Region,
-		Container:    rls.Container,
-		Genre:        rls.Genre,
-		ID:           rls.ID,
-		Group:        rls.Group,
-		Meta:         orEmpty(rls.Meta),
-		Site:         rls.Site,
-		Sum:          rls.Sum,
-		Pass:         rls.Pass,
-		Req:          rls.Req,
-		Ext:          rls.Ext,
-		IsProper:     rls.IsProper(),
-		IsRepack:     rls.IsRepack(),
+		Episodes:     orEmpty(episodes(rel.Numbering)),
+		Numbering:    numberingToOutput(rel.Numbering),
+		Version:      rel.Version,
+		Disc:         rel.Disc,
+		Codec:        orEmpty(rel.Codec),
+		DynamicRange: rel.DynamicRange,
+		BitDepth:     rel.BitDepth,
+		Audio:        orEmpty(rel.Audio),
+		Channels:     rel.Channels,
+		Other:        orEmpty(rel.Other),
+		Cut:          orEmpty(rel.Cut),
+		Edition:      orEmpty(rel.Edition),
+		Language:     orEmpty(rel.Language),
+		Size:         rel.Size,
+		Region:       rel.Region,
+		Container:    rel.Container,
+		Genre:        rel.Genre,
+		ID:           rel.ID,
+		Group:        rel.Group,
+		Meta:         orEmpty(rel.Meta),
+		Site:         rel.Site,
+		Sum:          rel.Sum,
+		Pass:         rel.Pass,
+		Req:          rel.Req,
+		Ext:          rel.Ext,
+		Flags:        rel.Flags,
+		Repack:       rel.Repack,
+		IsProper:     rel.Flags.Has(rls.FlagProper),
+		IsRepack:     rel.Repack != 0,
 	}
 }
 
