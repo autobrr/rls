@@ -58,5 +58,7 @@
   {"file_name": "Life.Uncut.S01E01.720p.WEB.h264-GRP", "type": "episode", "title": "Life Uncut", "no_tag": "Uncut"},
   {"file_name": "Family.Extended.2015.1080p.WEB.h264-GRP", "type": "movie", "title": "Family Extended", "no_tag": "Extended.Cut"},
   {"file_name": "Total.Internal.2016.720p.WEB.h264-GRP", "type": "movie", "title": "Total Internal", "no_tag": "INTERNAL"},
-  {"file_name": "My.Dubbed.Life.2020.1080p.WEB.h264-GRP", "type": "movie", "title": "My Dubbed Life", "no_tag": "DUBBED"}
+  {"file_name": "My.Dubbed.Life.2020.1080p.WEB.h264-GRP", "type": "movie", "title": "My Dubbed Life", "no_tag": "DUBBED"},
+  {"file_name": "Charlottes.Web.2006.2160p.UHD.AMZN.WEB-DL.DDP5.1.H.265-GRP", "type": "movie", "title": "Charlottes Web", "no_tag": ["WEB", "UHD.BluRay"]},
+  {"file_name": "The.Web.S01E02.2160p.UHD.NF.WEBRip.x265-GRP", "type": "episode", "title": "The Web", "no_tag": ["WEB", "UHD.BluRay"]}
 ]

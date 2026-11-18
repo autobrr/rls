@@ -101,5 +101,14 @@
   {"file_name": "The Italian Job (1969) [Remastered] 1080p BluRay x265 10bit DTS-HD MA 2.0-GRP", "type": "movie", "title": "The Italian Job", "no_tag": "iTALiAN"},
   {"file_name": "Extended Family (2023) S01E01 (1080p AMZN WEB-DL x265 HEVC 10bit EAC3 5.1 GRP)", "type": "episode", "title": "Extended Family", "no_tag": "Extended.Cut"},
   {"file_name": "[GRP] The Real Housewives of Beverly Hills - 13x01 (1080p WEB h264)", "type": "episode", "title": "The Real Housewives of Beverly Hills", "no_tag": "REAL"},
-  {"file_name": "Uncut Gems 2019 2160p NF WEB-DL DDP5.1 Atmos DV HEVC-GRP", "type": "movie", "title": "Uncut Gems", "no_tag": "Uncut"}
+  {"file_name": "Uncut Gems 2019 2160p NF WEB-DL DDP5.1 Atmos DV HEVC-GRP", "type": "movie", "title": "Uncut Gems", "no_tag": "Uncut"},
+  {"file_name": "Web.of.Make.Believe.S01E01.2160p.UHD.NF.WEBRip.x265-GRP", "type": "episode", "title": "Web of Make Believe", "no_tag": ["WEB", "UHD.BluRay"]},
+  {"file_name": "Movie.2020.2160p.UHD.x265-WEB", "type": "movie", "title": "Movie", "no_tag": ["WEB", "UHD.WEB"]},
+  {"file_name": "Movie.2020.2160p.AMZN.WEB-DL.UHD.x265-GRP", "type": "movie", "title": "Movie", "no_tag": "UHD.BluRay"},
+  {"file_name": "Movie.2020.UHD.2160p-WEB", "type": "movie", "title": "Movie", "no_tag": ["WEB", "UHD.WEB"]},
+  {"file_name": "Movie.2020.UHD.2160p.REMUX.HEVC.TrueHD.Atmos.7.1.AMZN.WEB-DL.DDP5.1.Audio-GRP", "type": "movie", "title": "Movie", "no_tag": "UHD.WEB-DL"},
+  {"file_name": "Movie.2020.2160p.UHD.REMUX.DV.HDR10.HYBRID.AMZN.WEB-DL-GRP", "type": "movie", "title": "Movie", "no_tag": "UHD.WEB-DL"},
+  {"file_name": "Movie.2020.2160p.UHD.BDMV.HYBRID.AMZN.WEB-DL-GRP", "type": "movie", "title": "Movie", "no_tag": "UHD.WEB-DL"},
+  {"file_name": "Movie.2020.2160p.UHD.HYBRID.WEB-DL.BluRay.x265-GRP", "type": "movie", "title": "Movie", "no_tag": "UHD.WEB-DL"},
+  {"file_name": "Show.S01E02.2160p.UHD.AMZN.HDTV.x265-GRP", "type": "episode", "title": "Show", "no_tag": "UHD.BluRay"}
 ]

@@ -655,6 +655,12 @@ func TestAccuracySample(t *testing.T) {
 var probeFailures = map[string]map[string]string{
 	"probes-title.json": {
 		"Series.7.The.Contenders.2001.DVDRip.x264-GRP": `series "The Contenders", group "GRP", seasons [7]`,
+		// fixSourceUHD joins the uhd to the group, which is still a source
+		// tag when it runs
+		"Movie.2020.UHD.2160p-WEB": `movie "Movie", tag UHD.WEB, group "WEB"`,
+		// the second walk of fixSourceUHD joins web sources only, and the tv
+		// source past the streaming service is left a bluray
+		"Show.S01E02.2160p.UHD.AMZN.HDTV.x265-GRP": `episode "Show", tag UHD.BluRay, group "GRP", seasons [1], episode 2`,
 	},
 	"probes-title-end.json": {
 		"Pardon.My.French.2021.1080p.WEB.h264-GRP":     `movie "Pardon My", tag FRENCH, group "GRP"`,

@@ -32,8 +32,8 @@ right, and the others were written from the name.
 | `labelled/habari-known-failures.json` | 11 | habari `test/failing.json` | yes, with reasons |
 | `labelled/nyaa-400.json` | 400 | a random sample of `nyaa.txt`, read by hand | yes, by us |
 | `labelled/nyaa-blind-140.json` | 140 | names of `nyaa.txt` that two prototypes read differently, judged blind | yes, by us |
-| `labelled/probes-title.json` | 103 | scene names built by hand, a vocabulary word anywhere in the title | yes, by us |
-| `labelled/probes-title-end.json` | 60 | scene names built by hand, a vocabulary word as the last word of the title | yes, by us |
+| `labelled/probes-title.json` | 112 | scene names built by hand, a vocabulary word anywhere in the title | yes, by us |
+| `labelled/probes-title-end.json` | 62 | scene names built by hand, a vocabulary word as the last word of the title | yes, by us |
 | `labelled/probes-brackets.json` | 368 | names with a bracket that no fansub group wrote, built by hand or real | yes, by us |
 | `nyaa.txt` | 13,215 | nyaa.si listing and search pages, categories 1_2 / 1_3 / 1_4 | no |
 | `sports.txt` | 2,505 | predb SPORTS and TV sections, plus documented tracker conventions | no |
@@ -163,6 +163,13 @@ film or a set of episodes. A name whose meaning is open in more than that is no 
 
 When you add a tag row or a rule that touches title words, add probes for it: movies, episodes,
 packs, with the word first, inside and last.
+
+The rows around a bare `UHD`, one that the lexer reads as a source of its own and that a web
+source stands behind or in front of, hold the source that `UHD` must not give. A web release with `Web` in
+its title or a streaming service between gives no `UHD.BluRay` (`The.Web.S01E02.2160p.UHD.NF.
+WEBRip`), and a disc or a `WEB` group gives no web source (`Movie.2020.UHD.2160p.REMUX.HEVC.TrueHD.
+Atmos.7.1.AMZN.WEB-DL.DDP5.1.Audio`, `Movie.2020.2160p.UHD.x265-WEB`). Most of them have no
+vocabulary word in the title, and their `no_tag` is that source.
 
 `labelled/probes-brackets.json` holds the look-alikes of a fansub name: names with a bracket that
 no fansub group wrote. They are films, shows, records, books, games and applications in the shapes
