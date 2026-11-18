@@ -310,7 +310,8 @@ func lastTag(tags []Tag) int {
 //  4. The last word left over ('Title PS4 GRP', '(1080p x265 AAC Group)'),
 //     with the words in front that belong to it, see widenGroup. Not a word
 //     that reads as the checksum of the file, which unused takes, one that a
-//     tag follows in its bracket, an item of a list, or a word amid the tags.
+//     tag follows in its bracket, an item of a list, a word amid the tags, or
+//     one that belongs to the tag in front of it ('[English Dub]').
 //  5. The site in the bracket that closes the name ('Show - 04
 //     [1080p][Group].mkv'). It comes last, so that a group named in the tags
 //     is preferred ('(BD 1080p - Encoder)[Uploader]').
@@ -436,7 +437,7 @@ func (b *TagBuilder) lastWord(r *Release) bool {
 	last := r.unused[n-1]
 	s := r.tags[last].Text()
 	if r.Sum == "" && b.checksum(s) || !strings.ContainsFunc(s, unicode.IsLetter) ||
-		beforeTag(r.tags, last) || plusList(r.tags, last) || amidTags(r.tags, last) {
+		beforeTag(r.tags, last) || plusList(r.tags, last) || amidTags(r.tags, last) || afterTag(r.tags, last) {
 		return false
 	}
 	r.Group, r.unused = s, r.unused[:n-1]
@@ -516,6 +517,14 @@ func beforeTag(tags []Tag, i int) bool {
 		}
 	}
 	return false
+}
+
+// afterTag reports whether the text at i is a word that belongs to the tag in
+// front of it, ie the 'Sub' of 'Ultra Maniac Eng Sub' and the 'Dub' of
+// '[English Dub][1080p]', see tagWord. Such a word is not the group.
+func afterTag(tags []Tag, i int) bool {
+	return tagWord(tags[i].Text()) && i >= 2 && tags[i-1].Is(TagTypeDelim) && strings.Trim(tags[i-1].Delim(), "._ ") == "" &&
+		tags[i-2].Is(TagTypeLanguage, TagTypeAudio)
 }
 
 // amidTags reports whether the text at i sits inside the run of tags: a tag
