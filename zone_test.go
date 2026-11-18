@@ -20,11 +20,6 @@ import (
 // release. A zone that starts with 'cost' holds the names a rule reads wrong
 // by what they mean, so that a change to the rule shows what it buys back.
 func TestZoneTable(t *testing.T) {
-	// a language directly in front of a year, which langBeforeYear decides
-	cell := TagTypeLanguage
-	if langBeforeYear {
-		cell = TagTypeText
-	}
 	for _, test := range []struct {
 		zone, s, word string
 		typ           TagType
@@ -41,17 +36,26 @@ func TestZoneTable(t *testing.T) {
 		{"title", "The.French.Dispatch.2021.1080p.BluRay.x264-GRP", "French", TagTypeText},
 		{"title", "The.Dutch.Master.S01E01.720p.HDTV.x264-GRP", "Dutch", TagTypeText},
 		{"title", "A.Complete.Unknown.2024.1080p.WEB.h264-GRP", "Complete", TagTypeText},
-		// in front of a year
-		{"edge, year", "5.Headed.Shark.Attack.German.2017.1080p.BluRay.x264-GRP", "German", cell},
-		{"edge, year", "Amelie French (2001) [1080p]", "French", cell},
-		{"edge, year", "The.Good.German.2006.GERMAN.DL.1080p.BluRay.x264-GRP", "German", cell},
-		{"edge, year", "Dracula.Tot.aber.gluecklich.German.1995.German.DL.1080p.BluRay.x265-PaTrol", "German", cell},
-		{"edge, year", "Movie.Name.French.2019.1080p.BluRay.x264-GRP", "French", cell},
+		// in front of a year a language written as its name is a word, and
+		// German, a word in scene spelling and a code are tags
+		{"edge, year", "Johnny.English.2003.1080p.BluRay.H264-LUBRiCATE", "English", TagTypeText},
+		{"edge, year", "Pardon.My.French.2009.DVDRip.XviD-GFW", "French", TagTypeText},
+		{"edge, year", "The.Italian.2005.PROPER.LiMiTED.DVDRip.XviD-HNR", "Italian", TagTypeText},
+		{"edge, year", "Broken.English.2007.LiMiTED.NORDiC.PAL.DVDR-DROiDS", "English", TagTypeText},
+		{"edge, year", "Johnny English (2003) [1080p] [BluRay] [YTS.AM]", "English", TagTypeText},
+		{"edge, year", "5.Headed.Shark.Attack.German.2017.1080p.BluRay.x264-GRP", "German", TagTypeLanguage},
+		{"edge, year", "Auf.Wiedersehen.Kinder.German.1987.dTV.XviD-CDDDIVX", "German", TagTypeLanguage},
+		{"edge, year", "Dracula.Tot.aber.gluecklich.German.1995.German.DL.1080p.BluRay.x265-PaTrol", "German", TagTypeLanguage},
+		{"edge, year", "3.Ninjas.Kick.Back.SPANiSH.1994.DVDRip.XViD-MULTiPLY", "SPANiSH", TagTypeLanguage},
+		{"edge, year", "Dzem.Muza.POLiSH.2010.BONUS.COMPLETE.PAL.MDVDR-D2HVDV", "POLiSH", TagTypeLanguage},
+		{"edge, year", "THX.1138.SE.1971.NORDiC.PAL.DVDR-DNA", "SE", TagTypeLanguage},
+		{"edge, year", "Movie.Name.Eng.2019.1080p.BluRay.x264-GRP", "Eng", TagTypeLanguage},
 		// a language in front of a year is in that cell whatever follows the
 		// year
-		{"edge, year", "Stargate.SG1.German.2003.S7.D1.COMPLETE.PAL.DVDR-DAW", "German", cell},
-		{"edge, year", "Sex.And.The.City.German.1998.Season.1.Disc1.Complete.DVDR-BTR", "German", cell},
-		{"edge, year", "BBC.Verborgene.Welten.Das.geheime.Leben.der.Insekten.German.2006.E05.Der.Insektenstaat.DOKU.DVDRiP.XViD-DARM", "German", cell},
+		{"edge, year", "Stargate.SG1.German.2003.S7.D1.COMPLETE.PAL.DVDR-DAW", "German", TagTypeLanguage},
+		{"edge, year", "Sex.And.The.City.German.1998.Season.1.Disc1.Complete.DVDR-BTR", "German", TagTypeLanguage},
+		{"edge, year", "BBC.Verborgene.Welten.Das.geheime.Leben.der.Insekten.German.2006.E05.Der.Insektenstaat.DOKU.DVDRiP.XViD-DARM", "German", TagTypeLanguage},
+		{"edge, year", "Show.English.2003.S07E01.720p.HDTV.x264-GRP", "English", TagTypeText},
 		{"edge, year", "Made.in.USA.1966.1080p.BluRay.x264-USURY", "USA", TagTypeText},
 		{"edge, year", "Almost.Complete.2018.1080p.WEB.h264-GRP", "Complete", TagTypeText},
 		{"edge, year", "Magnum.Opus.2017.1080p.WEB-DL.DD5.1.H264-GRP", "Opus", TagTypeText},
@@ -71,7 +75,12 @@ func TestZoneTable(t *testing.T) {
 		{"edge, capitals", "MADE.IN.USA.1966.1080p.BluRay.x264-GRP", "USA", TagTypeRegion},
 		{"edge, capitals", "Angora.By.Night.DANiSH.Season2.Disc1.PAL.DVDR-DROiDS", "DANiSH", TagTypeLanguage},
 		// what the table costs: a tag written as a word in front of the year
-		// or the numbering
+		// or the numbering, and a word written as German or as a tag
+		{"cost, edge", "Baby.Einstein.Baby.Noah.English.2004.DVDRip.XviD-WPi", "English", TagTypeText},
+		{"cost, edge", "Zombie Shark The Swimming Dead French 2015 AC3 BDRiP x264-XF", "French", TagTypeText},
+		{"cost, edge", "Amelie French (2001) [1080p]", "French", TagTypeText},
+		{"cost, edge", "The.Good.German.2006.1080p.BluRay.x264-OLDTiME", "German", TagTypeLanguage},
+		{"cost, edge", "The.Good.German.2006.GERMAN.DL.1080p.BluRay.x264-GRP", "German", TagTypeLanguage},
 		{"cost, edge", "The.Handmaiden.Extended.2016.Korean.Edition.COMPLETE.BLURAY-JRP", "Extended", TagTypeText},
 		{"cost, edge", "Blood.Vengeance.For.Blood.Live.Limited.2006.JAPANESE.DVDRip.XviD-ASSASS1NS", "Limited", TagTypeText},
 		{"cost, edge", "History.Of.Hardcore.Presented.By.DJ.Gizmo.Complete.2004.DUTCH.PAL.DVDr-HBDVD", "Complete", TagTypeText},

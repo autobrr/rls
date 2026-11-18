@@ -663,11 +663,13 @@ var probeFailures = map[string]map[string]string{
 		"Show.S01E02.2160p.UHD.AMZN.HDTV.x265-GRP": `episode "Show", tag UHD.BluRay, group "GRP", seasons [1], episode 2`,
 	},
 	"probes-title-end.json": {
-		"Pardon.My.French.2021.1080p.WEB.h264-GRP":     `movie "Pardon My", tag FRENCH, group "GRP"`,
-		"Excuse.My.French.2014.1080p.BluRay.x264-GRP":  `movie "Excuse My", tag FRENCH, group "GRP"`,
-		"The.Good.German.2006.1080p.BluRay.x264-GRP":   `movie "The Good", tag GERMAN, group "GRP"`,
-		"The.Quiet.Italian.2010.720p.BluRay.x264-GRP":  `movie "The Quiet", tag iTALiAN, group "GRP"`,
-		"Little.Britain.USA.S01E01.720p.HDTV.x264-GRP": `episode "Little Britain", tag USA, group "GRP", seasons [1], episode 1`,
+		// German in front of the year is a tag, and a language written as
+		// its name a word, see langBeforeYear
+		"The.Good.German.2006.1080p.BluRay.x264-GRP":                   `movie "The Good", tag GERMAN, group "GRP"`,
+		"The.Good.German.2006.1080p.BluRay.x264-OLDTiME":               `movie "The Good", tag GERMAN, group "OLDTiME"`,
+		"Baby.Einstein.Baby.Noah.English.2004.DVDRip.XviD-WPi":         `movie "Baby Einstein Baby Noah English", group "WPi"`,
+		"Zombie Shark The Swimming Dead French 2015 AC3 BDRiP x264-XF": `movie "Zombie Shark The Swimming Dead French", group "XF"`,
+		"Little.Britain.USA.S01E01.720p.HDTV.x264-GRP":                 `episode "Little Britain", tag USA, group "GRP", seasons [1], episode 1`,
 	},
 	"probes-brackets.json": {
 		"Doctor Who (2005) S13 Special - Eve of the Daleks (1080p BluRay x265) [QxR]":                             `series "Doctor Who", group "QxR", seasons [13]`,
