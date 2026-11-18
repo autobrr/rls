@@ -606,6 +606,14 @@ func (b *TagBuilder) Build(tags []Tag, end int) Release {
 // the type, so that the tags that are unset and the titles that are read are
 // those of that type. Nothing before them reads it.
 func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
+	r := b.assemble(tags, end, h)
+	r.Flags, r.Repack = readOther(r.Other)
+	return r
+}
+
+// assemble builds a release from tags as build does, but for the readings of
+// Other, which build takes from the Other that assemble leaves.
+func (b *TagBuilder) assemble(tags []Tag, end int, h Hint) Release {
 	// flags in brackets that open the name ('[REPACK] [Group] Show'), which
 	// only the meta lexer puts there, are left out of the build of the rest,
 	// so that the rest reads as if it opened the name
@@ -618,7 +626,7 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 		if cut < len(d) {
 			tags[k], from = NewTag(TagTypeDelim, nil, []byte(d[cut:]), []byte(d[cut:])), k
 		}
-		r := b.build(tags[from:], end-from, h)
+		r := b.assemble(tags[from:], end-from, h)
 		tags[k] = closer
 		// the build may have made tags of its own: fixHalfEpisode does
 		// ('[REPACK] Show.S01E06.5.x264'), and so does the structure stage
@@ -1330,13 +1338,19 @@ func preciser(cur, s string) bool {
 	return cur == "" || cur == "CD" || (cur == "DVD" && s != "CD")
 }
 
+// isRemux reports whether s, a value of Other, is a remux in any case, as a
+// caller's other row may spell it ('remux').
+func isRemux(s string) bool {
+	return strings.EqualFold(s, "REMUX")
+}
+
 // remuxSource gives a remux that names no source the disc it was taken from
 // ('Movie 1981 1080p Remux AVC DTS-HD MA 2.0-GRP' is a BluRay, 'Movie 1954
 // 2160p Remux DoVi HEVC-GRP' a UHD BluRay), as Radarr and Sonarr read a remux
 // as a BluRay. The other disc with a 1080p video, the HD DVD, is named as one
 // ('1080p HD-DVD Remux'), and a source written in the name is left as it is.
 func (b *TagBuilder) remuxSource(r *Release) {
-	if r.Source != "" || !r.Type.Is(Movie, Series, Episode) || !r.IsRemux() {
+	if r.Source != "" || !r.Type.Is(Movie, Series, Episode) || !slices.ContainsFunc(r.Other, isRemux) {
 		return
 	}
 	switch r.Resolution {

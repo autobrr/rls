@@ -71,9 +71,19 @@ type Release struct {
 	Audio        []string
 	Channels     string
 	Other        []string
-	Cut          []string
-	Edition      []string
-	Language     []string
+	// Flags are the release flags of Other ('REAL.PROPER' gives FlagReal and
+	// FlagProper), in any case. The parser sets them from Other once it is
+	// done with it. They do not follow Other: a caller that changes Other
+	// after the parse, or builds a Release by hand, sets Flags itself.
+	Flags Flags
+	// Repack is the repack generation of Other: 0 for none, 1 for 'REPACK',
+	// 2 for 'REPACK2' or 'REREPACK', and n for 'REPACKn'. With more than one
+	// it is the highest. As with Flags, the parser sets it from Other, and a
+	// caller that changes Other or builds a Release by hand sets it itself.
+	Repack   int
+	Cut      []string
+	Edition  []string
+	Language []string
 
 	Size      string
 	Region    string
@@ -369,57 +379,6 @@ func (r Release) Dates() []Tag {
 		dates = append(dates, r.tags[i])
 	}
 	return dates
-}
-
-// IsProper reports whether the release is a proper, written PROPER or
-// REAL.PROPER. It reads Other, where the parser puts those two values, and
-// compares without regard to case.
-func (r Release) IsProper() bool {
-	return r.hasOther("PROPER", "REAL.PROPER")
-}
-
-// IsRepack reports whether the release is a repack, written REPACK, REPACKED,
-// REREPACK or REPACK2 to REPACK99. It reads Other, where the parser puts them
-// as REPACK, REREPACK and REPACK3 to REPACK99, and compares without regard to
-// case. A REPACK2 set by hand counts too. A re-rip (RERiP) is not a repack.
-func (r Release) IsRepack() bool {
-	if r.hasOther("REPACK", "REREPACK") {
-		return true
-	}
-	for _, s := range r.Other {
-		if len(s) < 7 || len(s) > 8 || !strings.EqualFold(s[:6], "REPACK") {
-			continue
-		}
-		// one digit from 2 on, or two digits that do not begin with 0
-		if d := s[6:]; d[0] >= '1' && d[0] <= '9' && (len(d) == 1 && d[0] != '1' || len(d) == 2 && d[1] >= '0' && d[1] <= '9') {
-			return true
-		}
-	}
-	return false
-}
-
-// IsRemux reports whether the release is a remux. It reads Other and compares
-// with REMUX without regard to case.
-func (r Release) IsRemux() bool {
-	return r.hasOther("REMUX")
-}
-
-// IsHybrid reports whether the release is a hybrid of several sources. It
-// reads Other and compares with HYBRiD without regard to case.
-func (r Release) IsHybrid() bool {
-	return r.hasOther("HYBRiD")
-}
-
-// hasOther reports whether Other holds any of the given values, ignoring case.
-func (r Release) hasOther(values ...string) bool {
-	for _, o := range r.Other {
-		for _, v := range values {
-			if strings.EqualFold(o, v) {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 // Tag is a release tag.

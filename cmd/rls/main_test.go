@@ -284,3 +284,27 @@ func TestRunDynamicRange(t *testing.T) {
 		}
 	}
 }
+
+// TestRunFlags checks the flags and the repack, and the two keys read from
+// them.
+func TestRunFlags(t *testing.T) {
+	tests := []struct {
+		name string
+		exp  []string
+	}{
+		{"Show.S01E02.1080p.WEB.h264-GRP", []string{`"flags":[]`, `"repack":0`, `"is_proper":false`, `"is_repack":false`}},
+		{"Show.S01E02.REAL.PROPER.REPACK2.1080p.WEB.h264-GRP", []string{`"flags":["PROPER","REAL"]`, `"repack":2`, `"is_proper":true`, `"is_repack":true`}},
+		{"Movie.2020.1080p.BluRay.REMUX.AVC.DTS-HD.MA.5.1-GRP", []string{`"flags":["REMUX"]`, `"repack":0`, `"is_proper":false`, `"is_repack":false`}},
+	}
+	for _, tt := range tests {
+		var buf bytes.Buffer
+		if err := run(&buf, nil, []string{tt.name}); err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		for _, s := range tt.exp {
+			if !strings.Contains(buf.String(), s) {
+				t.Errorf("%q: expected output to contain %s, got: %s", tt.name, s, buf.String())
+			}
+		}
+	}
+}
