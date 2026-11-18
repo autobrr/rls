@@ -33,6 +33,10 @@ func TestGroupOrigin(t *testing.T) {
 		// a known group of another type is given back, and is the last word
 		{"Movie.2019.1080p.WEB.h264-CODEX", "CODEX", groupWord},
 		{"Some.Movie.2019.1080p.WEB.h264", "", groupNone},
+		// a word that belongs to the tag in front of it is no group
+		{"Ultra Maniac Eng Sub", "", groupNone},
+		{"Sentai Daishikkaku - 02 | Go! Go! Loser Ranger! [English Dub][1080p][DSNP]", "", groupNone},
+		{"Vivid Strike - OP1 - Future Strike (Yui Ogura) [English Sub][Baaro][393E177A].mkv", "Baaro", groupTrailing},
 		{"[Group] Show - 01 [1080p] [ABCD1234]", "Group", groupLeading},
 	} {
 		if r := ParseString(test.s); r.Group != test.group || r.groupFrom != test.from {

@@ -158,7 +158,7 @@ func (t tally) pct() float64 {
 // that trades a case away has to lower its floor and say why.
 var floors = map[string]map[string]float64{
 	"anitomy.json": {"title": 65, "group": 92, "episode": 64, "episodeTitle": 69, "season": 90, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
-	"habari.json":  {"title": 70, "group": 88, "episode": 63, "episodeTitle": 55, "season": 89, "checksum": 99, "ext": 99, "resolution": 93, "version": 71},
+	"habari.json":  {"title": 70, "group": 89, "episode": 63, "episodeTitle": 55, "season": 89, "checksum": 99, "ext": 99, "resolution": 93, "version": 71},
 	"anitogo.json": {"title": 65, "group": 93, "episode": 63, "episodeTitle": 65, "season": 93, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
 }
 
@@ -253,8 +253,8 @@ func TestAccuracyLabelled(t *testing.T) {
 // percentage: a change that loses one name has to lower its floor and say why,
 // and one that gains a name raises it.
 var sampleFloors = map[string]map[string]int{
-	"nyaa-400.json":       {"names": 330, "title": 347, "group": 391, "type": 310, "season": 398, "episode": 375},
-	"nyaa-blind-140.json": {"names": 27, "title": 63, "group": 122, "type": 45, "season": 134, "episode": 101},
+	"nyaa-400.json":       {"names": 331, "title": 347, "group": 392, "type": 310, "season": 398, "episode": 375},
+	"nyaa-blind-140.json": {"names": 27, "title": 63, "group": 124, "type": 45, "season": 134, "episode": 101},
 }
 
 // episodes gives the episodes of r as a sample writes them: nothing for a
