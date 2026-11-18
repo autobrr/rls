@@ -157,7 +157,7 @@
   resolution: "2160p"
   year: 1968
   codec: "x265"
-  hdr: "DV"
+  dynamicRange: "DV"
   audio: "DDP"
   channels: "5.1"
   group: "c0kE"
@@ -250,7 +250,7 @@
   collection: "HMAX"
   year: 2021
   codec: "x265"
-  hdr: "DV HDR"
+  dynamicRange: "DV HDR"
   audio: "DDP Atmos"
   channels: "5.1"
   group: "cTurtle-4K"
@@ -343,7 +343,7 @@
   resolution: "2160p"
   year: 2000
   codec: "HEVC"
-  hdr: "DV"
+  dynamicRange: "DV"
   audio: "DTS-HD.MA"
   channels: "5.1"
   other: "HYBRiD REMUX"
@@ -490,7 +490,7 @@
   collection: "IMAX"
   year: 2019
   codec: "HEVC"
-  hdr: "DV HDR"
+  dynamicRange: "DV HDR"
   audio: "TrueHD Atmos"
   channels: "7.1"
   group: "SiC"
@@ -684,7 +684,7 @@
   resolution: "2160p"
   year: 2019
   codec: "HEVC"
-  hdr: "DV"
+  dynamicRange: "DV"
   audio: "TrueHD Atmos"
   channels: "7.1"
   other: "REMUX"
@@ -946,7 +946,7 @@
   resolution: "1080p"
   year: 2020
   codec: "x265"
-  hdr: "DV HDR"
+  dynamicRange: "DV HDR"
   audio: "DDP Atmos"
   channels: "5.1"
   group: "Kyo"
@@ -957,7 +957,7 @@
   resolution: "1080p"
   year: 2020
   codec: "x265"
-  hdr: "SDR"
+  dynamicRange: "SDR"
   audio: "DD"
   channels: "5.1"
   other: "REREPACK"
@@ -970,7 +970,7 @@
   resolution: "1080p"
   year: 2020
   codec: "x265"
-  hdr: "SDR"
+  dynamicRange: "SDR"
   audio: "DD"
   channels: "5.1"
   other: "REPACK3"
@@ -983,7 +983,7 @@
   resolution: "1080p"
   year: 2020
   codec: "x265"
-  hdr: "SDR"
+  dynamicRange: "SDR"
   audio: "DD"
   channels: "5.1"
   other: "PROPER"
@@ -1049,7 +1049,7 @@
   resolution: "2160p"
   year: 2026
   codec: "H.265"
-  hdr: "HLG"
+  dynamicRange: "HLG"
   group: "VERUM"
 "Fight!! Iczer-1 Special Compilation 1080p BDREMUX":
   type: "movie"
@@ -1081,7 +1081,7 @@
   collection: "F1TV"
   year: 2026
   codec: "H.265"
-  hdr: "HLG"
+  dynamicRange: "HLG"
   audio: "AAC"
   channels: "2.0"
   group: "MWR"
@@ -1126,7 +1126,7 @@
   collection: "F1TV"
   year: 2025
   codec: "H.265"
-  hdr: "HLG"
+  dynamicRange: "HLG"
   group: "MWR"
   unused: "Multi"
 "Formula1.2025.Round09.Spain.Race.SKY.F1TV.WEB-DL.1080p.h264.English-MWR":
@@ -1161,7 +1161,7 @@
   collection: "SkyF1UHD"
   year: 2026
   codec: "H.265"
-  hdr: "HDR"
+  dynamicRange: "HDR"
   audio: "DDP Atmos"
   channels: "5.1"
   group: "egortech"
@@ -1183,7 +1183,7 @@
   collection: "SkyF1UHD"
   year: 2026
   codec: "H.265"
-  hdr: "HDR"
+  dynamicRange: "HDR"
   audio: "DDP Atmos"
   channels: "5.1"
 "Formula1.2026.Round02.China.Drivers.Press.Conference.2160p.SkyF1UHD.UHDTV.DDP5.1Atmos.HDR.H.265-egor":
@@ -1195,7 +1195,7 @@
   collection: "SkyF1UHD"
   year: 2026
   codec: "H.265"
-  hdr: "HDR"
+  dynamicRange: "HDR"
   audio: "DDP Atmos"
   channels: "5.1"
   group: "egor"
@@ -1207,7 +1207,7 @@
   resolution: "2160p"
   collection: "SkyF1UHD"
   year: 2026
-  hdr: "HDR"
+  dynamicRange: "HDR"
   audio: "DDP Atmos"
   channels: "5.1"
 "Formula1.2026.Round05.Miami.Grand.Prix.Race.UHD.2160p50.HLG.WEB.h265-GRP":
@@ -1219,7 +1219,7 @@
   framerate: "50fps"
   year: 2026
   codec: "H.265"
-  hdr: "HLG"
+  dynamicRange: "HLG"
   group: "GRP"
 "Fussball.1.Bundesliga.2011-2012.04.Spieltag.Hannover.96.vs.FSV.Mainz.05.GERMAN.WS.HDTV.720p.x264-SPORTSBAR":
   type: "movie"
@@ -1386,7 +1386,7 @@
   collection: "IMAX"
   year: 2013
   codec: "x265"
-  hdr: "HDR10+"
+  dynamicRange: "HDR10+"
   audio: "DTS-HD.MA"
   channels: "7.1"
   group: "DON"
@@ -1398,7 +1398,7 @@
   collection: "IMAX"
   year: 2013
   codec: "x265"
-  hdr: "HDR10+"
+  dynamicRange: "HDR10+"
   audio: "DTS-HD.MA"
   channels: "7.1"
   group: "DON"
@@ -1632,7 +1632,7 @@
   title: "Movie"
   resolution: "2160p"
   year: 2020
-  hdr: "HDR10+"
+  dynamicRange: "HDR10+"
 "Movie.2020.2160p.WEB-DL.H.265.DD+":
   type: "movie"
   title: "Movie"
@@ -1648,7 +1648,7 @@
   resolution: "2160p"
   year: 2020
   codec: "H.265"
-  hdr: "HDR10+"
+  dynamicRange: "HDR10+"
   ext: "mkv"
 "Movie.2022.1080p.BluRay.x264.8bit-GRP":
   type: "movie"
@@ -1734,7 +1734,7 @@
   resolution: "2160p"
   year: 2022
   codec: "x265"
-  hdr: "HDR"
+  dynamicRange: "HDR"
   bitdepth: "10BIT"
   group: "GRP"
 "Movie.2022.UHD.2160p.WEB-DL.DDP.5.1.x265-GRP":
@@ -1799,7 +1799,7 @@
   resolution: "2160p"
   year: 2024
   codec: "x265"
-  hdr: "HDR10+"
+  dynamicRange: "HDR10+"
   group: "GROUP"
 "Movie 2024 2160p BluRay x265 DV HDR 10+ DTS-HD MA 5.1-GROUP":
   type: "movie"
@@ -1808,7 +1808,7 @@
   resolution: "2160p"
   year: 2024
   codec: "x265"
-  hdr: "DV HDR10+"
+  dynamicRange: "DV HDR10+"
   audio: "DTS-HD.MA"
   channels: "5.1"
   group: "GROUP"
@@ -1819,7 +1819,7 @@
   resolution: "2160p"
   year: 2024
   codec: "x265"
-  hdr: "DV HDR10+"
+  dynamicRange: "DV HDR10+"
   group: "GROUP"
 "Movie.2024.2160p.BluRay.x265.DV.HDR10.PLUS-GROUP":
   type: "movie"
@@ -1828,7 +1828,7 @@
   resolution: "2160p"
   year: 2024
   codec: "x265"
-  hdr: "DV HDR10+"
+  dynamicRange: "DV HDR10+"
   group: "GROUP"
 "Movie.2024.2160p.WEB-DL.H.265.DD+-GROUP":
   type: "movie"
@@ -2289,7 +2289,7 @@
   collection: "iTunes"
   year: 2022
   codec: "H.265"
-  hdr: "DV HDR"
+  dynamicRange: "DV HDR"
   audio: "DDP Atmos"
   channels: "5.1"
   other: "HYBRiD"
@@ -2429,7 +2429,7 @@
   resolution: "1080p"
   year: 2020
   codec: "x265"
-  hdr: "DV"
+  dynamicRange: "DV"
 "Stillwater.Ridge.2020.1080p.BluRay.x265-Anime_Time":
   type: "movie"
   title: "Stillwater Ridge"
@@ -2494,7 +2494,7 @@
   source: "WEB-DL"
   resolution: "2160p"
   year: 2020
-  hdr: "HDR10"
+  dynamicRange: "HDR10"
 "Stillwater Ridge 2020 BluRay x264 - BTN 4K":
   type: "movie"
   title: "Stillwater Ridge"
@@ -2510,7 +2510,7 @@
   resolution: "1080p"
   year: 2021
   codec: "x265"
-  hdr: "SDR"
+  dynamicRange: "SDR"
   audio: "DDP"
   channels: "5.1"
   language: "RUSSiAN"
@@ -2523,7 +2523,7 @@
   collection: "ATV"
   year: 2021
   codec: "x265"
-  hdr: "SDR"
+  dynamicRange: "SDR"
   audio: "DDP Atmos"
   channels: "5.1"
   language: "ENGLiSH"
@@ -2536,7 +2536,7 @@
   collection: "ATV"
   year: 2021
   codec: "x265"
-  hdr: "SDR"
+  dynamicRange: "SDR"
   audio: "DDP Atmos"
   channels: "5.1"
   language: "ENGLiSH"
@@ -2578,7 +2578,7 @@
   resolution: "2160p"
   year: 2021
   codec: "x265"
-  hdr: "DV HDR"
+  dynamicRange: "DV HDR"
   audio: "DDP"
   channels: "7.1"
   language: "ENGLiSH"
@@ -2625,7 +2625,7 @@
   resolution: "2160p"
   year: 2022
   codec: "HEVC"
-  hdr: "DV"
+  dynamicRange: "DV"
   audio: "TrueHD Atmos"
   channels: "7.1"
   other: "REMUX"
@@ -2705,7 +2705,7 @@
   resolution: "2160p"
   year: 2023
   codec: "HEVC"
-  hdr: "DV HDR"
+  dynamicRange: "DV HDR"
   audio: "DDP"
   channels: "7.1"
   other: "PROPER REMUX"
@@ -2865,7 +2865,7 @@
   resolution: "2160p"
   year: 2013
   codec: "HEVC"
-  hdr: "DV"
+  dynamicRange: "DV"
   audio: "DTS-HD.MA"
   channels: "5.1"
   other: "REMUX"
@@ -2991,7 +2991,7 @@
   collection: "Criterion.Collection"
   year: 2019
   codec: "HEVC x265"
-  hdr: "DV HDR10+"
+  dynamicRange: "DV HDR10+"
   audio: "TrueHD Atmos"
   channels: "7.1"
   group: "FZHD"
@@ -3025,7 +3025,7 @@
   resolution: "2160p"
   year: 2021
   codec: "HEVC"
-  hdr: "DV"
+  dynamicRange: "DV"
   audio: "TrueHD Atmos"
   channels: "7.1"
   other: "REMUX"
@@ -3076,7 +3076,7 @@
   resolution: "2160p"
   year: 1954
   codec: "HEVC"
-  hdr: "DV HDR10"
+  dynamicRange: "DV HDR10"
   audio: "DTS-HD.MA"
   channels: "5.1"
   other: "REMUX"
@@ -3582,7 +3582,7 @@
   year: 2021
   series: 1
   codec: "x265"
-  hdr: "HDR"
+  dynamicRange: "HDR"
   audio: "DDPA"
   channels: "5.1"
   group: "182K"
@@ -3910,7 +3910,7 @@
   series: 2
   episode: 4
   codec: "HEVC"
-  hdr: "HLG"
+  dynamicRange: "HLG"
   audio: "AAC"
   channels: "2.0"
   group: "WELP"
@@ -4123,7 +4123,7 @@
   series: 2026
   episode: 19
   codec: "H.265"
-  hdr: "HLG"
+  dynamicRange: "HLG"
   audio: "DD"
   channels: "5.1"
   group: "F1Carreras"
@@ -6598,7 +6598,7 @@
   year: 2022
   series: 1
   codec: "x265"
-  hdr: "SDR"
+  dynamicRange: "SDR"
   audio: "DDP"
   channels: "5.1"
   language: "ENGLiSH"
@@ -6622,7 +6622,7 @@
   year: 2022
   series: 1
   codec: "x265"
-  hdr: "SDR"
+  dynamicRange: "SDR"
   audio: "DDP"
   channels: "5.1"
   language: "ENGLiSH"
@@ -7093,7 +7093,7 @@
   series: 1
   episode: 2
   codec: "H.265"
-  hdr: "DV HDR"
+  dynamicRange: "DV HDR"
   audio: "DDP Atmos"
   channels: "5.1"
   group: "FLUX"

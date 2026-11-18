@@ -267,3 +267,20 @@ func TestRunNumbering(t *testing.T) {
 		}
 	}
 }
+
+// TestRunDynamicRange checks that the formats are written in one order,
+// whatever order the name gives them in.
+func TestRunDynamicRange(t *testing.T) {
+	for _, name := range []string{
+		"Movie.2020.2160p.WEB-DL.HDR10.DV.HEVC-GRP",
+		"Movie.2020.2160p.WEB-DL.DV.HDR10.HEVC-GRP",
+	} {
+		var buf bytes.Buffer
+		if err := run(&buf, nil, []string{name}); err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if s := `"dynamic_range":["DV","HDR10"]`; !strings.Contains(buf.String(), s) {
+			t.Errorf("%q: expected output to contain %s, got: %s", name, s, buf.String())
+		}
+	}
+}

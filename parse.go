@@ -996,7 +996,7 @@ func (b *TagBuilder) collect(r *Release) {
 		case TagTypeCodec:
 			r.Codec = appendOnce(r.Codec, r.tags[i].Codec())
 		case TagTypeHDR:
-			r.HDR = appendOnce(r.HDR, r.tags[i].HDR())
+			r.DynamicRange |= ParseDynamicRange(r.tags[i].HDR())
 		case TagTypeBitDepth:
 			if r.BitDepth == "" {
 				r.BitDepth = r.tags[i].BitDepth()
@@ -1267,8 +1267,11 @@ func (b *TagBuilder) unset(r *Release) {
 				r.Collection, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeCodec && slices.Contains(r.Codec, s):
 				r.Codec, r.tags[i] = remove(r.Codec, s), r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeHDR && slices.Contains(r.HDR, s):
-				r.HDR, r.tags[i] = remove(r.HDR, s), r.tags[i].As(TagTypeText, nil)
+			case typ == TagTypeHDR:
+				// a tag that is none of the formats is in no bit, and is
+				// still given back
+				r.tags[i] = r.tags[i].As(TagTypeText, nil)
+				r.DynamicRange = dropDynamicRange(r.DynamicRange, r.tags, ParseDynamicRange(s))
 			case typ == TagTypeBitDepth && r.BitDepth == s:
 				r.BitDepth, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeAudio && slices.Contains(r.Audio, s):
@@ -1304,6 +1307,20 @@ func (b *TagBuilder) unset(r *Release) {
 			r.tags[i], r.Channels = r.tags[i].As(TagTypeText, nil), ""
 		}
 	}
+}
+
+// dropDynamicRange removes format f from d unless a hdr tag left in tags
+// still gives it, as two tags can spell one format ('DV' and 'DoVi').
+func dropDynamicRange(d DynamicRange, tags []Tag, f DynamicRange) DynamicRange {
+	if f == 0 {
+		return d
+	}
+	for _, tag := range tags {
+		if tag.Is(TagTypeHDR) && ParseDynamicRange(tag.HDR()) == f {
+			return d
+		}
+	}
+	return d &^ f
 }
 
 // preciser reports whether source s replaces the source collected so far,

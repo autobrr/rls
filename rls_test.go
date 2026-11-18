@@ -226,8 +226,8 @@ func TestListValuesOnce(t *testing.T) {
 	if exp := []string{"PROPER", "REPACK"}; !slices.Equal(r.Other, exp) {
 		t.Errorf("expected other %q, got: %q", exp, r.Other)
 	}
-	if exp := []string{"HDR"}; !slices.Equal(r.HDR, exp) {
-		t.Errorf("expected hdr %q, got: %q", exp, r.HDR)
+	if exp := HDR; r.DynamicRange != exp {
+		t.Errorf("expected dynamic range %v, got: %v", exp, r.DynamicRange)
 	}
 	if exp := []string{"Extended.Cut"}; !slices.Equal(r.Cut, exp) {
 		t.Errorf("expected cut %q, got: %q", exp, r.Cut)
@@ -809,6 +809,8 @@ func TestExport_tests(t *testing.T) {
 			switch name {
 			case "seriesepisodes":
 				name = "seriesEpisodes"
+			case "dynamicrange":
+				name = "dynamicRange"
 			}
 			switch v.Field(j).Kind() {
 			case reflect.Int:
@@ -1139,15 +1141,15 @@ type rls struct {
 	Version        string
 	Disc           string
 
-	Codec    string
-	HDR      string
-	Bitdepth string
-	Audio    string
-	Channels string
-	Other    string
-	Cut      string
-	Edition  string
-	Language string
+	Codec        string
+	DynamicRange string
+	Bitdepth     string
+	Audio        string
+	Channels     string
+	Other        string
+	Cut          string
+	Edition      string
+	Language     string
 
 	Size      string
 	Region    string
@@ -1215,15 +1217,15 @@ func buildRls(r Release) rls {
 		Version:        r.Version,
 		Disc:           r.Disc,
 
-		Codec:    strings.Join(r.Codec, " "),
-		HDR:      strings.Join(r.HDR, " "),
-		Bitdepth: r.BitDepth,
-		Audio:    strings.Join(r.Audio, " "),
-		Channels: r.Channels,
-		Other:    strings.Join(r.Other, " "),
-		Cut:      strings.Join(r.Cut, " "),
-		Edition:  strings.Join(r.Edition, " "),
-		Language: strings.Join(r.Language, " "),
+		Codec:        strings.Join(r.Codec, " "),
+		DynamicRange: strings.Join(r.DynamicRange.Strings(), " "),
+		Bitdepth:     r.BitDepth,
+		Audio:        strings.Join(r.Audio, " "),
+		Channels:     r.Channels,
+		Other:        strings.Join(r.Other, " "),
+		Cut:          strings.Join(r.Cut, " "),
+		Edition:      strings.Join(r.Edition, " "),
+		Language:     strings.Join(r.Language, " "),
 
 		Size:      r.Size,
 		Region:    r.Region,
@@ -1275,7 +1277,7 @@ func rlsTests(tb testing.TB) []rlsTest {
 			}
 			name := strings.ToUpper(string(line[2:3])) + string(line[3:n])
 			switch name {
-			case "Id", "Hdr":
+			case "Id":
 				name = strings.ToUpper(name)
 			}
 			f := reflect.ValueOf(&test.exp).Elem().FieldByName(name)
