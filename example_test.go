@@ -57,3 +57,14 @@ func ExampleFlags() {
 	// true
 	// 2
 }
+
+func ExampleSource_Kind() {
+	r := rls.ParseString("Movie.2020.2160p.UHD.WEB-DL.DV.HDR10.H265-GRP")
+	fmt.Println(r.Source, r.Source.Kind() == rls.SourceWebDL, r.Source.UHD())
+	fmt.Println(r.Codec[0], r.Codec[0].Kind() == rls.CodecHEVC)
+	fmt.Println(r.Resolution, r.Resolution.Height(), r.Resolution.Interlaced())
+	// Output:
+	// UHD.WEB-DL true true
+	// H.265 true
+	// 2160p 2160 false
+}

@@ -205,7 +205,7 @@ func TestParseHintType(t *testing.T) {
 			"The.Mix.2021.DVDRip.XviD-GRP", Music, Movie,
 			func(r Release) bool {
 				return r.Title == "The Mix" && r.Year == 2021 && r.Source == "DVDRiP" &&
-					slices.Equal(r.Codec, []string{"XViD"}) && len(r.Other) == 0 && r.Group == "GRP"
+					slices.Equal(r.Codec, []Codec{"XViD"}) && len(r.Other) == 0 && r.Group == "GRP"
 			},
 		},
 		// a special of a show, with no episode number, is read as a film

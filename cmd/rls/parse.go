@@ -45,10 +45,10 @@ type releaseOutput struct {
 	Platform string `json:"platform"`
 	Arch     string `json:"arch"`
 
-	Source     string `json:"source"`
-	Resolution string `json:"resolution"`
-	FrameRate  string `json:"framerate"`
-	Collection string `json:"collection"`
+	Source     rls.Source     `json:"source"`
+	Resolution rls.Resolution `json:"resolution"`
+	FrameRate  string         `json:"framerate"`
+	Collection string         `json:"collection"`
 
 	Year    int `json:"year"`
 	Month   int `json:"month"`
@@ -65,7 +65,7 @@ type releaseOutput struct {
 	Version    string          `json:"version"`
 	Disc       string          `json:"disc"`
 
-	Codec        []string         `json:"codec"`
+	Codec        []rls.Codec      `json:"codec"`
 	DynamicRange rls.DynamicRange `json:"dynamic_range"`
 	BitDepth     string           `json:"bit_depth"`
 	Audio        []string         `json:"audio"`

@@ -802,11 +802,11 @@ loop:
 
 // sourceOf returns the source of a release with tags: the first one, or a more
 // precise one after a CD or a DVD, see preciser.
-func sourceOf(tags []Tag) string {
-	var source string
+func sourceOf(tags []Tag) Source {
+	var source Source
 	for _, tag := range tags {
 		if tag.Is(TagTypeSource) && preciser(source, tag.Source()) {
-			source = tag.Source()
+			source = Source(tag.Source())
 		}
 	}
 	return source

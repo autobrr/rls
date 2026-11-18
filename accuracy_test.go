@@ -232,7 +232,7 @@ func TestAccuracyLabelled(t *testing.T) {
 					get("checksum").add(strings.EqualFold(r.Sum, s))
 				}
 				if s := first(c.VideoResolution); s != "" {
-					get("resolution").add(r.Resolution == fixtureRes(s))
+					get("resolution").add(string(r.Resolution) == fixtureRes(s))
 				}
 				if s := first(c.FileExtension); s != "" {
 					get("ext").add(strings.EqualFold(r.Ext, s))
@@ -739,8 +739,17 @@ func vocabulary() map[string]bool {
 // tagValues returns the values r holds in the fields a vocabulary word can
 // land in.
 func tagValues(r Release) []string {
-	v := slices.Concat(r.Language, r.Other, r.Cut, r.Edition, r.Codec, r.DynamicRange.Strings(), r.Audio)
-	return append(v, r.Collection, r.Region, r.Source, r.Genre, r.Platform, r.Arch, r.Container)
+	v := slices.Concat(r.Language, r.Other, r.Cut, r.Edition, strs(r.Codec), r.DynamicRange.Strings(), r.Audio)
+	return append(v, r.Collection, r.Region, string(r.Source), r.Genre, r.Platform, r.Arch, r.Container)
+}
+
+// strs returns the values of v as strings.
+func strs[T ~string](v []T) []string {
+	s := make([]string, len(v))
+	for i, t := range v {
+		s[i] = string(t)
+	}
+	return s
 }
 
 // sameUnits reports whether r holds what a probe says its name holds, and
