@@ -388,6 +388,7 @@ func TestOneOwner(t *testing.T) {
 		"unset":            "a row of another release type is no tag of this one, which the type decides for the whole name and no zone does",
 		"handBack":         "a guess of the group lexer that is a word, which the owner of the group decides",
 		"settleGroupType":  "a known group of another release type, which the owner of the group decides",
+		"decimals":         "a channel layout between two words of a fansub title is a number with a point, which is a question of what a number counts",
 	}
 	found := funcsWith(t, func(n ast.Node) bool {
 		if call, ok := n.(*ast.CallExpr); ok {
@@ -541,6 +542,41 @@ func TestSettleLinear(t *testing.T) {
 		long := clock(shape.head+strings.Repeat(shape.unit, 8000)+shape.tail, shape.stage)
 		if long > 24*short {
 			t.Errorf("%q: 8000 of %q took %s and 1000 took %s, more than 24 times as long", shape.head+shape.unit+shape.tail, shape.unit, long, short)
+		}
+	}
+}
+
+// buildWhole builds the tags of s with every tag inside the name, where
+// the lexers set what follows the name apart: the group, the extension, a
+// bracket that closes behind it.
+func buildWhole(s string) Release {
+	tags, _ := ParseTagsString(s)
+	return DefaultParser.(*TagParser).state().builder.Build(tags, len(tags))
+}
+
+// TestAnchorPastEnd checks that the zones read no tag behind the name. With
+// nothing to anchor a name, its anchor is its end, which is the length of
+// the tags when the name ends them: a claim in front of a closing bracket
+// then read the tag at the anchor, and there was none. The lexers leave an
+// ASCII bracket that closes behind the name outside it ('A Patch]'), so the
+// names here end in one they do not know, and every name of the tests and
+// the corpora is built once more with all of its tags inside it.
+func TestAnchorPastEnd(t *testing.T) {
+	for _, s := range []string{"Movie FLAC】", "A Patch〕", "Show German】", "A Patch 】", "A Patch]", "A FLAC]", "Show German]"} {
+		if o := fmt.Sprintf("%o", ParseString(s)); o != s {
+			t.Errorf("%q: expected the name to print as written, got: %q", s, o)
+		}
+		if o := fmt.Sprintf("%o", buildWhole(s)); o != s {
+			t.Errorf("%q: expected the name built whole to print as written, got: %q", s, o)
+		}
+	}
+	z := zones{end: 4, anchor: 4}
+	if tag := z.anchorTag(make([]Tag, 4)); tag.Is(TagTypeDate, TagTypeSeries) || tag.v != nil {
+		t.Errorf("expected a tag of no type for an anchor at the end, got: %v", tag)
+	}
+	for _, s := range boundNames(t) {
+		if o := fmt.Sprintf("%o", buildWhole(s)); o != s {
+			t.Errorf("%q: expected the name built whole to print as written, got: %q", s, o)
 		}
 	}
 }

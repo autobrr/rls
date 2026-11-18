@@ -86,7 +86,7 @@ func TestGroupOwner(t *testing.T) {
 	})
 	for found, owners := range map[*map[string]int][]string{
 		&sets:  {"group", "bracketedGroup", "lastWord", "widenGroup"},
-		&makes: {"suffixBeforeBrackets", "settleGroupType"},
+		&makes: {"leadGroup", "suffixBeforeBrackets", "settleGroupType"},
 	} {
 		for name := range *found {
 			ok := false

@@ -341,6 +341,17 @@ func computeZones(tags []Tag, end int) zones {
 	return z
 }
 
+// anchorTag returns the tag at the anchor. A name with nothing to anchor it
+// has its anchor at end, and no tag stands there when the name ends the tags
+// ('Show German]' built with every tag in the name). So the anchor is read
+// here alone, and is a tag of no type for such a name.
+func (z zones) anchorTag(tags []Tag) Tag {
+	if z.anchor >= z.end {
+		return Tag{}
+	}
+	return tags[z.anchor]
+}
+
 // titleRange reports whether the tag at i is a range of numbers after a word
 // that ends the title, with an episode after it past a spaced hyphen, ie the
 // '17-26' of '[Erai-raws] Tatsuki Fujimoto 17-26 - 01 ~ 08', which names the
@@ -431,7 +442,7 @@ func (b *TagBuilder) settle(r *Release) zones {
 		}
 	}
 	var buf [256]uint8
-	in := brackets(tags, buf[:0])
+	in, _ := brackets(tags, buf[:0], nil)
 	// from the right, so that each claim sees what its right neighbour
 	// became. source is whether a source stands behind the claim
 	var source bool
@@ -487,17 +498,75 @@ const (
 	bracketList
 )
 
+// The roles a bracket can have in a name, by what it holds. The structure
+// stage reads the title, the numbering and the group of a fansub name from
+// them, see structure, and the owner of the group which bracket is the group.
+const (
+	// roleNone is a bracket that holds nothing.
+	roleNone uint8 = iota
+	// roleGroup is a group or a site, which the meta lexer read as one
+	// ('[SubsPlease]') or the owner of the group made a group tag ('(CBB)').
+	roleGroup
+	// roleSum is the checksum of the file ('[ABCD1234]').
+	roleSum
+	// roleTags is a bracket that holds a tag ('[BD 1080p]', '(English Dub)').
+	roleTags
+	// roleNumber is numbers and nothing else ('[03]', '(01-12)', '[922]',
+	// '(S2)').
+	roleNumber
+	// roleWords is words and no tag ('[Title of the Show]', '(Other Name)',
+	// '(CBB)'). A number or a season may stand among them ('[Title 2]',
+	// '[Title S2]').
+	roleWords
+	// roleYear is a year or a date ('(2004)').
+	roleYear
+)
+
+// span is one bracket of a name.
+type span struct {
+	// open is the first tag in the bracket, and end the delimiter that
+	// closes it. A meta tag is a bracket of its own, with end == open+1,
+	// and meta says that it is one.
+	open, end int
+	meta      bool
+	// by is the byte that opens it: '[', '(' or '{'.
+	by byte
+	// role is what the bracket holds.
+	role uint8
+	// words is the number of plain words in it.
+	words int
+}
+
 // brackets returns, for each of tags, the kind of bracket it stands in. It
-// appends to buf, which lets the caller keep a short name off the heap.
+// appends to buf, which lets the caller keep a short name off the heap. With
+// spans that is not nil it also appends each bracket of the name to it, in
+// the order they open, with the role of each, and returns it.
 //
 // A bracket is read whole, from where it opens to where the last bracket
 // inside it closes ('[4K_HDR(2160P)+1080P]'), and what it holds decides how
-// word reads a claim in it.
-func brackets(tags []Tag, buf []uint8) []uint8 {
+// word reads a claim in it. This is the one reading of the brackets of a
+// name: the zones, the structure stage and the owner of the group all read
+// its result.
+func brackets(tags []Tag, buf []uint8, spans []span) ([]uint8, []span) {
 	in := append(buf, make([]uint8, len(tags))...)
 	var depth, open int
+	var by byte
 	for i, tag := range tags {
-		if tag.typ != TagTypeDelim {
+		switch tag.typ {
+		case TagTypeMeta:
+			if spans != nil && depth == 0 {
+				role := uint8(roleTags)
+				switch k, _ := tag.Meta(); k {
+				case "site":
+					role = roleGroup
+				case "sum":
+					role = roleSum
+				}
+				spans = append(spans, span{open: i, end: i + 1, meta: true, by: tag.val(0)[0], role: role})
+			}
+			continue
+		case TagTypeDelim:
+		default:
 			continue
 		}
 		// one delimiter can close a bracket and open the next ('][')
@@ -505,26 +574,31 @@ func brackets(tags []Tag, buf []uint8) []uint8 {
 			switch c {
 			case '(', '[', '{':
 				if depth++; depth == 1 {
-					open = i + 1
+					open, by = i+1, c
 				}
 			case ')', ']', '}':
 				if depth == 0 {
 					continue
 				}
 				if depth--; depth == 0 {
-					bracket(tags, in, open, i)
+					role, words := bracket(tags, in, open, i)
+					if spans != nil {
+						spans = append(spans, span{open: open, end: i, by: by, role: role, words: words})
+					}
 				}
 			}
 		}
 	}
-	return in
+	return in, spans
 }
 
-// bracket sets in to the kinds of the bracket that holds tags[open:end].
-func bracket(tags []Tag, in []uint8, open, end int) {
+// bracket sets in to the kinds of the bracket that holds tags[open:end], and
+// returns its role and the number of plain words in it.
+func bracket(tags []Tag, in []uint8, open, end int) (uint8, int) {
 	// list is where the bracket starts to list tags
 	list, claim := end, -1
-	var claims, words, others int
+	var claims, words, others, numbers, seasons, dates, groups int
+	var sum bool
 loop:
 	for i := open; i < end; i++ {
 		switch tag := tags[i]; {
@@ -543,13 +617,28 @@ loop:
 			break loop
 		case tag.Is(TagTypeText) && !tagWord(tag.v[0]):
 			words++
+			switch s := tag.v[0]; {
+			case len(s) <= 4 && strings.Trim(s, "0123456789") == "":
+				numbers++
+			case len(s) == 8:
+				sum = isChecksum(s)
+			}
 		case strength(tag) != strengthNone:
 			if claims++; claim == -1 {
 				claim = i
 			}
 			continue
 		default:
-			others++
+			switch others++; {
+			case tag.typ == TagTypeSeries && !tag.wroteEpisode():
+				seasons++
+			case tag.typ == TagTypeSeries:
+				numbers++
+			case tag.typ == TagTypeDate:
+				dates++
+			case tag.typ == TagTypeGroup:
+				groups++
+			}
 		}
 		claim = -1
 	}
@@ -568,6 +657,43 @@ loop:
 	for i := list; i < end; i++ {
 		in[i] = bracketList
 	}
+	role := uint8(roleTags)
+	switch total := words + claims + others; {
+	case list != end:
+	case total == 0:
+		role = roleNone
+	case numbers+seasons == total:
+		role = roleNumber
+	case dates == total:
+		role = roleYear
+	case groups == 1 && total == 1:
+		role = roleGroup
+	case words == 1 && total == 1 && sum:
+		role = roleSum
+	// a title may name its season ('[Youjo Senki S2]')
+	case words+seasons == total && words != 0:
+		role = roleWords
+	}
+	return role, words
+}
+
+// isChecksum reports whether s reads as the checksum of a file: eight hex
+// digits, one of them a number ('ABCD1234', not 'DEADBEEF').
+func isChecksum(s string) bool {
+	if len(s) != 8 {
+		return false
+	}
+	var digit bool
+	for i := 0; i < len(s); i++ {
+		switch c := s[i]; {
+		case c >= '0' && c <= '9':
+			digit = true
+		case c|0x20 >= 'a' && c|0x20 <= 'f':
+		default:
+			return false
+		}
+	}
+	return digit
 }
 
 // settleVideo decides the claims that settle left to the type of the release,
@@ -850,7 +976,8 @@ func edgeWord(tags []Tag, z zones, m int) bool {
 		!slices.ContainsFunc(tags[z.start:m], func(t Tag) bool { return t.Is(TagTypeText) && mixedCase(t.v[0]) }) {
 		return false
 	}
-	numbering := tags[z.anchor].Is(TagTypeSeries)
+	anchor := z.anchorTag(tags)
+	numbering := anchor.Is(TagTypeSeries)
 	// behind is the numbering, or the numbering right behind the year
 	behind := numbering
 	if sd, k, plain := z.side(tags, z.anchor, +1); !behind && plain && sd == sideTag {
@@ -860,7 +987,7 @@ func edgeWord(tags []Tag, z zones, m int) bool {
 	case TagTypeLanguage:
 		// a numbering written in a language says the release is in it
 		// ('Robocop.German.Staffel1')
-		if numbering && tag.Language() == "GERMAN" && len(tags[z.anchor].v[0]) >= 7 && strings.EqualFold(tags[z.anchor].v[0][:7], "staffel") {
+		if numbering && tag.Language() == "GERMAN" && len(anchor.v[0]) >= 7 && strings.EqualFold(anchor.v[0][:7], "staffel") {
 			return false
 		}
 		return languageName(tag) && (numbering || langBeforeYear)
@@ -978,7 +1105,7 @@ func word(tags []Tag, z zones, in []uint8, m, edge int, source bool) bool {
 		!(capitals(tag.v[0]) && slices.ContainsFunc(tags[z.start:m], func(t Tag) bool { return t.Is(TagTypeText) && mixedCase(t.v[0]) })) {
 		return true
 	}
-	numbered := z.anchor != z.end && tags[z.anchor].Is(TagTypeDate, TagTypeSeries)
+	numbered := z.anchorTag(tags).Is(TagTypeDate, TagTypeSeries)
 	switch {
 	// title: a word follows before the anchor, in a bracket or not
 	// ('Bang_(Japanese_Version)-JA-DVDRip', 'Buzzcocks-French_(US_Version)-
@@ -1009,7 +1136,7 @@ func word(tags []Tag, z zones, in []uint8, m, edge int, source bool) bool {
 	// it is in front of a year ('Amelie French (2001)'). In front of any
 	// other bracket it is a tag ('Movie Title German (DL) 2019',
 	// 'Show.Name.German.(S01).COMPLETE')
-	case z.last < m && m < z.close && z.close+1 == z.anchor && tags[z.anchor].Is(TagTypeDate):
+	case z.last < m && m < z.close && z.close+1 == z.anchor && z.anchorTag(tags).Is(TagTypeDate):
 		if languageName(tag) && edge == 1 && left == sideWord && lplain && edgeWord(tags, z, m) {
 			return true
 		}

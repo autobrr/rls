@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 	"unsafe"
@@ -540,6 +541,25 @@ type TagBuilder struct {
 	languagef *finder
 	// groupf is the group find func.
 	groupf *finder
+	// infos are the rows of the vocabulary, and words finds those of every
+	// type but the group that a word may be. It is made when a name first
+	// asks for it, see tagged.
+	infos map[string][]*taginfo.Taginfo
+	words atomic.Pointer[tagWords]
+}
+
+// tagWords are the rows of the vocabulary that a word is asked against:
+// those with spellings by a spelling in upper case, and the rows that only
+// their regexp confirms by a byte they begin with, see firstBytes.
+type tagWords struct {
+	spelled map[string][]wordRow
+	rest    [256][]*taginfo.Taginfo
+}
+
+// wordRow is a row of the vocabulary in the finder of its type.
+type wordRow struct {
+	f *finder
+	i int32
 }
 
 // NewTagBuilder creates a new release builder.
@@ -572,6 +592,7 @@ func (b *TagBuilder) Init(infos map[string][]*taginfo.Taginfo) Builder {
 		resolutionf: newFinder(TagTypeResolution, infos["resolution"]...),
 		languagef:   newFinder(TagTypeLanguage, infos["language"]...),
 		groupf:      newFinder(TagTypeGroup, infos["group"]...),
+		infos:       infos,
 	}
 }
 
@@ -598,10 +619,14 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 		}
 		r := b.build(tags[from:], end-from, h)
 		tags[k] = closer
-		// the build may have made tags of its own, as fixHalfEpisode does
-		// ('[REPACK] Show.S01E06.5.x264'). Its dates and unused words are
-		// places in those, so they are kept behind the flags
-		if len(r.tags) != len(tags)-from {
+		// the build may have made tags of its own: fixHalfEpisode does
+		// ('[REPACK] Show.S01E06.5.x264'), and so does the structure stage
+		// when it reads a name in a copy, which may be as long as what it
+		// was given ('[REPACK] (Group) Title - 01'). So the tags are told
+		// apart by where they are kept and not by how many there are. The
+		// release was read from those tags, and its dates and unused words
+		// are places in them, so they are the tags behind the flags
+		if len(r.tags) != len(tags)-from || len(r.tags) != 0 && &r.tags[0] != &tags[from] {
 			tags, end = slices.Concat(tags[:from], r.tags), r.end+from
 			if from == k {
 				tags[k] = closer
@@ -622,6 +647,9 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 		}
 		for i := range r.unused {
 			r.unused[i] += from
+		}
+		if r.first != -1 {
+			r.first += from
 		}
 		return r
 	}
@@ -699,6 +727,8 @@ func leadingFlags(tags []Tag, end int) (int, int) {
 func (b *TagBuilder) init(r *Release) {
 	b.fixHalfEpisode(r)
 	b.fixAudioRange(r)
+	// read a name written the way a fansub group writes one by its brackets
+	b.structure(r)
 	// decide which of the words the lexers claimed are words of a title,
 	// and whether what the group lexer guessed is the group
 	b.settleGroup(r, b.settle(r))
@@ -1380,9 +1410,9 @@ func (b *TagBuilder) yearTitles(r *Release) (int, int, int) {
 	// seek to text
 	for ; pos < len(r.tags) && !r.tags[pos].Is(TagTypeText); pos++ {
 	}
-	start := pos
+	start := b.skipped(r, pos)
 	var offset int
-	r.Title, offset = b.title(r.tags[start:], r.path, TagTypeText)
+	r.Title, offset = b.firstTitle(r, start)
 	// a year in parentheses with the title after it is a word of the title
 	// ('(2001)A Space Odyssey(1961)', '(2001) A Space Odyssey (1968)',
 	// '(2001).A.Space.Odyssey.(1968)')
@@ -1781,8 +1811,9 @@ func (b *TagBuilder) defaultTitle(r *Release) int {
 	var pos int
 	for pos = 0; pos < len(r.tags) && !r.tags[pos].Is(TagTypeText); pos++ {
 	}
+	pos = b.skipped(r, pos)
 	var offset int
-	r.Title, offset = b.title(r.tags[pos:], r.path, TagTypeText)
+	r.Title, offset = b.firstTitle(r, pos)
 	return pos + offset
 }
 
@@ -1835,6 +1866,13 @@ func isPath(tags []Tag) bool {
 // delimiter, returning the title and ending position. path is whether the
 // name is a file path, where a slash separates folders.
 func (b *TagBuilder) title(tags []Tag, path bool, types ...TagType) (string, int) {
+	return b.titleOf(tags, path, false, types...)
+}
+
+// titleOf is title for a name that sets its words apart with spaces or not.
+// decimal says that it does, so that a dot between two numbers is the point
+// of a decimal and no separator ('Evangelion 3.33 You Can (Not) Redo').
+func (b *TagBuilder) titleOf(tags []Tag, path, decimal bool, types ...TagType) (string, int) {
 	var v []string
 	var i int
 loop:
@@ -1859,6 +1897,9 @@ loop:
 				// lists another label for it ('Show SP/OVA Episode 00'), so
 				// those end the title.
 				v = append(v, "/")
+			case decimal && s == "." && i != 0 && i+1 < len(tags) && tags[i-1].Is(types...) && tags[i+1].Is(types...) &&
+				allDigits(tags[i-1].v[0], 4) && allDigits(tags[i+1].v[0], 4):
+				v = append(v, ".")
 			case !strings.ContainsAny(s, "()[]{}\\/") && s != "__":
 				v = append(v, b.delim(s, tags, i, types...))
 			default:
