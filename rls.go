@@ -60,15 +60,20 @@ type Release struct {
 	Version   string
 	Disc      string
 
-	Codec    []string
-	HDR      []string
-	BitDepth string
-	Audio    []string
-	Channels string
-	Other    []string
-	Cut      []string
-	Edition  []string
-	Language []string
+	Codec []string
+	// DynamicRange is the set of dynamic range formats the name gives
+	// ('DV.HDR10' gives DV and HDR10). A hdr row added with WithTaginfo
+	// whose tag is one of the seven spellings in another case counts as that
+	// format ('dv' is DV). A row with any other tag gives no format, while its
+	// tag stays in Tags.
+	DynamicRange DynamicRange
+	BitDepth     string
+	Audio        []string
+	Channels     string
+	Other        []string
+	Cut          []string
+	Edition      []string
+	Language     []string
 
 	Size      string
 	Region    string

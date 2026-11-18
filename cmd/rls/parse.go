@@ -65,15 +65,15 @@ type releaseOutput struct {
 	Version    string          `json:"version"`
 	Disc       string          `json:"disc"`
 
-	Codec    []string `json:"codec"`
-	HDR      []string `json:"dynamic_range"`
-	BitDepth string   `json:"bit_depth"`
-	Audio    []string `json:"audio"`
-	Channels string   `json:"channels"`
-	Other    []string `json:"other"`
-	Cut      []string `json:"cut"`
-	Edition  []string `json:"edition"`
-	Language []string `json:"language"`
+	Codec        []string         `json:"codec"`
+	DynamicRange rls.DynamicRange `json:"dynamic_range"`
+	BitDepth     string           `json:"bit_depth"`
+	Audio        []string         `json:"audio"`
+	Channels     string           `json:"channels"`
+	Other        []string         `json:"other"`
+	Cut          []string         `json:"cut"`
+	Edition      []string         `json:"edition"`
+	Language     []string         `json:"language"`
 
 	Size      string   `json:"size"`
 	Region    string   `json:"region"`
@@ -158,53 +158,53 @@ func rlsToOutput(rls rls.Release) releaseOutput {
 	series, hasSeason := rls.Numbering.Season()
 	episode, hasEpisode := rls.Numbering.Episode()
 	return releaseOutput{
-		Artist:     rls.Artist,
-		Type:       rls.Type.String(),
-		Title:      rls.Title,
-		Subtitle:   rls.Subtitle,
-		Alt:        orEmpty(rls.Alt),
-		Platform:   rls.Platform,
-		Arch:       rls.Arch,
-		Source:     rls.Source,
-		Resolution: rls.Resolution,
-		FrameRate:  rls.FrameRate,
-		Collection: rls.Collection,
-		Year:       rls.Year,
-		Month:      rls.Month,
-		Day:        rls.Day,
-		YearEnd:    rls.YearEnd,
-		HasSeason:  hasSeason,
-		Series:     series,
-		Seasons:    orEmpty(seasons(rls.Numbering)),
-		HasEpisode: hasEpisode,
-		Episode:    episode,
-		Episodes:   orEmpty(episodes(rls.Numbering)),
-		Numbering:  numberingToOutput(rls.Numbering),
-		Version:    rls.Version,
-		Disc:       rls.Disc,
-		Codec:      orEmpty(rls.Codec),
-		HDR:        orEmpty(rls.HDR),
-		BitDepth:   rls.BitDepth,
-		Audio:      orEmpty(rls.Audio),
-		Channels:   rls.Channels,
-		Other:      orEmpty(rls.Other),
-		Cut:        orEmpty(rls.Cut),
-		Edition:    orEmpty(rls.Edition),
-		Language:   orEmpty(rls.Language),
-		Size:       rls.Size,
-		Region:     rls.Region,
-		Container:  rls.Container,
-		Genre:      rls.Genre,
-		ID:         rls.ID,
-		Group:      rls.Group,
-		Meta:       orEmpty(rls.Meta),
-		Site:       rls.Site,
-		Sum:        rls.Sum,
-		Pass:       rls.Pass,
-		Req:        rls.Req,
-		Ext:        rls.Ext,
-		IsProper:   rls.IsProper(),
-		IsRepack:   rls.IsRepack(),
+		Artist:       rls.Artist,
+		Type:         rls.Type.String(),
+		Title:        rls.Title,
+		Subtitle:     rls.Subtitle,
+		Alt:          orEmpty(rls.Alt),
+		Platform:     rls.Platform,
+		Arch:         rls.Arch,
+		Source:       rls.Source,
+		Resolution:   rls.Resolution,
+		FrameRate:    rls.FrameRate,
+		Collection:   rls.Collection,
+		Year:         rls.Year,
+		Month:        rls.Month,
+		Day:          rls.Day,
+		YearEnd:      rls.YearEnd,
+		HasSeason:    hasSeason,
+		Series:       series,
+		Seasons:      orEmpty(seasons(rls.Numbering)),
+		HasEpisode:   hasEpisode,
+		Episode:      episode,
+		Episodes:     orEmpty(episodes(rls.Numbering)),
+		Numbering:    numberingToOutput(rls.Numbering),
+		Version:      rls.Version,
+		Disc:         rls.Disc,
+		Codec:        orEmpty(rls.Codec),
+		DynamicRange: rls.DynamicRange,
+		BitDepth:     rls.BitDepth,
+		Audio:        orEmpty(rls.Audio),
+		Channels:     rls.Channels,
+		Other:        orEmpty(rls.Other),
+		Cut:          orEmpty(rls.Cut),
+		Edition:      orEmpty(rls.Edition),
+		Language:     orEmpty(rls.Language),
+		Size:         rls.Size,
+		Region:       rls.Region,
+		Container:    rls.Container,
+		Genre:        rls.Genre,
+		ID:           rls.ID,
+		Group:        rls.Group,
+		Meta:         orEmpty(rls.Meta),
+		Site:         rls.Site,
+		Sum:          rls.Sum,
+		Pass:         rls.Pass,
+		Req:          rls.Req,
+		Ext:          rls.Ext,
+		IsProper:     rls.IsProper(),
+		IsRepack:     rls.IsRepack(),
 	}
 }
 

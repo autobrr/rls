@@ -739,7 +739,7 @@ func vocabulary() map[string]bool {
 // tagValues returns the values r holds in the fields a vocabulary word can
 // land in.
 func tagValues(r Release) []string {
-	v := slices.Concat(r.Language, r.Other, r.Cut, r.Edition, r.Codec, r.HDR, r.Audio)
+	v := slices.Concat(r.Language, r.Other, r.Cut, r.Edition, r.Codec, r.DynamicRange.Strings(), r.Audio)
 	return append(v, r.Collection, r.Region, r.Source, r.Genre, r.Platform, r.Arch, r.Container)
 }
 
@@ -881,7 +881,7 @@ func TestCorpusStructural(t *testing.T) {
 				if r.Sum != "" {
 					hasSum++
 				}
-				if len(r.HDR) != 0 {
+				if r.DynamicRange != 0 {
 					hasHDR++
 				}
 			}

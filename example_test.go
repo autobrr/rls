@@ -31,3 +31,16 @@ func ExampleParse() {
 	//   other: ["REISSUE" "BOXSET"]
 	//   group: NOiR
 }
+
+func ExampleDynamicRange() {
+	r := rls.ParseString("Movie.2020.2160p.WEB-DL.HDR10.DV.HEVC-GRP")
+	fmt.Println(r.DynamicRange)
+	fmt.Printf("%q\n", r.DynamicRange.Strings())
+	fmt.Println(r.DynamicRange.Has(rls.DV))
+	fmt.Println(r.DynamicRange.Has(rls.DV | rls.HDR10Plus))
+	// Output:
+	// DV,HDR10
+	// ["DV" "HDR10"]
+	// true
+	// false
+}
