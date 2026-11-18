@@ -352,11 +352,9 @@ func (r Release) Seasons() []int {
 
 // seasonRange returns the index of the series tag that starts a range of
 // seasons which the series tag at i ends, or -1. Both tags write a season and
-// no episode, the second season is the higher one, and the first tag's text
-// ends in the hyphen or tilde ('S01-' of 'S01-S03' and 'S01-03', 'Seasons 1~'
-// of 'Seasons 1~7', 'Season 1 - ' of '(Season 1 - 3)') or a hyphen or tilde
-// stands between the two with at most dots and spaces beside it ('S01 - S03',
-// 'S01~S03', 'S01 ~ S03').
+// no episode, the second season is the higher one, and a hyphen or tilde
+// stands between the two with at most dots, underscores and spaces beside it
+// ('S01-S03', 'S01-03', 'Seasons 1~7', '(Season 1 - 3)', 'S01 ~ S03').
 //
 // An episode written after the range with no season of its own is in none of
 // them, as SeriesEpisodes, EpisodeSpans and EpisodeRange have it ('Season 1-4
@@ -366,13 +364,8 @@ func (r Release) seasonRange(i int) int {
 	if tag.typ != TagTypeSeries || tag.val(1) == "" || tag.wroteEpisode() {
 		return -1
 	}
-	switch {
-	case i >= 2 && r.tags[i-1].typ == TagTypeDelim && strings.ContainsAny(r.tags[i-1].val(0), "-~") && len(strings.Trim(r.tags[i-1].val(0), "._ ")) == 1:
+	if i >= 2 && r.tags[i-1].typ == TagTypeDelim && strings.ContainsAny(r.tags[i-1].val(0), "-~") && len(strings.Trim(r.tags[i-1].val(0), "._ ")) == 1 {
 		start = i - 2
-	case i >= 1:
-		if s := strings.TrimRight(r.tags[i-1].val(0), " _"); strings.HasSuffix(s, "-") || strings.HasSuffix(s, "~") {
-			start = i - 1
-		}
 	}
 	if start == -1 || r.tags[start].typ != TagTypeSeries || r.tags[start].val(1) == "" || r.tags[start].wroteEpisode() ||
 		atoi(r.tags[start].val(1)) >= atoi(tag.val(1)) {
@@ -385,7 +378,10 @@ func (r Release) seasonRange(i int) int {
 // two are seasons of a list, or -1. Both tags write a season and no episode,
 // the second season is the higher one, and a plus, an ampersand or a comma
 // stands between the two with nothing but spaces and underscores beside it
-// ('S01+S02', 'Season 1 + 2', 'S1, S2', 'Season 01 & Season 02').
+// ('S01+S02', 'Season 1 + 2', 'S1, S2', 'Season 01 & Season 02'). An
+// ampersand is a word of its own between two seasons, and the end of the text
+// of the first in a list the series lexer read as one ('Seasons 1 &' of
+// 'Seasons 1 & 2').
 //
 // As after a range, an episode written after the list with no season of its
 // own is in none of them, whether it is a range or one episode ('S1+S2
@@ -405,7 +401,7 @@ func (r Release) seasonList(i int) int {
 			}
 			sep = sep || s != ""
 		case TagTypeSeries:
-			sep = sep || s != "" && strings.IndexByte("+&,", s[len(s)-1]) != -1
+			sep = sep || strings.HasSuffix(s, "&")
 			if !sep || r.tags[j].val(1) == "" || r.tags[j].wroteEpisode() || atoi(r.tags[j].val(1)) >= atoi(tag.val(1)) {
 				return -1
 			}

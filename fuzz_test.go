@@ -48,9 +48,17 @@ func exercise(r Release) {
 //
 // A tag may have no text. The series lexer adds a Date tag for a year written
 // as a season ('S2024E05'), and the Series tag before it holds the bytes.
+//
+// The tags also follow the rule of checkEdges: no tag begins or ends with a
+// delimiter outside its value. And their slice has no room to spare, which
+// join counts for.
 func checkTags(tb testing.TB, s string) {
 	tb.Helper()
 	tags, _ := ParseTagsString(s)
+	checkEdges(tb, s, tags)
+	if cap(tags) != len(tags) {
+		tb.Errorf("%q: expected room for the %d tags and no more, got: %d", s, len(tags), cap(tags))
+	}
 	var b strings.Builder
 	at := -1
 	for i, tag := range tags {
@@ -84,7 +92,8 @@ func checkTags(tb testing.TB, s string) {
 // It also checks that the tags reproduce the input: a lexer that skips bytes
 // without tagging them loses part of the name silently, and nothing else would
 // notice. checkTags makes the same comparison on the tags straight out of
-// Parse, with no Build in between, so a failure names the lexing step.
+// Parse, with no Build in between, so a failure names the lexing step. And it
+// checks that no tag holds a delimiter outside its value, lexed or built.
 //
 // Plain go test runs the seeds, which are every name in tests.yaml and the
 // inputs below, so both checks run without -fuzz.
@@ -128,6 +137,7 @@ func FuzzParseString(f *testing.F) {
 		if o := fmt.Sprintf("%o", r); o != s {
 			t.Errorf("round trip failed:\n in: %q\nout: %q", s, o)
 		}
+		checkEdges(t, s, r.Tags())
 		exercise(r)
 	})
 }

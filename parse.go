@@ -362,17 +362,14 @@ func (p *tagParser) run(src, buf []byte) ([]Tag, int) {
 	for i < n {
 		start, end, i, _ = p.next(src, buf, start, end, i, n, &notFirst)
 	}
-	// start, and then end reversed
-	tags := make([]Tag, len(start)+len(end))
-	copy(tags, start)
-	for i, k := len(end), len(start); i > 0; i, k = i-1, k+1 {
-		tags[k] = end[i-1]
-	}
+	// start, and then end reversed, with the delimiters the lexers took into
+	// their tags as tags of their own
+	tags, k := p.join(src, start, end)
 	if sc != nil {
 		sc.give(start, end)
 		tagScratchPool.Put(sc)
 	}
-	return tags, len(start)
+	return tags, k
 }
 
 // tagScratch is the room a parse lexes its tags into: those read from the
@@ -591,8 +588,25 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	// flags in brackets that open the name ('[REPACK] [Group] Show'), which
 	// only the meta lexer puts there, are left out of the build of the rest,
 	// so that the rest reads as if it opened the name
-	if k := leadingFlags(tags, end); k != 0 {
-		r := b.build(tags[k:], end-k, h)
+	if k, cut := leadingFlags(tags, end); k != 0 {
+		// a bracket after the flags opens in the delimiter that closes them
+		// ('] [1080p]', '] (2019)'), and the rest is read with what is left
+		// of that delimiter
+		closer, from := tags[k], k+1
+		if d := closer.Delim(); cut < len(d) {
+			tags[k], from = NewTag(TagTypeDelim, nil, []byte(d[cut:]), []byte(d[cut:])), k
+		}
+		r := b.build(tags[from:], end-from, h)
+		tags[k] = closer
+		// the build may have made tags of its own, as fixHalfEpisode does
+		// ('[REPACK] Show.S01E06.5.x264'). Its dates and unused words are
+		// places in those, so they are kept behind the flags
+		if len(r.tags) != len(tags)-from {
+			tags, end = slices.Concat(tags[:from], r.tags), r.end+from
+			if from == k {
+				tags[k] = closer
+			}
+		}
 		var other []string
 		for _, tag := range tags[:k] {
 			if tag.Is(TagTypeOther) {
@@ -604,10 +618,10 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 		}
 		r.tags, r.end, r.Other = tags, end, other
 		for i := range r.dates {
-			r.dates[i] += k
+			r.dates[i] += from
 		}
 		for i := range r.unused {
-			r.unused[i] += k
+			r.unused[i] += from
 		}
 		return r
 	}
@@ -653,27 +667,38 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	return *r
 }
 
-// leadingFlags returns how many tags the flags in brackets that open the name
-// take up ('[REPACK] [Group] Show'), with the delimiters after them, or 0 when
-// nothing else is left.
-func leadingFlags(tags []Tag, end int) int {
-	bracket := func(tag Tag, s string) bool {
-		return tag.Is(TagTypeDelim) && len(tag.Delim()) == 1 && strings.Contains(s, tag.Delim())
+// leadingFlags finds the flags in brackets that open the name ('[REPACK]
+// [Group] Show', '[PROPER][REPACK] Show'). It returns the position of the
+// delimiter that closes the last of them, and how many bytes of that
+// delimiter go with the flags: the bracket and what sets it apart from the
+// rest ('] ' of '] (2019)'). It returns 0 when the name has no such flags, or
+// nothing else.
+func leadingFlags(tags []Tag, end int) (int, int) {
+	if end < 3 || !tags[0].Is(TagTypeDelim) || tags[0].Delim() != "[" && tags[0].Delim() != "(" {
+		return 0, 0
 	}
-	k := 0
-	for k+2 < end && bracket(tags[k], "[(") && bracket(tags[k+2], "])") && tags[k+1].Is(TagTypeOther) {
-		if info := tags[k+1].Info(); info == nil || !isReleaseFlag(info.Tag()) {
+	var k, cut int
+	for i := 0; i+2 < end && tags[i+1].Is(TagTypeOther) && tags[i+2].Is(TagTypeDelim); i += 2 {
+		d := tags[i+2].Delim()
+		if d == "" || d[0] != ']' && d[0] != ')' {
 			break
 		}
-		k += 3
-		if k < end && tags[k].Is(TagTypeDelim, TagTypeWhitespace) && !strings.ContainsAny(tags[k].Delim(), "[(") {
-			k++
+		if info := tags[i+1].Info(); info == nil || !isReleaseFlag(info.Tag()) {
+			break
+		}
+		k, cut = i+2, 1
+		for cut < len(d) && d[cut] != '[' && d[cut] != '(' {
+			cut++
+		}
+		// the next flag opens with the last byte of the delimiter
+		if cut != len(d)-1 {
+			break
 		}
 	}
-	if k >= end {
-		return 0
+	if k == 0 || cut == len(tags[k].Delim()) && k+1 >= end {
+		return 0, 0
 	}
-	return k
+	return k, cut
 }
 
 // leadingAlt reads a leading bracket of CJK script as the title in that
@@ -690,7 +715,7 @@ func leadingAlt(r *Release) {
 	i := 0
 	for ; i < len(r.tags) && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim); i++ {
 	}
-	if i == len(r.tags) || !r.tags[i].Is(TagTypeMeta) || !strings.HasPrefix(strings.TrimSpace(r.tags[i].v[0]), "[") {
+	if i == len(r.tags) || !r.tags[i].Is(TagTypeMeta) || !strings.HasPrefix(r.tags[i].v[0], "[") {
 		return
 	}
 	if k, v := r.tags[i].Meta(); k != "site" || v != r.Site {
@@ -765,7 +790,7 @@ func (b *TagBuilder) trailingGroup(r *Release) {
 			// a site given by name ('[[site:name]]', '-={name}=-') is not
 			// a group
 			if k, v := tag.Meta(); k == "site" && v == r.Site {
-				if s := strings.TrimSpace(tag.v[0]); strings.HasPrefix(s, "[") && !strings.HasPrefix(s, "[[") {
+				if s := tag.v[0]; strings.HasPrefix(s, "[") && !strings.HasPrefix(s, "[[") {
 					r.Group = v
 				}
 				return
@@ -796,22 +821,26 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 		return
 	}
 	for g := i + 2; g < len(r.tags); g++ {
-		if !r.tags[g].Is(TagTypeGroup) || r.tags[g].f != nil || !r.tags[g-1].Is(TagTypeDelim) || r.tags[g-1].v[0] != "-" {
+		if !r.tags[g].Is(TagTypeGroup) || r.tags[g].f != nil || !r.tags[g-1].Is(TagTypeDelim) {
+			continue
+		}
+		// the hyphen is the last one of the delimiters in front of the
+		// group, with the spaces after it
+		d := r.tags[g-1].v[0]
+		h := strings.LastIndexByte(d, '-')
+		if h == -1 {
 			continue
 		}
 		p := g - 2
 		for ; p > i && r.tags[p].Is(TagTypeWhitespace, TagTypeDelim); p-- {
 		}
-		// the group tag holds the spaces after the hyphen, which go to the
-		// delimiter for the title to read 'Chaos - Prologue'
+		tight, spaced := d == "-", h+1 < len(d) && strings.HasSuffix(d[:h], " ")
 		s, grp := r.tags[g].v[0], r.tags[g].v[1]
-		d := "-" + s[:len(s)-len(strings.TrimLeft(s, " \t_"))]
-		spaced := len(d) > 1 && p != g-2 && strings.HasSuffix(r.tags[g-2].v[0], " ")
 		var tag Tag
 		switch {
 		case r.tags[p].Is(TagTypeText), spaced && r.tags[p].Is(TagTypeSeries, TagTypeEdition):
-			tag = NewTag(TagTypeText, nil, []byte(s[len(d)-1:]), []byte(grp))
-		case len(d) == 1 && p == g-2 && r.tags[p].Is(TagTypeOther) && afterBracket(r.tags[p-1]) && isInitials(r.tags[p].v[0], r.tags[i]):
+			tag = NewTag(TagTypeText, nil, []byte(s), []byte(grp))
+		case tight && p == g-2 && r.tags[p].Is(TagTypeOther) && afterBracket(r.tags[p-1]) && isInitials(r.tags[p].v[0], r.tags[i]):
 			// a hyphenated word alone after the last bracket is the mark
 			// of the group in the leading bracket when it begins with the
 			// initials of that group ('[Hakata Ramen] Show (S2) 02 [1080p
@@ -829,12 +858,12 @@ func (b *TagBuilder) fixTailGroup(r *Release) {
 			if info := b.languagef.find(grp); info == nil || strings.Contains(info.Tag(), "$") {
 				continue
 			}
-			tag = NewTag(TagTypeLanguage, b.languagef.fn, []byte(s[len(d)-1:]), []byte(grp))
+			tag = NewTag(TagTypeLanguage, b.languagef.fn, []byte(s), []byte(grp))
 		default:
 			continue
 		}
-		r.tags[g-1], r.tags[g] = NewTag(TagTypeDelim, nil, []byte(d), []byte(d)), tag
-		if r.end == g-1 {
+		// the word is then read with the tags from the start of the name
+		if r.tags[g] = tag; r.end == g-1 || r.end == g {
 			r.end = g + 1
 		}
 	}
@@ -1246,9 +1275,16 @@ func (b *TagBuilder) fixFirst(r *Release) {
 	}
 	// a genre written as a bare word opens the title ('DOC.Martin.S01E01'),
 	// where one in parentheses is the genre ('(Comedy) Title')
-	if i != r.end && r.tags[i].Is(TagTypeGenre) && !strings.HasSuffix(r.tags[i].v[0], ")") {
+	if i != r.end && r.tags[i].Is(TagTypeGenre) && !parenthesized(r.tags, i) {
 		r.tags[i] = r.tags[i].As(TagTypeText, nil)
 	}
+}
+
+// parenthesized reports whether the tag at i stands alone in parentheses, with
+// at most spaces beside it ('(Comedy)', '( anime )').
+func parenthesized(tags []Tag, i int) bool {
+	return peek(tags, i-1, TagTypeDelim) && strings.HasSuffix(strings.TrimRight(tags[i-1].Delim(), "\t\n\f\r "), "(") &&
+		peek(tags, i+1, TagTypeDelim) && strings.HasPrefix(strings.TrimLeft(tags[i+1].Delim(), "\t\n\f\r "), ")")
 }
 
 // fixBad fixes bad collection/language/other/arch/platform tags before i.
@@ -2143,9 +2179,7 @@ func (b *TagBuilder) fixTrailingGroup(r *Release) {
 	if r.Group != "" || !r.Type.Is(Movie, Series, Episode) {
 		return
 	}
-	i := len(r.tags) - 1
-	for ; i > 1 && r.tags[i].Is(TagTypeWhitespace, TagTypeExt); i-- {
-	}
+	i := lastTag(r.tags)
 	if i < 2 || !r.tags[i].Is(TagTypeSource, TagTypeCollection) || !r.tags[i-1].Is(TagTypeDelim) || r.tags[i-1].Delim() != "-" ||
 		!slices.ContainsFunc(r.tags[:i-1], func(tag Tag) bool { return tag.Is(TagTypeCodec, TagTypeResolution) }) {
 		return
@@ -2160,6 +2194,21 @@ func (b *TagBuilder) fixTrailingGroup(r *Release) {
 			r.Collection = tag.Collection()
 		}
 	}
+}
+
+// lastTag returns the position of the last tag of the name: the one in front
+// of the file extension and its dot, when the name has one, and of the
+// whitespace that ends the name. It is -1 for a name of nothing else.
+func lastTag(tags []Tag) int {
+	i := len(tags) - 1
+	for ; i >= 0 && tags[i].Is(TagTypeWhitespace); i-- {
+	}
+	if i >= 2 && tags[i].Is(TagTypeExt) && tags[i-1].Is(TagTypeDelim) && tags[i-1].Delim() == "." {
+		i -= 2
+	}
+	for ; i >= 0 && tags[i].Is(TagTypeWhitespace); i-- {
+	}
+	return i
 }
 
 // preciser reports whether source s replaces the source collected so far,
@@ -2454,7 +2503,7 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 	// the first text after a '+' lists what else the release holds ('S01-04 +
 	// OVAs', 'Season 01-25+Movies+Specials', 'S01 1080p + Specials'), and is
 	// not a title
-	if r.tags[pos-1].Is(TagTypeDelim) && strings.Contains(r.tags[pos-1].Delim(), "+") {
+	if r.tags[pos-1].Is(TagTypeDelim) && strings.Contains(r.tags[pos-1].Delim(), "+") && !seasonPlus(r.tags, pos-1) {
 		return kept(pos)
 	}
 	// text inside a bracket that opened after the episode is a block of tags
@@ -2500,6 +2549,22 @@ func (b *TagBuilder) episodeTitles(r *Release) int {
 		r.Subtitle, offset = r.Subtitle+" "+rest, j+1+n-pos
 	}
 	return pos + offset
+}
+
+// seasonPlus reports whether the delimiter at i is a plus alone between a
+// season written as 'S01' and a word ('S01+OVA', 'S01+S02+Movie'). The word
+// after such a plus is read as the title of an episode, where one after a
+// plus set off by spaces is not ('S01 + OVA').
+func seasonPlus(tags []Tag, i int) bool {
+	if tags[i].Delim() != "+" || !peek(tags, i-1, TagTypeSeries) || !peek(tags, i+1, TagTypeText) {
+		return false
+	}
+	s, next := tags[i-1].val(0), tags[i+1].val(0)
+	if len(s) < 2 || len(s) > 3 || s[0]|0x20 != 's' || strings.Trim(s[1:], "0123456789") != "" || next == "" {
+		return false
+	}
+	c := next[0]
+	return c >= '0' && c <= '9' || c|0x20 >= 'a' && c|0x20 <= 'z'
 }
 
 // musicTitles sets the titles for music.
@@ -2680,10 +2745,26 @@ func isPath(tags []Tag) bool {
 			break
 		}
 	}
+	// the spaces that set a meta tag apart from the name are not spaces
+	// between its words ('[Group] Fate/Zero.S01E01.1080p' is no path, and
+	// 'Some Show/Some.Show.S01E01.1080p [ABCD1234]' is one)
 	space := func(tags []Tag) bool {
-		return slices.ContainsFunc(tags, func(tag Tag) bool {
-			return tag.Is(TagTypeDelim, TagTypeWhitespace) && strings.ContainsRune(tag.v[0], ' ')
-		})
+		for i, tag := range tags {
+			if !tag.Is(TagTypeDelim, TagTypeWhitespace) {
+				continue
+			}
+			d := tag.v[0]
+			if peek(tags, i-1, TagTypeMeta) {
+				d = strings.TrimLeft(d, "\t\n\f\r ")
+			}
+			if peek(tags, i+1, TagTypeMeta) {
+				d = strings.TrimRight(d, "\t\n\f\r ")
+			}
+			if strings.ContainsRune(d, ' ') {
+				return true
+			}
+		}
+		return false
 	}
 	for i, tag := range slices.Backward(tags) {
 		if tag.Is(TagTypeDelim) && strings.ContainsRune(tag.v[0], '/') {
@@ -2705,7 +2786,13 @@ loop:
 		case tags[i].Is(types...):
 			v = append(v, tags[i].TextReplace(".", " ", -1))
 		case tags[i].Is(TagTypeDelim):
-			switch s := tags[i].Delim(); {
+			s := tags[i].Delim()
+			// the dot of a file extension is no part of the name, nor of
+			// the delimiter in front of it ('Title..mkv' reads as 'Title.')
+			if peek(tags, i+1, TagTypeExt) {
+				s = strings.TrimSuffix(s, ".")
+			}
+			switch {
 			case s == "/" && !path && i != 0 && tags[i-1].Is(types...) && !tags[i-1].Was(TagTypeSource) && i+1 < len(tags) && tags[i+1].Is(types...):
 				// a slash between two words is part of the title of a release
 				// ('Fate/strange Fake S01', 'Face/Off 1997', 'AC/DC - Album'),
@@ -2861,6 +2948,10 @@ func plusList(tags []Tag, i int) bool {
 	for i--; i >= 0 && tags[i].Is(TagTypeText, TagTypeDelim); i-- {
 		if !tags[i].Is(TagTypeDelim) {
 			continue
+		}
+		// see seasonPlus
+		if seasonPlus(tags, i) {
+			return false
 		}
 		// what follows the last bracket
 		d := tags[i].Delim()
