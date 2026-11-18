@@ -835,35 +835,76 @@ func (b *TagBuilder) start(r *Release, i int) int {
 	return i
 }
 
-// fixSourceUHD fixes a bare uhd source tag next to a web source tag with only
-// resolution, frame rate, hdr and bit depth tags between, as the uhd marks a
-// web source and not a bluray (ie, 'Movie.2022.UHD.2160p.WEB...',
+// fixSourceUHD fixes a bare uhd source tag next to a web source tag, as the
+// uhd marks a web source and not a bluray (ie, 'Movie.2022.UHD.2160p.WEB...',
 // 'Movie.2022.2160p.WEB.UHD...' or 'Event.2026.UHD.2160p50.HLG.WEB...'). The
-// first of the pair is changed, as the first source tag is collected.
-//
-// Next to a tv source the uhd is the resolution of a broadcast (ie,
+// first of the pair is changed, as the first source tag is collected. Next to
+// a tv source the uhd is the resolution of a broadcast (ie,
 // 'Show.S01.UHD.HDTV...'), and the tv source is the one to collect.
+//
+// The walk first passes only the tags that describe the picture. When it
+// finds no web or tv source that way, it walks again past the streaming
+// service, the cut, the edition, the language and the other tags too, and
+// joins a web source there ('Movie.2020.2160p.UHD.AMZN.WEB-DL...',
+// 'Show.S01E02.2160p.UHD.NF.WEBRip...', 'Movie.2020.2160p.UHD.HYBRID.WEB-DL...').
+// So a source the first walk reaches is read as it was, and the second walk
+// only adds the joins the first could not make. A tv source it reaches is
+// left as it is ('Show.S01.UHD.AMZN.HDTV...' stays a bluray, as before). It is not taken in a name
+// that names a disc: a remux is taken from a disc, as remuxSource reads a
+// remux that names no source, and a full disc or a bluray is one, so the web
+// words of such a name are those of a track or of a hybrid
+// ('Movie.2020.UHD.2160p.REMUX.DV.HDR10.HYBRID.AMZN.WEB-DL...').
+//
+// Two joins of the second walk are known and left as they are. A web group
+// behind the streaming service is still a source tag here, and is joined
+// ('Movie.2020.2160p.UHD.NF-WEB' is a uhd web). A uhd that is a word of the
+// title of a record or a game joins across a language or an edition word
+// ('Game.UHD.German.Web-GRP' gives a uhd web, and gave a bluray before; both
+// are wrong).
 func (b *TagBuilder) fixSourceUHD(r *Release) {
 	for i := range r.end {
 		if !r.tags[i].Is(TagTypeSource) || !strings.EqualFold(r.tags[i].Text(), "UHD") {
 			continue
 		}
-		for _, inc := range []int{1, -1} {
-			j, s := nextSource(r.tags[:r.end], i, inc)
-			switch {
-			case j == -1:
-				continue
-			case s == "WEB", s == "WEB-DL", s == "WEBRiP":
-				k := min(i, j)
-				r.tags[k] = NewTag(TagTypeSource, r.tags[i].f, []byte(r.tags[k].v[0]), []byte("UHD."+s))
-			case strings.Contains(s, "TV"):
-				r.tags[i] = r.tags[i].as(TagTypeResolution, b.resolutionf)
-			default:
-				continue
+	walks:
+		for _, wide := range []bool{false, true} {
+			if wide && namesDisc(r.tags[:r.end]) {
+				break
 			}
-			break
+			for _, inc := range []int{1, -1} {
+				j, s := nextSource(r.tags[:r.end], i, inc, wide)
+				switch {
+				case j == -1:
+					continue
+				case s == "WEB", s == "WEB-DL", s == "WEBRiP":
+					k := min(i, j)
+					r.tags[k] = NewTag(TagTypeSource, r.tags[i].f, []byte(r.tags[k].v[0]), []byte("UHD."+s))
+				case !wide && strings.Contains(s, "TV"):
+					r.tags[i] = r.tags[i].as(TagTypeResolution, b.resolutionf)
+				default:
+					continue
+				}
+				break walks
+			}
 		}
 	}
+}
+
+// namesDisc reports whether tags name a disc: a remux, a full disc ('BDMV')
+// or a bluray source other than a bare uhd ('BluRay', 'UHD.BluRay', 'BDRiP',
+// 'BRDRip', 'BDSCR').
+func namesDisc(tags []Tag) bool {
+	return slices.ContainsFunc(tags, func(tag Tag) bool {
+		switch {
+		case tag.Is(TagTypeOther):
+			o := tag.Other()
+			return isRemux(o) || o == "BDMV"
+		case tag.Is(TagTypeSource) && !strings.EqualFold(tag.Text(), "UHD"):
+			s := strings.ToUpper(tag.Source())
+			return strings.Contains(s, "BLURAY") || strings.HasPrefix(s, "BD") || strings.HasPrefix(s, "BRD") || strings.HasPrefix(s, "UHD.BD")
+		}
+		return false
+	})
 }
 
 // fixMusic fixes music tags. Changes single cbr audio tag to the cbr container
@@ -2205,10 +2246,17 @@ func peek(tags []Tag, i int, types ...TagType) bool {
 
 // nextSource returns the index and value of the source tag next to i in the
 // direction of inc, when only whitespace, delimiters and resolution, frame
-// rate, hdr and bit depth tags are between them, or -1.
-func nextSource(tags []Tag, i, inc int) (int, string) {
+// rate, hdr and bit depth tags are between them, or -1. When wide, collection,
+// cut, edition, language and other tags may be between too: these are the
+// tags a name writes in front of its source ('UHD.AMZN.WEB-DL',
+// 'UHD.HYBRID.WEB-DL', 'UHD.MULTi.WEB-DL'). The codec, audio and channels
+// stand behind the source and stop the walk, as past them a web word is the
+// group ('UHD.x265-WEB') or the source of a track ('UHD.HEVC.DTS-HD.MA.7.1.
+// AMZN.WEB-DL.Audio').
+func nextSource(tags []Tag, i, inc int, wide bool) (int, string) {
 	for i += inc; 0 <= i && i < len(tags); i += inc {
-		if tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeResolution, TagTypeFrameRate, TagTypeHDR, TagTypeBitDepth) {
+		if tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeResolution, TagTypeFrameRate, TagTypeHDR, TagTypeBitDepth) ||
+			wide && tags[i].Is(TagTypeCollection, TagTypeCut, TagTypeEdition, TagTypeLanguage, TagTypeOther) {
 			continue
 		}
 		if tags[i].Is(TagTypeSource) {

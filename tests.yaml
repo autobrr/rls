@@ -1545,6 +1545,19 @@
   year: 2024
   codec: "H.264"
   group: "GRP"
+"Movie (2020) [UHD - WEB-DL]":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  year: 2020
+"Movie.2020.UHD.AMZN.WEB.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB"
+  collection: "AMZN"
+  year: 2020
+  codec: "x265"
+  group: "GRP"
 "Movie 2020 1080p BluRay x264 + Bonus":
   type: "movie"
   title: "Movie"
@@ -1627,12 +1640,27 @@
   other: "REPACK"
   group: "GRP"
   site: "TGx"
+"Movie (2020) 2160p UHD - WEB-DL x265":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "x265"
 "Movie (2020) [2160p HDR10+]":
   type: "movie"
   title: "Movie"
   resolution: "2160p"
   year: 2020
   dynamicRange: "HDR10+"
+"Movie.2020.2160p.UHD.HDR10-WEBRip.x265":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEBRiP"
+  resolution: "2160p"
+  year: 2020
+  codec: "x265"
+  dynamicRange: "HDR10"
 "Movie.2020.2160p.WEB-DL.H.265.DD+":
   type: "movie"
   title: "Movie"
@@ -1650,6 +1678,127 @@
   codec: "H.265"
   dynamicRange: "HDR10+"
   ext: "mkv"
+"Movie 2020 2160p UHD AMZN WEB-DL x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  collection: "AMZN"
+  year: 2020
+  codec: "x265"
+  group: "GRP"
+"Movie.2020.2160p.UHD-HDR.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "x265"
+  dynamicRange: "HDR"
+  group: "GRP"
+"Movie.2020.2160p.UHD.60fps.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  framerate: "60fps"
+  year: 2020
+  codec: "x265"
+  group: "GRP"
+"Movie.2020.2160p.UHD.AMZN.WEB-DL.DDP5.1.HDR.H.265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  collection: "AMZN"
+  year: 2020
+  codec: "H.265"
+  dynamicRange: "HDR"
+  audio: "DDP"
+  channels: "5.1"
+  group: "GRP"
+"Movie.2020.2160p.UHD.Directors.Cut.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "x265"
+  cut: "Directors.Cut"
+  group: "GRP"
+"Movie.2020.2160p.UHD.GERMAN.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "x265"
+  language: "GERMAN"
+  group: "GRP"
+"Movie.2020.2160p.UHD.HYBRID.WEB-DL.DV.HDR.H.265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "H.265"
+  dynamicRange: "DV HDR"
+  other: "HYBRiD"
+  group: "GRP"
+"Movie.2020.2160p.UHD.MULTi.DSNP.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  collection: "DSNP"
+  year: 2020
+  codec: "x265"
+  language: "MULTi"
+  group: "GRP"
+"Movie.2020.2160p.UHD.Open.Matte.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "x265"
+  edition: "Open.Matte"
+  group: "GRP"
+"Movie.2020.2160p.UHD.PROPER.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "x265"
+  other: "PROPER"
+  group: "GRP"
+"Movie.2020.2160p.WEB-DL-UHD.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  year: 2020
+  codec: "x265"
+  group: "GRP"
+"Movie.2020.2160p.WEB.UHD.AMZN.WEB-DL.x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB"
+  resolution: "2160p"
+  collection: "AMZN"
+  year: 2020
+  codec: "x265"
+  group: "GRP"
+"Movie_2020_2160p_UHD_AMZN_WEB-DL_x265-GRP":
+  type: "movie"
+  title: "Movie"
+  source: "UHD.WEB-DL"
+  resolution: "2160p"
+  collection: "AMZN"
+  year: 2020
+  codec: "x265"
+  group: "GRP"
 "Movie.2022.1080p.BluRay.x264.8bit-GRP":
   type: "movie"
   title: "Movie"
@@ -5898,6 +6047,16 @@
   episode: 2
   codec: "H.264"
   group: "SACD"
+"Show.S01E02.2160p.UHD.NF.WEBRip.x265-GRP":
+  type: "episode"
+  title: "Show"
+  source: "UHD.WEBRiP"
+  resolution: "2160p"
+  collection: "NF"
+  series: 1
+  episode: 2
+  codec: "x265"
+  group: "GRP"
 "Show.S01E02.AKA.Other.Title.1080p.WEB.H264-GRP":
   type: "episode"
   title: "Show"
