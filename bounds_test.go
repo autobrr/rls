@@ -2,6 +2,7 @@ package rls
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -161,7 +162,8 @@ func edgeDelims(s string) (lead, trail int) {
 //     as none, without it ('DD+', 'HDR10+').
 //   - A meta tag begins and ends with its brackets.
 //   - A delimiter tag holds delimiters only, and the whole run of them at
-//     its place, after a tag for each ellipsis the run begins with.
+//     its place: no delimiter tag follows another, but one that follows an
+//     ellipsis.
 func checkEdges(tb testing.TB, name string, tags []Tag) {
 	tb.Helper()
 	for i, tag := range tags {
@@ -172,7 +174,7 @@ func checkEdges(tb testing.TB, name string, tags []Tag) {
 			if strings.TrimFunc(text, isAnyDelim) != "" {
 				tb.Errorf("%q: tag %d: expected a delimiter tag of delimiters only, got: %q", name, i, text)
 			}
-			if i != 0 && tags[i-1].Is(TagTypeDelim) && tags[i-1].val(0) != ellipsis || len(text) > len(ellipsis) && strings.HasPrefix(text, ellipsis) {
+			if i != 0 && tags[i-1].Is(TagTypeDelim) && tags[i-1].val(0) != ellipsis {
 				tb.Errorf("%q: tag %d: expected one delimiter tag for a run of delimiters, got: %q after %q", name, i, text, tags[max(i-1, 0)].val(0))
 			}
 		case tag.Is(TagTypeWhitespace):
@@ -285,6 +287,7 @@ func TestJoinCallerLexer(t *testing.T) {
 		return start, append(end, keep(NewTag(TagTypeOther, nil, src[n-4:n], src[n-3:n]))), i, n - 4, true
 	}}
 	// 'KEY=' and a word, with the delimiters after it
+	typ := TagTypeID
 	lexer := TagLexer{Lex: func(src, buf []byte, start, end []Tag, i, n int) ([]Tag, []Tag, int, int, bool) {
 		if !strings.HasPrefix(string(src[i:n]), "KEY=") {
 			return start, end, i, n, false
@@ -297,21 +300,72 @@ func TestJoinCallerLexer(t *testing.T) {
 		for k < n && isAnyDelim(rune(src[k])) {
 			k++
 		}
-		return append(start, keep(NewTag(TagTypeID, nil, src[i:k], src[i+4:j]))), end, k, n, true
+		return append(start, keep(NewTag(typ, nil, src[i:k], src[i+4:j]))), end, k, n, true
 	}}
 	p := NewParser(WithLexers(append([]Lexer{once, lexer}, DefaultLexers()...)...))
 	const name = "Show.KEY=abc.-.1080p.x264-GRP.END"
-	tags, end := p.Parse([]byte(name))
-	const exp = "<Text:Show><Delim:.><ID:KEY=abc><Delim:.-.><Resolution:1080p><Delim:.><Codec:x264>|<Delim:-><Group:GRP><Delim:.><Other:END>"
-	if s := tagStream(tags, end); s != exp {
-		t.Errorf("%q expected:\n  %s\ngot:\n  %s", name, exp, s)
+	// a text tag is cut as any other tag is
+	for _, typ = range []TagType{TagTypeID, TagTypeText} {
+		made = made[:0]
+		tags, end := p.Parse([]byte(name))
+		exp := "<Text:Show><Delim:.><" + typ.String() + ":KEY=abc><Delim:.-.><Resolution:1080p><Delim:.><Codec:x264>|<Delim:-><Group:GRP><Delim:.><Other:END>"
+		if s := tagStream(tags, end); s != exp {
+			t.Errorf("%q expected:\n  %s\ngot:\n  %s", name, exp, s)
+		}
+		checkEdges(t, name, tags)
+		if len(made) != 2 || made[0].val(0) != ".END" || made[1].val(0) != "KEY=abc.-." {
+			t.Errorf("expected the tags of the lexer to keep their text, got: %q", made)
+		}
+		if s := fmt.Sprintf("%o", p.ParseRelease([]byte(name))); s != name {
+			t.Errorf("expected %q, got: %q", name, s)
+		}
 	}
-	checkEdges(t, name, tags)
-	if len(made) != 2 || made[0].val(0) != ".END" || made[1].val(0) != "KEY=abc.-." {
-		t.Errorf("expected the tags of the lexer to keep their text, got: %q", made)
+}
+
+// TestJoinClosingRun checks that the delimiters that close a name stay the one
+// tag the meta lexer reads them as, so that four dots there are no ellipsis
+// and a dot, which they are between two tags.
+func TestJoinClosingRun(t *testing.T) {
+	for _, test := range []struct {
+		s, exp, title string
+	}{
+		{"S.W.A.T....", "<Text:S><Delim:.><Text:W><Delim:.><Text:A><Delim:.><Text:T>|<Delim:....>", "S.W.A.T."},
+		{"Some Title....", "<Text:Some><Delim: ><Text:Title>|<Delim:....>", "Some Title"},
+		{"Some Title...", "<Text:Some><Delim: ><Text:Title>|<Delim:...>", "Some Title..."},
+		{"Title....2019.1080p", "<Text:Title><Delim:...><Delim:.><Date:2019><Delim:.><Resolution:1080p>", "Title..."},
+	} {
+		tags, end := ParseTagsString(test.s)
+		if s := tagStream(tags, end); s != test.exp {
+			t.Errorf("%q expected:\n  %s\ngot:\n  %s", test.s, test.exp, s)
+		}
+		checkEdges(t, test.s, tags)
+		if r := ParseString(test.s); r.Title != test.title {
+			t.Errorf("%q expected title %q, got: %q", test.s, test.title, r.Title)
+		}
 	}
-	if s := fmt.Sprintf("%o", p.ParseRelease([]byte(name))); s != name {
-		t.Errorf("expected %q, got: %q", name, s)
+}
+
+// TestLeadingFlagsHalfEpisode checks that the unused words of a name are the
+// same with a flag in a bracket in front of it, when the build of the rest
+// joins half an episode onto its tag and so makes tags of its own.
+func TestLeadingFlagsHalfEpisode(t *testing.T) {
+	const name = "French.Kiss.S01E06.5.x264.E-AC3.5.1-GRP-Obfuscated.cbr"
+	words := func(r Release) []string {
+		var v []string
+		for _, tag := range r.Unused() {
+			v = append(v, tag.Text())
+		}
+		return v
+	}
+	plain, flagged := ParseString(name), ParseString("[REPACK] "+name)
+	if a, b := words(plain), words(flagged); !slices.Equal(a, b) {
+		t.Errorf("expected unused %q with the flag as without it, got: %q", a, b)
+	}
+	if !slices.Equal(flagged.Other, append([]string{"REPACK"}, plain.Other...)) || flagged.Title != plain.Title || flagged.Group != plain.Group {
+		t.Errorf("expected the flag and the reading of %q, got: %q, %q, %q", name, flagged.Other, flagged.Title, flagged.Group)
+	}
+	if s := fmt.Sprintf("%o", flagged); s != "[REPACK] "+name {
+		t.Errorf("expected %q, got: %q", "[REPACK] "+name, s)
 	}
 }
 
@@ -344,11 +398,11 @@ func TestLeadingFlagsBracket(t *testing.T) {
 	}
 }
 
-// TestJoinReadings checks the readings that rest on a delimiter which a tag
-// used to hold: the space after a leading bracket in a name with a slash, the
-// dot of a file extension after a title and after a trailing source, the
-// parentheses of a genre, the hyphen in front of a word after a leading
-// group, and what sets the seasons of a range or a list apart.
+// TestJoinReadings checks the readings that rest on a delimiter beside a tag
+// whose lexer reads it: the space after a leading bracket in a name with a
+// slash, the dot of a file extension after a title and after a trailing
+// source, the parentheses of a genre, the hyphen in front of a word after a
+// leading group, and what sets the seasons of a range or a list apart.
 func TestJoinReadings(t *testing.T) {
 	for _, test := range []struct {
 		s, title, group, genre string

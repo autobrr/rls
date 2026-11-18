@@ -32,10 +32,11 @@ import (
 // A lexer of a caller's that makes its tags with NewTag gets copies, as before.
 //
 // The text of a tag may hold the delimiters a lexer read to find where its
-// token ends ('S01 ', '.mkv'). When the lexers are done the parser cuts those
-// that the value of the tag does not hold off the tag, and gives them a
-// delimiter tag with the delimiters around them. The slices a lexer was
-// handed are not changed by that.
+// token ends ('S01 ', '.mkv'). When the lexers are done the parser cuts them
+// off the tag and gives them a delimiter tag with the delimiters around them,
+// see edges for which ones. The tags the caller of the parser gets are then
+// copies with the shorter text, and the slices a lexer was handed are not
+// changed.
 type LexFunc func([]byte, []byte, []Tag, []Tag, int, int) ([]Tag, []Tag, int, int, bool)
 
 // Lexer is the interface for lexers.

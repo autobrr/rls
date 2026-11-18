@@ -598,6 +598,15 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 		}
 		r := b.build(tags[from:], end-from, h)
 		tags[k] = closer
+		// the build may have made tags of its own, as fixHalfEpisode does
+		// ('[REPACK] Show.S01E06.5.x264'). Its dates and unused words are
+		// places in those, so they are kept behind the flags
+		if len(r.tags) != len(tags)-from {
+			tags, end = slices.Concat(tags[:from], r.tags), r.end+from
+			if from == k {
+				tags[k] = closer
+			}
+		}
 		var other []string
 		for _, tag := range tags[:k] {
 			if tag.Is(TagTypeOther) {

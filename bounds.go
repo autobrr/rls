@@ -29,6 +29,11 @@ const ellipsis = "..."
 // That joins what the lexers gave as delimiter tags of their own, as the
 // hyphen in front of a group is one ('x264 - GRP' has ' - ').
 //
+// A run that is one delimiter tag of a lexer and nothing else stays that tag.
+// The meta lexer reads the delimiters that close a name as one, whatever they
+// are, and four dots there are no ellipsis and a dot ('S.W.A.T....', which
+// reads as 'S.W.A.T.').
+//
 // The slice is as long as the tags it holds: measure counts them before they
 // are written. A name with nothing to cut or to join costs that count and the
 // one copy.
@@ -107,7 +112,9 @@ func (p *tagParser) measure(start, end []Tag) (n, made int, changed bool) {
 	// which are an ellipsis for each it begins with and one for the rest,
 	// last whether the delimiter tag before was an ellipsis, and hosted
 	// whether a delimiter tag of the parse is in the run
-	var settled, last, hosted bool
+	// alone is whether the run is one delimiter tag of the parse and nothing
+	// else, which stays as it is
+	var settled, last, hosted, alone bool
 	for k, total := 0, len(start)+len(end); k <= total; k++ {
 		var tag *Tag
 		switch {
@@ -121,24 +128,28 @@ func (p *tagParser) measure(start, end []Tag) (n, made int, changed bool) {
 			if s := tag.val(0); tag.typ == TagTypeDelim && s != "" {
 				whole := len(s) <= len(ellipsis) || !strings.HasPrefix(s, ellipsis)
 				settled = whole && (run.pieces == 0 || settled && last)
-				hosted, last = hosted || p.pooled && len(tag.v) > 1, s == ellipsis
+				hosted, last, alone = hosted || p.pooled && len(tag.v) > 1, s == ellipsis, run.pieces == 0
 				run.add(s)
 				continue
 			}
 			if lead, trail, _, _ = p.edges(tag); lead != 0 {
 				run.add(tag.v[0][:lead])
-				settled = false
+				settled, alone = false, false
 			}
 		}
 		// the run ends at a tag that is no delimiter, and with the name
-		if run.pieces != 0 {
+		switch {
+		case run.pieces == 0:
+		case alone:
+			n++
+		default:
 			c := run.tags()
 			n, made, changed = n+c, made+c, changed || !settled
 			if hosted {
 				made--
 			}
-			run, hosted = delimRun{}, false
 		}
+		run, hosted, alone = delimRun{}, false, false
 		if tag == nil {
 			break
 		}
@@ -164,6 +175,9 @@ type joiner struct {
 	// host is a delimiter tag of the parse in run, whose values hold the
 	// first delimiter tag written for it in place of new ones.
 	host *Tag
+	// alone is the delimiter tag of the parse that run is, when it is one
+	// and nothing else.
+	alone *Tag
 	// vs is room for the values of the delimiter tags that have no host, two
 	// each.
 	vs []string
@@ -181,6 +195,9 @@ func (j *joiner) tag(tag *Tag) {
 		if j.host == nil && j.p.pooled && len(tag.v) > 1 {
 			j.host = tag
 		}
+		if j.alone = nil; j.pieces == 0 {
+			j.alone = tag
+		}
 		j.run, j.pieces = cat(j.src, j.run, s), j.pieces+1
 		return
 	}
@@ -192,7 +209,7 @@ func (j *joiner) tag(tag *Tag) {
 	}
 	s := tag.v[0]
 	if lead != 0 {
-		j.run, j.pieces = cat(j.src, j.run, s[:lead]), j.pieces+1
+		j.run, j.pieces, j.alone = cat(j.src, j.run, s[:lead]), j.pieces+1, nil
 	}
 	j.flush()
 	t := *tag
@@ -218,12 +235,16 @@ func (j *joiner) flush() {
 	}
 	for run, at := j.run, 0; run != ""; {
 		s := run
-		if strings.HasPrefix(s, ellipsis) {
+		if j.alone == nil && strings.HasPrefix(s, ellipsis) {
 			s = ellipsis
 		}
 		// a tag is in the part of the name where it begins
 		if j.crossed && j.split == -1 && at >= j.cross {
 			j.split = len(j.dst)
+		}
+		if j.alone != nil {
+			j.dst = append(j.dst, *j.alone)
+			break
 		}
 		var v []string
 		switch {
@@ -242,7 +263,7 @@ func (j *joiner) flush() {
 	if j.crossed && j.split == -1 {
 		j.split = len(j.dst)
 	}
-	j.run, j.pieces, j.host = "", 0, nil
+	j.run, j.pieces, j.host, j.alone = "", 0, nil, nil
 }
 
 // edges returns how many bytes at the start and at the end of the text of tag
@@ -261,7 +282,7 @@ func (j *joiner) flush() {
 // 'E' of 'S01E02' are, and only the whitespace outside them is cut ('[Group]
 // ' in front of a title, ' [ABCD1234]' at the end of a name).
 func (p *tagParser) edges(tag *Tag) (lead, trail, vlead, vtrail int) {
-	if tag.typ == TagTypeText || tag.typ == TagTypeWhitespace || len(tag.v) == 0 {
+	if tag.typ == TagTypeWhitespace || len(tag.v) == 0 {
 		return 0, 0, 0, 0
 	}
 	s := tag.v[0]
