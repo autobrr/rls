@@ -96,6 +96,8 @@ type Release struct {
 	// is one.
 	absolute   int
 	isAbsolute bool
+	// groupFrom is where Group was read.
+	groupFrom groupOrigin
 }
 
 // Parse creates a release from src.

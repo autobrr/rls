@@ -386,7 +386,8 @@ func TestOneOwner(t *testing.T) {
 		"fixAudioRange":    "a range that is the bit depth and sample rate of a record is no numbering, which is a question of what a number counts",
 		"fixMusic":         "one episode in a name with a tag of a record is a track, which is a question of what a number counts",
 		"unset":            "a row of another release type is no tag of this one, which the type decides for the whole name and no zone does",
-		"fixTailGroup":     "a word of the group in the leading bracket, which goes with the group",
+		"handBack":         "a guess of the group lexer that is a word, which the owner of the group decides",
+		"settleGroupType":  "a known group of another release type, which the owner of the group decides",
 	}
 	found := funcsWith(t, func(n ast.Node) bool {
 		if call, ok := n.(*ast.CallExpr); ok {
@@ -513,7 +514,7 @@ func TestSettleLinear(t *testing.T) {
 			r := &Release{tags: slices.Clone(tags), end: end}
 			start := time.Now()
 			if stage {
-				b.settle(r)
+				b.settleGroup(r, b.settle(r))
 			} else {
 				ParseString(s)
 			}
