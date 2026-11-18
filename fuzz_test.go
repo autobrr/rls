@@ -11,8 +11,14 @@ import (
 func exercise(r Release) {
 	_ = r.String()
 	_ = fmt.Sprintf("%o|%s|%e|%q", r, r, r, r)
-	_ = r.SeriesEpisodes()
-	_ = r.EpisodeSpans()
+	n := r.Numbering
+	_, _ = n.Season()
+	_, _ = n.Episode()
+	_, _ = n.Absolute()
+	_ = fmt.Sprint(n.Scheme, n.Shape())
+	for season, episode := range n.All() {
+		_, _ = season, episode
+	}
 	_, _ = r.Event()
 	for _, tag := range r.Tags() {
 		_ = tag.Normalize()
@@ -93,7 +99,8 @@ func checkTags(tb testing.TB, s string) {
 // without tagging them loses part of the name silently, and nothing else would
 // notice. checkTags makes the same comparison on the tags straight out of
 // Parse, with no Build in between, so a failure names the lexing step. And it
-// checks that no tag holds a delimiter outside its value, lexed or built.
+// checks that no tag holds a delimiter outside its value, lexed or built, and
+// that the numbering of the release agrees with itself and with its tags.
 //
 // Plain go test runs the seeds, which are every name in tests.yaml and the
 // inputs below, so both checks run without -fuzz.
@@ -117,6 +124,11 @@ func FuzzParseString(f *testing.F) {
 	// a range in the bracket that closes the name
 	f.Add("[Grp] Show [1-13]")
 	f.Add("Show (01-12).mkv")
+	// a range and the episode it ends at written again, and a second
+	// numbering beside a range
+	f.Add("e0-1 E1")
+	f.Add("S01E01-E03.Episode.2")
+	f.Add("S04E29-31v2")
 	// a list of seasons, whole, cut short and at the end of the name
 	f.Add("Show (Season 1+2+3) [1080p]")
 	f.Add("Show S01+02 & 03, 04")
@@ -138,6 +150,7 @@ func FuzzParseString(f *testing.F) {
 			t.Errorf("round trip failed:\n in: %q\nout: %q", s, o)
 		}
 		checkEdges(t, s, r.Tags())
+		checkNumbering(t, s, r)
 		exercise(r)
 	})
 }

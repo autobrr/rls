@@ -198,3 +198,72 @@ func TestRunEmptyLists(t *testing.T) {
 		t.Errorf("expected empty lists as [], got: %s", buf.String())
 	}
 }
+
+// TestRunNumbering checks the keys that give the seasons and the episodes of
+// a release: those a line has always had, and the numbering object that
+// spells the fields out.
+func TestRunNumbering(t *testing.T) {
+	tests := []struct {
+		name string
+		exp  []string
+	}{
+		{
+			"Show.S01E02-E04.1080p.WEB.h264-GRP",
+			[]string{
+				`"has_season":true,"series":1,"seasons":[1],"has_episode":true,"episode":2,"episodes":[[1,2],[1,3],[1,4]]`,
+				`"numbering":{"scheme":"seasoned","shape":"episodes","seasons":[1],"episodes":[{"season":1,"first":2,"last":4,"frac":0,"kind":""}],"alt":[],"volume":0,"contents":[],"batch":false}`,
+			},
+		},
+		// an episode with no season is in season 0 under episodes, and in
+		// season -1 in the numbering
+		{
+			"[Grp] Show - 01-03 [1080p]",
+			[]string{
+				`"has_season":false,"series":0,"seasons":[],"has_episode":true,"episode":1,"episodes":[[0,1],[0,2],[0,3]]`,
+				`"numbering":{"scheme":"absolute","shape":"episodes","seasons":[],"episodes":[{"season":-1,"first":1,"last":3,"frac":0,"kind":""}],"alt":[]`,
+			},
+		},
+		// seasons are in rising order under seasons, and in the order of the
+		// name in the numbering
+		{
+			"[Grp] Show [Season 2 + Season 1 OVA] [BD 1080p]",
+			[]string{
+				`"has_season":true,"series":2,"seasons":[1,2],"has_episode":false,"episode":0,"episodes":[]`,
+				`"numbering":{"scheme":"seasoned","shape":"seasons","seasons":[2,1],"episodes":[],"alt":[]`,
+			},
+		},
+		{
+			"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP",
+			[]string{
+				`"has_season":true,"series":23,"seasons":[23],"has_episode":true,"episode":19,"episodes":[[23,19]]`,
+				`"episodes":[{"season":23,"first":19,"last":19,"frac":0,"kind":""}],"alt":[{"season":-1,"first":1174,"last":1174,"frac":0,"kind":""}]`,
+			},
+		},
+		{
+			"[Grp] Show - 21.5 [1080p]",
+			[]string{`"episodes":[{"season":-1,"first":21,"last":21,"frac":5,"kind":""}]`},
+		},
+		{
+			"Show.2024.03.11.1080p.WEB.h264-GRP",
+			[]string{
+				`"has_season":false,"series":0,"seasons":[],"has_episode":false,"episode":0,"episodes":[]`,
+				`"numbering":{"scheme":"daily","shape":"daily","seasons":[],"episodes":[],"alt":[],"volume":0,"contents":[],"batch":false}`,
+			},
+		},
+		{
+			"The.Matrix.1999.1080p.BluRay.x264-GROUP",
+			[]string{`"numbering":{"scheme":"","shape":"","seasons":[],"episodes":[],"alt":[],"volume":0,"contents":[],"batch":false}`},
+		},
+	}
+	for _, tt := range tests {
+		var buf bytes.Buffer
+		if err := run(&buf, nil, []string{tt.name}); err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		for _, s := range tt.exp {
+			if !strings.Contains(buf.String(), s) {
+				t.Errorf("%q: expected output to contain %s, got: %s", tt.name, s, buf.String())
+			}
+		}
+	}
+}

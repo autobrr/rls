@@ -2,13 +2,16 @@ package rls
 
 import (
 	"fmt"
+	"math"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
-// numbering is what HasSeason, HasEpisode, Seasons and EpisodeRange give for
-// a release.
+// numbering is what a Numbering gives for a release: whether it has a season
+// and an episode, its seasons, and the range of its episodes.
 type numbering struct {
 	season, episode bool
 	seasons         []int
@@ -17,15 +20,53 @@ type numbering struct {
 }
 
 func numberingOf(r Release) numbering {
-	first, last, ok := r.EpisodeRange()
+	n := r.Numbering
+	_, season := n.Season()
+	_, episode := n.Episode()
+	first, last, ok := episodeRange(n)
 	return numbering{
-		season:  r.HasSeason(),
-		episode: r.HasEpisode(),
-		seasons: r.Seasons(),
+		season:  season,
+		episode: episode,
+		seasons: n.Seasons,
 		first:   first,
 		last:    last,
 		ok:      ok,
 	}
+}
+
+// ep returns one episode, or one range of episodes, of a season.
+func ep(season, first, last int) Ep {
+	return Ep{Season: season, First: first, Last: last}
+}
+
+// episodeRange returns the first and the last episode when n gives more than
+// one ('S01E05E06', 'S01E02-04', '01-12'). The episodes are those of the
+// season the first episode is in, so 'S01E01.S02E01' is not a range, and
+// neither is one episode under two numberings ('S23E19.Episode.1174').
+func episodeRange(n Numbering) (first, last int, ok bool) {
+	for i, e := range n.Episodes {
+		switch {
+		case i == 0:
+			first, last = e.First, e.Last
+		case e.Season == n.Episodes[0].Season:
+			first, last = min(first, e.First, e.Last), max(last, e.First, e.Last)
+		}
+	}
+	if first == last {
+		return 0, 0, false
+	}
+	return first, last, true
+}
+
+// pairs returns each season and episode that n.All yields, once and in rising
+// order, with NoSeason for an episode that has no season.
+func pairs(n Numbering) [][]int {
+	var v [][]int
+	for season, episode := range n.All() {
+		v = append(v, []int{season, episode})
+	}
+	slices.SortFunc(v, slices.Compare[[]int])
+	return slices.CompactFunc(v, slices.Equal[[]int])
 }
 
 func TestNumbering(t *testing.T) {
@@ -48,15 +89,16 @@ func TestNumbering(t *testing.T) {
 		{"Show.S01E02-04.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}, first: 2, last: 4, ok: true}},
 		{"Show.S01E02-E04.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}, first: 2, last: 4, ok: true}},
 		{"Show.S00E02-E05.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{0}, first: 2, last: 5, ok: true}},
-		// the two ends of a range that is too wide for SeriesEpisodes to fill
+		// the two ends of a range that is too wide for All to fill
 		{"Show.S01E1-E99999.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1}, first: 1, last: 99999, ok: true}},
 		// one episode under two numberings
 		{"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{23}}},
 		// one episode in two seasons is not a range
 		{"Show.S01E01.S02E01.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1, 2}}},
-		// the episodes are those of the season written first, the one in Series
-		{"Show.S02E01.S01E05-E06.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1, 2}}},
-		{"Show.S02E01E02.S01E05.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{1, 2}, first: 1, last: 2, ok: true}},
+		// the episodes are those of the season written first, the one Season
+		// gives, and the seasons are in the order written
+		{"Show.S02E01.S01E05-E06.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{2, 1}}},
+		{"Show.S02E01E02.S01E05.1080p.WEB.h264-GRP", numbering{season: true, episode: true, seasons: []int{2, 1}, first: 1, last: 2, ok: true}},
 		// the same episode twice in a path
 		{"Show.S11E11-GRP/Show.S11E11-GRP.mkv", numbering{season: true, episode: true, seasons: []int{11}}},
 		// no season, one episode
@@ -108,49 +150,164 @@ func TestNumbering(t *testing.T) {
 	}
 }
 
+// TestNumberingByHand checks that a Numbering made by hand gives what its
+// maker put in it, and that the methods read the value alone: a release has
+// the numbering it holds, whatever its tags say.
 func TestNumberingByHand(t *testing.T) {
-	// a caller clears the fields of a parsed release, and the tags still
-	// give the season and the episode
-	cleared := ParseString("Show.S01E02.1080p.WEB.h264-GRP")
-	cleared.Series, cleared.Episode = 0, 0
+	type answers struct {
+		season, episode, absolute int
+		seasoned, numbered, abs   bool
+		shape                     Shape
+		pairs                     [][]int
+	}
+	parsed := ParseString("Show.S01E02.1080p.WEB.h264-GRP")
+	// a caller clears the numbering of a parsed release, or replaces it to
+	// make a pack read as one of its episodes
+	cleared, replaced := parsed, ParseString("Show.S01.1080p.WEB.h264-GRP")
+	cleared.Numbering = Numbering{}
+	replaced.Numbering.Episodes = []Ep{ep(1, 4, 4)}
 	tests := []struct {
 		name string
-		r    Release
-		exp  numbering
+		n    Numbering
+		exp  answers
 	}{
-		{"zero", Release{}, numbering{}},
-		{"series", Release{Series: 3}, numbering{season: true, seasons: []int{3}}},
-		{"episode", Release{Episode: 4}, numbering{episode: true}},
-		{"series and episode", Release{Series: 1, Episode: 2}, numbering{season: true, episode: true, seasons: []int{1}}},
-		{"cleared", cleared, numbering{season: true, episode: true, seasons: []int{1}}},
+		{"zero", Numbering{}, answers{}},
+		{"season", Numbering{Scheme: SchemeSeasoned, Seasons: []int{3}}, answers{season: 3, seasoned: true, shape: ShapeSeason}},
+		{"seasons", Numbering{Scheme: SchemeSeasoned, Seasons: []int{3, 1}}, answers{season: 3, seasoned: true, shape: ShapeSeasons}},
+		{"season 0", Numbering{Seasons: []int{0}}, answers{seasoned: true, shape: ShapeSeason}},
+		{
+			"episode", Numbering{Scheme: SchemeAbsolute, Episodes: []Ep{ep(NoSeason, 4, 4)}},
+			answers{episode: 4, numbered: true, absolute: 4, abs: true, shape: ShapeEpisode, pairs: [][]int{{NoSeason, 4}}},
+		},
+		{
+			"episode 0", Numbering{Episodes: []Ep{ep(NoSeason, 0, 0)}},
+			answers{numbered: true, abs: true, shape: ShapeEpisode, pairs: [][]int{{NoSeason, 0}}},
+		},
+		{
+			"season and episode", Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}, Episodes: []Ep{ep(1, 2, 2)}},
+			answers{season: 1, seasoned: true, episode: 2, numbered: true, shape: ShapeEpisode, pairs: [][]int{{1, 2}}},
+		},
+		// the season of an episode is a season, with nothing in Seasons
+		{
+			"episode in a season", Numbering{Episodes: []Ep{ep(2, 5, 5)}},
+			answers{season: 2, seasoned: true, episode: 5, numbered: true, shape: ShapeEpisode, pairs: [][]int{{2, 5}}},
+		},
+		// the zero Ep is in season 0, which qualifies its episode as the
+		// specials do
+		{
+			"zero ep", Numbering{Episodes: []Ep{{First: 5, Last: 5}}},
+			answers{seasoned: true, episode: 5, numbered: true, shape: ShapeEpisode, pairs: [][]int{{0, 5}}},
+		},
+		{
+			"range", Numbering{Episodes: []Ep{ep(NoSeason, 1, 12)}},
+			answers{episode: 1, numbered: true, shape: ShapeEpisodes, pairs: [][]int{{NoSeason, 1}, {NoSeason, 2}, {NoSeason, 3}, {NoSeason, 4}, {NoSeason, 5}, {NoSeason, 6}, {NoSeason, 7}, {NoSeason, 8}, {NoSeason, 9}, {NoSeason, 10}, {NoSeason, 11}, {NoSeason, 12}}},
+		},
+		{
+			"half an episode", Numbering{Episodes: []Ep{{Season: NoSeason, First: 21, Last: 21, Frac: 5}}},
+			answers{episode: 21, numbered: true, shape: ShapeEpisode, pairs: [][]int{{NoSeason, 21}}},
+		},
+		{
+			"second numbering", Numbering{Seasons: []int{23}, Episodes: []Ep{ep(23, 19, 19)}, Alt: []Ep{ep(NoSeason, 1174, 1174)}},
+			answers{season: 23, seasoned: true, episode: 19, numbered: true, absolute: 1174, abs: true, shape: ShapeEpisode, pairs: [][]int{{23, 19}}},
+		},
+		{
+			"the episode again", Numbering{Seasons: []int{2}, Episodes: []Ep{ep(2, 6, 6)}, Alt: []Ep{ep(NoSeason, 6, 6)}},
+			answers{season: 2, seasoned: true, episode: 6, numbered: true, shape: ShapeEpisode, pairs: [][]int{{2, 6}}},
+		},
+		// an extra is no regular episode: it is in Episodes with its Kind,
+		// and Episode, Absolute, Shape and All pass over it
+		{"an extra", Numbering{Episodes: []Ep{{Season: NoSeason, First: 2, Last: 2, Kind: EpOVA}}}, answers{}},
+		{"extras", Numbering{Episodes: []Ep{{Season: NoSeason, First: 3, Last: 3, Kind: EpSpecial}, {Season: NoSeason, First: 1, Last: 2, Kind: EpOP}}}, answers{}},
+		{
+			"an extra of a season", Numbering{Seasons: []int{2}, Episodes: []Ep{{Season: 2, First: 1, Last: 1, Kind: EpOVA}}},
+			answers{season: 2, seasoned: true, shape: ShapeSeason},
+		},
+		{
+			"an extra and an episode", Numbering{Episodes: []Ep{{Season: NoSeason, First: 2, Last: 2, Kind: EpSpecial}, ep(NoSeason, 7, 7)}},
+			answers{episode: 7, numbered: true, absolute: 7, abs: true, shape: ShapeEpisode, pairs: [][]int{{NoSeason, 7}}},
+		},
+		{
+			"an episode and extras", Numbering{Episodes: []Ep{ep(NoSeason, 7, 7), {Season: NoSeason, First: 1, Last: 1, Kind: EpPV}, {Season: NoSeason, First: 1, Last: 1, Kind: EpED}}},
+			answers{episode: 7, numbered: true, absolute: 7, abs: true, shape: ShapeEpisode, pairs: [][]int{{NoSeason, 7}}},
+		},
+		{
+			"an extra and a range", Numbering{Episodes: []Ep{{Season: NoSeason, First: 1, Last: 1, Kind: EpOVA}, ep(NoSeason, 1, 3)}},
+			answers{episode: 1, numbered: true, shape: ShapeEpisodes, pairs: [][]int{{NoSeason, 1}, {NoSeason, 2}, {NoSeason, 3}}},
+		},
+		// more than one episode has no absolute number
+		{
+			"two episodes", Numbering{Episodes: []Ep{ep(NoSeason, 0, 0), ep(NoSeason, 5, 5)}},
+			answers{numbered: true, shape: ShapeEpisodes, pairs: [][]int{{NoSeason, 0}, {NoSeason, 5}}},
+		},
+		{
+			"an episode and a range", Numbering{Episodes: []Ep{ep(NoSeason, 13, 13), ep(NoSeason, 1, 2)}},
+			answers{episode: 13, numbered: true, shape: ShapeEpisodes, pairs: [][]int{{NoSeason, 1}, {NoSeason, 2}, {NoSeason, 13}}},
+		},
+		// an Ep that ends below its start is one episode
+		{
+			"last below first", Numbering{Episodes: []Ep{ep(NoSeason, 5, 3)}},
+			answers{episode: 5, numbered: true, absolute: 5, abs: true, shape: ShapeEpisode, pairs: [][]int{{NoSeason, 5}}},
+		},
+		{"daily", Numbering{Scheme: SchemeDaily}, answers{shape: ShapeDaily}},
+		{"daily with a season", Numbering{Scheme: SchemeDaily, Seasons: []int{1}}, answers{season: 1, seasoned: true, shape: ShapeDaily}},
+		{"cleared", cleared.Numbering, answers{}},
+		{
+			"replaced", replaced.Numbering,
+			answers{season: 1, seasoned: true, episode: 4, numbered: true, shape: ShapeEpisode, pairs: [][]int{{1, 4}}},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if got := numberingOf(test.r); !equalNumbering(got, test.exp) {
+			var got answers
+			got.season, got.seasoned = test.n.Season()
+			got.episode, got.numbered = test.n.Episode()
+			got.absolute, got.abs = test.n.Absolute()
+			got.shape, got.pairs = test.n.Shape(), pairs(test.n)
+			if !reflect.DeepEqual(got, test.exp) {
 				t.Errorf("got %+v, expected %+v", got, test.exp)
 			}
 		})
 	}
+	// the tags of the two releases are those of the parse
+	if s := fmt.Sprintf("%o", cleared); s != "Show.S01E02.1080p.WEB.h264-GRP" {
+		t.Errorf("expected the name back, got: %q", s)
+	}
+	// what Compare and Event read is the numbering the release holds
+	if Compare(parsed, cleared) <= 0 {
+		t.Errorf("expected the release with no numbering to sort before the one with an episode")
+	}
+	event := Release{Type: Episode, Title: "Formula1", Numbering: Numbering{Seasons: []int{2024}, Episodes: []Ep{ep(2024, 5, 5)}}}
+	if ev, ok := event.Event(); !ok || ev.Round != 5 {
+		t.Errorf("expected round 5 of an event, got: %+v %t", ev, ok)
+	}
 }
 
+// TestNumberingAllocs checks that the methods of a Numbering allocate nothing,
+// since they are asked of every release a caller holds.
 func TestNumberingAllocs(t *testing.T) {
 	for _, name := range []string{
 		"Show.S01E02-E04.1080p.WEB.h264-GRP",
 		"Show.S01-S03.1080p.BluRay.x264-GRP",
 		"[Grp] Show - 01-12 [1080p]",
+		"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP",
 	} {
-		r := ParseString(name)
+		n := ParseString(name).Numbering
 		for _, test := range []struct {
 			name string
-			max  float64
 			f    func()
 		}{
-			{"HasSeason", 0, func() { _ = r.HasSeason() }},
-			{"HasEpisode", 0, func() { _ = r.HasEpisode() }},
-			{"EpisodeRange", 0, func() { _, _, _ = r.EpisodeRange() }},
+			{"Season", func() { _, _ = n.Season() }},
+			{"Episode", func() { _, _ = n.Episode() }},
+			{"Absolute", func() { _, _ = n.Absolute() }},
+			{"Shape", func() { _ = n.Shape() }},
+			{"All", func() {
+				for season, episode := range n.All() {
+					_, _ = season, episode
+				}
+			}},
 		} {
-			if n := testing.AllocsPerRun(100, test.f); n > test.max {
-				t.Errorf("%s: %s allocates %v times, expected at most %v", name, test.name, n, test.max)
+			if n := testing.AllocsPerRun(100, test.f); n != 0 {
+				t.Errorf("%s: %s allocates %v times, expected none", name, test.name, n)
 			}
 		}
 	}
@@ -161,18 +318,18 @@ func equalNumbering(a, b numbering) bool {
 		a.first == b.first && a.last == b.last && a.ok == b.ok
 }
 
-// TestEpisodeZero checks that a written episode 0 is an episode: SeriesEpisodes
-// lists it, a range starts at it, and with no season it is absolute.
+// TestEpisodeZero checks that a written episode 0 is an episode: All yields
+// it, a range starts at it, and with no season it is absolute.
 func TestEpisodeZero(t *testing.T) {
 	tests := []struct {
 		name     string
 		exp      [][]int
 		absolute bool
 	}{
-		{"[Group] Show - 00 [720p]", [][]int{{0, 0}}, true},
-		{"[Group] Show - 00v2 [720p]", [][]int{{0, 0}}, true},
-		{"[Group] Show - Episode 0 [720p]", [][]int{{0, 0}}, true},
-		{"Show.E00.1080p.WEB.h264-GRP", [][]int{{0, 0}}, true},
+		{"[Group] Show - 00 [720p]", [][]int{{NoSeason, 0}}, true},
+		{"[Group] Show - 00v2 [720p]", [][]int{{NoSeason, 0}}, true},
+		{"[Group] Show - Episode 0 [720p]", [][]int{{NoSeason, 0}}, true},
+		{"Show.E00.1080p.WEB.h264-GRP", [][]int{{NoSeason, 0}}, true},
 		// a season qualifies it
 		{"Show.S01E00.1080p.WEB.h264-GRP", [][]int{{1, 0}}, false},
 		{"Show.1x00.HDTV.x264-GRP", [][]int{{1, 0}}, false},
@@ -181,29 +338,30 @@ func TestEpisodeZero(t *testing.T) {
 		// ranges that start at 0
 		{"Show.S01E00E01.1080p.WEB.h264-GRP", [][]int{{1, 0}, {1, 1}}, false},
 		{"Show.S01E00-E02.1080p.WEB.h264-GRP", [][]int{{1, 0}, {1, 1}, {1, 2}}, false},
-		{"[Group] Show - 00-03 [720p]", [][]int{{0, 0}, {0, 1}, {0, 2}, {0, 3}}, false},
-		{"[Group] Show - 00 ~ 02 [720p]", [][]int{{0, 0}, {0, 1}, {0, 2}}, false},
+		{"[Group] Show - 00-03 [720p]", [][]int{{NoSeason, 0}, {NoSeason, 1}, {NoSeason, 2}, {NoSeason, 3}}, false},
+		{"[Group] Show - 00 ~ 02 [720p]", [][]int{{NoSeason, 0}, {NoSeason, 1}, {NoSeason, 2}}, false},
 		// a range that ends at 0 is its two ends
 		{"Show.S01E03-E00.1080p.WEB.h264-GRP", [][]int{{1, 0}, {1, 3}}, false},
-		// half an episode and a range after the 0 are not its number
-		{"[Group] Show - 00 (Ep 5.5) [720p]", [][]int{{0, 0}, {0, 5}}, true},
-		{"[Group] Show - 00 - E05-07 [720p]", [][]int{{0, 0}, {0, 5}, {0, 6}, {0, 7}}, true},
+		// with half an episode or a range after the 0 the name gives more
+		// than one episode, and has no absolute number
+		{"[Group] Show - 00 (Ep 5.5) [720p]", [][]int{{NoSeason, 0}, {NoSeason, 5}}, false},
+		{"[Group] Show - 00 - E05-07 [720p]", [][]int{{NoSeason, 0}, {NoSeason, 5}, {NoSeason, 6}, {NoSeason, 7}}, false},
 		// half an episode has no absolute number
-		{"[Group] Show - 00.5 [720p]", [][]int{{0, 0}}, false},
+		{"[Group] Show - 00.5 [720p]", [][]int{{NoSeason, 0}}, false},
 		// no episode written
 		{"Show.S01.1080p.WEB.h264-GRP", nil, false},
 		{"Show.2024.1080p.WEB.h264-GRP", nil, false},
 	}
 	for _, test := range tests {
-		r := ParseString(test.name)
-		if v := r.SeriesEpisodes(); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
+		n := ParseString(test.name).Numbering
+		if v := pairs(n); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
 			t.Errorf("%q: expected series episodes %v, got: %v", test.name, test.exp, v)
 		}
-		if episode, ok := r.Absolute(); episode != 0 || ok != test.absolute {
+		if episode, ok := n.Absolute(); episode != 0 || ok != test.absolute {
 			t.Errorf("%q: expected absolute 0 %t, got: %d %t", test.name, test.absolute, episode, ok)
 		}
-		if ok := r.HasEpisode(); ok != (test.exp != nil) {
-			t.Errorf("%q: expected has episode %t, got: %t", test.name, test.exp != nil, ok)
+		if _, ok := n.Episode(); ok != (test.exp != nil) {
+			t.Errorf("%q: expected an episode %t, got: %t", test.name, test.exp != nil, ok)
 		}
 	}
 	for _, tag := range ParseString("Show.S01E00.1080p.WEB.h264-GRP").Tags() {
@@ -211,9 +369,14 @@ func TestEpisodeZero(t *testing.T) {
 			t.Errorf("expected episodes [0], got: %v", v)
 		}
 	}
-	// the first episode that is not 0 is the absolute one, as it is Episode
-	if episode, ok := ParseString("[Group] Show - 00 - 05 [720p]").Absolute(); episode != 5 || !ok {
-		t.Errorf("expected absolute 5 true, got: %d %t", episode, ok)
+	// two episodes have no absolute number, and Episode gives the first,
+	// which is 0 and an episode
+	n := ParseString("[Group] Show - 00 - 05 [720p]").Numbering
+	if episode, ok := n.Absolute(); episode != 0 || ok {
+		t.Errorf("expected no absolute episode, got: %d %t", episode, ok)
+	}
+	if episode, ok := n.Episode(); episode != 0 || !ok {
+		t.Errorf("expected episode 0 true, got: %d %t", episode, ok)
 	}
 }
 
@@ -227,16 +390,16 @@ func TestEpisodeRangeTilde(t *testing.T) {
 		{"[Grp] Show S04E29~E31 1080p WEB H.264", [][]int{{4, 29}, {4, 30}, {4, 31}}},
 		{"Show.S01E02~S01E04.1080p.WEB.h264-GRP", [][]int{{1, 2}, {1, 3}, {1, 4}}},
 		{"Show.S01E01~03.1080p.WEB.x264-GRP", [][]int{{1, 1}, {1, 2}, {1, 3}}},
-		{"[Grp] Show E05~E07 [1080p]", [][]int{{0, 5}, {0, 6}, {0, 7}}},
+		{"[Grp] Show E05~E07 [1080p]", [][]int{{NoSeason, 5}, {NoSeason, 6}, {NoSeason, 7}}},
 		// two seasons are not a range
 		{"Show.S01E02~S02E04.1080p.WEB.h264-GRP", [][]int{{1, 2}, {2, 4}}},
 	}
 	for _, test := range tests {
-		r := ParseString(test.name)
-		if v := r.SeriesEpisodes(); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
+		n := ParseString(test.name).Numbering
+		if v := pairs(n); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
 			t.Errorf("%q: expected series episodes %v, got: %v", test.name, test.exp, v)
 		}
-		first, last, ok := r.EpisodeRange()
+		first, last, ok := episodeRange(n)
 		if exp := test.exp[0][0] == test.exp[len(test.exp)-1][0]; ok != exp || ok && (first != test.exp[0][1] || last != test.exp[len(test.exp)-1][1]) {
 			t.Errorf("%q: expected the range of %v, got: %d to %d, %t", test.name, test.exp, first, last, ok)
 		}
@@ -261,7 +424,7 @@ func TestSeriesEpisodesSeasonZero(t *testing.T) {
 		{"Show.S01E02-S02E04.1080p.WEB.h264-GRP", [][]int{{1, 2}, {2, 4}}},
 	}
 	for _, test := range tests {
-		if v := ParseString(test.name).SeriesEpisodes(); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
+		if v := pairs(ParseString(test.name).Numbering); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
 			t.Errorf("%q: expected series episodes %v, got: %v", test.name, test.exp, v)
 		}
 	}
@@ -302,31 +465,35 @@ func TestSeriesEpisodesSecondNumbering(t *testing.T) {
 		{"[Grp] Show S2 - 04 [1080p].mkv", [][]int{{2, 4}}, 4},
 		{"Show.S01E01.S02.Episode.2.1080p.WEB.h264-GRP", [][]int{{1, 1}, {2, 2}}, 1},
 		// no season written
-		{"Show.Episode.1.1080p.WEB.h264-GRP", [][]int{{0, 1}}, 1},
+		{"Show.Episode.1.1080p.WEB.h264-GRP", [][]int{{NoSeason, 1}}, 1},
 		// a part is not an episode
 		{"Show.S01E01.Part.1.1080p.WEB.h264-GRP", [][]int{{1, 1}}, 1},
 		{"Show.S01E02.Part.2.1080p.WEB.h264-GRP", [][]int{{1, 2}}, 2},
 	}
 	for _, test := range tests {
-		r := ParseString(test.name)
-		if v := r.SeriesEpisodes(); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
+		n := ParseString(test.name).Numbering
+		if v := pairs(n); !slices.EqualFunc(v, test.exp, slices.Equal[[]int]) {
 			t.Errorf("%q: expected series episodes %v, got: %v", test.name, test.exp, v)
 		}
-		if r.Episode != test.episode {
-			t.Errorf("%q: expected episode %d, got: %d", test.name, test.episode, r.Episode)
+		if episode, _ := n.Episode(); episode != test.episode {
+			t.Errorf("%q: expected episode %d, got: %d", test.name, test.episode, episode)
 		}
 	}
 	// season 2 writes its episode in '(S02E01)', so the 13 after 'S2' is a
 	// second numbering
 	name := "[Grp] Show S2 - 13 (S02E01) [1080p].mkv"
-	if v, exp := ParseString(name).SeriesEpisodes(), [][]int{{2, 1}}; !slices.EqualFunc(v, exp, slices.Equal[[]int]) {
+	n := ParseString(name).Numbering
+	if v, exp := pairs(n), [][]int{{2, 1}}; !slices.EqualFunc(v, exp, slices.Equal[[]int]) {
 		t.Errorf("%q: expected series episodes %v, got: %v", name, exp, v)
+	}
+	if exp := []Ep{ep(NoSeason, 13, 13)}; !slices.Equal(n.Alt, exp) {
+		t.Errorf("%q: expected the second numbering %v, got: %v", name, exp, n.Alt)
 	}
 }
 
 // TestAbsoluteSecondNumbering checks that an episode written without a season
 // beside one written with a season and an episode is the absolute episode,
-// and that Episode is the season's episode wherever the two are written.
+// and that Episode gives the season's episode wherever the two are written.
 func TestAbsoluteSecondNumbering(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -350,6 +517,16 @@ func TestAbsoluteSecondNumbering(t *testing.T) {
 		{"Show.S01E05.E06.1080p.WEB.h264-GRP", 5, 0, false},
 		{"Show.S01E01.Episode.5-7.1080p.WEB.h264-GRP", 1, 0, false},
 		{"Show.S01E01.Episode.5.5.1080p.WEB.h264-GRP", 1, 0, false},
+		// the end of a range that a version follows
+		{"[Judas] Shingeki no Kyojin (Attack on Titan) - S04E29-31v2 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)", 29, 0, false},
+		{"Show.S04E29-31v2.1080p.WEB.H264-GRP", 29, 0, false},
+		{"Show.S04E29~31v2.1080p.WEB.H264-GRP", 29, 0, false},
+		{"Show.S01E998-1002v2.1080p.WEB.H264-GRP", 998, 0, false},
+		// four digits after a lower episode are another number, as they are
+		// with no version after them, and so is an episode written with a word
+		{"Show.S23E19-1174v2.1080p.WEB.H264-GRP", 19, 1174, true},
+		{"Show.S01E05-2020v2.1080p.WEB.H264-GRP", 5, 2020, true},
+		{"Show.S01E05-Episode.10.1080p.WEB.H264-GRP", 5, 10, true},
 		// a season with no episode leaves the episode after it in the season
 		{"[Grp] Show S2 - 04 [1080p].mkv", 4, 0, false},
 		{"Show.S01E01.S02.Episode.2.1080p.WEB.h264-GRP", 1, 0, false},
@@ -357,25 +534,25 @@ func TestAbsoluteSecondNumbering(t *testing.T) {
 		{"[Group] One Piece - 1169 [1080p].mkv", 1169, 1169, true},
 	}
 	for _, test := range tests {
-		r := ParseString(test.name)
-		if r.Episode != test.episode {
-			t.Errorf("%q: expected episode %d, got: %d", test.name, test.episode, r.Episode)
+		n := ParseString(test.name).Numbering
+		if episode, _ := n.Episode(); episode != test.episode {
+			t.Errorf("%q: expected episode %d, got: %d", test.name, test.episode, episode)
 		}
-		if absolute, ok := r.Absolute(); absolute != test.absolute || ok != test.ok {
+		if absolute, ok := n.Absolute(); absolute != test.absolute || ok != test.ok {
 			t.Errorf("%q: expected absolute %d %t, got: %d %t", test.name, test.absolute, test.ok, absolute, ok)
 		}
 	}
 }
 
 // TestSeasonRange checks a range of seasons written with one season word:
-// Series is the first season, Seasons gives every season of the range, the
+// Season gives the first season, Seasons every season of the range, the
 // release is a pack, and the last season is neither the subtitle nor a
 // leftover word. An episode written beside the range is in no season.
 func TestSeasonRange(t *testing.T) {
 	tests := []struct {
 		name    string
 		seasons []int
-		spans   []EpisodeSpan
+		spans   []Ep
 	}{
 		// a bare hyphen or a tilde
 		{"Show.S01-03.1080p.BluRay.x264-GRP", []int{1, 2, 3}, nil},
@@ -399,31 +576,34 @@ func TestSeasonRange(t *testing.T) {
 		{"[Grp] Show (Season 01 - 04+OVAs) [BD] [1080p]", []int{1, 2, 3, 4}, nil},
 		// episodes beside the range are in no season, whichever way the range
 		// is written
-		{"[Grp] Show Season 1-4 (1-76) [1080p]", []int{1, 2, 3, 4}, []EpisodeSpan{{"", "1", "76"}}},
-		{"[Grp] Show 001-367 (Seasons 1-10) [BD 1080p]", []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, []EpisodeSpan{{"", "001", "367"}}},
-		{"[Grp] Show S01-04 (1-76) [1080p]", []int{1, 2, 3, 4}, []EpisodeSpan{{"", "1", "76"}}},
-		{"[Grp] Show S01-S04 (1-76) [1080p]", []int{1, 2, 3, 4}, []EpisodeSpan{{"", "1", "76"}}},
+		{"[Grp] Show Season 1-4 (1-76) [1080p]", []int{1, 2, 3, 4}, []Ep{ep(NoSeason, 1, 76)}},
+		{"[Grp] Show 001-367 (Seasons 1-10) [BD 1080p]", []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, []Ep{ep(NoSeason, 1, 367)}},
+		{"[Grp] Show S01-04 (1-76) [1080p]", []int{1, 2, 3, 4}, []Ep{ep(NoSeason, 1, 76)}},
+		{"[Grp] Show S01-S04 (1-76) [1080p]", []int{1, 2, 3, 4}, []Ep{ep(NoSeason, 1, 76)}},
 	}
 	for _, test := range tests {
 		r := ParseString(test.name)
-		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
-			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
+		n := r.Numbering
+		if !slices.Equal(n.Seasons, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, n.Seasons)
 		}
 		if r.Type != Series {
 			t.Errorf("%q: expected type series, got: %s", test.name, r.Type)
 		}
-		if r.Series != test.seasons[0] {
-			t.Errorf("%q: expected series %d, got: %d", test.name, test.seasons[0], r.Series)
+		if season, ok := n.Season(); season != test.seasons[0] || !ok {
+			t.Errorf("%q: expected season %d, got: %d %t", test.name, test.seasons[0], season, ok)
 		}
-		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
-			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		if !slices.Equal(n.Episodes, test.spans) {
+			t.Errorf("%q: expected episodes %v, got: %v", test.name, test.spans, n.Episodes)
 		}
-		if exp := len(test.spans) != 0; r.HasEpisode() != exp {
-			t.Errorf("%q: expected HasEpisode %t", test.name, exp)
+		// a range of seasons alone is several seasons, and with a range of
+		// episodes beside it the release is its episodes
+		if exp := map[bool]Shape{false: ShapeSeasons, true: ShapeEpisodes}[len(test.spans) != 0]; n.Shape() != exp {
+			t.Errorf("%q: expected shape %s, got: %s", test.name, exp, n.Shape())
 		}
-		for _, pair := range r.SeriesEpisodes() {
-			if pair[0] != 0 {
-				t.Errorf("%q: expected the episodes in no season, got: %v", test.name, pair)
+		for season := range n.All() {
+			if season != NoSeason {
+				t.Errorf("%q: expected the episodes in no season, got one in season %d", test.name, season)
 				break
 			}
 		}
@@ -444,26 +624,26 @@ func TestSeasonRange(t *testing.T) {
 	notRanges := []struct {
 		name   string
 		season int
-		spans  []EpisodeSpan
+		spans  []Ep
 	}{
 		// a season and its episode
-		{"[Grp] Show Season 3 - 03 [1080p]", 3, []EpisodeSpan{{"3", "03", ""}}},
-		{"[Grp] Show Season 1 - 12 [1080p]", 1, []EpisodeSpan{{"1", "12", ""}}},
-		{"[Grp] Show Season 2 - 8 [1080p]", 2, []EpisodeSpan{{"2", "8", ""}}},
-		{"[Grp] Show S2 - 04 [1080p]", 2, []EpisodeSpan{{"2", "04", ""}}},
-		{"[Grp] Show S01 - 04 [1080p]", 1, []EpisodeSpan{{"01", "04", ""}}},
-		{"[Grp] Show S01 - 04 (1080p)", 1, []EpisodeSpan{{"01", "04", ""}}},
-		{"[Grp] Show S01 - 12 + OVA [1080p]", 1, []EpisodeSpan{{"01", "12", ""}}},
-		{"[Grp] Show Season 1 - 12 + OVA [1080p]", 1, []EpisodeSpan{{"1", "12", ""}}},
-		{"[Grp] Show (S01 - 12) [1080p]", 1, []EpisodeSpan{{"01", "12", ""}}},
+		{"[Grp] Show Season 3 - 03 [1080p]", 3, []Ep{ep(3, 3, 3)}},
+		{"[Grp] Show Season 1 - 12 [1080p]", 1, []Ep{ep(1, 12, 12)}},
+		{"[Grp] Show Season 2 - 8 [1080p]", 2, []Ep{ep(2, 8, 8)}},
+		{"[Grp] Show S2 - 04 [1080p]", 2, []Ep{ep(2, 4, 4)}},
+		{"[Grp] Show S01 - 04 [1080p]", 1, []Ep{ep(1, 4, 4)}},
+		{"[Grp] Show S01 - 04 (1080p)", 1, []Ep{ep(1, 4, 4)}},
+		{"[Grp] Show S01 - 12 + OVA [1080p]", 1, []Ep{ep(1, 12, 12)}},
+		{"[Grp] Show Season 1 - 12 + OVA [1080p]", 1, []Ep{ep(1, 12, 12)}},
+		{"[Grp] Show (S01 - 12) [1080p]", 1, []Ep{ep(1, 12, 12)}},
 	}
 	for _, test := range notRanges {
-		r := ParseString(test.name)
-		if v := r.Seasons(); !slices.Equal(v, []int{test.season}) {
-			t.Errorf("%q: expected season %d alone, got: %v", test.name, test.season, v)
+		n := ParseString(test.name).Numbering
+		if !slices.Equal(n.Seasons, []int{test.season}) {
+			t.Errorf("%q: expected season %d alone, got: %v", test.name, test.season, n.Seasons)
 		}
-		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
-			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		if !slices.Equal(n.Episodes, test.spans) {
+			t.Errorf("%q: expected episodes %v, got: %v", test.name, test.spans, n.Episodes)
 		}
 	}
 	// the second number is not a season: it is not the higher one, it is
@@ -481,7 +661,7 @@ func TestSeasonRange(t *testing.T) {
 		{"Show.S01-720p.WEB.x264-GRP", []int{1}},
 		{"The.Four.Seasons.1-2.1080p.BluRay.x264-GRP", nil},
 	} {
-		if v := ParseString(test.name).Seasons(); !slices.Equal(v, test.seasons) {
+		if v := ParseString(test.name).Numbering.Seasons; !slices.Equal(v, test.seasons) {
 			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
 		}
 	}
@@ -534,14 +714,15 @@ func TestSeasonList(t *testing.T) {
 	}
 	for _, test := range tests {
 		r := ParseString(test.name)
-		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
-			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
+		n := r.Numbering
+		if !slices.Equal(n.Seasons, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, n.Seasons)
 		}
-		if r.Type != Series || r.Series != test.seasons[0] || !strings.HasPrefix(r.Title, "Show") {
-			t.Errorf("%q: expected series %d of Show, got: %s %d of %q", test.name, test.seasons[0], r.Type, r.Series, r.Title)
+		if season, _ := n.Season(); r.Type != Series || season != test.seasons[0] || !strings.HasPrefix(r.Title, "Show") {
+			t.Errorf("%q: expected series %d of Show, got: %s %d of %q", test.name, test.seasons[0], r.Type, season, r.Title)
 		}
-		if r.HasEpisode() {
-			t.Errorf("%q: expected no episode, got: %q", test.name, r.EpisodeSpans())
+		if n.Episodes != nil || n.Alt != nil || n.Shape() != ShapeSeasons {
+			t.Errorf("%q: expected seasons and no episode, got: %v %v, %s", test.name, n.Episodes, n.Alt, n.Shape())
 		}
 		for _, tag := range r.Unused() {
 			if s := tag.Text(); s == "&" || strings.Trim(s, "0123456789") == "" {
@@ -611,7 +792,7 @@ func TestSeasonList(t *testing.T) {
 		{"Artist-Seasons_1_&_2-WEB-FLAC-2020-GRP", nil},
 	} {
 		r := ParseString(test.name)
-		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
+		if v := r.Numbering.Seasons; !slices.Equal(v, test.seasons) {
 			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
 		}
 		if s := fmt.Sprintf("%o", r); s != test.name {
@@ -624,8 +805,8 @@ func TestSeasonList(t *testing.T) {
 		"Show.S01,24.12.2020.1080p.WEB.H264-GRP",
 		"Show S01 & 24.12.2020",
 	} {
-		if r := ParseString(name); r.Year != 2020 || r.Month != 12 || r.Day != 24 || !slices.Equal(r.Seasons(), []int{1}) {
-			t.Errorf("%q: expected season 1 and 2020-12-24, got: %v and %d-%d-%d", name, r.Seasons(), r.Year, r.Month, r.Day)
+		if r := ParseString(name); r.Year != 2020 || r.Month != 12 || r.Day != 24 || !slices.Equal(r.Numbering.Seasons, []int{1}) {
+			t.Errorf("%q: expected season 1 and 2020-12-24, got: %v and %d-%d-%d", name, r.Numbering.Seasons, r.Year, r.Month, r.Day)
 		}
 	}
 }
@@ -636,40 +817,40 @@ func TestSeasonListEpisodes(t *testing.T) {
 	for _, test := range []struct {
 		name    string
 		seasons []int
-		spans   []EpisodeSpan
+		spans   []Ep
 	}{
-		{"[Grp] Show Season 1+2 (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
-		{"[Grp] Show S1+S2 (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
-		{"[Grp] Show S1, S2 (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
-		{"[Grp] Show (Season 01 + Season 02) (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
-		{"[Grp] Show Season 1 & Season 2 (01-25) [1080p]", []int{1, 2}, []EpisodeSpan{{"", "01", "25"}}},
-		{"[Grp] Show S1 + S2 - 05 [1080p]", []int{1, 2}, []EpisodeSpan{{"", "05", ""}}},
+		{"[Grp] Show Season 1+2 (01-25) [1080p]", []int{1, 2}, []Ep{ep(NoSeason, 1, 25)}},
+		{"[Grp] Show S1+S2 (01-25) [1080p]", []int{1, 2}, []Ep{ep(NoSeason, 1, 25)}},
+		{"[Grp] Show S1, S2 (01-25) [1080p]", []int{1, 2}, []Ep{ep(NoSeason, 1, 25)}},
+		{"[Grp] Show (Season 01 + Season 02) (01-25) [1080p]", []int{1, 2}, []Ep{ep(NoSeason, 1, 25)}},
+		{"[Grp] Show Season 1 & Season 2 (01-25) [1080p]", []int{1, 2}, []Ep{ep(NoSeason, 1, 25)}},
+		{"[Grp] Show S1 + S2 - 05 [1080p]", []int{1, 2}, []Ep{ep(NoSeason, 5, 5)}},
 		// one season, written twice or once
-		{"[Grp] Show Season 1 (S01) (01-25) [1080p]", []int{1}, []EpisodeSpan{{"01", "01", "25"}}},
-		{"[Grp] Show S2 (01-25) [1080p]", []int{2}, []EpisodeSpan{{"2", "01", "25"}}},
+		{"[Grp] Show Season 1 (S01) (01-25) [1080p]", []int{1}, []Ep{ep(1, 1, 25)}},
+		{"[Grp] Show S2 (01-25) [1080p]", []int{2}, []Ep{ep(2, 1, 25)}},
 	} {
-		r := ParseString(test.name)
-		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
-			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
+		n := ParseString(test.name).Numbering
+		if !slices.Equal(n.Seasons, test.seasons) {
+			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, n.Seasons)
 		}
-		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
-			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		if !slices.Equal(n.Episodes, test.spans) {
+			t.Errorf("%q: expected episodes %v, got: %v", test.name, test.spans, n.Episodes)
 		}
-		season := atoi(test.spans[0].Season)
-		for _, pair := range r.SeriesEpisodes() {
-			if pair[0] != season {
-				t.Errorf("%q: expected the episodes in season %d, got: %v", test.name, season, pair)
+		for season := range n.All() {
+			if season != test.spans[0].Season {
+				t.Errorf("%q: expected the episodes in season %d, got one in season %d", test.name, test.spans[0].Season, season)
 				break
 			}
 		}
-		if first, last, ok := r.EpisodeRange(); ok != (test.spans[0].Last != "") || ok && (first != 1 || last != 25) {
+		if first, last, ok := episodeRange(n); ok != (test.spans[0].First != test.spans[0].Last) || ok && (first != 1 || last != 25) {
 			t.Errorf("%q: expected the range 1 to 25 where one is written, got: %d, %d, %t", test.name, first, last, ok)
 		}
 	}
 }
 
-// TestSeasonZeroFirst checks that Series is the first season the name writes
-// when that season is 0, and not the season of a second numbering after it.
+// TestSeasonZeroFirst checks that Season gives the first season the name
+// writes when that season is 0, and not the season of a second numbering
+// after it.
 func TestSeasonZeroFirst(t *testing.T) {
 	tests := []struct {
 		name            string
@@ -690,21 +871,22 @@ func TestSeasonZeroFirst(t *testing.T) {
 	}
 	for _, test := range tests {
 		r := ParseString(test.name)
-		if r.Series != test.series || r.Episode != test.episode {
-			t.Errorf("%q: expected series %d episode %d, got: %d and %d", test.name, test.series, test.episode, r.Series, r.Episode)
+		season, ok := r.Numbering.Season()
+		if episode, _ := r.Numbering.Episode(); season != test.series || episode != test.episode {
+			t.Errorf("%q: expected series %d episode %d, got: %d and %d", test.name, test.series, test.episode, season, episode)
 		}
 		if r.Type != test.typ {
 			t.Errorf("%q: expected type %s, got: %s", test.name, test.typ, r.Type)
 		}
-		if !r.HasSeason() {
+		if !ok {
 			t.Errorf("%q: expected a season", test.name)
 		}
 	}
 }
 
-// TestHalfEpisode checks that half an episode keeps its fraction in the tag:
-// Episode is the whole number, the fraction is not a word of the name, and the
-// number is not an absolute one.
+// TestHalfEpisode checks that half an episode keeps its fraction in the tag
+// and in Frac: Episode gives the whole number, the fraction is not a word of
+// the name, and the number is not an absolute one.
 func TestHalfEpisode(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -743,26 +925,33 @@ func TestHalfEpisode(t *testing.T) {
 	}
 	for _, test := range tests {
 		r := ParseString(test.name)
+		n := r.Numbering
 		var fraction string
 		for _, tag := range r.Tags() {
 			fraction += tag.fraction()
 		}
-		_, absolute := r.Absolute()
-		if r.Episode != test.episode || fraction != test.fraction || r.Subtitle != test.subtitle {
-			t.Errorf("%q: expected episode %d, fraction %q, subtitle %q, got: %d, %q, %q", test.name, test.episode, test.fraction, test.subtitle, r.Episode, fraction, r.Subtitle)
+		episode, _ := n.Episode()
+		_, absolute := n.Absolute()
+		if episode != test.episode || fraction != test.fraction || r.Subtitle != test.subtitle {
+			t.Errorf("%q: expected episode %d, fraction %q, subtitle %q, got: %d, %q, %q", test.name, test.episode, test.fraction, test.subtitle, episode, fraction, r.Subtitle)
 		}
 		if absolute && test.fraction != "" {
 			t.Errorf("%q: expected no absolute episode", test.name)
 		}
-		if pairs := r.SeriesEpisodes(); len(pairs) != 1 {
-			t.Errorf("%q: expected one episode, got: %v", test.name, pairs)
+		if n.Shape() != ShapeEpisode {
+			t.Errorf("%q: expected one episode, got: %v", test.name, n.Episodes)
+		}
+		// Frac is the digits of the fraction as a number, without the zeros
+		// that end them: '.10' is the tenth that '.1' is
+		if frac := strings.TrimRight(strings.TrimPrefix(test.fraction, "."), "0"); len(n.Episodes) != 1 || int(n.Episodes[0].Frac) != atoi(frac) {
+			t.Errorf("%q: expected the fraction %q in Frac, got: %v", test.name, frac, n.Episodes)
 		}
 		if s := fmt.Sprintf("%o", r); s != test.name {
 			t.Errorf("%q: expected the name back, got: %q", test.name, s)
 		}
 	}
 	// the dot of 'Ep.' is not a decimal point
-	if episode, ok := ParseString("[Group] Show Ep. 07 [720p]").Absolute(); episode != 7 || !ok {
+	if episode, ok := ParseString("[Group] Show Ep. 07 [720p]").Numbering.Absolute(); episode != 7 || !ok {
 		t.Errorf("expected absolute 7 true, got: %d %t", episode, ok)
 	}
 }
@@ -773,21 +962,21 @@ func TestHalfEpisode(t *testing.T) {
 func TestBracketedRange(t *testing.T) {
 	tests := []struct {
 		name  string
-		spans []EpisodeSpan
+		spans []Ep
 	}{
-		{"[Grp] Show Title [1-13]", []EpisodeSpan{{"", "1", "13"}}},
-		{"[Grp] Show Title (01-13)", []EpisodeSpan{{"", "01", "13"}}},
-		{"Show Title (01-12).mkv", []EpisodeSpan{{"", "01", "12"}}},
-		{"Show_Title [1-13] [.srt]", []EpisodeSpan{{"", "1", "13"}}},
+		{"[Grp] Show Title [1-13]", []Ep{ep(NoSeason, 1, 13)}},
+		{"[Grp] Show Title (01-13)", []Ep{ep(NoSeason, 1, 13)}},
+		{"Show Title (01-12).mkv", []Ep{ep(NoSeason, 1, 12)}},
+		{"Show_Title [1-13] [.srt]", []Ep{ep(NoSeason, 1, 13)}},
 		// in the middle of the name, as before
-		{"[Grp] Show Title [01-13] [1080p]", []EpisodeSpan{{"", "01", "13"}}},
+		{"[Grp] Show Title [01-13] [1080p]", []Ep{ep(NoSeason, 1, 13)}},
 		// a range of years is not one of episodes
 		{"[Grp] Show Title (2019-2020)", nil},
 	}
 	for _, test := range tests {
 		r := ParseString(test.name)
-		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
-			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		if v := r.Numbering.Episodes; !slices.Equal(v, test.spans) {
+			t.Errorf("%q: expected episodes %v, got: %v", test.name, test.spans, v)
 		}
 		if s := fmt.Sprintf("%o", r); s != test.name {
 			t.Errorf("%q: expected the name back, got: %q", test.name, s)
@@ -803,7 +992,7 @@ func TestAudioRange(t *testing.T) {
 		name          string
 		typ           Type
 		artist, title string
-		spans         []EpisodeSpan
+		spans         []Ep
 	}{
 		{"Mira Calder - Beneath Quiet Skies (2002) HDTracks 2011 [FLAC 24-96]", Music, "Mira Calder", "Beneath Quiet Skies", nil},
 		{"Mira Calder - Beneath Quiet Skies (2002) [FLAC 24-48]", Music, "Mira Calder", "Beneath Quiet Skies", nil},
@@ -818,23 +1007,23 @@ func TestAudioRange(t *testing.T) {
 		{"Mira Calder - Live in Oslo (2011) [1080p FLAC (24-96)]", Movie, "", "Mira Calder - Live in Oslo", nil},
 		{"Mira Calder - Live in Oslo (2011) [1080p FLAC(24-96)]", Movie, "", "Mira Calder - Live in Oslo", nil},
 		// the episodes of a batch, in a name with a resolution
-		{"[Grp] Show Title - 24-48 [1080p]", Series, "", "Show Title", []EpisodeSpan{{"", "24", "48"}}},
-		{"[Grp] Show Title 24-48 [BD 1080p FLAC]", Series, "", "Show Title", []EpisodeSpan{{"", "24", "48"}}},
-		{"[Grp] Show Title (16-44) [720p]", Series, "", "Show Title", []EpisodeSpan{{"", "16", "44"}}},
+		{"[Grp] Show Title - 24-48 [1080p]", Series, "", "Show Title", []Ep{ep(NoSeason, 24, 48)}},
+		{"[Grp] Show Title 24-48 [BD 1080p FLAC]", Series, "", "Show Title", []Ep{ep(NoSeason, 24, 48)}},
+		{"[Grp] Show Title (16-44) [720p]", Series, "", "Show Title", []Ep{ep(NoSeason, 16, 44)}},
 		// after the audio, in a bracket that follows the one the audio is in
-		{"[Grp] Show Title [BD 1080p FLAC] (24-48)", Series, "", "Show Title", []EpisodeSpan{{"", "24", "48"}}},
-		{"[Grp] Show Title [1080p FLAC] [24-48]", Series, "", "Show Title", []EpisodeSpan{{"", "24", "48"}}},
+		{"[Grp] Show Title [BD 1080p FLAC] (24-48)", Series, "", "Show Title", []Ep{ep(NoSeason, 24, 48)}},
+		{"[Grp] Show Title [1080p FLAC] [24-48]", Series, "", "Show Title", []Ep{ep(NoSeason, 24, 48)}},
 		// a range that is no bit depth and sample rate
-		{"[Grp] Show Title - 24-50 [FLAC]", Series, "", "Show Title", []EpisodeSpan{{"", "24", "50"}}},
-		{"[Grp] Show Title - 01-48 [FLAC]", Series, "", "Show Title", []EpisodeSpan{{"", "01", "48"}}},
+		{"[Grp] Show Title - 24-50 [FLAC]", Series, "", "Show Title", []Ep{ep(NoSeason, 24, 50)}},
+		{"[Grp] Show Title - 01-48 [FLAC]", Series, "", "Show Title", []Ep{ep(NoSeason, 1, 48)}},
 	}
 	for _, test := range tests {
 		r := ParseString(test.name)
 		if r.Type != test.typ || r.Artist != test.artist || r.Title != test.title {
 			t.Errorf("%q: expected type %s, artist %q and title %q, got: %s, %q and %q", test.name, test.typ, test.artist, test.title, r.Type, r.Artist, r.Title)
 		}
-		if v := r.EpisodeSpans(); !slices.Equal(v, test.spans) {
-			t.Errorf("%q: expected spans %q, got: %q", test.name, test.spans, v)
+		if v := r.Numbering.Episodes; !slices.Equal(v, test.spans) {
+			t.Errorf("%q: expected episodes %v, got: %v", test.name, test.spans, v)
 		}
 		if s := fmt.Sprintf("%o", r); s != test.name {
 			t.Errorf("%q: expected the name back, got: %q", test.name, s)
@@ -887,8 +1076,9 @@ func TestGermanSeason(t *testing.T) {
 	}
 	for _, test := range tests {
 		r := ParseString(test.name)
-		if r.Series != test.series || r.Episode != test.episode || r.Type != test.typ {
-			t.Errorf("%q: expected series %d, episode %d, type %s, got: %d, %d, %s", test.name, test.series, test.episode, test.typ, r.Series, r.Episode, r.Type)
+		season, _ := r.Numbering.Season()
+		if episode, _ := r.Numbering.Episode(); season != test.series || episode != test.episode || r.Type != test.typ {
+			t.Errorf("%q: expected series %d, episode %d, type %s, got: %d, %d, %s", test.name, test.series, test.episode, test.typ, season, episode, r.Type)
 		}
 		if s := fmt.Sprintf("%o", r); s != test.name {
 			t.Errorf("%q: expected the name back, got: %q", test.name, s)
@@ -938,7 +1128,7 @@ func TestSeasonInEpisodeTitle(t *testing.T) {
 		if r.Subtitle != test.subtitle {
 			t.Errorf("%q: expected subtitle %q, got: %q", test.name, test.subtitle, r.Subtitle)
 		}
-		if v := r.Seasons(); !slices.Equal(v, test.seasons) {
+		if v := r.Numbering.Seasons; !slices.Equal(v, test.seasons) {
 			t.Errorf("%q: expected seasons %v, got: %v", test.name, test.seasons, v)
 		}
 		if s := fmt.Sprintf("%o", r); s != test.name {
@@ -952,7 +1142,7 @@ func TestSeasonInEpisodeTitle(t *testing.T) {
 		"Show.S01E01.Title+Season.2.1080p.WEB.h264-GRP",
 	} {
 		r := ParseString(name)
-		if v := r.Seasons(); !slices.Equal(v, []int{1, 2}) {
+		if v := r.Numbering.Seasons; !slices.Equal(v, []int{1, 2}) {
 			t.Errorf("%q: expected seasons [1 2], got: %v", name, v)
 		}
 		if s := fmt.Sprintf("%o", r); s != name {
@@ -961,101 +1151,696 @@ func TestSeasonInEpisodeTitle(t *testing.T) {
 	}
 }
 
-func TestEpisodeSpans(t *testing.T) {
+// TestEpisodes checks the episodes a name gives, in the order it writes them
+// and with a range as one Ep, and the second numberings beside them.
+func TestEpisodes(t *testing.T) {
 	tests := []struct {
 		name string
-		exp  []EpisodeSpan
+		exp  []Ep
+		alt  []Ep
 	}{
-		// one episode, with its leading zero
-		{"Show.S01E02.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", ""}}},
-		{"[Group] Show - 04 [720p]", []EpisodeSpan{{"", "04", ""}}},
-		{"[Group] Show - 1169 [720p]", []EpisodeSpan{{"", "1169", ""}}},
+		// one episode
+		{"Show.S01E02.1080p.WEB.h264-GRP", []Ep{ep(1, 2, 2)}, nil},
+		{"[Group] Show - 04 [720p]", []Ep{ep(NoSeason, 4, 4)}, nil},
+		{"[Group] Show - 1169 [720p]", []Ep{ep(NoSeason, 1169, 1169)}, nil},
 		// half an episode
-		{"[Group] Show - 21.5 [720p]", []EpisodeSpan{{"", "21.5", ""}}},
-		{"[Group] Show - 12.10 [720p]", []EpisodeSpan{{"", "12.10", ""}}},
-		{"[Group] Show - 13.5v2 [720p]", []EpisodeSpan{{"", "13.5", ""}}},
-		{"Show.S01E06.5.720p.WEB.x264-GRP", []EpisodeSpan{{"01", "06.5", ""}}},
-		{"[Group] Show Ep 5.5 [720p]", []EpisodeSpan{{"", "5.5", ""}}},
+		{"[Group] Show - 21.5 [720p]", []Ep{{Season: NoSeason, First: 21, Last: 21, Frac: 5}}, nil},
+		{"[Group] Show - 12.10 [720p]", []Ep{{Season: NoSeason, First: 12, Last: 12, Frac: 1}}, nil},
+		{"[Group] Show - 12.50 [720p]", []Ep{{Season: NoSeason, First: 12, Last: 12, Frac: 5}}, nil},
+		{"[Group] Show - 12.5 [720p]", []Ep{{Season: NoSeason, First: 12, Last: 12, Frac: 5}}, nil},
+		// a zero in front of the fraction is not kept
+		{"[Group] Show - 12.05 [720p]", []Ep{{Season: NoSeason, First: 12, Last: 12, Frac: 5}}, nil},
+		{"[Group] Show - 13.5v2 [720p]", []Ep{{Season: NoSeason, First: 13, Last: 13, Frac: 5}}, nil},
+		{"Show.S01E06.5.720p.WEB.x264-GRP", []Ep{{Season: 1, First: 6, Last: 6, Frac: 5}}, nil},
+		{"[Group] Show Ep 5.5 [720p]", []Ep{{Season: NoSeason, First: 5, Last: 5, Frac: 5}}, nil},
 		// an episode 0
-		{"[Group] Show - 00 [720p]", []EpisodeSpan{{"", "00", ""}}},
-		{"Show.S01E00.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "00", ""}}},
-		{"Show.S00E05.1080p.WEB.h264-GRP", []EpisodeSpan{{"00", "05", ""}}},
+		{"[Group] Show - 00 [720p]", []Ep{ep(NoSeason, 0, 0)}, nil},
+		{"Show.S01E00.1080p.WEB.h264-GRP", []Ep{ep(1, 0, 0)}, nil},
+		{"Show.S00E05.1080p.WEB.h264-GRP", []Ep{ep(0, 5, 5)}, nil},
 		// ranges, inside a tag and between two tags
-		{"Show.S01E02-04.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", "04"}}},
-		{"Show.S01E02-E04.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", "04"}}},
-		{"Show.S00E02-S00E04.1080p.WEB.h264-GRP", []EpisodeSpan{{"00", "02", "04"}}},
-		{"[Group] Show - 00 ~ 12 [720p]", []EpisodeSpan{{"", "00", "12"}}},
-		{"[Group] Show (01-12) [720p]", []EpisodeSpan{{"", "01", "12"}}},
+		{"Show.S01E02-04.1080p.WEB.h264-GRP", []Ep{ep(1, 2, 4)}, nil},
+		{"Show.S01E02-E04.1080p.WEB.h264-GRP", []Ep{ep(1, 2, 4)}, nil},
+		{"Show.S00E02-S00E04.1080p.WEB.h264-GRP", []Ep{ep(0, 2, 4)}, nil},
+		{"[Group] Show - 00 ~ 12 [720p]", []Ep{ep(NoSeason, 0, 12)}, nil},
+		{"[Group] Show (01-12) [720p]", []Ep{ep(NoSeason, 1, 12)}, nil},
 		// a range that ends the title, in front of the episodes
-		{"[Group] Show 17-26 - 01 ~ 08 [720p]", []EpisodeSpan{{"", "01", "08"}}},
+		{"[Group] Show 17-26 - 01 ~ 08 [720p]", []Ep{ep(NoSeason, 1, 8)}, nil},
 		// a range that starts at 1 is the episodes of a batch, not the title
-		{"[Group] Show 01-12 - 13 [720p]", []EpisodeSpan{{"", "01", "12"}, {"", "13", ""}}},
-		{"Show.S01E1-E99999.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "1", "99999"}}},
+		{"[Group] Show 01-12 - 13 [720p]", []Ep{ep(NoSeason, 1, 12), ep(NoSeason, 13, 13)}, nil},
+		{"Show.S01E1-E99999.1080p.WEB.h264-GRP", []Ep{ep(1, 1, 99999)}, nil},
 		// episodes that are not a range
-		{"Show.S01E05E06.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "05", ""}, {"01", "06", ""}}},
-		{"Show.S01E01.S02E01.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "01", ""}, {"02", "01", ""}}},
-		{"Show.S01E02-S02E04.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", ""}, {"02", "04", ""}}},
+		{"Show.S01E05E06.1080p.WEB.h264-GRP", []Ep{ep(1, 5, 5), ep(1, 6, 6)}, nil},
+		{"Show.S01E01.S02E01.1080p.WEB.h264-GRP", []Ep{ep(1, 1, 1), ep(2, 1, 1)}, nil},
+		{"Show.S01E02-S02E04.1080p.WEB.h264-GRP", []Ep{ep(1, 2, 2), ep(2, 4, 4)}, nil},
 		// the season written before the episode, and a season 0 after another
-		{"[Group] Show S2 - 04 [720p]", []EpisodeSpan{{"2", "04", ""}}},
-		{"[Group] Show 2nd Season - 08 [720p]", []EpisodeSpan{{"2", "08", ""}}},
-		{"[Group] Show - S04E29 (WEB 1080p) | Other Name - E88 - S00E36", []EpisodeSpan{{"04", "29", ""}, {"04", "88", ""}, {"00", "36", ""}}},
+		{"[Group] Show S2 - 04 [720p]", []Ep{ep(2, 4, 4)}, nil},
+		{"[Group] Show 2nd Season - 08 [720p]", []Ep{ep(2, 8, 8)}, nil},
+		{"[Group] Show - S04E29 (WEB 1080p) | Other Name - E88 - S00E36", []Ep{ep(4, 29, 29), ep(4, 88, 88), ep(0, 36, 36)}, nil},
 		// a range goes on over a second hyphen
-		{"Show.S01E02-E03-E04.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", "04"}}},
-		{"Show.S01E02-E04-06.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", "06"}}},
-		{"Show.S01E01-E02.E04-E05.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "01", "02"}, {"01", "04", "05"}}},
-		{"Show.Ep.05-07.1080p.WEB.h264-GRP", []EpisodeSpan{{"", "05", "07"}}},
-		{"[Group] Show S2 - 04 ~ 06 [720p]", []EpisodeSpan{{"2", "04", "06"}}},
-		{"Show.S01E05-E06.5.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "05", "06.5"}}},
-		// an end that is not higher, a hyphen with spaces and a tilde between
-		// two tags make no range
-		{"Show.S01E02-E01.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "02", ""}, {"01", "01", ""}}},
-		{"Show.S01E05-E05.1080p.WEB.h264-GRP", []EpisodeSpan{{"01", "05", ""}, {"01", "05", ""}}},
-		{"Show S01E02 - E04 1080p WEB h264-GRP", []EpisodeSpan{{"01", "02", ""}, {"01", "04", ""}}},
+		{"Show.S01E02-E03-E04.1080p.WEB.h264-GRP", []Ep{ep(1, 2, 4)}, nil},
+		{"Show.S01E02-E04-06.1080p.WEB.h264-GRP", []Ep{ep(1, 2, 6)}, nil},
+		{"Show.S01E01-E02.E04-E05.1080p.WEB.h264-GRP", []Ep{ep(1, 1, 2), ep(1, 4, 5)}, nil},
+		{"Show.Ep.05-07.1080p.WEB.h264-GRP", []Ep{ep(NoSeason, 5, 7)}, nil},
+		{"[Group] Show S2 - 04 ~ 06 [720p]", []Ep{ep(2, 4, 6)}, nil},
+		{"Show.S01E05-E06.5.1080p.WEB.h264-GRP", []Ep{{Season: 1, First: 5, Last: 6, Frac: 5}}, nil},
+		// an end that is not higher and a hyphen with spaces between two tags
+		// make no range, and the same episode twice is listed once
+		{"Show.S01E02-E01.1080p.WEB.h264-GRP", []Ep{ep(1, 2, 2), ep(1, 1, 1)}, nil},
+		{"Show.S01E05-E05.1080p.WEB.h264-GRP", []Ep{ep(1, 5, 5)}, nil},
+		{"Show S01E02 - E04 1080p WEB h264-GRP", []Ep{ep(1, 2, 2), ep(1, 4, 4)}, nil},
 		// the season carried over a tag with no episode, and none carried back
-		{"Show.S01.1080p.E05.WEB.h264-GRP", []EpisodeSpan{{"01", "05", ""}}},
-		{"Show.E05.S01.1080p.WEB.h264-GRP", []EpisodeSpan{{"", "05", ""}}},
+		{"Show.S01.1080p.E05.WEB.h264-GRP", []Ep{ep(1, 5, 5)}, nil},
+		{"Show.E05.S01.1080p.WEB.h264-GRP", []Ep{ep(NoSeason, 5, 5)}, nil},
 		// the channels are not a fraction
-		{"Show.S01E06.5.1.AAC.720p.WEB-GRP", []EpisodeSpan{{"01", "06", ""}}},
+		{"Show.S01E06.5.1.AAC.720p.WEB-GRP", []Ep{ep(1, 6, 6)}, nil},
 		// a tilde makes a range as a hyphen does, inside a tag and between two
-		{"[Grp] Show S04E29~E31 1080p WEB H.264", []EpisodeSpan{{"04", "29", "31"}}},
-		{"Show.S01E01~03.1080p.WEB.x264-GRP", []EpisodeSpan{{"01", "01", "03"}}},
+		{"[Grp] Show S04E29~E31 1080p WEB H.264", []Ep{ep(4, 29, 31)}, nil},
+		// the end of a range that a version follows, and a second numbering
+		// after a hyphen, which is no range
+		{"Show.S04E29-31v2.1080p.WEB.H264-GRP", []Ep{ep(4, 29, 31)}, nil},
+		{"Show.S23E19-1174v2.1080p.WEB.H264-GRP", []Ep{ep(23, 19, 19)}, []Ep{ep(NoSeason, 1174, 1174)}},
+		{"Show.S01E05-Episode.10.1080p.WEB.H264-GRP", []Ep{ep(1, 5, 5)}, []Ep{ep(NoSeason, 10, 10)}},
+		{"Show.S01E01~03.1080p.WEB.x264-GRP", []Ep{ep(1, 1, 3)}, nil},
 		// a range end of four digits after an episode of three or more
-		{"[Grp] Show EP1156-1170 [1080p]", []EpisodeSpan{{"", "1156", "1170"}}},
-		{"Show.S01E1001-1004.1080p.WEB.x264-GRP", []EpisodeSpan{{"01", "1001", "1004"}}},
-		{"[Grp] Show E998-1002 [1080p]", []EpisodeSpan{{"", "998", "1002"}}},
+		{"[Grp] Show EP1156-1170 [1080p]", []Ep{ep(NoSeason, 1156, 1170)}, nil},
+		{"Show.S01E1001-1004.1080p.WEB.x264-GRP", []Ep{ep(1, 1001, 1004)}, nil},
+		{"[Grp] Show E998-1002 [1080p]", []Ep{ep(NoSeason, 998, 1002)}, nil},
 		// four digits after a lower episode are a year or another number, as
 		// are those a thousand episodes on
-		{"Show.S01E05-2020.1080p.WEB.x264-GRP", []EpisodeSpan{{"01", "05", ""}}},
-		{"[Grp] Show E05-2020 [1080p]", []EpisodeSpan{{"", "05", ""}}},
-		{"Show.S01E05-1080.WEB.x264-GRP", []EpisodeSpan{{"01", "05", ""}}},
-		{"Show.S01E100-9999.WEB.x264-GRP", []EpisodeSpan{{"01", "100", ""}}},
+		{"Show.S01E05-2020.1080p.WEB.x264-GRP", []Ep{ep(1, 5, 5)}, nil},
+		{"[Grp] Show E05-2020 [1080p]", []Ep{ep(NoSeason, 5, 5)}, nil},
+		{"Show.S01E05-1080.WEB.x264-GRP", []Ep{ep(1, 5, 5)}, nil},
+		{"Show.S01E100-9999.WEB.x264-GRP", []Ep{ep(1, 100, 100)}, nil},
 		// half an episode with a tag or a version right after it
-		{"Show.S01E06.5.WEB.x264-GRP", []EpisodeSpan{{"01", "06.5", ""}}},
-		{"Show.S01E02.5v2.720p.WEB.x264-GRP", []EpisodeSpan{{"01", "02.5", ""}}},
-		// one episode under two numberings, in the order written
-		{"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP", []EpisodeSpan{{"23", "19", ""}, {"23", "1174", ""}}},
+		{"Show.S01E06.5.WEB.x264-GRP", []Ep{{Season: 1, First: 6, Last: 6, Frac: 5}}, nil},
+		{"Show.S01E02.5v2.720p.WEB.x264-GRP", []Ep{{Season: 1, First: 2, Last: 2, Frac: 5}}, nil},
+		// one episode under two numberings: the second one has no season
+		{"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP", []Ep{ep(23, 19, 19)}, []Ep{ep(NoSeason, 1174, 1174)}},
+		{"[Grp] Show - 1174 (S23E19) [1080p]", []Ep{ep(23, 19, 19)}, []Ep{ep(NoSeason, 1174, 1174)}},
+		{"Noragami - S02E06 - What Must Be Done [Episode 6]", []Ep{ep(2, 6, 6)}, []Ep{ep(NoSeason, 6, 6)}},
+		// a second numbering starts no range, ends none, and is a range of
+		// its own when it writes one
+		{"Show.S01E01.Episode.5-E07.1080p.WEB.h264-GRP", []Ep{ep(1, 1, 1), ep(1, 7, 7)}, []Ep{ep(NoSeason, 5, 5)}},
+		{"Show.S01E01.Episode.5-7.1080p.WEB.h264-GRP", []Ep{ep(1, 1, 1)}, []Ep{ep(NoSeason, 5, 7)}},
+		{"Show.S01E01.Episode.5.5.1080p.WEB.h264-GRP", []Ep{ep(1, 1, 1)}, []Ep{{Season: NoSeason, First: 5, Last: 5, Frac: 5}}},
+		// the same episode written twice, in a path
+		{"Show.S11E11-GRP/Show.S11E11-GRP.mkv", []Ep{ep(11, 11, 11)}, nil},
 		// no episode
-		{"Show.S01.1080p.WEB.h264-GRP", nil},
-		{"Show.S01-S03.1080p.WEB.h264-GRP", nil},
-		{"Show.2024.10.13.1080p.WEB.h264-GRP", nil},
-		{"Movie.2020.1080p.BluRay.x264-GRP", nil},
+		{"Show.S01.1080p.WEB.h264-GRP", nil, nil},
+		{"Show.S01-S03.1080p.WEB.h264-GRP", nil, nil},
+		{"Show.2024.10.13.1080p.WEB.h264-GRP", nil, nil},
+		{"Movie.2020.1080p.BluRay.x264-GRP", nil, nil},
 	}
 	for _, test := range tests {
-		if v := ParseString(test.name).EpisodeSpans(); !slices.Equal(v, test.exp) {
-			t.Errorf("%q: expected spans %q, got: %q", test.name, test.exp, v)
+		n := ParseString(test.name).Numbering
+		if !slices.Equal(n.Episodes, test.exp) || !slices.Equal(n.Alt, test.alt) {
+			t.Errorf("%q: expected episodes %v and second numbering %v, got: %v and %v", test.name, test.exp, test.alt, n.Episodes, n.Alt)
 		}
 	}
-	// by hand
-	if v := (Release{Series: 2, Episode: 5}).EpisodeSpans(); !slices.Equal(v, []EpisodeSpan{{"2", "5", ""}}) {
-		t.Errorf("expected the episode set by hand, got: %q", v)
+}
+
+// TestNumberingValue checks the whole Numbering of names that between them
+// have every scheme and shape, and what its methods give for it.
+func TestNumberingValue(t *testing.T) {
+	type answers struct {
+		season, episode, absolute int
+		seasoned, numbered, abs   bool
+		shape                     Shape
 	}
-	if v := (Release{Series: 2}).EpisodeSpans(); v != nil {
-		t.Errorf("expected no span, got: %q", v)
+	tests := []struct {
+		name string
+		exp  Numbering
+		ans  answers
+	}{
+		// a season and an episode
+		{
+			"Show.S01E05.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}, Episodes: []Ep{ep(1, 5, 5)}},
+			answers{season: 1, seasoned: true, episode: 5, numbered: true, shape: ShapeEpisode},
+		},
+		{
+			"Show.1x05.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}, Episodes: []Ep{ep(1, 5, 5)}},
+			answers{season: 1, seasoned: true, episode: 5, numbered: true, shape: ShapeEpisode},
+		},
+		// a season in front of the episode
+		{
+			"[Grp] Show S2 - 04 [1080p].mkv",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{2}, Episodes: []Ep{ep(2, 4, 4)}},
+			answers{season: 2, seasoned: true, episode: 4, numbered: true, shape: ShapeEpisode},
+		},
+		{
+			"[Grp] Show 2nd Season - 08 [1080p].mkv",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{2}, Episodes: []Ep{ep(2, 8, 8)}},
+			answers{season: 2, seasoned: true, episode: 8, numbered: true, shape: ShapeEpisode},
+		},
+		// season 0 and episode 0 are a season and an episode
+		{
+			"Show.S00E05.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{0}, Episodes: []Ep{ep(0, 5, 5)}},
+			answers{seasoned: true, episode: 5, numbered: true, shape: ShapeEpisode},
+		},
+		{
+			"Show.S01E00.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}, Episodes: []Ep{ep(1, 0, 0)}},
+			answers{season: 1, seasoned: true, numbered: true, shape: ShapeEpisode},
+		},
+		{
+			"[Grp] Show - 00 [1080p].mkv",
+			Numbering{Scheme: SchemeAbsolute, Episodes: []Ep{ep(NoSeason, 0, 0)}},
+			answers{numbered: true, abs: true, shape: ShapeEpisode},
+		},
+		// packs
+		{
+			"Show.S01.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}},
+			answers{season: 1, seasoned: true, shape: ShapeSeason},
+		},
+		{
+			"Show.S00.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{0}},
+			answers{seasoned: true, shape: ShapeSeason},
+		},
+		{
+			"Show.S01-S03.1080p.BluRay.x264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1, 2, 3}},
+			answers{season: 1, seasoned: true, shape: ShapeSeasons},
+		},
+		// the seasons are in the order written, and Season gives the first
+		{
+			"[Grp] Show [Season 2 + Season 1 OVA] [BD 1080p]",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{2, 1}},
+			answers{season: 2, seasoned: true, shape: ShapeSeasons},
+		},
+		// the first season written is not the season of the episode
+		{
+			"Show.S01-S03E05.1080p.BluRay.x264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1, 3}, Episodes: []Ep{ep(3, 5, 5)}},
+			answers{season: 1, seasoned: true, episode: 5, numbered: true, shape: ShapeEpisode},
+		},
+		// several episodes
+		{
+			"Show.S01E05E06.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}, Episodes: []Ep{ep(1, 5, 5), ep(1, 6, 6)}},
+			answers{season: 1, seasoned: true, episode: 5, numbered: true, shape: ShapeEpisodes},
+		},
+		{
+			"Show.S01E01-E03.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}, Episodes: []Ep{ep(1, 1, 3)}},
+			answers{season: 1, seasoned: true, episode: 1, numbered: true, shape: ShapeEpisodes},
+		},
+		// the first episode of a batch is its episode, as that of any range
+		{
+			"[Grp] Show - 01-12 [1080p]",
+			Numbering{Scheme: SchemeAbsolute, Episodes: []Ep{ep(NoSeason, 1, 12)}},
+			answers{episode: 1, numbered: true, shape: ShapeEpisodes},
+		},
+		{
+			"[Grp] Show S2 - 01-12 [1080p]",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{2}, Episodes: []Ep{ep(2, 1, 12)}},
+			answers{season: 2, seasoned: true, episode: 1, numbered: true, shape: ShapeEpisodes},
+		},
+		// episodes with no season anywhere are absolute
+		{
+			"[Grp] Show - 1169 [1080p].mkv",
+			Numbering{Scheme: SchemeAbsolute, Episodes: []Ep{ep(NoSeason, 1169, 1169)}},
+			answers{episode: 1169, numbered: true, absolute: 1169, abs: true, shape: ShapeEpisode},
+		},
+		{
+			"Show.E1100.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeAbsolute, Episodes: []Ep{ep(NoSeason, 1100, 1100)}},
+			answers{episode: 1100, numbered: true, absolute: 1100, abs: true, shape: ShapeEpisode},
+		},
+		// half an episode
+		{
+			"[Grp] Show - 21.5 [1080p].mkv",
+			Numbering{Scheme: SchemeAbsolute, Episodes: []Ep{{Season: NoSeason, First: 21, Last: 21, Frac: 5}}},
+			answers{episode: 21, numbered: true, shape: ShapeEpisode},
+		},
+		{
+			"Show.S01E05-E06.5.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}, Episodes: []Ep{{Season: 1, First: 5, Last: 6, Frac: 5}}},
+			answers{season: 1, seasoned: true, episode: 5, numbered: true, shape: ShapeEpisodes},
+		},
+		// a second numbering
+		{
+			"Show.S23E19.Episode.1174.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{23}, Episodes: []Ep{ep(23, 19, 19)}, Alt: []Ep{ep(NoSeason, 1174, 1174)}},
+			answers{season: 23, seasoned: true, episode: 19, numbered: true, absolute: 1174, abs: true, shape: ShapeEpisode},
+		},
+		{
+			"Noragami - S02E06 - What Must Be Done [Episode 6]",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{2}, Episodes: []Ep{ep(2, 6, 6)}, Alt: []Ep{ep(NoSeason, 6, 6)}},
+			answers{season: 2, seasoned: true, episode: 6, numbered: true, shape: ShapeEpisode},
+		},
+		{
+			"Show.S00E05.Episode.12.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{0}, Episodes: []Ep{ep(0, 5, 5)}, Alt: []Ep{ep(NoSeason, 12, 12)}},
+			answers{seasoned: true, episode: 5, numbered: true, shape: ShapeEpisode},
+		},
+		// the same episode twice
+		{
+			"Show.S11E11-GRP/Show.S11E11-GRP.mkv",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{11}, Episodes: []Ep{ep(11, 11, 11)}},
+			answers{season: 11, seasoned: true, episode: 11, numbered: true, shape: ShapeEpisode},
+		},
+		// a date where an episode would stand
+		{
+			"Show.2024.03.11.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeDaily},
+			answers{shape: ShapeDaily},
+		},
+		{
+			"Show.2024.05.06.Title.Season.1.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeDaily, Seasons: []int{1}},
+			answers{season: 1, seasoned: true, shape: ShapeDaily},
+		},
+		// a date beside an episode
+		{
+			"Show.S01E05.2024.03.11.1080p.WEB.h264-GRP",
+			Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}, Episodes: []Ep{ep(1, 5, 5)}},
+			answers{season: 1, seasoned: true, episode: 5, numbered: true, shape: ShapeEpisode},
+		},
+		// no numbering
+		{"Movie.2020.1080p.BluRay.x264-GRP", Numbering{}, answers{}},
+		{"Artist_Name-Album_Title-2CD-FLAC-2020-GRP", Numbering{}, answers{}},
 	}
-	// by hand over a parsed season pack, which HasEpisode counts too
-	r := ParseString("Show.S01.1080p.WEB.h264-GRP")
-	r.Episode = 4
-	if v := r.EpisodeSpans(); !slices.Equal(v, []EpisodeSpan{{"1", "4", ""}}) || !r.HasEpisode() {
-		t.Errorf("expected the episode set by hand, got: %q", v)
+	for _, test := range tests {
+		r := ParseString(test.name)
+		n := r.Numbering
+		if !reflect.DeepEqual(n, test.exp) {
+			t.Errorf("%q: expected %+v, got: %+v", test.name, test.exp, n)
+		}
+		var got answers
+		got.season, got.seasoned = n.Season()
+		got.episode, got.numbered = n.Episode()
+		got.absolute, got.abs = n.Absolute()
+		if got.shape = n.Shape(); got != test.ans {
+			t.Errorf("%q: expected %+v, got: %+v", test.name, test.ans, got)
+		}
+		checkNumbering(t, test.name, r)
+	}
+	// a dated name is a daily episode by its type: the type a caller gives
+	// says whether the date stands for an episode
+	const dated = "Show.2024.03.11.1080p.WEB.h264-GRP"
+	for typ, exp := range map[Type]Scheme{Unknown: SchemeDaily, Episode: SchemeDaily, Movie: SchemeNone, Series: SchemeNone} {
+		if n := ParseStringHint(dated, Hint{Type: typ}).Numbering; n.Scheme != exp {
+			t.Errorf("%q as %q: expected scheme %q, got: %q", dated, typ, exp, n.Scheme)
+		}
+	}
+}
+
+// TestNumberingNames checks the names of the schemes, the shapes and the
+// kinds, which a caller prints and logs.
+func TestNumberingNames(t *testing.T) {
+	for _, test := range []struct {
+		v   fmt.Stringer
+		exp string
+	}{
+		{SchemeNone, ""}, {SchemeSeasoned, "seasoned"}, {SchemeAbsolute, "absolute"}, {SchemeDaily, "daily"}, {Scheme(99), ""},
+		{ShapeNone, ""}, {ShapeEpisode, "episode"}, {ShapeEpisodes, "episodes"}, {ShapeSeason, "season"}, {ShapeSeasons, "seasons"}, {ShapeDaily, "daily"}, {Shape(99), ""},
+		{EpRegular, ""}, {EpSpecial, "special"}, {EpOVA, "ova"}, {EpOP, "op"}, {EpED, "ed"}, {EpPV, "pv"}, {EpKind(99), ""},
+	} {
+		if s := test.v.String(); s != test.exp {
+			t.Errorf("%T(%d): expected %q, got: %q", test.v, test.v, test.exp, s)
+		}
+	}
+}
+
+// TestNumberingAll checks the order All yields in, that it stops when asked
+// to, and that it yields the two ends of a range it has no room to fill.
+func TestNumberingAll(t *testing.T) {
+	n := ParseString("[Grp] Show - S04E29-E31 (WEB 1080p) | Other Name - E88 - S00E36").Numbering
+	var got [][]int
+	for season, episode := range n.All() {
+		got = append(got, []int{season, episode})
+	}
+	if exp := [][]int{{4, 29}, {4, 30}, {4, 31}, {4, 88}, {0, 36}}; !slices.EqualFunc(got, exp, slices.Equal[[]int]) {
+		t.Errorf("expected %v in the order of the name, got: %v", exp, got)
+	}
+	got = nil
+	for season, episode := range n.All() {
+		if got = append(got, []int{season, episode}); len(got) == 2 {
+			break
+		}
+	}
+	if len(got) != 2 {
+		t.Errorf("expected All to stop after two, got: %v", got)
+	}
+	// the room is shared by the ranges of a numbering, in their order
+	wide := Numbering{Episodes: []Ep{ep(1, 1, 9000), ep(1, 9001, 12000), ep(2, 1, 3), ep(NoSeason, 7, 7)}}
+	count := map[int]int{}
+	for season := range wide.All() {
+		count[season]++
+	}
+	if exp := map[int]int{1: 9000 + 2, 2: 3, NoSeason: 1}; !reflect.DeepEqual(count, exp) {
+		t.Errorf("expected the episodes per season %v, got: %v", exp, count)
+	}
+	// an extra yields nothing
+	got = nil
+	for season, episode := range (Numbering{Episodes: []Ep{{Season: 1, First: 1, Last: 9, Kind: EpOVA}, ep(1, 5, 6), {Season: 1, First: 2, Last: 2, Kind: EpSpecial}}}).All() {
+		got = append(got, []int{season, episode})
+	}
+	if exp := [][]int{{1, 5}, {1, 6}}; !slices.EqualFunc(got, exp, slices.Equal[[]int]) {
+		t.Errorf("expected %v, got: %v", exp, got)
+	}
+}
+
+// TestNumberingAllAnyValue checks that All ends on a value no parse made, as
+// one decoded from a stored release may be: it yields no more than the two
+// ends of each Ep and maxRangeFill episodes beside them, whatever the numbers.
+// An Ep whose Last is not above its First yields its First, and a number
+// below 0 is yielded as it is.
+func TestNumberingAllAnyValue(t *testing.T) {
+	const lo, hi = math.MinInt, math.MaxInt
+	for _, test := range []struct {
+		name string
+		eps  []Ep
+		// the pairs when they are few, and else how many there are
+		exp   [][]int
+		count int
+	}{
+		{"last below first", []Ep{ep(1, 5, 3)}, [][]int{{1, 5}}, 0},
+		{"below zero", []Ep{ep(-7, -3, -1)}, [][]int{{-7, -3}, {-7, -2}, {-7, -1}}, 0},
+		{"from below zero to the highest", []Ep{ep(1, -2, hi)}, [][]int{{1, -2}, {1, hi}}, 0},
+		{"from the lowest to the highest", []Ep{ep(1, lo, hi)}, [][]int{{1, lo}, {1, hi}}, 0},
+		{"the two highest", []Ep{ep(1, hi-1, hi)}, [][]int{{1, hi - 1}, {1, hi}}, 0},
+		{"the highest three", []Ep{ep(1, hi-2, hi)}, [][]int{{1, hi - 2}, {1, hi - 1}, {1, hi}}, 0},
+		{"the lowest three", []Ep{ep(1, lo, lo+2)}, [][]int{{1, lo}, {1, lo + 1}, {1, lo + 2}}, 0},
+		{"the highest alone", []Ep{ep(NoSeason, hi, hi)}, [][]int{{NoSeason, hi}}, 0},
+		{"the highest down to the lowest", []Ep{ep(1, hi, lo)}, [][]int{{1, hi}}, 0},
+		// a range that fits is filled, and the one after it has what is left
+		{"as wide as the room", []Ep{ep(1, 0, maxRangeFill+1)}, nil, maxRangeFill + 2},
+		{"one wider than the room", []Ep{ep(1, 0, maxRangeFill+2)}, [][]int{{1, 0}, {1, maxRangeFill + 2}}, 0},
+		{"the room used up", []Ep{ep(1, -5000, 5001), ep(2, lo, hi), ep(3, 1, 3), ep(3, 7, 8)}, nil, maxRangeFill + 2 + 2 + 2 + 2},
+		// the first range of 9,000 is filled, and the others are their ends
+		{"many wide ranges", slices.Repeat([]Ep{ep(1, -2, hi), ep(2, lo, 0), ep(3, 1, 9000)}, 100), nil, 100*6 + 8998},
+	} {
+		n := Numbering{Episodes: test.eps}
+		var got [][]int
+		var count int
+		for season, episode := range n.All() {
+			if count++; count > 4*maxRangeFill {
+				break
+			}
+			if test.exp != nil {
+				got = append(got, []int{season, episode})
+			}
+		}
+		switch {
+		case test.exp != nil && !slices.EqualFunc(got, test.exp, slices.Equal[[]int]):
+			t.Errorf("%s: expected %v, got: %v", test.name, test.exp, got)
+		case test.exp == nil && count != test.count:
+			t.Errorf("%s: expected %d pairs, got: %d", test.name, test.count, count)
+		}
+		// the other methods read such a value too
+		_, _ = n.Season()
+		_, _ = n.Episode()
+		_, _ = n.Absolute()
+		_ = n.Shape()
+	}
+}
+
+// checkNumbering checks what holds for the Numbering of every parsed release,
+// whatever the name: the fields agree with each other and with the series
+// tags, and each method gives what the fields say.
+func checkNumbering(tb testing.TB, name string, r Release) {
+	tb.Helper()
+	n := r.Numbering
+	fail := func(format string, args ...any) {
+		tb.Helper()
+		tb.Errorf("%.200q: %s\n  %+v", name, fmt.Sprintf(format, args...), n)
+	}
+	// the fields
+	for _, list := range [][]Ep{n.Episodes, n.Alt} {
+		for i, e := range list {
+			switch {
+			case e.First < 0 || e.First > e.Last:
+				fail("expected an episode from First up to Last, got: %+v", e)
+			case e.Season != NoSeason && e.Season < 0:
+				fail("expected a season or NoSeason, got: %+v", e)
+			case e.Kind != EpRegular || e.Frac > 99 || e.Frac != 0 && e.Frac%10 == 0:
+				fail("expected a regular episode with a fraction of two digits at most and no zero at its end, got: %+v", e)
+			case e.Season != NoSeason && !slices.Contains(n.Seasons, e.Season):
+				fail("expected the season of %+v in Seasons", e)
+			case slices.Contains(list[:i], e):
+				fail("expected %+v once", e)
+			}
+		}
+		if list != nil && (len(list) == 0 || cap(list) != len(list)) {
+			fail("expected nil for no episodes and no room to spare, got: %d of %d", len(list), cap(list))
+		}
+	}
+	for i, season := range n.Seasons {
+		if season < 0 || slices.Contains(n.Seasons[:i], season) {
+			fail("expected each season once, got: %v", n.Seasons)
+		}
+	}
+	if n.Seasons != nil && (len(n.Seasons) == 0 || cap(n.Seasons) != len(n.Seasons)) {
+		fail("expected nil for no seasons and no room to spare, got: %d of %d", len(n.Seasons), cap(n.Seasons))
+	}
+	if slices.ContainsFunc(n.Alt, func(e Ep) bool { return e.Season != NoSeason }) || n.Alt != nil && (n.Episodes == nil || n.Seasons == nil) {
+		fail("expected a second numbering with no season, beside a season and an episode")
+	}
+	if n.Volume != 0 || n.Contents != nil || n.Batch {
+		fail("expected no volume, contents or batch")
+	}
+	daily := n.Episodes == nil && r.Type == Episode && r.Year != 0 && r.Month != 0 && r.Day != 0
+	scheme := SchemeNone
+	switch {
+	case daily:
+		scheme = SchemeDaily
+	case n.Seasons != nil:
+		scheme = SchemeSeasoned
+	case n.Episodes != nil:
+		scheme = SchemeAbsolute
+	}
+	if n.Scheme != scheme {
+		fail("expected scheme %q, got: %q", scheme, n.Scheme)
+	}
+	// the tags
+	var seasons, episodes bool
+	for _, tag := range r.tags {
+		if !tag.Is(TagTypeSeries) {
+			continue
+		}
+		if tag.val(1) != "" {
+			if seasons = true; !slices.Contains(n.Seasons, atoi(tag.val(1))) {
+				fail("expected the season of the tag %q in Seasons", tag.val(0))
+			}
+		}
+		episodes = episodes || tag.wroteEpisode()
+	}
+	if seasons != (n.Seasons != nil) || episodes != (n.Episodes != nil) {
+		fail("expected seasons %t and episodes %t by the tags", seasons, episodes)
+	}
+	if again, _ := r.numbering(); !reflect.DeepEqual(again, Numbering{Scheme: again.Scheme, Seasons: n.Seasons, Episodes: n.Episodes, Alt: n.Alt}) {
+		fail("expected the tags to give the same numbering again, got: %+v", again)
+	}
+	// the methods
+	season, seasoned := n.Season()
+	if seasoned != (n.Seasons != nil) || seasoned && season != n.Seasons[0] || !seasoned && season != 0 {
+		fail("expected Season to give the first of Seasons, got: %d %t", season, seasoned)
+	}
+	episode, numbered := n.Episode()
+	if numbered != (n.Episodes != nil) || numbered && episode != n.Episodes[0].First || !numbered && episode != 0 {
+		fail("expected Episode to give the First of the first episode, got: %d %t", episode, numbered)
+	}
+	shape := ShapeNone
+	switch {
+	case len(n.Episodes) == 1 && n.Episodes[0].First == n.Episodes[0].Last:
+		shape = ShapeEpisode
+	case n.Episodes != nil:
+		shape = ShapeEpisodes
+	case daily:
+		shape = ShapeDaily
+	case len(n.Seasons) == 1:
+		shape = ShapeSeason
+	case n.Seasons != nil:
+		shape = ShapeSeasons
+	}
+	if n.Shape() != shape {
+		fail("expected shape %q, got: %q", shape, n.Shape())
+	}
+	// All yields the episodes of each Ep in turn: its First, then all the
+	// episodes inside a range or none of them, and the Last of a range
+	var all [][2]int
+	for season, episode := range n.All() {
+		all = append(all, [2]int{season, episode})
+	}
+	var k, filled int
+	for _, e := range n.Episodes {
+		if k == len(all) || all[k] != [2]int{e.Season, e.First} {
+			fail("expected All to yield the First of %+v as pair %d, got: %v", e, k, all[min(k, len(all)):min(k+1, len(all))])
+			break
+		}
+		if k++; e.First == e.Last {
+			continue
+		}
+		if inside := e.Last - e.First - 1; inside > 0 && k < len(all) && all[k] == [2]int{e.Season, e.First + 1} {
+			for episode := e.First + 1; episode < e.Last && k < len(all) && all[k] == [2]int{e.Season, episode}; episode++ {
+				k, filled = k+1, filled+1
+			}
+		}
+		if k == len(all) || all[k] != [2]int{e.Season, e.Last} {
+			fail("expected All to yield the Last of %+v as pair %d, got: %v", e, k, all[min(k, len(all)):min(k+1, len(all))])
+			break
+		}
+		k++
+	}
+	if k != len(all) || filled > maxRangeFill {
+		fail("expected All to yield the episodes and no more, and to fill at most %d, got: %d pairs, %d read and %d filled", maxRangeFill, len(all), k, filled)
+	}
+	// an absolute episode is one whole episode: the one episode of a name
+	// with no season anywhere, which Episode gives too, and else a second
+	// numbering that is not the season's episode again
+	absolute, ok := n.Absolute()
+	one := func(e Ep) bool { return e.First == absolute && e.Last == absolute && e.Frac == 0 }
+	switch {
+	case !ok && absolute != 0:
+		fail("expected no number with no absolute episode, got: %d", absolute)
+	case !ok:
+	case !seasoned && (len(n.Episodes) != 1 || !one(n.Episodes[0]) || absolute != episode):
+		fail("expected the absolute episode %d to be the one episode", absolute)
+	case seasoned && (season == 0 || absolute == episode || !slices.ContainsFunc(n.Alt, one)):
+		fail("expected the absolute episode %d to be a second numbering, and not of the specials or the episode again", absolute)
+	}
+}
+
+// TestNumberingInvariants checks checkNumbering on every name there is: those
+// of tests.yaml, of the labelled fixtures and of the corpora that are present.
+func TestNumberingInvariants(t *testing.T) {
+	names := slices.Concat(benchCorpus(t), scratchNames())
+	for _, file := range []string{"anitomy.json", "anitogo.json", "nyaa-400.json", "nyaa-blind-140.json", "probes-title.json", "probes-title-end.json"} {
+		for _, c := range loadLabelled(t, file) {
+			names = append(names, c.FileName)
+		}
+	}
+	if !testing.Short() {
+		for _, file := range []string{"nyaa.txt", "sports.txt"} {
+			v, _ := readCorpus(file)
+			names = append(names, v...)
+		}
+	}
+	shapes := map[Shape]int{}
+	for _, name := range names {
+		r := ParseString(name)
+		checkNumbering(t, name, r)
+		shapes[r.Numbering.Shape()]++
+	}
+	t.Logf("%d names: %v", len(names), shapes)
+}
+
+// TestNumberingLinear checks that the time to parse a name grows with its
+// length and not with the square of it, for names that are all numbering. A
+// name is untrusted input, and the numbering is read on every parse. Each
+// shape is parsed at two lengths, one eight times the other, and the longer
+// may take 24 times as long: a walk over the name for every series tag takes
+// 64.
+func TestNumberingLinear(t *testing.T) {
+	clock := func(s string) time.Duration {
+		best := time.Duration(1<<63 - 1)
+		for range 5 {
+			start := time.Now()
+			ParseString(s)
+			best = min(best, time.Since(start))
+		}
+		return best
+	}
+	for _, unit := range []string{
+		// a range that is a word of the title, and the episodes
+		"Title 17-26 - 01 ~ 08 ",
+		// seasons with their episodes, the same and different ones
+		"S01E01.",
+		"S01E01.S02E02.",
+		// ranges between two tags and inside one
+		"E01-E02.",
+		"01 ~ 12 ",
+		// a list of seasons
+		"Season 1+2+",
+		// episodes with no season, and second numberings
+		"[Grp] Show - 05 ",
+		"- 05 ",
+		"- 05v2 ",
+		"Episode 5 ",
+		"S23E19.Episode.1174.",
+		"S01E01.S02E02.Episode.3.",
+		// a season in front of the episode, and seasons with a range beside
+		"S2 - 04 ",
+		"2nd Season - 08 ",
+		"Season 1-4 (1-76) ",
+	} {
+		short := clock(strings.Repeat(unit, 1000))
+		long := clock(strings.Repeat(unit, 8000))
+		if long > 24*short {
+			t.Errorf("8000 of %q took %s and 1000 took %s, more than 24 times as long", unit, long, short)
+		}
+	}
+}
+
+// TestNumberingParseAllocs keeps what the numbering adds to a parse to what a
+// release holds on to: nothing for a name with no numbering, and one
+// allocation for its seasons, its episodes and its second numbering each.
+func TestNumberingParseAllocs(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		max  float64
+	}{
+		{"Movie.Title.2019.1080p.WEB-DL.DDP5.1.H.264-GRP", 0},
+		{"Show.Title.2024.03.11.1080p.WEB-DL.H.264-GRP", 0},
+		{"Show.Title.S01.1080p.WEB-DL.H.264-GRP", 1},
+		{"[SubsPlease] Show Title - 05 (1080p) [ABCD1234].mkv", 1},
+		{"[SubsPlease] Show Title (01-12) (1080p) [Batch]", 1},
+		{"Show.Title.S01E02.The.Episode.1080p.WEB-DL.DDP5.1.H.264-GRP", 2},
+		{"Show.Title.S01E02-E04.1080p.WEB-DL.H.264-GRP", 2},
+		{"Show.Title.S23E19.Episode.1174.1080p.WEB-DL.H.264-GRP", 3},
+	} {
+		r := ParseString(test.name)
+		if n := testing.AllocsPerRun(100, func() { _, _ = r.numbering() }); n > test.max {
+			t.Errorf("%q: expected at most %v allocations for the numbering, got: %v", test.name, test.max, n)
+		}
+	}
+}
+
+// TestEventNumbering checks what Event reads of the numbering of a name that
+// starts with a competition: an episode with no season makes it a show about
+// the sport, and the range of a batch does not.
+func TestEventNumbering(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		exp  bool
+	}{
+		{"UFC.300.Prelims.1080p.WEB.h264-GRP", true},
+		{"WWE.Unreal.E02.1080p.WEB.h264-GRP", false},
+		{"UFC.Countdown.E05.720p.HDTV.x264-GRP", false},
+		{"UFC.2024.E01-E03.Qualifying.1080p.WEB.h264-GRP", false},
+		{"UFC.2024.(01-05).Qualifying.1080p.WEB.h264-GRP", true},
+	} {
+		if ev, ok := ParseString(test.name).Event(); ok != test.exp {
+			t.Errorf("%q: expected an event %t, got: %+v %t", test.name, test.exp, ev, ok)
+		}
+	}
+	// a release made by hand has the episode it was given
+	r := Release{Type: Episode, Title: "UFC 300", Subtitle: "Prelims"}
+	if _, ok := r.Event(); !ok {
+		t.Errorf("expected an event with no numbering")
+	}
+	r.Numbering = Numbering{Scheme: SchemeAbsolute, Episodes: []Ep{ep(NoSeason, 5, 5)}}
+	if ev, ok := r.Event(); ok {
+		t.Errorf("expected no event with an episode and no season, got: %+v", ev)
+	}
+	// the range of a batch is no episode, and neither is an extra
+	for _, n := range []Numbering{
+		{Scheme: SchemeAbsolute, Episodes: []Ep{ep(NoSeason, 1, 3)}},
+		{Episodes: []Ep{{Season: NoSeason, First: 2, Last: 2, Kind: EpOVA}}},
+		{Episodes: []Ep{ep(NoSeason, 0, 0)}},
+	} {
+		if r.Numbering = n; !func() bool { _, ok := r.Event(); return ok }() {
+			t.Errorf("expected an event with %+v", n)
+		}
+	}
+	r.Numbering = Numbering{Scheme: SchemeSeasoned, Seasons: []int{1}, Episodes: []Ep{ep(1, 5, 5)}}
+	if ev, ok := r.Event(); ok {
+		t.Errorf("expected no event with a season and an episode, got: %+v", ev)
 	}
 }
