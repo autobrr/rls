@@ -388,7 +388,7 @@ func TestLeadingFlagsBracket(t *testing.T) {
 		{"(REPACK) 2012.1080p.BluRay.x264-GRP", "2012", "GRP", "1080p", 0, []string{"REPACK"}},
 	} {
 		r := ParseString(test.s)
-		if r.Title != test.title || r.Group != test.group || r.Resolution != test.resolution || r.Year != test.year || fmt.Sprint(r.Other) != fmt.Sprint(test.other) {
+		if r.Title != test.title || r.Group != test.group || string(r.Resolution) != test.resolution || r.Year != test.year || fmt.Sprint(r.Other) != fmt.Sprint(test.other) {
 			t.Errorf("%q expected title %q, group %q, resolution %q, year %d, other %q, got: %q, %q, %q, %d, %q",
 				test.s, test.title, test.group, test.resolution, test.year, test.other, r.Title, r.Group, r.Resolution, r.Year, r.Other)
 		}

@@ -980,11 +980,11 @@ func (b *TagBuilder) collect(r *Release) {
 			}
 		case TagTypeSource:
 			if s := r.tags[i].Source(); preciser(r.Source, s) {
-				r.Source = s
+				r.Source = Source(s)
 			}
 		case TagTypeResolution:
 			if r.Resolution == "" {
-				r.Resolution = r.tags[i].Resolution()
+				r.Resolution = Resolution(r.tags[i].Resolution())
 			}
 		case TagTypeCollection:
 			if r.Collection == "" {
@@ -1002,7 +1002,11 @@ func (b *TagBuilder) collect(r *Release) {
 				r.Disc = r.tags[i].Disc()
 			}
 		case TagTypeCodec:
-			r.Codec = appendOnce(r.Codec, r.tags[i].Codec())
+			// appendOnce is kept to strings: as a generic it made the
+			// build of a long name a few percent slower
+			if c := Codec(r.tags[i].Codec()); !slices.Contains(r.Codec, c) {
+				r.Codec = append(r.Codec, c)
+			}
 		case TagTypeHDR:
 			r.DynamicRange |= ParseDynamicRange(r.tags[i].HDR())
 		case TagTypeBitDepth:
@@ -1236,7 +1240,7 @@ func (b *TagBuilder) unset(r *Release) {
 	for i := 0; i < len(r.tags); i++ {
 		// if source had been previously reset, save it
 		if grabSource && r.tags[i].Is(TagTypeSource) && r.Source == "" {
-			r.Source = r.tags[i].Source()
+			r.Source = Source(r.tags[i].Source())
 		}
 		ityp := r.tags[i].InfoType()
 		// reset exclusive tags
@@ -1266,15 +1270,22 @@ func (b *TagBuilder) unset(r *Release) {
 				r.Platform, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeArch && r.Arch == s:
 				r.Arch, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeSource && r.Source == s:
+			case typ == TagTypeSource && string(r.Source) == s:
 				// the source is then the next one in the name
 				r.Source, r.tags[i], grabSource = "", r.tags[i].As(TagTypeText, nil), true
-			case typ == TagTypeResolution && r.Resolution == s:
+			case typ == TagTypeResolution && string(r.Resolution) == s:
 				r.Resolution, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeCollection && r.Collection == s:
 				r.Collection, r.tags[i] = "", r.tags[i].As(TagTypeText, nil)
-			case typ == TagTypeCodec && slices.Contains(r.Codec, s):
-				r.Codec, r.tags[i] = remove(r.Codec, s), r.tags[i].As(TagTypeText, nil)
+			case typ == TagTypeCodec && slices.Contains(r.Codec, Codec(s)):
+				// as remove does for the lists of strings
+				var v []Codec
+				for _, c := range r.Codec {
+					if c != Codec(s) {
+						v = append(v, c)
+					}
+				}
+				r.Codec, r.tags[i] = v, r.tags[i].As(TagTypeText, nil)
 			case typ == TagTypeHDR:
 				// a tag that is none of the formats is in no bit, and is
 				// still given back
@@ -1307,7 +1318,7 @@ func (b *TagBuilder) unset(r *Release) {
 			}
 		} else if !movieSeriesEpisodeMusicGame && r.tags[i].Is(TagTypeSource) && ityp.Is(Movie, Series, Episode) {
 			// reset movie/series/episode source tags
-			if r.Source == r.tags[i].Normalize() {
+			if string(r.Source) == r.tags[i].Normalize() {
 				r.Source = ""
 			}
 			r.tags[i], grabSource = r.tags[i].As(TagTypeText, nil), true
@@ -1334,7 +1345,7 @@ func dropDynamicRange(d DynamicRange, tags []Tag, f DynamicRange) DynamicRange {
 // preciser reports whether source s replaces the source collected so far,
 // which it does when there is none or when s is more precise than a CD or a
 // DVD.
-func preciser(cur, s string) bool {
+func preciser(cur Source, s string) bool {
 	return cur == "" || cur == "CD" || (cur == "DVD" && s != "CD")
 }
 

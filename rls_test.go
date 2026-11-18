@@ -135,7 +135,7 @@ func TestOpeningResolution(t *testing.T) {
 	}
 	for _, test := range tests {
 		r := ParseString(test.name)
-		if r.Title != test.title || r.Resolution != test.resolution || r.Group != test.group {
+		if r.Title != test.title || string(r.Resolution) != test.resolution || r.Group != test.group {
 			t.Errorf("%q: expected title %q, resolution %q, group %q, got: %q, %q, %q", test.name, test.title, test.resolution, test.group, r.Title, r.Resolution, r.Group)
 		}
 	}
@@ -168,7 +168,7 @@ func TestSpecialEpisode(t *testing.T) {
 		{"Artist - Album SP Episode 1 (Remastered)", "Album", "", "SP", Music},
 	} {
 		r := ParseString(test.name)
-		if r.Type != test.typ || r.Title != test.title || r.Subtitle != test.subtitle || r.Source != test.source {
+		if r.Type != test.typ || r.Title != test.title || r.Subtitle != test.subtitle || string(r.Source) != test.source {
 			t.Errorf("%q: expected %s, title %q, subtitle %q, source %q, got: %s, %q, %q, %q", test.name, test.typ, test.title, test.subtitle, test.source, r.Type, r.Title, r.Subtitle, r.Source)
 		}
 	}
@@ -213,7 +213,7 @@ func TestListValuesOnce(t *testing.T) {
 	if exp := []string{"DUAL.AUDIO", "AAC"}; !slices.Equal(r.Audio, exp) {
 		t.Errorf("expected audio %q, got: %q", exp, r.Audio)
 	}
-	if exp := []string{"HEVC", "x265"}; !slices.Equal(r.Codec, exp) {
+	if exp := []Codec{"HEVC", "x265"}; !slices.Equal(r.Codec, exp) {
 		t.Errorf("expected codec %q, got: %q", exp, r.Codec)
 	}
 	if exp := []string{"ENGLiSH"}; !slices.Equal(r.Language, exp) {
@@ -1200,8 +1200,8 @@ func buildRls(r Release) rls {
 		Platform: r.Platform,
 		Arch:     r.Arch,
 
-		Source:     r.Source,
-		Resolution: r.Resolution,
+		Source:     string(r.Source),
+		Resolution: string(r.Resolution),
 		Framerate:  r.FrameRate,
 		Collection: r.Collection,
 
@@ -1217,7 +1217,7 @@ func buildRls(r Release) rls {
 		Version:        r.Version,
 		Disc:           r.Disc,
 
-		Codec:        strings.Join(r.Codec, " "),
+		Codec:        strings.Join(strs(r.Codec), " "),
 		DynamicRange: strings.Join(r.DynamicRange.Strings(), " "),
 		Bitdepth:     r.BitDepth,
 		Audio:        strings.Join(r.Audio, " "),

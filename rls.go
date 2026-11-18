@@ -41,8 +41,8 @@ type Release struct {
 	Platform string
 	Arch     string
 
-	Source     string
-	Resolution string
+	Source     Source
+	Resolution Resolution
 	// FrameRate is the frames per second as written ('60fps', '23.976fps'),
 	// on its own or after the resolution ('1080p60').
 	FrameRate  string
@@ -60,7 +60,7 @@ type Release struct {
 	Version   string
 	Disc      string
 
-	Codec []string
+	Codec []Codec
 	// DynamicRange is the set of dynamic range formats the name gives
 	// ('DV.HDR10' gives DV and HDR10). A hdr row added with WithTaginfo
 	// whose tag is one of the seven spellings in another case counts as that
@@ -1308,7 +1308,7 @@ func Compare(a, b Release) int {
 		compareInt(aepisode, bepisode),
 		compareTitle(a.Subtitle, b.Subtitle),
 		compareTitles(a.Alt, b.Alt),
-		compareIntString(a.Resolution, b.Resolution),
+		compareIntString(string(a.Resolution), string(b.Resolution)),
 		compareString(a.Version, b.Version),
 		compareString(a.Group, b.Group),
 		compareString(a.Title, b.Title),
