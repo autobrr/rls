@@ -66,6 +66,47 @@ func groupTag(tags []Tag) int {
 	return -1
 }
 
+// leadGroup reads the group of a name that opens with it in parentheses, ie
+// the 'CBB' of '(CBB) Aoki Hagane no Arpeggio - The Complete Series (BD
+// 1080p)', and reports whether it made a group tag. The meta lexer reads a
+// group in square brackets alone. in and spans are the brackets of the name,
+// see brackets: the first is parentheses around one word of at most twelve
+// bytes, a title of two words or more follows it outside any bracket, and a
+// bracket of tags closes the name, as the parentheses that open a film or a
+// record hold a word of its title ('(Un)Well', '(500) Days of Summer').
+func (b *TagBuilder) leadGroup(r *Release, in []uint8, spans []span) bool {
+	s := spans[0]
+	if s.meta || s.role != roleWords || s.words != 1 || groupTag(r.tags) != -1 {
+		return false
+	}
+	g := -1
+	for i := s.open; i < s.end; i++ {
+		switch {
+		case r.tags[i].Is(TagTypeText) && g == -1:
+			g = i
+		case !r.tags[i].Is(TagTypeDelim, TagTypeWhitespace):
+			return false
+		}
+	}
+	if g == -1 || !gap(r.tags, 0, s.open) {
+		return false
+	}
+	if s.by != '(' || len(r.tags[g].v[0]) > 12 {
+		return false
+	}
+	var words int
+	for i := s.end + 1; i < len(r.tags) && in[i] == bracketNone && r.tags[i].Is(TagTypeText, TagTypeDelim); i++ {
+		if r.tags[i].Is(TagTypeText) {
+			words++
+		}
+	}
+	if last := spans[len(spans)-1]; words < 2 || last.role != roleTags || !gap(r.tags, last.end, len(r.tags)) && !r.tags[len(r.tags)-1].Is(TagTypeExt) {
+		return false
+	}
+	r.tags[g], r.groupFrom = r.tags[g].as(TagTypeGroup, nil), groupLeading
+	return true
+}
+
 // settleGroup decides what the lexers left open about the group tag, with the
 // zones of the name: a guess of the group lexer that is a word of the name is
 // given back to it, and a '-GROUP' in front of brackets is made the group.

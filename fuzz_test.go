@@ -100,7 +100,8 @@ func checkTags(tb testing.TB, s string) {
 // notice. checkTags makes the same comparison on the tags straight out of
 // Parse, with no Build in between, so a failure names the lexing step. And it
 // checks that no tag holds a delimiter outside its value, lexed or built, and
-// that the numbering of the release agrees with itself and with its tags.
+// that the numbering of the release agrees with itself and with its tags,
+// also when the name is built with every tag inside it.
 //
 // Plain go test runs the seeds, which are every name in tests.yaml and the
 // inputs below, so both checks run without -fuzz.
@@ -135,6 +136,19 @@ func FuzzParseString(f *testing.F) {
 	f.Add("Seasons 1 &")
 	f.Add("S1+")
 	f.Add("S1 , 2")
+	// a claim in front of a bracket that closes the name and that no lexer
+	// knows, so that it ends the tags
+	f.Add("Movie FLAC】")
+	f.Add("A Patch〕")
+	f.Add("Show German】")
+	// flags in a bracket in front of what the builder then builds alone:
+	// words and a group in parentheses, a bracket right behind the delimiter
+	// that closes the flags, and a group in the square brackets of CJK
+	// text. The first is the input a fuzz run found
+	f.Add("[REPACK7](A000)00 000(000000")
+	f.Add("[REPACK] (Group) Show - 01 [1080p]")
+	f.Add("[REPACK]([Batch]) Show 1080p")
+	f.Add("[REPACK] 【Group】Show - 01 [1080p]")
 	// the edges of the lexers that read the start and the end of a name
 	for _, s := range []string{
 		" ", "...", "-", "[]", "[[", "\x00", "\xff\xfe", "-GROUP", ".mkv",
@@ -152,6 +166,10 @@ func FuzzParseString(f *testing.F) {
 		checkEdges(t, s, r.Tags())
 		checkNumbering(t, s, r)
 		exercise(r)
+		// and with every tag inside the name, see buildWhole
+		whole := buildWhole(s)
+		checkNumbering(t, s, whole)
+		exercise(whole)
 	})
 }
 
@@ -197,7 +215,8 @@ func FuzzParseGates(f *testing.F) {
 // FuzzParseHint checks that no name and no hint can panic the parser, a wrong
 // type for the name least of all: the steps after the type is known index the
 // tags they expect a release of that type to have. The tags still reproduce
-// the input, since a hint changes how tags are read and never their text.
+// the input, since a hint changes how tags are read and never their text, and
+// the numbering agrees with the tags whatever the hint says.
 func FuzzParseHint(f *testing.F) {
 	for i, test := range rlsTests(f) {
 		f.Add(test.s, uint8(i), i%2 == 0)
@@ -210,6 +229,7 @@ func FuzzParseHint(f *testing.F) {
 		if o := fmt.Sprintf("%o", r); o != s {
 			t.Errorf("round trip failed:\n in: %q\nout: %q", s, o)
 		}
+		checkNumbering(t, s, r)
 		exercise(r)
 	})
 }

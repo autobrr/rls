@@ -157,9 +157,9 @@ func (t tally) pct() float64 {
 // down to a whole percent, and 99 where the measured value is 100: a change
 // that trades a case away has to lower its floor and say why.
 var floors = map[string]map[string]float64{
-	"anitomy.json": {"title": 65, "group": 92, "episode": 65, "episodeTitle": 69, "season": 90, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
-	"habari.json":  {"title": 70, "group": 89, "episode": 65, "episodeTitle": 55, "season": 89, "checksum": 99, "ext": 99, "resolution": 93, "version": 71},
-	"anitogo.json": {"title": 65, "group": 93, "episode": 64, "episodeTitle": 65, "season": 93, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
+	"anitomy.json": {"title": 70, "group": 93, "episode": 65, "episodeTitle": 69, "season": 90, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
+	"habari.json":  {"title": 74, "group": 89, "episode": 65, "episodeTitle": 55, "season": 91, "checksum": 99, "ext": 99, "resolution": 93, "version": 71},
+	"anitogo.json": {"title": 71, "group": 94, "episode": 64, "episodeTitle": 65, "season": 93, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
 }
 
 // upstream are the SHA-256 sums of the committed fixtures, which are the files
@@ -256,8 +256,8 @@ func TestAccuracyLabelled(t *testing.T) {
 // percentage: a change that loses one name has to lower its floor and say why,
 // and one that gains a name raises it.
 var sampleFloors = map[string]map[string]int{
-	"nyaa-400.json":       {"names": 331, "title": 347, "group": 392, "type": 310, "season": 398, "episode": 375},
-	"nyaa-blind-140.json": {"names": 27, "title": 63, "group": 124, "type": 45, "season": 134, "episode": 101},
+	"nyaa-400.json":       {"names": 337, "title": 354, "group": 393, "type": 310, "season": 398, "episode": 375},
+	"nyaa-blind-140.json": {"names": 36, "title": 81, "group": 124, "type": 45, "season": 134, "episode": 101},
 }
 
 // episodes gives the episodes of r as a sample writes them: nothing for a

@@ -33,7 +33,9 @@ type Release struct {
 	// Alt is the other names of a movie or series given with 'AKA' or 'aka'
 	// in the title, one name per element ('A.aka.B.aka.C.2001' gives 'B' and
 	// 'C'), or the title in CJK script from a leading bracket in front of a
-	// scene name ('[港灯].Harbor.Lights.S01-GRP').
+	// scene name ('[港灯].Harbor.Lights.S01-GRP'). A fansub name gives them
+	// behind a bar or a slash, or in a bracket behind the title ('[Group] A
+	// | B - 01', '[Group] A / B - 01', '[Group] A (B) - 01').
 	Alt []string
 
 	Platform string
@@ -94,6 +96,12 @@ type Release struct {
 	numbered bool
 	// groupFrom is where Group was read.
 	groupFrom groupOrigin
+	// shaped is whether the structure stage read the name, see shapeOf.
+	// first is then the first word of its title, as a position in the tags,
+	// and boxed whether the title stands in a bracket of its own
+	// ('[Group][Title][01]').
+	shaped, boxed bool
+	first         int
 
 	tags   []Tag
 	dates  []int
