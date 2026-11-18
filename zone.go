@@ -395,8 +395,9 @@ func (z zones) side(tags []Tag, i, inc int) (side, int, bool) {
 // settle decides, for every word the lexers claimed, whether it is a tag or
 // a word, and turns the words back into text. The type of the release is not
 // known yet, as it is read from the tags that settle leaves: see settleVideo
-// for the claims that need it.
-func (b *TagBuilder) settle(r *Release) {
+// for the claims that need it. It returns the zones of the name, which
+// settleGroup reads the group in.
+func (b *TagBuilder) settle(r *Release) zones {
 	b.settleWindows(r)
 	b.settleDates(r)
 	tags, end := r.tags, r.end
@@ -455,6 +456,7 @@ func (b *TagBuilder) settle(r *Release) {
 			tags[i] = tags[i].As(TagTypeText, nil)
 		}
 	}
+	return z
 }
 
 // The kinds of bracket a tag can stand in, see brackets.
