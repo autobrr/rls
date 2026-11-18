@@ -752,6 +752,11 @@ func (tag Tag) Normalize() string {
 		typ, s := tag.Meta()
 		switch typ {
 		case "site", "sum":
+			// a group in the square brackets of CJK text keeps them, see
+			// leadSquare ('【Group】')
+			if o := tag.val(0); squared(o) {
+				return o
+			}
 			return "[" + s + "]"
 		case "pass":
 			return "{{" + s + "}}"

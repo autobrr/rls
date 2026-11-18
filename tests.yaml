@@ -3296,6 +3296,15 @@
   other: "REMUX"
   group: "FraMeSToR"
   ext: "mkv"
+"[Mezashite] Aikatsu! ‒ 100 [D035A39F].mkv":
+  type: "episode"
+  title: "Aikatsu!"
+  episode: 100
+  absolute: 100
+  group: "Mezashite"
+  site: "Mezashite"
+  sum: "D035A39F"
+  ext: "mkv"
 "[Mecha] Aldnoah.Zero - 24.5v2 (OVA) (BD 1920x1080 x265-10Bit Flac)":
   type: "episode"
   title: "Aldnoah Zero"
@@ -7132,6 +7141,28 @@
   group: "Prejudice-Studio"
   site: "Prejudice-Studio"
   unused: "简体内嵌"
+"[YYQ字幕组][幼女战记 第二季 / 谭雅战记 第二季 / Youjo Senki S2][03][1080P][简日双语][MP4][AVC_AAC][TVRIP]":
+  type: "episode"
+  title: "幼女战记"
+  alt: "谭雅战记 AKA Youjo Senki"
+  source: "TVRiP"
+  resolution: "1080p"
+  series: 2
+  episode: 3
+  codec: "AVC"
+  audio: "AAC"
+  container: "MP4"
+  group: "YYQ字幕组"
+  site: "YYQ字幕组"
+  unused: "简日双语"
+"[Doomdos] - 搜神记 - 第3话 - [4K]":
+  type: "episode"
+  title: "搜神记"
+  resolution: "2160p"
+  episode: 3
+  absolute: 3
+  group: "Doomdos"
+  site: "Doomdos"
 "[DBD-Raws][火影忍者 疾风传/Naruto Shippuuden][386-412TV][BOX7][美版/USA.Ver][1080P][BDRip][HEVC-10bit][FLACx2][MKV](NARUTO -ナルト- 疾風伝)":
   type: "series"
   title: "火影忍者 疾风传"
@@ -7147,6 +7178,19 @@
   group: "DBD-Raws"
   site: "DBD-Raws"
   unused: "美版 Ver FLACx2 NARUTO ナルト 疾風伝"
+"[NC-Raws] 飙速宅男 第五季 / Yowamushi Pedal: Limit Break - 15 (CR 1920x1080 AVC AAC MKV)":
+  type: "episode"
+  title: "飙速宅男"
+  alt: "Yowamushi Pedal: Limit Break"
+  resolution: "1080p"
+  collection: "CR"
+  series: 5
+  episode: 15
+  codec: "AVC"
+  audio: "AAC"
+  container: "MKV"
+  group: "NC-Raws"
+  site: "NC-Raws"
 "AC.DC.Under.Review.Back.in.Black.2006.NTSC.MDVDR-MUSiQUE":
   type: "music"
   title: "AC DC Under Review Back in Black"

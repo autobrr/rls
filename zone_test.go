@@ -391,6 +391,7 @@ func TestOneOwner(t *testing.T) {
 		"handBack":         "a guess of the group lexer that is a word, which the owner of the group decides",
 		"handBackMarker":   "a guess of the group lexer that says what the release holds, which the owner of the group decides",
 		"settleGroupType":  "a known group of another release type, which the owner of the group decides",
+		"leadSquare":       "a word is cut behind the group in the square brackets of CJK text, and what is left of it is the text it was",
 		"contents":         "a season in a list of names is a part of a name, which is a question of what a number counts",
 		"decimals":         "a channel layout between two words of a fansub title is a number with a point, which is a question of what a number counts",
 		"numbers":          "a number behind a hyphen that is written onto a word or counts the next is no episode, which is a question of what a number counts",

@@ -96,6 +96,7 @@ func structureRows() []structureRow {
 		// the roles of the brackets: the group, the title in a bracket of
 		// its own, the number alone, and another title
 		{"(CBB) Aoki Hagane no Arpeggio - The Complete Series (BD 1080p)(HEVC-x265-10bit)", Series, "Aoki Hagane no Arpeggio", "", "CBB", nil, "", 0, "Complete Series", false},
+		{"[YYQ字幕组][幼女战记 第二季 / 谭雅战记 第二季 / Youjo Senki S2][03][1080P][简日双语][MP4][AVC_AAC][TVRIP]", Episode, "幼女战记", "谭雅战记|Youjo Senki", "YYQ字幕组", []int{2}, "S2:3", 0, "", false},
 		{"[AoJiaoZero][Mangaka-san to Assistant-san to the Animation] 02 [BIG][X264_AAC][720P].mp4", Episode, "Mangaka-san to Assistant-san to the Animation", "", "AoJiaoZero", nil, "2", 0, "", false},
 		{"[Judas] Koujo Denka no Kateikyoushi (Private Tutor to the Duke`s Daughter) - SP01 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)", Episode, "Koujo Denka no Kateikyoushi", "Private Tutor to the Duke`s Daughter", "Judas", nil, "1 special", 0, "", false},
 		{"[WBDP] [Vivid] Uchouten Kazoku / The Eccentric Family 2 [BD][1080p-AAC]", untold, "Uchouten Kazoku 2", "The Eccentric Family 2", "WBDP", nil, "", 0, "", false},
@@ -189,7 +190,16 @@ func structureRows() []structureRow {
 		{"[UTW-THORA] Evangelion 3.33 You Can (Not) Redo [BD][1080p,x264,flac]", Movie, "Evangelion 3.33 You Can (Not) Redo", "", "UTW-THORA", nil, "", 0, "", false},
 		{"[Beatrice-Raws] Evangelion 3.0+1.0 Thrice Upon a Time [BDRip 1920x816 HEVC TrueHD]", Movie, "Evangelion 3.0+1.0 Thrice Upon a Time", "", "Beatrice-Raws", nil, "", 0, "", false},
 		// markers of an episode and of a season that no lexer reads
+		{"[Group] Show #01 [720p]", Episode, "Show", "", "Group", nil, "1", 0, "", false},
+		{"[Group] Show [04 of 12] [720p]", Episode, "Show", "", "Group", nil, "4", 0, "", false},
+		{"[Doomdos] - 搜神记 - 第3话 - [4K]", Episode, "搜神记", "", "Doomdos", nil, "3", 0, "", false},
+		{"[Doomdos] - 是王者啊？稷下篇 - 第13話 - [1080p]", Episode, "是王者啊？稷下篇", "", "Doomdos", nil, "13", 0, "", false},
+		{"[Group] Show 第０３话 [720p]", Episode, "Show", "", "Group", nil, "3", 0, "", false},
+		{"[NC-Raws] 飙速宅男 第五季 / Yowamushi Pedal: Limit Break - 15 (CR 1920x1080 AVC AAC MKV)", Episode, "飙速宅男", "Yowamushi Pedal: Limit Break", "NC-Raws", []int{5}, "S5:15", 0, "", false},
+		{"[Mezashite] Aikatsu! ‒ 100 [D035A39F].mkv", Episode, "Aikatsu!", "", "Mezashite", nil, "100", 0, "", false},
 		// the square brackets of CJK text
+		{"【喵萌奶茶屋】★07月新番★[碧蓝航线 微速前进！2!! / 碧蓝航线 微速前行 第二季 / Azur Lane - Bisoku Zenshin! S2][03][1080p][简日双语]", Episode, "碧蓝航线 微速前进！2!!", "碧蓝航线 微速前行|Azur Lane - Bisoku Zenshin!", "喵萌奶茶屋", []int{2}, "S2:3", 0, "", false},
+		{"【百冬練習組】【元祖！邦多利醬_GANSO BanG Dream Chan】[42][1080p AVC AAC][繁體]", Episode, "元祖！邦多利醬 GANSO BanG Dream Chan", "", "百冬練習組", nil, "42", 0, "", false},
 		// a name that no fansub group wrote is read where it sets a marker
 		// apart from its title: behind a hyphen, a plus, the year or the
 		// season, in a bracket, or with a word that only an anime release has
@@ -221,6 +231,7 @@ func structureRows() []structureRow {
 		{"[Kametsu] The Legend of Heroes - Trails in the Sky (The Animation) [2011] (BD 1080p x264 10-bit FLAC) [Dual-Audio]", untold, "The Legend of Heroes - Trails in the Sky", "", "Kametsu", nil, "", 0, "", false},
 		{"[BlurayDesuYo] Shingeki no Kyojin (The Final Season) - Part 1 (BD 1920x1080 x264 10bit FLAC)", Series, "Shingeki no Kyojin", "", "BlurayDesuYo", nil, "", 0, "", false},
 		{"[Group] Title (The Final Season) - Special 2 [1080p]", Episode, "Title", "", "Group", nil, "2 special", 0, "", false},
+		{"[바카-Raws] Nekomonogatari (Black) #1-4 (BS11 1280x720 x264 AAC).mp4", Series, "Nekomonogatari", "", "바카-Raws", nil, "1-4", 0, "", false},
 		// a title written with a slash, and the same title twice
 		// a bare slash cuts where the script changes, and a list of what
 		// the release holds is no other title
@@ -259,6 +270,7 @@ func TestStructure(t *testing.T) {
 			t.Errorf("%q: expected seasons %v, episodes %q, volume %d, contents %q and batch %t, got: %v, %q, %d, %q and %t", test.s,
 				test.seasons, test.eps, test.volume, test.contents, test.batch, n.Seasons, epsOf(n), n.Volume, strings.Join(n.Contents, "|"), n.Batch)
 		}
+		// an extra is no episode of the show
 		if _, ok := n.Episode(); ok != slices.ContainsFunc(n.Episodes, func(e Ep) bool { return e.Kind == EpRegular }) {
 			t.Errorf("%q: expected Episode to give a regular episode alone, got: %t for %q", test.s, ok, epsOf(n))
 		}
@@ -275,7 +287,9 @@ func TestStructure(t *testing.T) {
 func TestSpacedRange(t *testing.T) {
 	for _, test := range []struct {
 		s, title string
-		eps      string
+		// eps is the range as epsOf writes it, or the empty string for a
+		// name with none
+		eps string
 	}{
 		// the real names with a range
 		{"Sentai Daishikkaku - 07 - 09 | Go! Go! Loser Ranger! [English Dub][1080p][DSNP]", "Sentai Daishikkaku", "7-9"},
@@ -411,7 +425,8 @@ func TestFlagsInFront(t *testing.T) {
 		return v
 	}
 	for _, test := range []struct {
-		s     string
+		s string
+		// flags is how many bytes of s the flags are
 		flags int
 	}{
 		// the input that a fuzz run found. What stands behind its flags
@@ -431,6 +446,8 @@ func TestFlagsInFront(t *testing.T) {
 		// delimiter that closes the flags
 		{"[REPACK] The Sopranos Complete Series 1080p BluRay x265 [Batch]", 9},
 		{"[REPACK]([Batch]) Show 1080p", 8},
+		// the group in the square brackets of CJK text, cut in a copy too
+		{"[REPACK] 【喵萌奶茶屋】★07月新番★[碧蓝航线 微速前进！2!! / 碧蓝航线 微速前行 第二季 / Azur Lane - Bisoku Zenshin! S2][03][1080p][简日双语]", 9},
 	} {
 		r, alone := ParseString(test.s), ParseString(test.s[test.flags:])
 		checkNumbering(t, test.s, r)
@@ -500,6 +517,7 @@ func TestStructureLeaves(t *testing.T) {
 		{"Show Name Special 01 1080p WEB H264-GRP", "Show Name Special 01"},
 		{"[FLAC] Artist - The Complete Series Box (2015)", "The Complete Series Box"},
 		{"[MP3] Artist - Live (Batch Release) (2019)", "Live"},
+		{"【Group】Movie.Name.Batch.2019.1080p.x264-GRP", "【Group】Movie Name Batch"},
 	} {
 		r := ParseString(test.s)
 		if r.shaped || r.Title != test.title || r.Numbering.Contents != nil || r.Numbering.Volume != 0 || r.Numbering.Batch {
@@ -563,11 +581,14 @@ func TestStructureAnnounce(t *testing.T) {
 func TestStructureKeepsTags(t *testing.T) {
 	b := DefaultParser.(*TagParser).state().builder.(*TagBuilder)
 	names := append(boundNames(t),
-		// a number with a point and a group in parentheses, each in a
-		// scene name
+		// the group in the square brackets of CJK text, a number with a
+		// point and a group in parentheses, each in a scene name
+		"【Group】Movie.Name.2019.1080p.x264-GRP",
+		"【Group】★01月新番★Movie.Name.2019.1080p.x264-GRP",
 		"Movie 3.0 Name.Of.It.2019.1080p.x264-GRP [x]",
 		"(GRP) Movie.Name.Of.It.2019.x264 [1080p]",
 		// and in a record, which has no sign of a video
+		"【Group】Artist - Album 2.0 Remix (2019) [FLAC]",
 		"(GRP) Artist - Album 2.0 Remix (2019) [FLAC]",
 		"[FLAC] Artist - Album 2.0 Remix (2019)",
 	)
@@ -596,6 +617,72 @@ func TestStructureKeepsTags(t *testing.T) {
 	}
 	if kept == 0 || read == 0 {
 		t.Errorf("expected names the stage reads and names it does not, got: %d read and %d not", read, kept)
+	}
+}
+
+// TestLeadSquare checks the group that opens a name in the square brackets
+// of CJK text: it is the meta tag that '[Group]' is, written as the name
+// writes it in %o and in %s, and no other such bracket is cut from its word.
+// A title keeps a bracket it holds as written, and loses the pair around it.
+func TestLeadSquare(t *testing.T) {
+	const name = "【悠哈璃羽字幕社&西农YUI汉化组】[暗芝居 第十七季_Yami Shibai 17][02][x264 1080p][CHT]"
+	r := ParseString(name)
+	if s := fmt.Sprintf("%o", r); s != name {
+		t.Errorf("expected %q, got: %q", name, s)
+	}
+	tags := r.Tags()
+	const lead = "【悠哈璃羽字幕社&西农YUI汉化组】"
+	if o, s := fmt.Sprintf("%o", tags[0]), fmt.Sprintf("%s", tags[0]); !tags[0].Is(TagTypeMeta) || o != lead || s != lead {
+		t.Errorf("expected a meta tag written and printed %q, got: %s %q %q", lead, tags[0].TagType(), o, s)
+	}
+	if r.Group != "悠哈璃羽字幕社&西农YUI汉化组" || r.Title != "暗芝居" || !slices.Equal(r.Numbering.Seasons, []int{17}) || epsOf(r.Numbering) != "S17:2" {
+		t.Errorf("expected the group, the title, season 17 and episode 2, got: %q %q %v %q", r.Group, r.Title, r.Numbering.Seasons, epsOf(r.Numbering))
+	}
+	for _, test := range []struct {
+		s, title string
+		// printed is %s, which keeps every bracket as written
+		printed string
+	}{
+		{"【MMZYSUB】★【Golden Time】[24（END）][GB][720P_MP4]", "Golden Time", "【MMZYSUB】★【Golden Time】[24（END）][GB][720p_MP4]"},
+		{"【百冬練習組】【元祖！邦多利醬_GANSO BanG Dream Chan】[42][1080p AVC AAC][繁體]", "元祖！邦多利醬 GANSO BanG Dream Chan", "【百冬練習組】【元祖！邦多利醬_GANSO BanG Dream Chan】[S00E42][1080p AVC AAC][繁體]"},
+		// a bracket that opens no name, and a name the stage does not read
+		{"[MP4/3.81G]JUR-274【破壊版】会社の地味な人妻経理 椎名ゆな", "JUR-274【破壊版】会社の地味な人妻経理 椎名ゆな", "[MP4/3.81G]JUR-274【破壊版】会社の地味な人妻経理 椎名ゆな"},
+		{"【Group】Movie.Name.2019.1080p.x264-GRP", "【Group】Movie Name", "【Group】Movie.Name.2019.1080p.x264-GRP"},
+	} {
+		r := ParseString(test.s)
+		if s := fmt.Sprintf("%s", r); r.Title != test.title || s != test.printed {
+			t.Errorf("%q: expected the title %q and %%s %q, got: %q and %q", test.s, test.title, test.printed, r.Title, s)
+		}
+		for i, tag := range r.Tags() {
+			if tag.Is(TagTypeDelim) && strings.ContainsAny(tag.Delim(), squareOpen+squareClose) {
+				t.Errorf("%q: tag %d: expected no delimiter with a bracket of CJK text, got: %q", test.s, i, tag.Delim())
+			}
+		}
+	}
+}
+
+// TestCounter checks the numbers written with a CJK counter.
+func TestCounter(t *testing.T) {
+	for _, test := range []struct {
+		s, num string
+		season bool
+		ok     bool
+	}{
+		{"第3话", "3", false, true},
+		{"第13話", "13", false, true},
+		{"第2集", "2", false, true},
+		{"第５回", "5", false, true},
+		{"第二季", "2", true, true},
+		{"第十七季", "17", true, true},
+		{"第二十一季", "21", true, true},
+		{"第3期", "3", true, true},
+		{"第季", "", false, false},
+		{"第三者", "", false, false},
+		{"第x话", "", false, false},
+	} {
+		if num, season, ok := counter(test.s); num != test.num || season != test.season || ok != test.ok {
+			t.Errorf("%q: expected %q %t %t, got: %q %t %t", test.s, test.num, test.season, test.ok, num, season, ok)
+		}
 	}
 }
 
@@ -652,6 +739,8 @@ func TestStructureLinear(t *testing.T) {
 		{"[G] T ", "01-02 ", "[1080p]"},
 		{"[G] T ", "- 01 - 03 ", "[1080p]"},
 		{"[G] T ", "- 01v2 - 03 ", "[1080p]"},
+		{"[G] T ", "#01 ", "[1080p]"},
+		{"[G] T ", "第3话 ", "[1080p]"},
 		{"[G] T ", "EP 1 ", "[1080p]"},
 		{"[G] T ", "1.0+", "x [1080p]"},
 		{"[G] T", " | A", " [1080p]"},
@@ -667,6 +756,7 @@ func TestStructureLinear(t *testing.T) {
 		{"[G] T ", "unofficial batch ", "[1080p]"},
 		{"[G] T - 01 ", "(Batch) ", "[1080p]"},
 		{"T - 01 [1080p] ", "[Batch] ", ""},
+		{"", "【a】", "[T][01][1080p]"},
 		// a run of merges, each of which join makes: a spaced range of
 		// extras, a range in the bracket of a complete series, and a range
 		// with the marker on both ends
@@ -675,7 +765,11 @@ func TestStructureLinear(t *testing.T) {
 		{"[G] T ", "SP01-SP03 ", "[1080p]"},
 		// runs of the square brackets of CJK text, which the lexers read as
 		// one word
+		{"[G] T ", "【", ""},
+		{"", "【】", ""},
 		{"", "】", ""},
+		{"", "【 ", ""},
+		{"【G】", "★", "[T][01][1080p]"},
 		{"[G] T ", "(a) / ", "b [1080p]"},
 		{"[G] Ta no ", "(The b) ", "[1080p]"},
 		{"(G) T a ", "b ", "[1080p]"},
@@ -783,6 +877,9 @@ func linearShapes() [][3]string {
 		}
 	}
 	brackets := [][2]string{{"(", ")"}, {"[", "]"}, {"{", "}"}}
+	for i, r := range []rune(squareOpen) {
+		brackets = append(brackets, [2]string{string(r), string([]rune(squareClose)[i])})
+	}
 	for _, b := range brackets {
 		for _, inner := range []string{"a", "a b", "01", "OVA", "OVA 01", "Batch", "Complete Series", ""} {
 			add("[G] T ", b[0]+inner+b[1]+" ", "[1080p]")

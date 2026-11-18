@@ -160,9 +160,9 @@ func (t tally) pct() float64 {
 // down to a whole percent, and 99 where the measured value is 100: a change
 // that trades a case away has to lower its floor and say why.
 var floors = map[string]map[string]float64{
-	"anitomy.json": {"title": 79, "group": 94, "episode": 82, "episodeTitle": 69, "season": 90, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
-	"habari.json":  {"title": 85, "group": 89, "episode": 86, "episodeTitle": 58, "season": 91, "checksum": 99, "ext": 99, "resolution": 93, "version": 71},
-	"anitogo.json": {"title": 78, "group": 94, "episode": 81, "episodeTitle": 65, "season": 93, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
+	"anitomy.json": {"title": 82, "group": 94, "episode": 87, "episodeTitle": 76, "season": 90, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
+	"habari.json":  {"title": 88, "group": 90, "episode": 90, "episodeTitle": 63, "season": 91, "checksum": 99, "ext": 99, "resolution": 93, "version": 71},
+	"anitogo.json": {"title": 81, "group": 95, "episode": 86, "episodeTitle": 75, "season": 93, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
 }
 
 // upstream are the SHA-256 sums of the committed fixtures, which are the files
@@ -261,8 +261,8 @@ func TestAccuracyLabelled(t *testing.T) {
 // percentage: a change that loses one name has to lower its floor and say why,
 // and one that gains a name raises it.
 var sampleFloors = map[string]map[string]int{
-	"nyaa-400.json":       {"names": 384, "title": 390, "group": 393, "type": 336, "season": 399, "episode": 396, "kind": 14, "volume": 4},
-	"nyaa-blind-140.json": {"names": 110, "title": 125, "group": 125, "type": 86, "season": 134, "episode": 134, "kind": 35, "volume": 6},
+	"nyaa-400.json":       {"names": 388, "title": 394, "group": 393, "type": 339, "season": 399, "episode": 399, "kind": 14, "volume": 4},
+	"nyaa-blind-140.json": {"names": 121, "title": 135, "group": 126, "type": 88, "season": 137, "episode": 136, "kind": 35, "volume": 6},
 }
 
 // episodes gives the episodes of r as a sample writes them: nothing for a

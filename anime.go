@@ -20,12 +20,15 @@ import (
 // order: which part is the group, which the title and which the tags. The
 // stage reads, in this order:
 //
+//   - the group that opens a name in the square brackets of CJK text, see
+//     leadSquare
 //   - the role of every bracket, see brackets, and from the roles the group
 //     that the meta lexer does not read, see leadGroup
 //   - the shape of the name, and whether the stage reads it at all: where
 //     the title starts, and where the head ends, which is the title and
 //     what numbers it, see shapeOf
-//   - what the order of the lexers hides, see repairs
+//   - what the order of the lexers hides, and the numbers written with a
+//     CJK counter, see repairs
 //   - what a pack holds and whether the name is a batch, see contents
 //   - the words that say what a release is and the numbers that count them,
 //     see units
@@ -95,11 +98,11 @@ func videoExt(s string) bool {
 // in one of two ways:
 //
 //   - a bracket opens it that names who made the release: a group or a
-//     site ('[Judas]', '(CBB)'), or words that are no tag ('[Golumpa &
-//     Aergia]'). A bracket that holds tags, a year or what the release is
-//     opens any kind of name, see nameless ('[FLAC] Artist - Album',
-//     '[BluRay] Title', '[2019] Title', '(2001) A Space Odyssey', '[Movies]
-//     Title')
+//     site ('[Judas]', '【喵萌奶茶屋】', '(CBB)'), or words that are no tag
+//     ('[Golumpa & Aergia]'). A bracket that holds tags, a year or what the
+//     release is opens any kind of name, see nameless ('[FLAC] Artist -
+//     Album', '[BluRay] Title', '[2019] Title', '(2001) A Space Odyssey',
+//     '[Movies] Title')
 //   - it has the checksum of its file ('[ABCD1234]')
 //
 // The tag of a tracker in front of a spaced title cannot be told from a
@@ -189,7 +192,7 @@ func (b *TagBuilder) shapeOf(tags []Tag, in []uint8, spans []span) (shape, bool)
 		// a number behind the bracket of words that follows the group is
 		// the episode of the title in that bracket ('[Group][Title] 02
 		// [720p]')
-		if tags[i].Is(TagTypeText) &&
+		if tags[i].Is(TagTypeText) && !starred(tags[i]) &&
 			!(k >= g+2 && allDigits(tags[i].v[0], 4) && spans[g].role == roleGroup && spans[g+1].role == roleWords) {
 			sh.first = i
 			break
@@ -424,14 +427,24 @@ func category(word string) bool {
 }
 
 // gap reports whether nothing but delimiters and whitespace stand in
-// tags[from:to].
+// tags[from:to], and a word between stars, which says when the show airs
+// ('【Group】★07月新番★[Title][03]').
 func gap(tags []Tag, from, to int) bool {
 	for i := from; i < to; i++ {
-		if !tags[i].Is(TagTypeDelim, TagTypeWhitespace) {
+		if !tags[i].Is(TagTypeDelim, TagTypeWhitespace) && !starred(tags[i]) {
 			return false
 		}
 	}
 	return true
+}
+
+// star sets a note apart in a name written in CJK text.
+const star = "★"
+
+// starred reports whether tag is a word between stars, or a star alone
+// ('【Group】★【Title】[24]').
+func starred(tag Tag) bool {
+	return tag.typ == TagTypeText && (tag.v[0] == star || len(tag.v[0]) > 2*len(star) && strings.HasPrefix(tag.v[0], star) && strings.HasSuffix(tag.v[0], star))
 }
 
 // decimals reads a channel layout between two words as a number with a
@@ -456,6 +469,70 @@ func decimals(tags []Tag, write bool) (found bool) {
 		}
 	}
 	return found
+}
+
+// The square brackets of CJK text, which a fansub group may write its name
+// in where a name in ASCII has '[' and ']': '【Group】', '［Group］',
+// '〔Group〕'. Each is three bytes.
+const (
+	squareOpen  = "【［〔"
+	squareClose = "】］〕"
+)
+
+// squared reports whether s opens with a square bracket of CJK text.
+func squared(s string) bool {
+	c, n := utf8.DecodeRuneInString(s)
+	return n == 3 && strings.ContainsRune(squareOpen, c)
+}
+
+// leadSquare reads the group that opens a name in the square brackets of CJK
+// text ('【喵萌奶茶屋】★07月新番★[Title][03]', '【Group】【Title】[42]'). The
+// lexers know the ASCII brackets alone, so the group is the start of a word
+// to them. It returns a copy of tags with that word cut: the bracket is the
+// meta tag that the meta lexer makes of '[Group]', written as the name
+// writes it, a star or a note between stars behind it is a word of its own
+// ('★', '★07月新番★'), and so is what is left. The tags it is given are left
+// as they are.
+//
+// No other such bracket is read. One around the title stays on the words of
+// the title ('【Golden', 'Time】'), where trimTitle takes it off, and one
+// inside a title is a part of it ('JUR-274【破壊版】').
+func leadSquare(tags []Tag) ([]Tag, bool) {
+	i := 0
+	for i < len(tags) && tags[i].typ == TagTypeWhitespace {
+		i++
+	}
+	if i == len(tags) || tags[i].typ != TagTypeText || len(tags[i].v) < 2 {
+		return nil, false
+	}
+	s := tags[i].v[0]
+	if !squared(s) {
+		return nil, false
+	}
+	const n = 3
+	k := strings.Index(squareOpen, s[:n])
+	end := strings.Index(s, squareClose[k:k+n])
+	if end <= n || strings.ContainsAny(s[n:end], squareOpen+squareClose) || utf8.RuneCountInString(s[n:end]) > 32 {
+		return nil, false
+	}
+	text := func(s string) Tag { return Tag{typ: TagTypeText, v: []string{s, s}} }
+	out := make([]Tag, 0, len(tags)+2)
+	out = append(out, tags[:i]...)
+	out = append(out, Tag{typ: TagTypeMeta, v: []string{s[:end+n], "site", s[n:end]}})
+	rest := s[end+n:]
+	if strings.HasPrefix(rest, star) {
+		cut := len(star)
+		if j := strings.Index(rest[cut:], star); j != -1 {
+			cut += j + len(star)
+		}
+		if cut < len(rest) {
+			out, rest = append(out, text(rest[:cut])), rest[cut:]
+		}
+	}
+	if rest != "" {
+		out = append(out, text(rest))
+	}
+	return append(out, tags[i+1:]...), true
 }
 
 // batchSite reads a bracket that holds 'Batch' and that the meta lexer took
@@ -517,7 +594,7 @@ var stageRooms = sync.Pool{New: func() any { return &stageRoom{spans: make([]spa
 func (b *TagBuilder) structure(r *Release) {
 	r.first = -1
 	var bracketed bool
-	for _, tag := range r.tags {
+	for i, tag := range r.tags {
 		// a tag made by hand may hold no value, and the stage reads the
 		// text and the value of every tag of a name it shapes
 		if len(tag.v) < 2 {
@@ -528,6 +605,10 @@ func (b *TagBuilder) structure(r *Release) {
 			bracketed = true
 		case TagTypeDelim:
 			bracketed = bracketed || strings.ContainsAny(tag.v[0], "([{")
+		case TagTypeText:
+			// the group in the square brackets of CJK text, which only
+			// the first word of a name is read for
+			bracketed = bracketed || i < 2 && squared(tag.v[0])
 		}
 	}
 	if !bracketed {
@@ -545,6 +626,11 @@ func (b *TagBuilder) shape(r *Release, buf []uint8, sbuf []span) ([]uint8, []spa
 	tags, end, from := r.tags, r.end, r.groupFrom
 	// own is whether the tags of r are a copy that the stage may write to
 	own := false
+	if cut, ok := leadSquare(tags); ok {
+		if r.tags, own = cut, true; r.end > 0 {
+			r.end += len(cut) - len(tags)
+		}
+	}
 	if cut, at, ok := batchSite(r.tags); ok {
 		if at < r.end {
 			r.end += len(cut) - len(r.tags)
@@ -1166,8 +1252,15 @@ func afterTitle(s string) bool {
 }
 
 // trimTitle trims a title as title does, and keeps a bracket that closes one
-// the title opened ('Mezzo(DSA)').
+// the title opened ('Mezzo(DSA)'). The square brackets of CJK text around a
+// title are no part of it ('【Golden Time】' is 'Golden Time').
 func trimTitle(s string) string {
+	if squared(s) {
+		k := strings.Index(squareOpen, s[:3])
+		if t, ok := strings.CutSuffix(s[3:], squareClose[k:k+3]); ok && !strings.ContainsAny(t, squareOpen+squareClose) {
+			s = t
+		}
+	}
 	s = strings.TrimLeftFunc(s, isTitleTrimDelim)
 	for len(s) > 0 {
 		c := s[len(s)-1]
@@ -1592,6 +1685,9 @@ func ranged(tag Tag) (string, string, bool) {
 // note and the number the episode, with a higher number behind a hyphen as
 // the end of a range ('(EP 1 - 52)'). 'Episodes 1-12' and 'Eps 01-12' are
 // read the same way.
+//
+// No lexer reads a number written with a CJK counter: '第3话', '第13話' and
+// '第2集' are an episode, and '第二季' and '第3期' a season, see counter.
 func (st *stage) repairs() {
 	tags := st.tags
 	for i := 1; i < len(tags); i++ {
@@ -1602,6 +1698,12 @@ func (st *stage) repairs() {
 			mark = strings.EqualFold(tag.v[0], "ep")
 		case TagTypeText:
 			mark = strings.EqualFold(tag.v[0], "episodes") || strings.EqualFold(tag.v[0], "eps")
+			// an episode or a season written with its counter, in the head
+			if num, season, ok := counter(tag.v[0]); ok && i > st.sh.first && i < st.sh.head {
+				if tags[i] = episode(tag, num); season {
+					tags[i].v[1], tags[i].v[2] = num, ""
+				}
+			}
 		}
 		if !mark || i+2 >= len(tags) || !plain(tags[i+1]) || !tags[i+2].Is(TagTypeText) || !allDigits(tags[i+2].v[0], 4) {
 			continue
@@ -1623,6 +1725,78 @@ func (st *stage) repairs() {
 		tags[i+2] = episode(tags[i+2], first)
 		i += 2
 	}
+}
+
+// counter reads a number written with a CJK counter between '第' and the
+// word that says what is counted: an episode ('第3话', '第13話', '第2集',
+// '第5回') or a season ('第二季', '第3期'). The number is written in ASCII
+// digits, in fullwidth digits or in Chinese numerals up to 99, and is
+// returned in ASCII digits. season is whether it counts a season.
+func counter(s string) (num string, season, ok bool) {
+	const first = "第"
+	if len(s) < len(first)+4 || len(s) > len(first)+16 || s[:len(first)] != first {
+		return "", false, false
+	}
+	s = s[len(first):]
+	switch {
+	case strings.HasSuffix(s, "话"), strings.HasSuffix(s, "話"), strings.HasSuffix(s, "集"), strings.HasSuffix(s, "回"):
+	case strings.HasSuffix(s, "季"), strings.HasSuffix(s, "期"):
+		season = true
+	default:
+		return "", false, false
+	}
+	s = s[:len(s)-3]
+	if t := fold(s); allDigits(t, 4) {
+		return t, season, true
+	}
+	// Chinese numerals: the ones, with a ten in front of them or not
+	n, digit := 0, 0
+	for _, c := range s {
+		switch k := strings.IndexRune("一二三四五六七八九", c); {
+		case k != -1 && digit == 0:
+			digit = k/3 + 1
+		case c == '十' && n == 0:
+			n, digit = max(digit, 1)*10, 0
+		default:
+			return "", false, false
+		}
+	}
+	if n += digit; n == 0 {
+		return "", false, false
+	}
+	return itoa(n), season, true
+}
+
+// itoa returns the decimal of a number from 1 to 99.
+func itoa(n int) string {
+	if n < 10 {
+		return string(rune('0' + n))
+	}
+	return string([]byte{byte('0' + n/10), byte('0' + n%10)})
+}
+
+// fold returns s as the stage reads it, with the fullwidth digits in ASCII
+// ('０１' is '01'). A string in ASCII is returned as it is.
+func fold(s string) string {
+	if strings.IndexFunc(s, func(c rune) bool { return c >= '０' && c <= '９' }) == -1 {
+		return s
+	}
+	return strings.Map(func(c rune) rune {
+		if c >= '０' && c <= '９' {
+			return c - '０' + '0'
+		}
+		return c
+	}, s)
+}
+
+// isDash reports whether s is a dash other than the hyphen, which a name may
+// set its episode off with ('Aikatsu! ‒ 100').
+func isDash(s string) bool {
+	switch s {
+	case "‐", "‑", "‒", "–", "—", "―", "−":
+		return true
+	}
+	return false
 }
 
 // holds reports whether the tag at i is a word that says what a pack holds,
@@ -2205,6 +2379,9 @@ type candidate struct {
 	// num is the number, and last the end of the range.
 	num, last string
 	score     int
+	// dash is the tag of a dash that sets the number off, and of the tag of
+	// the 'of' behind it that counts the episodes, or -1.
+	dash, of int
 	// lexed is whether a lexer read the number as an episode already.
 	lexed bool
 	// joined is whether the number is written onto a word, or counts the
@@ -2242,6 +2419,8 @@ const (
 //	+3  a version behind it ('01v2'), +2 one in the bracket behind it ('870
 //	    [v2]')
 //	+1  a part letter on it ('111C')
+//	+3  a number sign in front of it ('#01')
+//	+2  the number of episodes behind it ('01 of 24')
 //	+1  the name has a checksum, and +1 it has the extension of a video
 //	+2  a higher number behind a hyphen or a tilde makes it a range, and +1
 //	    when the two are as wide ('807 - 815')
@@ -2312,8 +2491,8 @@ func (st *stage) numbers() {
 		if tag.typ != TagTypeText && !bare(tag) {
 			continue
 		}
-		// a number starts with a digit
-		if s := tag.v[0]; s == "" || s[0] < '0' || s[0] > '9' {
+		// a number starts with a digit, a number sign or a fullwidth digit
+		if s := tag.v[0]; s == "" || (s[0] < '0' || s[0] > '9') && s[0] != '#' && s[0] < 0x80 {
 			continue
 		}
 		// the next episode of a list, and the end of a range behind the
@@ -2394,6 +2573,14 @@ func (st *stage) numbers() {
 	default:
 		tags[c.at] = episode(tags[c.at], c.num)
 	}
+	if c.score >= need {
+		if c.dash != -1 {
+			tags[c.dash] = unit(tags[c.dash], unitNote)
+		}
+		if c.of != -1 {
+			tags[c.of], tags[st.next(c.of, len(tags))] = unit(tags[c.of], unitNote), unit(tags[st.next(c.of, len(tags))], unitNote)
+		}
+	}
 }
 
 // score scores the bare number at tag i as the episode, see numbers, and
@@ -2401,11 +2588,19 @@ func (st *stage) numbers() {
 // or nil, and season the tag of the season the head writes, or -1.
 func (st *stage) score(i int, sp *span, season int) (candidate, bool) {
 	tags, sh := st.tags, st.sh
-	c := candidate{at: i, to: -1, lexed: tags[i].typ == TagTypeSeries}
-	num := tags[i].v[0]
+	c := candidate{at: i, to: -1, dash: -1, of: -1, lexed: tags[i].typ == TagTypeSeries}
+	num := fold(tags[i].v[0])
 	if c.lexed {
 		if num = tags[i].v[2]; tags[i].fraction() != "" {
 			return c, false
+		}
+	}
+	// a number sign marks an episode ('#01')
+	hash := !c.lexed && len(num) > 1 && num[0] == '#'
+	if hash {
+		// with its version or not ('#01v2')
+		if num = num[1:]; len(num) > 2 && num[len(num)-2]|0x20 == 'v' && num[len(num)-1] >= '0' && num[len(num)-1] <= '9' {
+			num = num[:len(num)-2]
 		}
 	}
 	var letter bool
@@ -2423,12 +2618,25 @@ func (st *stage) score(i int, sp *span, season int) (candidate, bool) {
 	p, n := st.prev(i, lo), st.next(i, hi)
 	var before, after string
 	if p != -1 {
-		before = st.between(p, i)
+		// a dash that is no hyphen is a word to the lexers, and sets the
+		// episode off as a hyphen does ('Aikatsu! ‒ 100')
+		if before = st.between(p, i); sp == nil && tags[p].Is(TagTypeText) && isDash(tags[p].v[0]) && before != "" {
+			c.dash, before = p, " - "
+			p = st.prev(p, lo)
+		}
 	}
 	if n != -1 {
 		after = st.between(i, n)
 	}
 	number := func(k int) bool { return k != -1 && tags[k].Is(TagTypeText) && allDigits(tags[k].v[0], 4) }
+	// the number of episodes behind it ('01 of 24', '[04 of 12]')
+	if k := st.next(n, hi); n != -1 && number(k) && tags[n].Is(TagTypeText) && strings.EqualFold(tags[n].v[0], "of") &&
+		strings.Trim(after, " _") == "" && atoi(num) <= atoi(tags[k].v[0]) {
+		c.of = n
+		if n = st.next(k, hi); n != -1 {
+			after = st.between(k, n)
+		}
+	}
 	// a range, which the number behind it ends, with half an episode behind
 	// that or not ('1-11.5')
 	end := i
@@ -2487,9 +2695,9 @@ func (st *stage) score(i int, sp *span, season int) (candidate, bool) {
 	case before == "-" && st.word(p), after == "-" && st.word(n) && c.to == -1:
 		c.joined = true
 		return c, false
-	// a number written as an episode is, with a zero in front of it,
-	// counts nothing ('01 All's well that ends well')
-	case n != -1 && c.to == -1 && num[0] != '0' && tags[n].Is(TagTypeText) && strings.Trim(after, " _") == "" &&
+	// a number written as an episode is, with a zero or a number sign in
+	// front of it, counts nothing ('#01 All's well that ends well')
+	case n != -1 && c.to == -1 && !hash && num[0] != '0' && tags[n].Is(TagTypeText) && strings.Trim(after, " _") == "" &&
 		(isCounted([]byte(tags[n].v[0])) || isUnit([]byte(tags[n].v[0]))):
 		// behind a hyphen only a word in the plural or a measure is
 		// counted: '- 13 OVA' is episode 13, which is an OVA
@@ -2525,6 +2733,12 @@ func (st *stage) score(i int, sp *span, season int) (candidate, bool) {
 	}
 	if letter {
 		c.score++
+	}
+	if hash {
+		c.score += 3
+	}
+	if c.of != -1 {
+		c.score += 2
 	}
 	if d := strings.Trim(before, " _"); sp == nil && len(before) > 1 && strings.HasSuffix(d, "-") && !strings.ContainsAny(d, "()[]{}") {
 		c.score += 2
