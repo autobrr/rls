@@ -44,14 +44,21 @@ type Numbering struct {
 	// episode is another episode and not a second numbering ('S01E05.E06'),
 	// and so is the end of a range ('S04E29-31v2').
 	Alt []Ep
-	// Volume is the volume or the box a name gives in place of episodes. The
-	// parser leaves it 0.
+	// Volume is the volume or the box a name gives in place of episodes
+	// ('[Grp] Show - Vol.06', 'Show - Box 01', '[BOX7]'), or 0. It is the
+	// first of a range of them ('(Vol.1-5)' gives 1).
 	Volume int
-	// Contents is what a pack says it holds besides its episodes. The parser
-	// leaves it nil.
+	// Contents is what the name says it holds besides numbered episodes,
+	// each once and in the order it writes them. It is what a pack lists
+	// ('TV+OVA+Movie Complete Series', 'S01 + OVAs', '(Season 1 + OVA +
+	// Movie)'), and an extra that is written with no number ('Show - OVA',
+	// 'Show NCOP & NCED', 'Show - Movie'). The values are spelled the same
+	// however the name writes them: 'TV', 'OVA', 'OAD', 'ONA', 'Movie',
+	// 'Special', 'OP', 'ED', 'PV', 'Extra', 'OST' and 'Complete Series'. A
+	// creditless opening or ending is an 'OP' or an 'ED'.
 	Contents []string
-	// Batch is whether the name says it is a batch. The parser leaves it
-	// false.
+	// Batch is whether the name says it is a batch ('(Batch)', '[BATCH]',
+	// '(unofficial batch)', '- 01 - 06 - Batch').
 	Batch bool
 }
 
@@ -80,8 +87,10 @@ type Ep struct {
 	// Last, so '1-11.5' is First 1, Last 11 and Frac 5. A whole episode has
 	// Frac 0.
 	Frac uint8
-	// Kind is what kind of episode it is. Every Ep of a parse is an
-	// EpRegular.
+	// Kind is what kind of episode it is. An extra is written with its
+	// kind in a name that a fansub group wrote ('Show - OVA 02', 'SP01',
+	// 'NCOP2', 'ED1'), and has no season. A creditless opening or ending is
+	// an EpOP or an EpED.
 	Kind EpKind
 }
 
@@ -127,15 +136,16 @@ type Scheme uint8
 
 // The schemes of a numbering.
 const (
-	// SchemeNone is a name with no numbering ('Movie.2020.1080p'), and the
-	// zero value.
+	// SchemeNone is a name with no numbering ('Movie.2020.1080p'), or with
+	// extras and no episode of the show ('Show - OVA 02'), and the zero
+	// value.
 	SchemeNone Scheme = iota
 	// SchemeSeasoned is a name that writes a season anywhere: with an
 	// episode ('S01E05', '1x05'), in front of one ('S2 - 04', '2nd Season -
 	// 08') or with none ('S01').
 	SchemeSeasoned
-	// SchemeAbsolute is a name that writes episodes and no season ('Show -
-	// 1169', 'E1100', '01-12').
+	// SchemeAbsolute is a name that writes regular episodes and no season
+	// ('Show - 1169', 'E1100', '01-12').
 	SchemeAbsolute
 	// SchemeDaily is a name with a date where an episode would stand
 	// ('Show.2024.03.11'): an Episode by its year, month and day that writes
@@ -354,8 +364,14 @@ func (n Numbering) All() iter.Seq2[int, int] {
 }
 
 // numbering reads the seasons and the episodes of the release from its series
-// tags. It also reports whether a tag that is no second numbering writes an
-// episode other than 0 in its first place, which Release.numbered keeps.
+// tags, and the extras, the volume, the contents and the batch from the unit
+// tags of the structure stage, see tagTypeUnit. It also reports whether a
+// series tag that is no second numbering writes an episode other than 0 in
+// its first place, which Release.numbered keeps.
+//
+// An extra is an Ep of its kind with no season, in Episodes where the name
+// writes it: 'S1 01-13 + SP01-03' gives the episodes 1 to 13 of season 1 and
+// the specials 1 to 3.
 //
 // The tags are walked twice and nothing is looked up across the name for one
 // of them, so that the time grows with the length of the name and not with
@@ -382,11 +398,13 @@ func (r Release) numbering() (n Numbering, numbered bool) {
 	// with are the seasons written with an episode, in rising order
 	with, series := wbuf[:0], false
 	for _, tag := range r.tags {
-		if tag.typ != TagTypeSeries {
-			continue
-		}
-		if series = true; tag.val(1) != "" && tag.wroteEpisode() {
-			with = append(with, atoi(tag.val(1)))
+		switch tag.typ {
+		case tagTypeUnit:
+			series = series || tag.val(1) != unitNote
+		case TagTypeSeries:
+			if series = true; tag.val(1) != "" && tag.wroteEpisode() {
+				with = append(with, atoi(tag.val(1)))
+			}
 		}
 	}
 	if !series {
@@ -407,7 +425,39 @@ func (r Release) numbering() (n Numbering, numbered bool) {
 	// open is which of the two the series tag before wrote its last episode
 	// as, which a hyphen may then make a range of
 	open := none
+	var contents []string
 	for i, tag := range r.tags {
+		if tag.typ == tagTypeUnit {
+			// what the structure stage read: an extra, a volume, what a
+			// pack holds, a batch
+			switch kind, ok := epKind(tag.val(1)); {
+			case ok:
+				if first := tag.val(2); first != "" {
+					// half an extra is written with its point ('OVA3.5')
+					first, half, _ := strings.Cut(first, ".")
+					e := Ep{Season: NoSeason, First: atoi(first), Last: atoi(first), Frac: uint8(atoi(half)), Kind: kind}
+					// the end of a range, or the next extra of a list
+					switch other := tag.val(4); {
+					case other == "":
+					case tag.val(3) == "&":
+						eps = append(eps, e)
+						e = Ep{Season: NoSeason, First: atoi(other), Last: atoi(other), Kind: kind}
+					default:
+						e.Last = atoi(other)
+					}
+					eps = append(eps, e)
+				}
+			case tag.val(1) == unitVolume:
+				if n.Volume == 0 {
+					n.Volume = atoi(tag.val(2))
+				}
+			case tag.val(1) == unitHolds:
+				contents = appendOnce(contents, tag.val(2))
+			case tag.val(1) == unitBatch:
+				n.Batch = true
+			}
+			continue
+		}
 		if tag.typ != TagTypeSeries {
 			continue
 		}
@@ -468,11 +518,13 @@ func (r Release) numbering() (n Numbering, numbered bool) {
 			ranged, open = false, kind
 		}
 	}
-	n = Numbering{Seasons: kept(unique(seasons)), Episodes: kept(unique(eps)), Alt: kept(unique(alt))}
+	n.Seasons, n.Episodes, n.Alt, n.Contents = kept(unique(seasons)), kept(unique(eps)), kept(unique(alt)), contents
+	// the scheme is that of the regular episodes: a name that gives extras
+	// alone numbers no episode of the show ('Title - OVA 02')
 	switch {
 	case n.Seasons != nil:
 		n.Scheme = SchemeSeasoned
-	case n.Episodes != nil:
+	case slices.ContainsFunc(n.Episodes, func(e Ep) bool { return e.Kind == EpRegular }):
 		n.Scheme = SchemeAbsolute
 	}
 	return n, numbered

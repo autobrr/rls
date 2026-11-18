@@ -19,3 +19,4 @@ dist/
 !/testdata/corpus/labelled/nyaa-blind-140.json
 !/testdata/corpus/labelled/probes-title.json
 !/testdata/corpus/labelled/probes-title-end.json
+!/testdata/corpus/labelled/probes-brackets.json

@@ -107,12 +107,79 @@ func (b *TagBuilder) leadGroup(r *Release, in []uint8, spans []span) bool {
 	return true
 }
 
+// handBackMarker hands a guessed group back to the name when it is a word
+// that says what the release holds, ie the 'NCED' of '[Group] Title NCOP-NCED'
+// and the 'OVA' of '[Group] Title - OVA'. The structure stage calls it in a
+// name it reads, in front of its own reading of such words, and marker
+// reports whether a word is one. It reports whether it handed one back.
+func (b *TagBuilder) handBackMarker(r *Release, marker func(string) bool) bool {
+	g := groupTag(r.tags)
+	if g < 1 || r.tags[g].f != nil || !marker(r.tags[g].v[1]) {
+		return false
+	}
+	// the group tag holds the spaces behind its hyphen, which go to the
+	// delimiter in front of it
+	text, grp := r.tags[g].v[0], r.tags[g].v[1]
+	if sp := text[:len(text)-len(strings.TrimLeft(text, " \t_"))]; sp != "" && r.tags[g-1].Is(TagTypeDelim) {
+		d := r.tags[g-1].v[0] + sp
+		r.tags[g-1], text = NewTag(TagTypeDelim, nil, []byte(d), []byte(d)), text[len(sp):]
+	}
+	if r.tags[g] = NewTag(TagTypeText, nil, []byte(text), []byte(grp)); r.end == g-1 || r.end == g {
+		r.end = g + 1
+	}
+	return true
+}
+
 // settleGroup decides what the lexers left open about the group tag, with the
-// zones of the name: a guess of the group lexer that is a word of the name is
-// given back to it, and a '-GROUP' in front of brackets is made the group.
+// zones of the name: a guess of the group lexer that is the end of a range of
+// episodes or a word of the name is given back to it, and a '-GROUP' in front
+// of brackets is made the group.
 func (b *TagBuilder) settleGroup(r *Release, z zones) {
+	b.handBackRange(r)
 	b.handBack(r, z)
 	b.suffixBeforeBrackets(r)
+}
+
+// handBackRange hands a guessed group back to the numbering when it is the
+// end of a range of episodes. The group lexer takes whatever follows the last
+// hyphen, and that is the last episode when a bare hyphen joins it to an
+// episode in front of it and it is written the same way with a higher number:
+// the '317' of 'Detective Conan - 316-317 [DCTP][2411959B].mkv', and the
+// 'S01E182' of 'S01E001-S01E182'. A group is no number, and none is named
+// like an episode of the season at hand.
+func (b *TagBuilder) handBackRange(r *Release) {
+	g := groupTag(r.tags)
+	if g < 2 || r.tags[g].f != nil || !r.tags[g-1].rangeDelim() || !r.tags[g-2].Is(TagTypeSeries) {
+		return
+	}
+	s, first := r.tags[g].v[0], r.tags[g-2]
+	season, last := "", s
+	// 'S01E182' behind an episode of the same season
+	if k := strings.IndexAny(s, "eE"); len(s) > 3 && s[0]|0x20 == 's' && k > 1 && first.val(1) != "" {
+		if season, last = s[1:k], s[k+1:]; atoi(season) != atoi(first.val(1)) || atoi(season) == 0 && strings.Trim(season, "0") != "" {
+			return
+		}
+	} else if first.val(1) != "" {
+		return
+	}
+	from := first.val(2)
+	if from == "" || len(first.v) != 3 || len(last) > 4 || len(last) != len(from) || strings.Trim(last, "0123456789") != "" || atoi(last) <= atoi(from) {
+		return
+	}
+	if season != "" {
+		if r.tags[g] = (Tag{typ: TagTypeSeries, v: []string{s, season, last}, was: TagTypeGroup ^ wasBit}); r.end == g {
+			r.end = g + 1
+		}
+		return
+	}
+	// two bare numbers are one range, as the range lexer reads '316-317'
+	// where no group can be ('- 316-317 [720p]')
+	text := first.v[0] + r.tags[g-1].v[0] + s
+	tags := slices.Clone(r.tags)
+	tags = slices.Replace(tags, g-2, g+1, Tag{typ: TagTypeSeries, v: []string{text, "", "", from, "-", last}, was: TagTypeGroup ^ wasBit})
+	if r.tags = tags; r.end >= g-1 {
+		r.end = max(r.end-2, g-1)
+	}
 }
 
 // handBack hands a guessed group back to the name when the name opens with
@@ -561,11 +628,17 @@ func beforeTag(tags []Tag, i int) bool {
 }
 
 // afterTag reports whether the text at i is a word that belongs to the tag in
-// front of it, ie the 'Sub' of 'Ultra Maniac Eng Sub' and the 'Dub' of
-// '[English Dub][1080p]', see tagWord. Such a word is not the group.
+// front of it, ie the 'Sub' of 'Ultra Maniac Eng Sub', the 'Dub' of '[English
+// Dub][1080p]' and the 'Audio' of 'BDrip Multi Audio DD 2.0', see tagWord.
+// Such a word is not the group.
 func afterTag(tags []Tag, i int) bool {
-	return tagWord(tags[i].Text()) && i >= 2 && tags[i-1].Is(TagTypeDelim) && strings.Trim(tags[i-1].Delim(), "._ ") == "" &&
-		tags[i-2].Is(TagTypeLanguage, TagTypeAudio)
+	if !tagWord(tags[i].Text()) || i < 2 || !tags[i-1].Is(TagTypeDelim) || strings.Trim(tags[i-1].Delim(), "._ ") != "" {
+		return false
+	}
+	// 'Multi' and 'Dual' are tags in capitals alone, and the word behind
+	// them belongs to them however they are written ('Multi Audio')
+	prev := tags[i-2]
+	return prev.Is(TagTypeLanguage, TagTypeAudio) || prev.Is(TagTypeText) && (strings.EqualFold(prev.v[0], "multi") || strings.EqualFold(prev.v[0], "dual"))
 }
 
 // amidTags reports whether the text at i sits inside the run of tags: a tag
@@ -595,10 +668,6 @@ func plusList(tags []Tag, i int) bool {
 	for i--; i >= 0 && tags[i].Is(TagTypeText, TagTypeDelim); i-- {
 		if !tags[i].Is(TagTypeDelim) {
 			continue
-		}
-		// see seasonPlus
-		if seasonPlus(tags, i) {
-			return false
 		}
 		// what follows the last bracket
 		d := tags[i].Delim()

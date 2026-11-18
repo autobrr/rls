@@ -299,7 +299,7 @@ func computeZones(tags []Tag, end int) zones {
 			continue
 		}
 		named = typ == TagTypeText || languageName(tags[j])
-		if typ == TagTypeSeries || j == date || technical(typ) || typ == TagTypeSource && !collisionProne(tags[j]) {
+		if typ == TagTypeSeries || typ == tagTypeUnit || j == date || technical(typ) || typ == TagTypeSource && !collisionProne(tags[j]) {
 			z.anchor = j
 			break
 		}
@@ -509,7 +509,8 @@ const (
 	roleGroup
 	// roleSum is the checksum of the file ('[ABCD1234]').
 	roleSum
-	// roleTags is a bracket that holds a tag ('[BD 1080p]', '(English Dub)').
+	// roleTags is a bracket that holds a tag ('[BD 1080p]', '(English Dub)',
+	// '[Batch]' once the stage has read the word).
 	roleTags
 	// roleNumber is numbers and nothing else ('[03]', '(01-12)', '[922]',
 	// '(S2)').
