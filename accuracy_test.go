@@ -254,7 +254,7 @@ func TestAccuracyLabelled(t *testing.T) {
 // and one that gains a name raises it.
 var sampleFloors = map[string]map[string]int{
 	"nyaa-400.json":       {"names": 330, "title": 347, "group": 391, "type": 310, "season": 398, "episode": 375},
-	"nyaa-blind-140.json": {"names": 26, "title": 61, "group": 122, "type": 45, "season": 134, "episode": 101},
+	"nyaa-blind-140.json": {"names": 27, "title": 63, "group": 122, "type": 45, "season": 134, "episode": 101},
 }
 
 // episodes gives the episodes of r as a sample writes them: nothing for a
@@ -481,30 +481,14 @@ func TestAccuracySample(t *testing.T) {
 // fixes one takes it off the list, in the same diff.
 var probeFailures = map[string][]string{
 	"probes-title.json": {
-		"Going.Dutch.S01E01.720p.HDTV.x264-GRP",
-		"Going.Dutch.S01E02.GERMAN.DL.1080p.WEB.h264-GRP",
-		"Made.in.USA.1966.1080p.BluRay.x264-GRP",
-		"The.Darjeeling.Limited.2007.1080p.BluRay.x264-GRP",
-		"The.Hybrid.2014.720p.BluRay.x264-GRP",
 		"Series.7.The.Contenders.2001.DVDRip.x264-GRP",
 	},
 	"probes-title-end.json": {
 		"Pardon.My.French.2021.1080p.WEB.h264-GRP",
 		"Excuse.My.French.2014.1080p.BluRay.x264-GRP",
-		"Double.Dutch.S01E01.720p.WEB.h264-GRP",
 		"The.Good.German.2006.1080p.BluRay.x264-GRP",
-		"Plain.English.S01E01.720p.HDTV.x264-GRP",
 		"The.Quiet.Italian.2010.720p.BluRay.x264-GRP",
-		"Miss.USA.2019.720p.HDTV.x264-GRP",
 		"Little.Britain.USA.S01E01.720p.HDTV.x264-GRP",
-		"Magnum.Opus.2017.1080p.WEB-DL.DD5.1.H264-GRP",
-		"Strictly.Limited.2019.720p.WEB.h264-GRP",
-		"The.Missing.Extras.S01E01.720p.WEB.h264-GRP",
-		"Blood.Remastered.2020.1080p.WEB.h264-GRP",
-		"Almost.Complete.2018.1080p.WEB.h264-GRP",
-		"Prim.and.Proper.S01E01.720p.WEB.h264-GRP",
-		"Family.Extended.2015.1080p.WEB.h264-GRP",
-		"Total.Internal.2016.720p.WEB.h264-GRP",
 	},
 }
 

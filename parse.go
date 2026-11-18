@@ -648,8 +648,8 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	b.specialDate(r)
 	// unset tags
 	b.unset(r)
-	b.titleMusicSource(r)
-	b.titleCollection(r)
+	// decide the words that are told from tags by the type
+	b.settleVideo(r)
 	b.fixBracketTagGroup(r)
 	b.fixTrailingGroup(r)
 	b.remuxSource(r)
@@ -958,106 +958,12 @@ func afterBracket(tag Tag) bool {
 
 // init fixes the initial tag set.
 func (b *TagBuilder) init(r *Release) {
-	b.fixWindows(r)
 	b.fixHalfEpisode(r)
-	b.fixTitleRange(r)
 	b.fixAudioRange(r)
-	b.fixFirstDate(r)
-	// determine earliest pivot
-	m, pivot := b.pivots(r, TagTypeDate, TagTypeSource, TagTypeSeries, TagTypeResolution, TagTypeVersion)
-	date, series := m[TagTypeDate], m[TagTypeSeries]
-	// reset/collect dates
-	if date != -1 {
-		r.dates = append(r.dates, date)
-	}
-	if dates := b.reset(r, date, TagTypeDate); len(dates) != 0 {
-		r.dates = append(r.dates, dates...)
-	}
-	// fix special tags
-	if date != -1 || series != -1 {
-		i := min(date, series)
-		switch {
-		case date == -1:
-			i = series
-		case series == -1:
-			i = date
-		}
-		b.fixSpecial(r, i, series != -1)
-		b.fixEpisodeTitle(r, i)
-	}
-	// get first text prior to pivot
-	end := b.end(r, pivot)
-	// reset language/other/arch/platform prior to end
-	_ = b.reset(r, end, TagTypeLanguage, TagTypeArch, TagTypePlatform)
-	b.fixFirst(r)
-	b.fixSourceWeb(r)
+	// decide which of the words the lexers claimed are words of a title
+	b.settle(r)
 	b.fixSourceUHD(r)
-	start := b.start(r, 0)
-	b.fixBad(r, start, end)
-	b.fixNoText(r, end)
-	b.fixIsolated(r)
-	b.fixWords(r)
 	b.fixMusic(r)
-}
-
-// fixWindows reads a bare 'Windows' as a word, unless it is an item of a list
-// of tags in the brackets that close the name, which is where a tracker names
-// the platform ('Some.Title-GROUP (2019) [Windows / Multi-Language / Full
-// ISO]'). Anywhere else it is a word of the title ('Broken.Windows.2020',
-// 'Artist - Open Windows (2019) [FLAC]', '(Windows Edition)'). So is it in a
-// name with a video or an audio tag, which a film, an episode or a record has
-// ('Movie.2019.1080p.WEB.H264-GRP [Windows]'). It goes back to plain text,
-// which no later step restores as a platform.
-func (b *TagBuilder) fixWindows(r *Release) {
-	media := slices.ContainsFunc(r.tags, func(tag Tag) bool {
-		return tag.Is(
-			TagTypeSeries,
-			TagTypeSource,
-			TagTypeResolution,
-			TagTypeFrameRate,
-			TagTypeCodec,
-			TagTypeHDR,
-			TagTypeBitDepth,
-			TagTypeAudio,
-			TagTypeChannels,
-		)
-	})
-	for i, depth := 0, 0; i < len(r.tags); i++ {
-		tag := r.tags[i]
-		switch {
-		case tag.Is(TagTypeDelim):
-			depth = bracketDepth(tag.Delim(), depth)
-		case tag.Is(TagTypePlatform) && tag.Platform() == "Windows" &&
-			(media || depth == 0 || !listItem(r.tags, i) || !closingBrackets(r.tags, i, depth)):
-			r.tags[i] = NewTag(TagTypeText, nil, []byte(tag.v[0]), []byte(tag.v[0]))
-		}
-	}
-}
-
-// listItem reports whether the tag at i is a whole item of a list in brackets,
-// with a bracket, a '/' or a ',' on either side of it ('[Windows / English]').
-func listItem(tags []Tag, i int) bool {
-	if !peek(tags, i-1, TagTypeDelim) || !peek(tags, i+1, TagTypeDelim) {
-		return false
-	}
-	prev, next := strings.TrimRight(tags[i-1].Delim(), " "), strings.TrimLeft(tags[i+1].Delim(), " ")
-	return prev != "" && strings.IndexByte("[(/,", prev[len(prev)-1]) != -1 &&
-		next != "" && strings.IndexByte("])/,", next[0]) != -1
-}
-
-// closingBrackets reports whether nothing but brackets follows the tag at i,
-// which depth brackets hold.
-func closingBrackets(tags []Tag, i, depth int) bool {
-	for i++; i < len(tags); i++ {
-		switch {
-		case tags[i].Is(TagTypeDelim):
-			depth = bracketDepth(tags[i].Delim(), depth)
-		case tags[i].Is(TagTypeWhitespace, TagTypeExt):
-		case depth == 0:
-			return false
-		}
-	}
-	return true
 }
 
 // fixHalfEpisode joins the half of an episode back onto it when a video tag
@@ -1084,25 +990,6 @@ func (b *TagBuilder) fixHalfEpisode(r *Release) {
 		v[0] += "." + half.v[0]
 		r.tags = slices.Delete(slices.Clone(r.tags), i+1, i+3)
 		r.tags[i].v, r.end = v, r.end-2
-	}
-}
-
-// fixTitleRange makes a range of numbers after a word the end of the title
-// when an episode follows it past a spaced hyphen, ie the '17-26' of
-// '[Erai-raws] Tatsuki Fujimoto 17-26 - 01 ~ 08', which names the show where
-// the '01 ~ 08' are its episodes. A range that starts at 1 is left alone, as
-// that is how the episodes of a batch are written ('Show 01-12 - 13').
-func (b *TagBuilder) fixTitleRange(r *Release) {
-	for i := 2; i+2 < r.end; i++ {
-		tag, delim, next := r.tags[i], r.tags[i+1], r.tags[i+2]
-		// the shape the episode range lexer gives, written tight ('17-26')
-		if !tag.Is(TagTypeSeries) || len(tag.v) != 6 || tag.v[1] != "" || tag.v[2] != "" || tag.v[4] != "-" || strings.ContainsAny(tag.v[0], " ~") ||
-			atoi(tag.v[3]) <= 1 ||
-			!r.tags[i-2].Is(TagTypeText) || !r.tags[i-1].Is(TagTypeDelim) || r.tags[i-1].v[0] != " " ||
-			!delim.Is(TagTypeDelim) || delim.v[0] != " - " || !next.Is(TagTypeSeries) || next.val(1) != "" || !next.wroteEpisode() {
-			continue
-		}
-		r.tags[i] = tag.As(TagTypeText, nil)
 	}
 }
 
@@ -1155,243 +1042,11 @@ func isSampleRate(s string) bool {
 	return false
 }
 
-// fixFirstDate fixes the special case of a date occuring before text, and
-// there are no other date tags.
-func (b *TagBuilder) fixFirstDate(r *Release) {
-	i, last := 0, -1
-	// seek last
-	for i = r.end; i > 0; i-- {
-		if r.tags[i-1].Is(TagTypeDate) {
-			last = i - 1
-			break
-		}
-	}
-	if last == -1 { // not found
-		return
-	}
-	// seek first
-	for i = 0; i < r.end && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim); i++ {
-	}
-	switch {
-	case i < last,
-		peek(r.tags, i-1, TagTypeDelim) && strings.HasSuffix(r.tags[i-1].Delim(), "("):
-	case r.tags[i].Is(TagTypeDate):
-		r.tags[i] = r.tags[i].As(TagTypeText, nil)
-	}
-}
-
-// pivots finds the last position for the specified tags, generating a map of
-// the types and earliest position of all.
-func (b *TagBuilder) pivots(r *Release, types ...TagType) (map[TagType]int, int) {
-	m := make(map[TagType]int, len(types))
-	for _, typ := range types {
-		m[typ] = -1
-	}
-	j := -1
-	// find minimum of types
-	for i := r.end; i > 0; i-- {
-		if typ := r.tags[i-1].TagType(); typ.Is(types...) && m[typ] == -1 {
-			m[typ], j = i-1, i-1
-		}
-	}
-	if j != -1 {
-		return m, j
-	}
-	return m, r.end
-}
-
-// reset any tags of types prior to i.
-func (b *TagBuilder) reset(r *Release, i int, types ...TagType) []int {
-	// reset date tag and collect indexes
-	var v []int
-	for ; i > 0; i-- {
-		if r.tags[i-1].Is(types...) {
-			r.tags[i-1], v = r.tags[i-1].As(TagTypeText, nil), append(v, i-1)
-		}
-	}
-	return v
-}
-
 // start finds the first text tag after i.
 func (b *TagBuilder) start(r *Release, i int) int {
 	for ; i < r.end && !r.tags[i].Is(TagTypeText); i++ {
 	}
 	return i
-}
-
-// end finds the first text tag before i.
-func (b *TagBuilder) end(r *Release, i int) int {
-	for ; i > 0 && !r.tags[i-1].Is(TagTypeText); i-- {
-	}
-	return i
-}
-
-// fixFirst fixes the first non text tag if it was badly matched.
-func (b *TagBuilder) fixFirst(r *Release) {
-	var i int
-	// seek. meta is skipped along with whitespace and delimiters: a leading
-	// bracket holds the site or the fansub group, never part of the title, and
-	// stopping on it left the first real title token unchecked (ie,
-	// '[Group] Complete Manual - 04' kept COMPLETE as an other tag).
-	for ; i < r.end && r.tags[i].Is(TagTypeWhitespace, TagTypeDelim, TagTypeMeta); i++ {
-	}
-	// a tag that opens a bracket of tags is a tag of the release, and the
-	// title comes after the bracket ('[Group][1080p] Title', '[BD 1080p] Title
-	// [Group]'). with nothing but words after it the bracket holds the title
-	// ('[Group] [Complete Manual] - 04')
-	var bracket bool
-	if i != r.end && i != 0 && r.tags[i-1].Is(TagTypeDelim) {
-		d := r.tags[i-1].v[0]
-		bracket = d != "" && strings.IndexByte("[({", d[len(d)-1]) != -1
-	}
-	if bracket {
-		var words, tags int
-		for j := i + 1; j < r.end && !(r.tags[j].Is(TagTypeDelim) && strings.ContainsAny(r.tags[j].v[0], "])}")); j++ {
-			switch {
-			case r.tags[j].Is(TagTypeText):
-				words++
-			case !r.tags[j].Is(TagTypeDelim, TagTypeWhitespace):
-				tags++
-			}
-		}
-		bracket = words == 0 || tags != 0
-	}
-	if !bracket && i != r.end && r.tags[i].Is(
-		TagTypePlatform,
-		TagTypeArch,
-		TagTypeSource,
-		TagTypeResolution,
-		TagTypeCodec,
-		TagTypeHDR,
-		TagTypeBitDepth,
-		TagTypeAudio,
-		TagTypeOther,
-		TagTypeCut,
-		TagTypeEdition,
-		TagTypeLanguage,
-		TagTypeRegion,
-	) {
-		r.tags[i] = r.tags[i].As(TagTypeText, nil)
-	}
-	// a genre written as a bare word opens the title ('DOC.Martin.S01E01'),
-	// where one in parentheses is the genre ('(Comedy) Title')
-	if i != r.end && r.tags[i].Is(TagTypeGenre) && !parenthesized(r.tags, i) {
-		r.tags[i] = r.tags[i].As(TagTypeText, nil)
-	}
-}
-
-// parenthesized reports whether the tag at i stands alone in parentheses, with
-// at most spaces beside it ('(Comedy)', '( anime )').
-func parenthesized(tags []Tag, i int) bool {
-	return peek(tags, i-1, TagTypeDelim) && strings.HasSuffix(strings.TrimRight(tags[i-1].Delim(), "\t\n\f\r "), "(") &&
-		peek(tags, i+1, TagTypeDelim) && strings.HasPrefix(strings.TrimLeft(tags[i+1].Delim(), "\t\n\f\r "), ")")
-}
-
-// fixBad fixes bad collection/language/other/arch/platform tags before i.
-func (b *TagBuilder) fixBad(r *Release, start, i int) {
-	// seek non language/edition/collection/cut/other/source/delim
-	for ; i > start &&
-		r.tags[i-1].Is(
-			TagTypeLanguage,
-			TagTypeEdition,
-			TagTypeCut,
-			TagTypeOther,
-			TagTypeCollection,
-			TagTypeDelim,
-			TagTypeSource,
-		); i-- {
-	}
-	// fix collection/language/other/arch/platform tag between start and i
-	for ; i > start; i-- {
-		switch {
-		case r.tags[i-1].Is(TagTypeCollection) && r.tags[i-1].Collection() == "IMAX",
-			r.tags[i-1].Is(TagTypeOther) && r.tags[i-1].Other() == "REMiX":
-			// ignore imax
-		case r.tags[i-1].Is(
-			TagTypeCollection,
-			TagTypeLanguage,
-			TagTypeOther,
-			TagTypeArch,
-			TagTypePlatform,
-		):
-			r.tags[i-1] = r.tags[i-1].As(TagTypeText, nil)
-		}
-	}
-}
-
-// fixSpecial fixes special collection and other tags before i.
-func (b *TagBuilder) fixSpecial(r *Release, i int, series bool) {
-	for ; i > 0; i-- {
-		typ, c, o, t := r.tags[i-1].TagType(), r.tags[i-1].Collection(), r.tags[i-1].Other(), r.tags[i-1].Text()
-		switch l := strings.ToLower(t); {
-		case typ == TagTypeCollection && (c == "CC" || c == "RED" || (c == "AMZN" && l == "amazon")),
-			typ == TagTypeSource && t == "Web",
-			typ == TagTypeCut && t == "Uncut",
-			typ == TagTypeOther && (o == "MD" || o == "RESTORATiON"),
-			typ == TagTypeCut && l == "dc",
-			series && (typ == TagTypeArch || typ == TagTypePlatform):
-			r.tags[i-1] = r.tags[i-1].As(TagTypeText, nil)
-		}
-	}
-}
-
-// fixEpisodeTitle fixes language, collection and region tags inside the title
-// of an episode, ie 'NO' in 'Show.S01E02.NO.WAY.OUT.1080p'. The title runs
-// from the series tag, or a date with a day, at i up to the first source,
-// resolution or codec tag. A tag in it is a word of the title when it stands
-// between the series tag or text and two more words of text, with nothing but
-// plain delimiters around them. That leaves alone a tag followed by other
-// tags ('Show.S01E02.GERMAN.1080p'), one that follows other tags
-// ('German.Dubbed.DL.x'), one with a single word after it ('English Dub'),
-// and one inside brackets ('[English Dub]').
-//
-// After a year alone the text is the name of an event, and only the tag right
-// after the year is fixed, ie 'Hungarian' in 'Formula1.2026.Hungarian.Grand.
-// Prix.1080p'. Words further in have text on both sides, which fixIsolated
-// handles. A 'MULTi' is left alone ('2024.MULTI.Audio.Sub').
-func (b *TagBuilder) fixEpisodeTitle(r *Release, i int) {
-	var year bool
-	if r.tags[i].Is(TagTypeDate) {
-		_, month, day := r.tags[i].Date()
-		year = month == 0 || day == 0
-	}
-	plain := func(k int) bool {
-		return r.tags[k].Is(TagTypeDelim) && !strings.ContainsAny(r.tags[k].v[0], "[](){}")
-	}
-	// prev is the tag before the one at k, across a delimiter
-	for k, prev := i+2, i; k+4 < r.end && !r.tags[k].Is(TagTypeSource, TagTypeResolution, TagTypeCodec); k++ {
-		if r.tags[k].Is(TagTypeDelim, TagTypeWhitespace) {
-			continue
-		}
-		if year && (prev != i || strings.HasPrefix(r.tags[k].Language(), "MULTi")) {
-			break
-		}
-		if r.tags[k].Is(TagTypeLanguage, TagTypeCollection, TagTypeRegion) && !service(r.tags[k]) && prev == k-2 && plain(k-1) &&
-			(prev == i || r.tags[prev].Is(TagTypeText)) &&
-			plain(k+1) && r.tags[k+2].Is(TagTypeText) && plain(k+3) && r.tags[k+4].Is(TagTypeText) {
-			r.tags[k] = r.tags[k].As(TagTypeText, nil)
-		}
-		prev = k
-	}
-}
-
-// fixSourceWeb fixes a bare web source tag preceded by text when any source
-// tag follows, as a release names its source once amongst the technical tags:
-// a preceding web tag is part of a title (ie,
-// 'Show.S03E03.A.Dark.Web.1080p.WEBRip...').
-func (b *TagBuilder) fixSourceWeb(r *Release) {
-	for i := 0; i < r.end; i++ {
-		if !r.tags[i].Is(TagTypeSource) || r.tags[i].Source() != "WEB" || !isolated(r.tags[:r.end], i, -1) {
-			continue
-		}
-		// seek source after i
-		for j := i + 1; j < r.end; j++ {
-			if r.tags[j].Is(TagTypeSource) {
-				r.tags[i] = r.tags[i].As(TagTypeText, nil)
-				break
-			}
-		}
-	}
 }
 
 // fixSourceUHD fixes a bare uhd source tag next to a web source tag with only
@@ -1425,127 +1080,9 @@ func (b *TagBuilder) fixSourceUHD(r *Release) {
 	}
 }
 
-// fixNoText fixes having no text but has a collection tag.
-func (b *TagBuilder) fixNoText(r *Release, end int) {
-	// bail if any text tags
-	i, n := 0, min(end+1, len(r.tags))
-	for ; i < n; i++ {
-		if r.tags[i].Is(TagTypeText) {
-			return
-		}
-	}
-	// reset
-	for i = range n {
-		if r.tags[i].Is(TagTypeCollection) {
-			r.tags[i] = r.tags[i].As(TagTypeText, nil)
-		}
-	}
-}
-
-// fixIsolated fixes isolated collection/language/other/arch/platform tags.
-func (b *TagBuilder) fixIsolated(r *Release) {
-	// if tag is isolated with text on both sides, change to text
-	for i := r.end - 1; i > 1; i-- {
-		// a bare 'dual' is the audio tag next to other tags or a bracket, and
-		// a word between two words ('Freestyle.Dual.Moguls')
-		dual := r.tags[i-1].Is(TagTypeAudio) && strings.EqualFold(r.tags[i-1].v[0], "dual") &&
-			r.tags[i-2].Is(TagTypeDelim) && strings.Trim(r.tags[i-2].Delim(), "._ ") == "" &&
-			r.tags[i].Is(TagTypeDelim) && strings.Trim(r.tags[i].Delim(), "._ ") == ""
-		if !service(r.tags[i-1]) && (dual || r.tags[i-1].Is(
-			TagTypeCollection,
-			TagTypeLanguage,
-			TagTypeOther,
-			TagTypeArch,
-			TagTypePlatform,
-			// region is deliberately absent. Adding it fixes 'ATP.Tour.US.Open'
-			// but breaks '[UK version]' and 'Videogame EUR NSW', which are
-			// structurally identical and genuinely regions. A region between two
-			// words is not separable from a title containing a region name
-			// without knowing where the title ends.
-		)) &&
-			isolated(r.tags[:r.end], i-1, -1) &&
-			isolated(r.tags[:r.end], i-1, +1) &&
-			r.tags[i-1].Other() != "REMiX" {
-			r.tags[i-1] = r.tags[i-1].As(TagTypeText, nil)
-		}
-	}
-}
-
-// fixWords fixes tags that are words of a name, in one pass:
-//
-// A region between two words with plain delimiters around it, outside any
-// bracket, ie the 'US' in 'Tennis.US.Open.2025'. The words must have been
-// read as text, and not be a tag that was reset to text, which keeps the
-// region in 'Videogame EUR NSW'. A note in brackets names the region it means
-// ('(Contains the UK dub)').
-//
-// A region, language or platform on either side of a 'vs', which is one of
-// the two sides of a match, ie the 'USA' in 'Canada.Vs.USA.1080p' or the 'PSV'
-// in 'Ajax.vs.PSV.720p'.
-//
-// A bare 'extended' in front of 'highlights', where it names the programme and
-// not a cut of it, ie 'Arsenal.vs.Liverpool.Extended.Highlights.1080p'.
-func (b *TagBuilder) fixWords(r *Release) {
-	plain := func(i int) bool {
-		return r.tags[i].typ == TagTypeDelim && strings.Trim(r.tags[i].v[0], "._ ") == ""
-	}
-	word := func(i int) bool {
-		return r.tags[i].typ == TagTypeText && !r.tags[i].Retyped()
-	}
-	side := func(i int) bool {
-		switch r.tags[i].typ {
-		case TagTypeText, TagTypeRegion, TagTypeLanguage, TagTypePlatform:
-			return true
-		}
-		return false
-	}
-	var depth int
-	for i := 0; i < r.end-2; i++ {
-		switch r.tags[i].typ {
-		case TagTypeDelim:
-			depth = bracketDepth(r.tags[i].v[0], depth)
-		case TagTypeRegion:
-			if i >= 2 && depth == 0 && plain(i-1) && plain(i+1) && word(i-2) && word(i+2) {
-				r.tags[i] = r.tags[i].As(TagTypeText, nil)
-			}
-		case TagTypeText:
-			if i < 2 || !word(i) || !isVersus(r.tags[i].v[0]) || !plain(i-1) || !plain(i+1) || !side(i-2) || !side(i+2) {
-				continue
-			}
-			for _, k := range [...]int{i - 2, i + 2} {
-				if r.tags[k].typ != TagTypeText {
-					r.tags[k] = r.tags[k].As(TagTypeText, nil)
-				}
-			}
-		case TagTypeCut:
-			if strings.EqualFold(r.tags[i].v[0], "extended") && plain(i+1) &&
-				r.tags[i+2].Is(TagTypeText, TagTypeOther) && strings.EqualFold(r.tags[i+2].v[0], "highlights") {
-				r.tags[i] = r.tags[i].As(TagTypeText, nil)
-			}
-		}
-	}
-}
-
-// isVersus reports whether s is a word that stands between the two sides of a
-// match.
-func isVersus(s string) bool {
-	switch len(s) {
-	case 1:
-		return s == "v" || s == "V" || s == "@"
-	case 2:
-		return strings.EqualFold(s, "vs") || strings.EqualFold(s, "at")
-	case 5:
-		return strings.EqualFold(s, "gegen")
-	case 6:
-		return strings.EqualFold(s, "contre")
-	}
-	return false
-}
-
 // fixMusic fixes music tags. Changes single cbr audio tag to the cbr container
-// (ie, a comic) tag, changes 16bit arch tag to audio tag, converts 'bootleg'
-// tag not surrounded by '-' or '()' back to text, and a single episode in a
-// name with a music exclusive audio tag and no resolution to text.
+// (ie, a comic) tag, changes 16bit arch tag to audio tag, and a single episode
+// in a name with a music exclusive audio tag and no resolution to text.
 func (b *TagBuilder) fixMusic(r *Release) {
 	// when only one music tag of `cbr`, change to container `cbr` (comic)
 	countCbr, posCbr, hasCbr, musicExcl := 0, 0, false, false
@@ -1560,16 +1097,6 @@ func (b *TagBuilder) fixMusic(r *Release) {
 			}
 			musicExcl = musicExcl || r.tags[i].InfoExcl()
 			countCbr++
-		}
-		// reset bootleg tag that is not '-bootleg-' or '(bootleg)'
-		if i != 0 && r.tags[i].Is(TagTypeOther) && r.tags[i].Other() == "BOOTLEG" {
-			wrapped := (peek(r.tags, i-1, TagTypeDelim) && strings.HasSuffix(r.tags[i-1].Delim(), "-") &&
-				peek(r.tags, i+1, TagTypeDelim) && strings.HasPrefix(r.tags[i+1].Delim(), "-")) ||
-				(peek(r.tags, i-1, TagTypeDelim) && strings.HasSuffix(r.tags[i-1].Delim(), "(") &&
-					peek(r.tags, i+1, TagTypeDelim) && strings.HasPrefix(r.tags[i+1].Delim(), ")"))
-			if !wrapped {
-				r.tags[i] = r.tags[i].As(TagTypeText, nil)
-			}
 		}
 		// fix single ep, and 16bit tag when music exclusive
 		if singleEp, sbBit := r.tags[i].SingleEp(), (r.tags[i].Is(TagTypeArch) && r.tags[i].Arch() == "16bit"); singleEp || sbBit {
@@ -1925,23 +1452,9 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 	case (r.Source == "" || r.Source == "WEB") && r.Resolution == "" && r.Year != 0:
 		return Music
 	}
-	// check for platform, arch tags previously reset
-	if initial {
-		var reinspect bool
-		for i := n; i > 0; i-- {
-			if r.tags[i-1].Was(TagTypePlatform, TagTypeArch) {
-				r.tags[i-1], reinspect = r.tags[i-1].Revert(), true
-				switch r.tags[i-1].TagType() {
-				case TagTypePlatform:
-					r.Platform = r.tags[i-1].Platform()
-				case TagTypeArch:
-					r.Arch = r.tags[i-1].Arch()
-				}
-			}
-		}
-		if reinspect {
-			return b.inspect(r, false)
-		}
+	// with no other sign of a type, what the name runs on is one
+	if initial && b.unsettle(r) {
+		return b.inspect(r, false)
 	}
 	return Unknown
 }
@@ -2050,104 +1563,6 @@ func (b *TagBuilder) unset(r *Release) {
 			r.tags[i], grabSource = r.tags[i].As(TagTypeText, nil), true
 		} else if !movieSeriesEpisodeMusicGame && r.tags[i].Is(TagTypeChannels) {
 			r.tags[i], r.Channels = r.tags[i].As(TagTypeText, nil), ""
-		}
-	}
-}
-
-// titleMusicSource gives back to the title of a video a music source written
-// among its words, when another source is the video's
-// ('The.CD.2020.1080p.WEB.H264-GRP', 'The.Last.CD.Shop.2020.1080p.WEB',
-// 'The.DVB.2020.720p.BluRay'). unset gives back only a source that is
-// exclusive to music ('The.Cassette.2020.1080p.WEB'). A music source alone in
-// the name stays its source, as a broadcast is one a video is taken from
-// ('Show.S01E02.DVB.x264-GRP', 'Show.Name.DVB.S01E01.720p.x264').
-// The words start after the brackets that open the name ('[Group] The CD - 01
-// [1080p WEB-DL]'), and end at a delimiter other than a separator: a source in
-// parentheses after the title is not one of them ('Artist - Live At Wembley
-// (CD) 2020 1080p WEB').
-func (b *TagBuilder) titleMusicSource(r *Release) {
-	if !r.Type.Is(Movie, Series, Episode) {
-		return
-	}
-	first, end, text := -1, len(r.tags), false
-loop:
-	for i, tag := range r.tags {
-		switch {
-		case tag.Is(TagTypeText):
-			text = true
-		case !text, tag.Is(TagTypeWhitespace):
-		case tag.Is(TagTypeSource) && tag.InfoType() == Music:
-			if first == -1 {
-				first = i
-			}
-		case !tag.Is(TagTypeDelim) || strings.Trim(tag.Delim(), " ._") != "":
-			end = i
-			break loop
-		}
-	}
-	if first == -1 || !slices.ContainsFunc(r.tags[end:], func(tag Tag) bool {
-		return tag.Is(TagTypeSource) && tag.InfoType() != Music
-	}) {
-		return
-	}
-	for i := first; i < end; i++ {
-		if r.tags[i].Is(TagTypeSource) {
-			r.tags[i] = r.tags[i].As(TagTypeText, nil)
-		}
-	}
-	r.Source = ""
-	for _, tag := range r.tags {
-		if tag.Is(TagTypeSource) && preciser(r.Source, tag.Source()) {
-			r.Source = tag.Source()
-		}
-	}
-}
-
-// titleCollection gives back to the title of a video a collection that opens
-// it, as a show or a film named after a channel is not taken from it
-// ('CNBC.Titans.S01E01', 'NOW.Apocalypse.S01E01', 'ESPN.30.for.30.S01E01',
-// 'BBC.The.Hunt.2015'). The collection is then the next one in the name
-// ('CNBC.Titans.S01E01.1080p.AMZN.WEB-DL'). The words start after the bracket
-// that opens the name ('[Group] CNBC Titans - 01 [1080p]'), and the code must
-// be followed by a word across a plain delimiter: a code set off from the
-// title is a label ('IMAX.-.Journey.to.the.South.Pacific.2013'), and one
-// followed by other tags is no title ('AMZN.S01E01'). An F1 broadcaster is
-// never a word ('F1TV.Formula1.2024.Round19'). A publisher of a tutorial or a
-// book is not a video, and stays its collection ('Lynda.com.Setting.Up.MySQL').
-func (b *TagBuilder) titleCollection(r *Release) {
-	if !r.Type.Is(Movie, Series, Episode) {
-		return
-	}
-	// a bracket is a meta tag, or delimiters around tags ('[DSD] Show - 01',
-	// '[Group].[1080p].Show.-.01', '[Group] [1080p] [WEB-DL] Show - 01'). A
-	// delimiter that closes one bracket can open the next ('] [')
-	i, inside := 0, false
-loop:
-	for ; i < len(r.tags); i++ {
-		switch tag := r.tags[i]; {
-		case tag.Is(TagTypeMeta):
-		case tag.Is(TagTypeWhitespace, TagTypeDelim):
-			d := tag.Delim()
-			if !inside && strings.Trim(d, " ._[]") != "" {
-				return
-			}
-			if k := strings.LastIndexAny(d, "[]"); k != -1 {
-				inside = d[k] == '['
-			}
-		case inside:
-		default:
-			break loop
-		}
-	}
-	if i+2 >= len(r.tags) || !r.tags[i].Is(TagTypeCollection) || service(r.tags[i]) || !r.tags[i+1].Is(TagTypeDelim) ||
-		strings.Trim(r.tags[i+1].Delim(), " ._") != "" || !r.tags[i+2].Is(TagTypeText) {
-		return
-	}
-	r.tags[i], r.Collection = r.tags[i].As(TagTypeText, nil), ""
-	for _, tag := range r.tags {
-		if tag.Is(TagTypeCollection) {
-			r.Collection = tag.Collection()
-			break
 		}
 	}
 }
@@ -3231,35 +2646,6 @@ func remove(v []string, str string) []string {
 // peek determines if i is of type.
 func peek(tags []Tag, i int, types ...TagType) bool {
 	return 0 <= i && i < len(tags) && tags[i].Is(types...)
-}
-
-// isolated determines if the tag in the indicated incremental direction
-// (-1/+1) is not text/whitespace.
-func isolated(tags []Tag, i, inc int) bool {
-	for i += inc; 0 < i && i < len(tags)-1 && tags[i+inc].Is(TagTypeWhitespace, TagTypeDelim); i += inc {
-	}
-	i += inc
-	// the len(tags)-1 bound is deliberate: it excludes the final tag, which at
-	// this point in the build is usually an as-yet unidentified group (the
-	// group is only settled in unused). Widening it to len(tags) makes
-	// 'MiniMeters v0 8 4 Beta MacOS BTCR' treat the trailing group BTCR as
-	// title text and lose the MacOS platform.
-	return 0 <= i && i < len(tags)-1 && tags[i].Is(TagTypeText)
-}
-
-// service returns true when tag is the collection of an F1 broadcaster, which
-// is not a word of a title, so it stays a collection between words ('Japan
-// Qualifying F1TV Live 1080p', 'Race F1TV Live+International 2160p'). Other
-// services are words when between words ('Show.S01E02.Watch.on.ZEE5.Today').
-func service(tag Tag) bool {
-	if !tag.Is(TagTypeCollection) {
-		return false
-	}
-	switch tag.Collection() {
-	case "F1TV", "SkyF1", "SkyF1UHD":
-		return true
-	}
-	return false
 }
 
 // nextSource returns the index and value of the source tag next to i in the

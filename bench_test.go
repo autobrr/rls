@@ -134,6 +134,19 @@ func BenchmarkParseTrailingDelims(b *testing.B) {
 	}
 }
 
+// claims is a long name of words the vocabulary claims, each of which the
+// zone stage decides. A pass over the name for every one of them takes
+// seconds rather than microseconds, see TestSettleLinear.
+var claims = strings.Repeat("Web.", 4000) + "S01E01.2017.1080p.x264-GRP"
+
+func BenchmarkParseClaims(b *testing.B) {
+	buildDefault()
+	b.ReportAllocs()
+	for b.Loop() {
+		ParseString(claims)
+	}
+}
+
 // readCorpus returns the names of a file of testdata/corpus, one a line. The
 // corpora are not in the repository, so the file may not be there.
 func readCorpus(file string) ([]string, error) {
