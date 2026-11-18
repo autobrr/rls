@@ -65,6 +65,16 @@
   title: "X-Men Apocalypse"
 "You.I.Me":
   title: "You I Me"
+"2.22.3D.2008.German.DL.1080p.BluRay.x264-MAJESTiC":
+  type: "movie"
+  title: "2 22"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2008
+  codec: "x264"
+  other: "3D"
+  language: "GERMAN DL"
+  group: "MAJESTiC"
 "5.Headed.Shark.Attack.German.2017.MERRY.XMAS.AC3.BDRiP.x264-XF":
   type: "movie"
   title: "5 Headed Shark Attack"
@@ -1493,6 +1503,14 @@
   year: 1979
   codec: "x264"
   group: "GRP"
+"Made.in.USA.1966.1080p.BluRay.x264-USURY":
+  type: "movie"
+  title: "Made in USA"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 1966
+  codec: "x264"
+  group: "USURY"
 "Mister.Aka.Manson.1999.1080p.BluRay.REMUX.AVC.FLAC.1.0-GRP.mkv":
   type: "movie"
   title: "Mister Aka Manson"
@@ -2691,6 +2709,14 @@
   other: "PROPER REMUX"
   language: "DL"
   group: "TvR"
+"The.Darjeeling.Limited.2007.1080p.BluRay.x264-CiNEFiLE":
+  type: "movie"
+  title: "The Darjeeling Limited"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2007
+  codec: "x264"
+  group: "CiNEFiLE"
 "The.Digipak.2020.1080p.WEB.H264-GRP":
   type: "movie"
   title: "The Digipak"
@@ -3160,10 +3186,11 @@
   series: 1
   codec: "AV1"
   audio: "DUAL.AUDIO"
+  other: "COMPLETE"
   language: "MULTiSUB VOSTFR"
   group: "Trix"
   site: "Trix"
-  unused: "Eighty Six Part 1 2 COMPLETE Optional"
+  unused: "Eighty Six Part 1 2 Optional"
 "[SubsPlease] 86 - Eighty Six - 21.5 (720p) [4191AC97].mkv":
   type: "episode"
   title: "86 - Eighty Six"
@@ -3304,6 +3331,16 @@
   group: "Hikki"
   site: "Hikki"
   unused: "OVA"
+"Austin.City.Limits.S48E02.Japanese.Breakfast-Arlo.Parks.1080p.WEB.h264-BAE":
+  type: "episode"
+  title: "Austin City Limits"
+  subtitle: "Japanese Breakfast-Arlo Parks"
+  source: "WEB"
+  resolution: "1080p"
+  series: 48
+  episode: 2
+  codec: "H.264"
+  group: "BAE"
 "Azure.Circles.Ghost.Realm.S01.1080p.BluRay.Opus2.0.x265-RUNE":
   type: "series"
   title: "Azure Circles Ghost Realm"
@@ -4057,6 +4094,29 @@
   audio: "DDP"
   channels: "5.1"
   group: "LAZY"
+"Ghosts.US.2021.S01E01.1080p.AMZN.WEB-DL.DDP5.1.H.264-FLUX":
+  type: "episode"
+  title: "Ghosts"
+  source: "WEB-DL"
+  resolution: "1080p"
+  collection: "AMZN"
+  year: 2021
+  series: 1
+  episode: 1
+  codec: "H.264"
+  audio: "DDP"
+  channels: "5.1"
+  region: "USA"
+  group: "FLUX"
+"Going.Dutch.S01E01.1080p.WEB.h264-ETHEL":
+  type: "episode"
+  title: "Going Dutch"
+  source: "WEB"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "H.264"
+  group: "ETHEL"
 "Gotham.S01E05.Viper.WEB-DL.x264.AAC":
   type: "episode"
   title: "Gotham"
@@ -4208,6 +4268,14 @@
   channels: "2.0"
   group: "NTb"
   ext: "mkv"
+"Hotellet.DANiSH.S01-S05.720p.WEB-DL.H.264":
+  type: "series"
+  title: "Hotellet"
+  source: "WEB-DL"
+  resolution: "720p"
+  series: 1
+  codec: "H.264"
+  language: "DANiSH"
 "Important Things With Demetri Martin (2009) S01 (1080p DVDRip AI Upscale x265 10bit AC3 2.0 - JBENT)[TAoE]":
   type: "series"
   title: "Important Things With Demetri Martin"
@@ -4234,7 +4302,7 @@
   language: "SUB"
   group: "Gecko"
   site: "Gecko"
-  unused: "无限少女48; Infinite Girl 48; Wuxian Shaonu 48 HARD SUB ZH HANS BATCH"
+  unused: "无限少女48; Infinite Girl 48; Wuxian Shaonu 48 HARD ZH HANS BATCH"
 "[R-Archive] Inuyasha Seasons 1~7 R1 DVD Remux 480p Eng Sub Dub Dual Audio":
   type: "series"
   title: "Inuyasha"
@@ -4499,6 +4567,14 @@
   channels: "5.1"
   language: "GERMAN SYNCED DL"
   group: "TVS"
+"Murder.Most.English.S01E01.DVDRip.XviD-OSiTV":
+  type: "episode"
+  title: "Murder Most English"
+  source: "DVDRiP"
+  series: 1
+  episode: 1
+  codec: "XViD"
+  group: "OSiTV"
 "NBA.2024.07.10.USA.vs.Canada.1080p.WEB.h264-GRP":
   type: "episode"
   title: "NBA"
@@ -6230,6 +6306,17 @@
   other: "HR"
   container: "WMV"
   group: "KTR"
+"Stargate.SG1.German.2003.S7.D1.COMPLETE.PAL.DVDR-DAW":
+  type: "series"
+  title: "Stargate SG1"
+  resolution: "576p"
+  year: 2003
+  series: 7
+  disc: "D01"
+  other: "COMPLETE"
+  language: "GERMAN"
+  size: "DVDR"
+  group: "DAW"
 "[Judas] Steins;Gate (Season 1 + OVA + Movie) [BD 1080p][HEVC x265 10bit][Dual-Audio][Multi-Subs] (Batch)":
   type: "series"
   title: "Steins;Gate"
@@ -6390,6 +6477,15 @@
   codec: "XViD"
   other: "WS"
   ext: "torrent"
+"The.English.S01E01.1080p.BluRay.x264-POPPiNS":
+  type: "episode"
+  title: "The English"
+  source: "BluRay"
+  resolution: "1080p"
+  series: 1
+  episode: 1
+  codec: "x264"
+  group: "POPPiNS"
 "The Flash 2014 S01E01 HDTV x264-LOL[ettv]":
   type: "episode"
   title: "The Flash"
@@ -6827,6 +6923,15 @@
   genre: "Documentary"
   group: "LiQUiD"
   ext: "mkv"
+"2_Pac-Me_Against_the_World_(German_Edition)-Interscope-CDM-1995-BFHMP3":
+  type: "music"
+  artist: "2 Pac"
+  title: "Me Against the World"
+  subtitle: "German Edition"
+  source: "CDM"
+  year: 1995
+  group: "BFHMP3"
+  unused: "Interscope"
 "100 gecs - 10,000 gecs (2nd Version) FLAC (16bit-44.1kHz)":
   type: "music"
   artist: "100 gecs"
@@ -6852,6 +6957,14 @@
   artist: "a"
   title: "(b) c"
   ext: "mp3"
+"A2C-White_Russian-(PBR002)-WEB-2010-MPX":
+  type: "music"
+  artist: "A2C"
+  title: "White Russian"
+  source: "WEB"
+  year: 2010
+  id: "PBR002"
+  group: "MPX"
 "AC/DC - Back in Black (1980) [FLAC]":
   type: "music"
   artist: "AC/DC"
@@ -7028,6 +7141,12 @@
   source: "WEB"
   year: 2020
   group: "GRP"
+"Autoflo-Old_English-2004-FTD":
+  type: "music"
+  artist: "Autoflo"
+  title: "Old English"
+  year: 2004
+  group: "FTD"
 "B_recordings--instant-(supercheap-03)-2VLS1998-kW":
   type: "music"
   artist: "B recordings"
