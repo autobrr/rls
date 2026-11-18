@@ -613,6 +613,15 @@
   audio: "LiNE"
   region: "R5"
   group: "UNiQUE"
+"Broken.English.2007.LiMiTED.NORDiC.PAL.DVDR-DROiDS":
+  type: "movie"
+  title: "Broken English"
+  resolution: "576p"
+  year: 2007
+  edition: "Limited.Edition"
+  language: "NORDiC"
+  size: "DVDR"
+  group: "DROiDS"
 "Broken.Windows.2020.1080p.WEB.H264-GRP":
   type: "movie"
   title: "Broken Windows"
@@ -917,6 +926,14 @@
   audio: "FLAC"
   group: "UTW-THORA"
   site: "UTW-THORA"
+"Everybody.Wants.To.Be.Italian.2007.Limited.DVDRiP.XviD-iNTiMiD":
+  type: "movie"
+  title: "Everybody Wants To Be Italian"
+  source: "DVDRiP"
+  year: 2007
+  codec: "XViD"
+  edition: "Limited.Edition"
+  group: "iNTiMiD"
 "[REPACK2] Example.Film.2020.1080p.BluRay.x265-GRP":
   type: "movie"
   title: "Example Film"
@@ -1378,6 +1395,23 @@
   codec: "x264 dxva"
   audio: "DTS"
   group: "wsp®"
+"Johnny.English.2003.German.DL.1080p.BluRay.x264-DETAiLS":
+  type: "movie"
+  title: "Johnny English"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2003
+  codec: "x264"
+  language: "GERMAN DL"
+  group: "DETAiLS"
+"Johnny.English.2003.1080p.BluRay.H264-LUBRiCATE":
+  type: "movie"
+  title: "Johnny English"
+  source: "BluRay"
+  resolution: "1080p"
+  year: 2003
+  codec: "H.264"
+  group: "LUBRiCATE"
 "IMAX.-.Journey.to.the.South.Pacific.2013.2160p.UHD.BluRay.DTS-HD.MA.7.1.HDR10+.x265-DON":
   type: "movie"
   title: "Journey to the South Pacific"
@@ -1461,6 +1495,14 @@
   year: 1997
   codec: "x264"
   group: "GRP"
+"La.French.2014.FRENCH.BluRay.COMPLETE-BonesBrigade":
+  type: "movie"
+  title: "La French"
+  source: "BluRay"
+  year: 2014
+  other: "COMPLETE"
+  language: "FRENCH"
+  group: "BonesBrigade"
 "La.Planete.Des.Singes.L'affrontement.TRUEFRENCH.720p.x264.HDLIGHT\t":
   type: "movie"
   title: "La Planete Des Singes L'affrontement"
@@ -2104,6 +2146,13 @@
   audio: "FLAC"
   group: "Kawaiika-Raws"
   site: "Kawaiika-Raws"
+"Old.English.1930.DSR.x264-REGRET":
+  type: "movie"
+  title: "Old English"
+  source: "DSRiP"
+  year: 1930
+  codec: "x264"
+  group: "REGRET"
 "[Feibanyama] One Piece Heroines [IQIYI WebRip 2160p HEVC AAC Multi-Subs]":
   type: "movie"
   title: "One Piece Heroines"
@@ -2130,6 +2179,13 @@
   year: 2007
   codec: "x264"
   group: "GRP"
+"Pardon.My.French.2009.DVDRip.XviD-GFW":
+  type: "movie"
+  title: "Pardon My French"
+  source: "DVDRiP"
+  year: 2009
+  codec: "XViD"
+  group: "GFW"
 "Pelicula.2020.MULTi.ES.EN.1080p.BluRay.x264-GRP":
   type: "movie"
   title: "Pelicula"
@@ -2922,6 +2978,15 @@
   audio: "DTS"
   group: "deciBeL"
   ext: "mkv"
+"The.Italian.2005.PROPER.LiMiTED.DVDRip.XviD-HNR":
+  type: "movie"
+  title: "The Italian"
+  source: "DVDRiP"
+  year: 2005
+  codec: "XViD"
+  other: "PROPER"
+  edition: "Limited.Edition"
+  group: "HNR"
 "The.Jungle.Book.2016.3D.1080p.BRRip.SBS.x264.AAC-ETRG":
   type: "movie"
   title: "The Jungle Book"
@@ -3311,15 +3376,6 @@
   cut: "Uncut"
   language: "GERMAN DL"
   group: "GRP"
-"Zombie Shark The Swimming Dead French 2015 AC3 BDRiP x264-XF":
-  type: "movie"
-  title: "Zombie Shark The Swimming Dead"
-  source: "BDRiP"
-  year: 2015
-  codec: "x264"
-  audio: "DD"
-  language: "FRENCH"
-  group: "XF"
 "[DBD-Raws][人参果/The Monkey King and the Fruit of Immortality][正片+其他动画短片+花絮][1080P][BDRip][HEVC-10bit][中英内封][FLAC][MKV]":
   type: "movie"
   title: "人参果"

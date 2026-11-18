@@ -936,17 +936,36 @@ func closingBrackets(tags []Tag, i, depth int) bool {
 }
 
 // langBeforeYear is the cell of the table in edgeWord for a language directly
-// in front of a year: false reads it as a tag ('5.Headed.Shark.Attack.German.
-// 2017'), which leaves 'Pardon.My.French.2021' with the title 'Pardon My',
-// and true reads it as a word.
-const langBeforeYear = false
+// in front of a year: it reports whether the language tag is a word of the
+// title. It is one when it is written as the name of the language is, a
+// capital and small letters ('Johnny.English.2003', 'Pardon.My.French.2009',
+// 'The.Italian.2005'), unless that language is German. German is the one
+// language the scene writes in front of the year as a tag, in any spelling
+// ('Auf.Wiedersehen.Kinder.German.1987', 'Stuart.Little.German.1999'), and
+// a word in scene spelling, a code or a short form is a tag in any language
+// ('3.Ninjas.Kick.Back.SPANiSH.1994', 'THX.1138.SE.1971', 'Movie.Eng.2019').
+// edgeWord has already made a tag of a word in capitals and of any claim in
+// a title with no word that mixes capitals and small letters ('THE.GOOD.
+// FRENCH.2019'), and the caller of a claim that does not stand alone between
+// a word and the year ('MULTi.English.2003', 'German.English.2003'). A
+// language that opens the name is its title ('Polish.2020'), see settle. A
+// season or an episode behind the year does not change the cell ('Show.
+// English.2003.S07E01').
+//
+// Of 360 names read by hand with a language in front of the year, this
+// reads 15 the other way from what they mean: 'Baby.Einstein.Baby.Noah.
+// English.2004', a tag, and the 14 releases of 'The.Good.German.2006', a
+// word.
+func langBeforeYear(tag Tag) bool {
+	return tag.Language() != "GERMAN" && tag.v[0] == tag.InfoTitle()
+}
 
 // edgeWord reports whether the one claim at m, which stands between the last
 // word of the title and a year or the numbering, is a word. It is what the
 // name alone cannot say, so this is a table of what is likelier:
 //
 //	             before a year             before the numbering
-//	language     tag ('German.2017')       word ('Going.Dutch.S01E01')
+//	language     see langBeforeYear        word ('Going.Dutch.S01E01')
 //	region       word ('Made.in.USA')      tag ('The.Office.US.S01E01')
 //	'complete'   word ('Almost.Complete')  tag ('Complete.Series.1-6')
 //	the others   word                      word
@@ -991,7 +1010,7 @@ func edgeWord(tags []Tag, z zones, m int) bool {
 		if numbering && tag.Language() == "GERMAN" && len(anchor.v[0]) >= 7 && strings.EqualFold(anchor.v[0][:7], "staffel") {
 			return false
 		}
-		return languageName(tag) && (numbering || langBeforeYear)
+		return languageName(tag) && (numbering || langBeforeYear(tag))
 	case TagTypeRegion:
 		return !behind
 	case TagTypeOther:
@@ -1134,7 +1153,7 @@ func word(tags []Tag, z zones, in []uint8, m, edge int, source bool) bool {
 			return true
 		}
 	// title edge: the year follows in parentheses, where a language is what
-	// it is in front of a year ('Amelie French (2001)'). In front of any
+	// it is in front of a year ('Johnny English (2003)'). In front of any
 	// other bracket it is a tag ('Movie Title German (DL) 2019',
 	// 'Show.Name.German.(S01).COMPLETE')
 	case z.last < m && m < z.close && z.close+1 == z.anchor && z.anchorTag(tags).Is(TagTypeDate):
