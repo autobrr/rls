@@ -429,9 +429,9 @@ func TestJoinReadings(t *testing.T) {
 		{"Show.S01.S02.1080p.WEB-DL.x264-GRP", "Show", "GRP", "", []int{1, 2}},
 	} {
 		r := ParseString(test.s)
-		if r.Title != test.title || r.Group != test.group || r.Genre != test.genre || fmt.Sprint(r.Seasons()) != fmt.Sprint(test.seasons) {
+		if r.Title != test.title || r.Group != test.group || r.Genre != test.genre || fmt.Sprint(r.Numbering.Seasons) != fmt.Sprint(test.seasons) {
 			t.Errorf("%q expected title %q, group %q, genre %q, seasons %v, got: %q, %q, %q, %v",
-				test.s, test.title, test.group, test.genre, test.seasons, r.Title, r.Group, r.Genre, r.Seasons())
+				test.s, test.title, test.group, test.genre, test.seasons, r.Title, r.Group, r.Genre, r.Numbering.Seasons)
 		}
 	}
 }

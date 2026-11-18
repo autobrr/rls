@@ -287,8 +287,8 @@ func TestNewParserWithLexers(t *testing.T) {
 	t.Parallel()
 	const name = "Show.S01E02.1080p.WEB.h264-GRP"
 	r := NewParser(WithLexers(NewTrimWhitespaceLexer())).ParseRelease([]byte(name))
-	if r.Series != 0 || r.Episode != 0 || r.Resolution != "" || r.Source != "" || len(r.Codec) != 0 {
-		t.Errorf("expected no season, episode, resolution, source or codec, got: %d %d %q %q %q", r.Series, r.Episode, r.Resolution, r.Source, r.Codec)
+	if r.Numbering.Shape() != ShapeNone || r.Resolution != "" || r.Source != "" || len(r.Codec) != 0 {
+		t.Errorf("expected no season, episode, resolution, source or codec, got: %+v %q %q %q", r.Numbering, r.Resolution, r.Source, r.Codec)
 	}
 	for _, tag := range r.Tags() {
 		if !tag.Is(TagTypeText, TagTypeDelim, TagTypeWhitespace) {
@@ -300,8 +300,8 @@ func TestNewParserWithLexers(t *testing.T) {
 	}
 	// a later option replaces an earlier one
 	r = NewParser(WithLexers(NewTrimWhitespaceLexer()), WithLexers(DefaultLexers()...)).ParseRelease([]byte(name))
-	if r.Series != 1 || r.Episode != 2 || r.Resolution != "1080p" {
-		t.Errorf("expected S01E02 in 1080p, got: %d %d %q", r.Series, r.Episode, r.Resolution)
+	if !slices.Equal(r.Numbering.Episodes, []Ep{ep(1, 2, 2)}) || r.Resolution != "1080p" {
+		t.Errorf("expected S01E02 in 1080p, got: %+v %q", r.Numbering, r.Resolution)
 	}
 }
 

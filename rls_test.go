@@ -63,9 +63,16 @@ func TestParseRelease(t *testing.T) {
 	}
 }
 
-// TestSeriesEpisodesRangeFill checks that the episodes inside a range are
-// filled in, and that ranges too wide to fill are given by their ends.
+// TestSeriesEpisodesRangeFill checks that All fills in the episodes inside a
+// range, and that ranges too wide to fill are given by their ends.
 func TestSeriesEpisodesRangeFill(t *testing.T) {
+	count := func(s string) int {
+		var n int
+		for range ParseString(s).Numbering.All() {
+			n++
+		}
+		return n
+	}
 	for _, test := range []struct {
 		s   string
 		exp int
@@ -75,17 +82,25 @@ func TestSeriesEpisodesRangeFill(t *testing.T) {
 		{"Show.E1-E99999.1080p.WEB-GRP", 2},
 		{"Show.S01.E1-E99999.1080p.WEB-GRP", 2},
 	} {
-		if n := len(ParseString(test.s).SeriesEpisodes()); n != test.exp {
+		if n := count(test.s); n != test.exp {
 			t.Errorf("%q expected %d episodes, got: %d", test.s, test.exp, n)
 		}
 	}
 	// every range adds its two ends, and together they fill no more than
 	// maxRangeFill episodes
-	for _, s := range []string{"E1-999.", "E1-E9999.", "S01E1-999."} {
-		const count = 500
-		if n := len(ParseString(strings.Repeat(s, count)).SeriesEpisodes()); n > maxRangeFill+2*count {
-			t.Errorf("%q repeated expected at most %d episodes, got: %d", s, maxRangeFill+2*count, n)
+	for _, s := range []string{"E1-999.", "E1-E9999.", "S01E1-999.", "E1-999.E2-999.", "S01E1-E9999.S02E1-E9999."} {
+		const times = 500
+		if n := count(strings.Repeat(s, times)); n > maxRangeFill+2*times {
+			t.Errorf("%q repeated expected at most %d episodes, got: %d", s, maxRangeFill+2*times, n)
 		}
+	}
+	// ranges that differ are each an Ep, and are filled until the room is used
+	var s strings.Builder
+	for i := range 500 {
+		fmt.Fprintf(&s, "E%d-%d.", i+1, i+900)
+	}
+	if n := count(s.String()); n <= maxRangeFill || n > maxRangeFill+2*500 {
+		t.Errorf("expected ranges that differ to fill %d episodes and no more than their ends beside, got: %d", maxRangeFill, n)
 	}
 }
 
@@ -1151,13 +1166,22 @@ type rls struct {
 }
 
 func buildRls(r Release) rls {
-	absolute, _ := r.Absolute()
+	series, _ := r.Numbering.Season()
+	episode, _ := r.Numbering.Episode()
+	absolute, _ := r.Numbering.Absolute()
 	req := 0
 	if r.Req {
 		req = 1
 	}
+	// each season and episode once and in rising order, when there is more
+	// than one. An episode the name gives no season for is written S00
+	var eps [][]int
+	for season, episode := range r.Numbering.All() {
+		eps = append(eps, []int{max(season, 0), episode})
+	}
+	slices.SortFunc(eps, slices.Compare[[]int])
 	var seriesEpisodes []string
-	if eps := r.SeriesEpisodes(); len(eps) > 1 {
+	if eps = slices.CompactFunc(eps, slices.Equal[[]int]); len(eps) > 1 {
 		for _, ep := range eps {
 			seriesEpisodes = append(seriesEpisodes, fmt.Sprintf("S%02dE%02d", ep[0], ep[1]))
 		}
@@ -1184,8 +1208,8 @@ func buildRls(r Release) rls {
 		Day:     r.Day,
 		Yearend: r.YearEnd,
 
-		Series:         r.Series,
-		Episode:        r.Episode,
+		Series:         series,
+		Episode:        episode,
 		Absolute:       absolute,
 		SeriesEpisodes: strings.Join(seriesEpisodes, " "),
 		Version:        r.Version,

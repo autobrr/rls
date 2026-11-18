@@ -4630,6 +4630,7 @@
   source: "BluRay"
   resolution: "1080p"
   series: 2
+  episode: 5
   seriesEpisodes: "S02E05 S02E06"
   audio: "FLAC"
   group: "Coalgirls"
@@ -4808,6 +4809,7 @@
   title: "Re Zero Kara Hajimeru Isekai Seikatsu"
   resolution: "720p"
   series: 2
+  episode: 1
   seriesEpisodes: "S02E01 S02E02 S02E03 S02E04 S02E05 S02E06 S02E07 S02E08 S02E09 S02E10 S02E11 S02E12 S02E13"
   group: "HorribleSubs"
   site: "HorribleSubs"
@@ -4938,6 +4940,20 @@
   channels: "5.1"
   other: "Audio.Description"
   group: "NTb"
+"[Judas] Shingeki no Kyojin (Attack on Titan) - S04E29-31v2 [1080p][HEVC x265 10bit][Multi-Subs] (Weekly)":
+  type: "episode"
+  title: "Shingeki no Kyojin"
+  resolution: "1080p"
+  series: 4
+  episode: 29
+  seriesEpisodes: "S04E29 S04E30 S04E31"
+  version: "v2"
+  codec: "HEVC x265"
+  bitdepth: "10BIT"
+  language: "MULTiSUB"
+  group: "Judas"
+  site: "Judas"
+  unused: "Attack on Titan Weekly"
 "Show - 01 (1080p@59.94fps)":
   type: "episode"
   title: "Show"
@@ -5906,6 +5922,7 @@
   type: "series"
   title: "Show Name"
   resolution: "1080p"
+  episode: 1
   seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
   group: "Group"
   site: "Group"
@@ -5914,6 +5931,7 @@
   type: "series"
   title: "Show Name"
   resolution: "1080p"
+  episode: 1
   seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
   group: "Group"
   site: "Group"
@@ -5923,29 +5941,13 @@
   title: "Show Name"
   resolution: "1080p"
   collection: "AT-X"
+  episode: 1
   seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08 S00E09 S00E10 S00E11 S00E12"
   codec: "MPEG-2"
   audio: "AAC"
   group: "Group"
   site: "Group"
   ext: "ts"
-"[Group] Show Name - 24-48 [BD 1080p FLAC]":
-  type: "series"
-  title: "Show Name"
-  source: "BluRay"
-  resolution: "1080p"
-  seriesEpisodes: "S00E24 S00E25 S00E26 S00E27 S00E28 S00E29 S00E30 S00E31 S00E32 S00E33 S00E34 S00E35 S00E36 S00E37 S00E38 S00E39 S00E40 S00E41 S00E42 S00E43 S00E44 S00E45 S00E46 S00E47 S00E48"
-  audio: "FLAC"
-  group: "Group"
-  site: "Group"
-"[Group] Show Name 10-12 [BD 1080p]":
-  type: "series"
-  title: "Show Name"
-  source: "BluRay"
-  resolution: "1080p"
-  seriesEpisodes: "S00E10 S00E11 S00E12"
-  group: "Group"
-  site: "Group"
 "[Group] Show Name - 05 (JA) [720p]":
   type: "episode"
   title: "Show Name"
@@ -5976,6 +5978,15 @@
   group: "Mori+Leopard-Raws"
   site: "Mori+Leopard-Raws"
   ext: "mkv"
+"[Group] Show Name 10-12 [BD 1080p]":
+  type: "series"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 10
+  seriesEpisodes: "S00E10 S00E11 S00E12"
+  group: "Group"
+  site: "Group"
 "[Group] Show Name - 24 (JA) [720p WEB-DL AVC AAC]":
   type: "episode"
   title: "Show Name"
@@ -5988,6 +5999,16 @@
   group: "Group"
   site: "Group"
   unused: "JA"
+"[Group] Show Name - 24-48 [BD 1080p FLAC]":
+  type: "series"
+  title: "Show Name"
+  source: "BluRay"
+  resolution: "1080p"
+  episode: 24
+  seriesEpisodes: "S00E24 S00E25 S00E26 S00E27 S00E28 S00E29 S00E30 S00E31 S00E32 S00E33 S00E34 S00E35 S00E36 S00E37 S00E38 S00E39 S00E40 S00E41 S00E42 S00E43 S00E44 S00E45 S00E46 S00E47 S00E48"
+  audio: "FLAC"
+  group: "Group"
+  site: "Group"
 "[Group] Show Name - S00E28 (WEB 1080p) (Show Name 2nd Season OVA)":
   type: "episode"
   title: "Show Name"
@@ -6050,21 +6071,22 @@
   group: "Group"
   site: "Group"
   unused: "EP : 402"
-"[Group] Show Name S2 - 13~24 [BDRip 1080p]":
-  type: "series"
-  title: "Show Name"
-  source: "BDRiP"
-  resolution: "1080p"
-  series: 2
-  seriesEpisodes: "S02E13 S02E14 S02E15 S02E16 S02E17 S02E18 S02E19 S02E20 S02E21 S02E22 S02E23 S02E24"
-  group: "Group"
-  site: "Group"
 "[Group] Show Name 2nd Season - 08 [1080p]":
   type: "episode"
   title: "Show Name"
   resolution: "1080p"
   series: 2
   episode: 8
+  group: "Group"
+  site: "Group"
+"[Group] Show Name S2 - 13~24 [BDRip 1080p]":
+  type: "series"
+  title: "Show Name"
+  source: "BDRiP"
+  resolution: "1080p"
+  series: 2
+  episode: 13
+  seriesEpisodes: "S02E13 S02E14 S02E15 S02E16 S02E17 S02E18 S02E19 S02E20 S02E21 S02E22 S02E23 S02E24"
   group: "Group"
   site: "Group"
 "Show Name 3rd Season (BD 1080p HEVC Opus)":
@@ -6411,6 +6433,7 @@
   source: "WEB-DL"
   resolution: "1080p"
   collection: "AMZN"
+  episode: 1
   seriesEpisodes: "S00E01 S00E02 S00E03 S00E04 S00E05 S00E06 S00E07 S00E08"
   codec: "AVC"
   audio: "DDP"

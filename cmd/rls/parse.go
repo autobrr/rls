@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/autobrr/rls"
@@ -54,14 +55,15 @@ type releaseOutput struct {
 	Day     int `json:"day"`
 	YearEnd int `json:"year_end"`
 
-	HasSeason  bool    `json:"has_season"`
-	Series     int     `json:"series"`
-	Seasons    []int   `json:"seasons"`
-	HasEpisode bool    `json:"has_episode"`
-	Episode    int     `json:"episode"`
-	Episodes   [][]int `json:"episodes"`
-	Version    string  `json:"version"`
-	Disc       string  `json:"disc"`
+	HasSeason  bool            `json:"has_season"`
+	Series     int             `json:"series"`
+	Seasons    []int           `json:"seasons"`
+	HasEpisode bool            `json:"has_episode"`
+	Episode    int             `json:"episode"`
+	Episodes   [][]int         `json:"episodes"`
+	Numbering  numberingOutput `json:"numbering"`
+	Version    string          `json:"version"`
+	Disc       string          `json:"disc"`
 
 	Codec    []string `json:"codec"`
 	HDR      []string `json:"dynamic_range"`
@@ -89,7 +91,72 @@ type releaseOutput struct {
 	IsRepack  bool     `json:"is_repack"`
 }
 
+// numberingOutput is the JSON form of the numbering of a release, field by
+// field. Shape is what the numbering covers, which the fields give together.
+type numberingOutput struct {
+	Scheme   string     `json:"scheme"`
+	Shape    string     `json:"shape"`
+	Seasons  []int      `json:"seasons"`
+	Episodes []epOutput `json:"episodes"`
+	Alt      []epOutput `json:"alt"`
+	Volume   int        `json:"volume"`
+	Contents []string   `json:"contents"`
+	Batch    bool       `json:"batch"`
+}
+
+// epOutput is the JSON form of one episode or range of episodes. Season is -1
+// for an episode the name gives no season for.
+type epOutput struct {
+	Season int    `json:"season"`
+	First  int    `json:"first"`
+	Last   int    `json:"last"`
+	Frac   int    `json:"frac"`
+	Kind   string `json:"kind"`
+}
+
+func numberingToOutput(n rls.Numbering) numberingOutput {
+	eps := func(v []rls.Ep) []epOutput {
+		out := make([]epOutput, 0, len(v))
+		for _, e := range v {
+			out = append(out, epOutput{Season: e.Season, First: e.First, Last: e.Last, Frac: int(e.Frac), Kind: e.Kind.String()})
+		}
+		return out
+	}
+	return numberingOutput{
+		Scheme:   n.Scheme.String(),
+		Shape:    n.Shape().String(),
+		Seasons:  orEmpty(n.Seasons),
+		Episodes: eps(n.Episodes),
+		Alt:      eps(n.Alt),
+		Volume:   n.Volume,
+		Contents: orEmpty(n.Contents),
+		Batch:    n.Batch,
+	}
+}
+
+// seasons returns the seasons of n in rising order, which is how the seasons
+// key lists them.
+func seasons(n rls.Numbering) []int {
+	v := slices.Clone(n.Seasons)
+	slices.Sort(v)
+	return v
+}
+
+// episodes returns each season and episode of n once and in rising order,
+// with the episodes inside a range, which is how the episodes key lists them.
+// An episode the name gives no season for is in season 0 there.
+func episodes(n rls.Numbering) [][]int {
+	var v [][]int
+	for season, episode := range n.All() {
+		v = append(v, []int{max(season, 0), episode})
+	}
+	slices.SortFunc(v, slices.Compare[[]int])
+	return slices.CompactFunc(v, slices.Equal[[]int])
+}
+
 func rlsToOutput(rls rls.Release) releaseOutput {
+	series, hasSeason := rls.Numbering.Season()
+	episode, hasEpisode := rls.Numbering.Episode()
 	return releaseOutput{
 		Artist:     rls.Artist,
 		Type:       rls.Type.String(),
@@ -106,12 +173,13 @@ func rlsToOutput(rls rls.Release) releaseOutput {
 		Month:      rls.Month,
 		Day:        rls.Day,
 		YearEnd:    rls.YearEnd,
-		HasSeason:  rls.HasSeason(),
-		Series:     rls.Series,
-		Seasons:    orEmpty(rls.Seasons()),
-		HasEpisode: rls.HasEpisode(),
-		Episode:    rls.Episode,
-		Episodes:   orEmpty(rls.SeriesEpisodes()),
+		HasSeason:  hasSeason,
+		Series:     series,
+		Seasons:    orEmpty(seasons(rls.Numbering)),
+		HasEpisode: hasEpisode,
+		Episode:    episode,
+		Episodes:   orEmpty(episodes(rls.Numbering)),
+		Numbering:  numberingToOutput(rls.Numbering),
 		Version:    rls.Version,
 		Disc:       rls.Disc,
 		Codec:      orEmpty(rls.Codec),

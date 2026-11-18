@@ -642,6 +642,10 @@ func (b *TagBuilder) build(tags []Tag, end int, h Hint) Release {
 	if Unknown < h.Type && h.Type <= Series {
 		r.Type = h.Type
 	}
+	// an episode with no episode written is one by its date
+	if r.Type == Episode && r.Numbering.Episodes == nil && r.Year != 0 && r.Month != 0 && r.Day != 0 {
+		r.Numbering.Scheme = SchemeDaily
+	}
 	// special
 	b.specialDate(r)
 	// unset tags
@@ -915,25 +919,9 @@ func appendOnce(v []string, s string) []string {
 
 // collect collects tags into the release.
 func (b *TagBuilder) collect(r *Release) {
-	// bareEp is whether an episode was written with no season, ie the '04' in
-	// 'Show - 04 (1080p)', 'Show E04' or 'Show Episode 04', and bare the first
-	// such episode. season is whether a season was written anywhere in the
-	// name, as a number ('S02E04', '2nd Season') or as the specials ('S00E04')
-	// seasoned is whether a tag before the one at hand wrote a season
-	// secondEp is whether one episode was written as a second numbering, ie
-	// the '1174' of 'S23E19.Episode.1174' or of '1174 (S23E19)', and second
-	// the first such episode
-	var bareEp, season, seasoned, secondEp bool
-	var bare, second int
+	// the series tags, which are read together
+	r.Numbering, r.numbered = r.numbering()
 	for i := 0; i < len(r.tags); i++ {
-		// the first one that is not 0, as Episode is
-		if (!bareEp || bare == 0) && bareEpisode(r.tags, i) {
-			bareEp, bare = true, atoi(r.tags[i].v[2])
-		}
-		if !secondEp && bareEpisode(r.tags, i) && r.secondNumbering(i) {
-			secondEp, second = true, atoi(r.tags[i].v[2])
-		}
-		season = season || r.tags[i].Is(TagTypeSeries) && r.tags[i].v[1] != ""
 		switch r.tags[i].typ {
 		case TagTypeText:
 		case TagTypePlatform:
@@ -959,17 +947,6 @@ func (b *TagBuilder) collect(r *Release) {
 		case TagTypeDate:
 			r.Year, r.Month, r.Day = r.tags[i].Date()
 			r.YearEnd = r.tags[i].yearEnd()
-		case TagTypeSeries:
-			// the first season the name writes, which season 0 is
-			series, episode := r.tags[i].Series()
-			if !seasoned {
-				r.Series, seasoned = series, r.tags[i].v[1] != ""
-			}
-			// the episode is the season's, wherever a second numbering is
-			// written ('1174 (S23E19)' is episode 19)
-			if r.Episode == 0 && !r.secondNumbering(i) {
-				r.Episode = episode
-			}
 		case TagTypeVersion:
 			if r.Version == "" {
 				r.Version = r.tags[i].Version()
@@ -1041,18 +1018,6 @@ func (b *TagBuilder) collect(r *Release) {
 			r.Ext = r.tags[i].Ext()
 		}
 	}
-	// a bare number is an absolute episode when nothing qualified it: a season
-	// marker anywhere makes it season relative by fansub convention ('Hell
-	// Mode S2 - 04' is episode 4 of season 2, not absolute 4). Beside a season
-	// and an episode it is a second numbering, and absolute unless it writes
-	// the season's episode again ('S02E06 [Episode 6]') or the season is the
-	// specials ('S00E05.Episode.12').
-	switch {
-	case bareEp && !season:
-		r.absolute, r.isAbsolute = bare, true
-	case secondEp && r.Series != 0 && second != r.Episode:
-		r.absolute, r.isAbsolute = second, true
-	}
 	// collect year, month, day from unset date tags
 	for i := len(r.dates); i > 0; i-- {
 		year, month, day := r.tags[r.dates[i-1]].Date()
@@ -1075,15 +1040,20 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 	}
 	n := len(r.tags)
 	// inspect types
-	// episode is whether an episode was written, which r.Episode cannot say
-	// for episode 0 ('Show - 00', 'S01E00')
-	// season is whether a season other than 0 was written, which r.Series
-	// cannot say when season 0 is written first ('S00E02 (S02E00)')
+	// series is whether the name has a series tag
+	// season is whether a season other than 0 was written
+	// episode is whether a tag writes an episode in its first place, which
+	// the range of a batch does not ('01-12'): 'S01E01-E03' is an episode
+	// and '[Grp] Show - 01-12' a series. r.numbered is whether such an
+	// episode is not 0, a second numbering aside ('S00E00.Episode.12' has
+	// none)
 	var app, series, season, episode, movie, video bool
 	for _, tag := range r.tags {
-		series = series || tag.Is(TagTypeSeries)
-		season = season || tag.Is(TagTypeSeries) && len(tag.v) > 1 && atoi(tag.v[1]) != 0
-		episode = episode || tag.Is(TagTypeSeries) && len(tag.v) > 2 && tag.v[2] != ""
+		if tag.Is(TagTypeSeries) {
+			series = true
+			season = season || atoi(tag.val(1)) != 0
+			episode = episode || tag.val(2) != ""
+		}
 		video = video || (!tag.Is(TagTypeGroup) && tag.InfoType() == Movie)
 	}
 	for i := n; i > 0; i-- {
@@ -1103,12 +1073,12 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 			}
 			return typ
 		case Series, Episode:
-			if r.Episode != 0 || episode || (r.Series == 0 && r.Episode == 0 && !series) && !slices.Contains(r.Other, "BOXSET") {
+			if episode || !series && !slices.Contains(r.Other, "BOXSET") {
 				return Episode
 			}
 			return Series
 		case Education:
-			if !season && r.Episode == 0 {
+			if !season && !r.numbered {
 				return Education
 			}
 		case Music:
@@ -1147,7 +1117,7 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 		// exclusive tag not superseded by version/episode/date
 		if r.tags[i-1].InfoExcl() &&
 			r.Version == "" &&
-			!season && r.Episode == 0 &&
+			!season && !r.numbered &&
 			r.Day == 0 && r.Month == 0 {
 			return typ
 		}
@@ -1175,9 +1145,9 @@ func (b *TagBuilder) inspect(r *Release, initial bool) Type {
 	}
 	// defaults
 	switch {
-	case r.Episode != 0 || episode || (r.Year != 0 && r.Month != 0 && r.Day != 0):
+	case episode || (r.Year != 0 && r.Month != 0 && r.Day != 0):
 		return Episode
-	case r.Series != 0 || series:
+	case series:
 		return Series
 	case app || (r.Version != "" && r.Resolution == "" && !movie):
 		return App

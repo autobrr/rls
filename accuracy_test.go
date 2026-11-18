@@ -157,9 +157,9 @@ func (t tally) pct() float64 {
 // down to a whole percent, and 99 where the measured value is 100: a change
 // that trades a case away has to lower its floor and say why.
 var floors = map[string]map[string]float64{
-	"anitomy.json": {"title": 65, "group": 92, "episode": 64, "episodeTitle": 69, "season": 90, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
-	"habari.json":  {"title": 70, "group": 89, "episode": 63, "episodeTitle": 55, "season": 89, "checksum": 99, "ext": 99, "resolution": 93, "version": 71},
-	"anitogo.json": {"title": 65, "group": 93, "episode": 63, "episodeTitle": 65, "season": 93, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
+	"anitomy.json": {"title": 65, "group": 92, "episode": 65, "episodeTitle": 69, "season": 90, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
+	"habari.json":  {"title": 70, "group": 89, "episode": 65, "episodeTitle": 55, "season": 89, "checksum": 99, "ext": 99, "resolution": 93, "version": 71},
+	"anitogo.json": {"title": 65, "group": 93, "episode": 64, "episodeTitle": 65, "season": 93, "checksum": 99, "ext": 99, "resolution": 90, "version": 92},
 }
 
 // upstream are the SHA-256 sums of the committed fixtures, which are the files
@@ -210,15 +210,18 @@ func TestAccuracyLabelled(t *testing.T) {
 				if g := first(c.ReleaseGroup); g != "" {
 					get("group").add(strings.EqualFold(r.Group, g))
 				}
-				if e := first(c.EpisodeNumber); e != "" {
-					get("episode").add(r.HasEpisode() && r.Episode == fixtureNum(e))
+				// one label is one episode, and a list is the two ends of
+				// the episodes a batch gives
+				if v, _ := values(c.EpisodeNumber); len(v) != 0 && v[0] != "" {
+					get("episode").add(slices.Equal(episodes(r), sampleNums(v)))
 				}
 				season := first(c.AnimeSeason)
 				if season == "" {
 					season = first(c.SeasonNumber)
 				}
 				if season != "" {
-					get("season").add(r.Series == fixtureNum(season))
+					n, _ := r.Numbering.Season()
+					get("season").add(n == fixtureNum(season))
 				}
 				if s := first(c.FileChecksum); s != "" {
 					get("checksum").add(strings.EqualFold(r.Sum, s))
@@ -259,37 +262,38 @@ var sampleFloors = map[string]map[string]int{
 
 // episodes gives the episodes of r as a sample writes them: nothing for a
 // release with none, one number for one episode, the two ends of a range.
-// Half an episode keeps its fraction at either end ('18.5', '1-11.5').
+// Half an episode keeps its fraction ('18.5', '1-11.5').
 func episodes(r Release) []string {
-	first, last, ranged := r.EpisodeRange()
+	first, last, ranged := episodeRange(r.Numbering)
 	if !ranged {
-		if !r.HasEpisode() {
+		episode, ok := r.Numbering.Episode()
+		if !ok {
 			return nil
 		}
-		first, last = r.Episode, r.Episode
+		first, last = episode, episode
 	}
-	// the fraction is only in the digits the name wrote. The first span that
-	// writes the number has it, read from the end of the name for the end of
-	// a range, so that 'S01E12 + S01E12.5' is episode 12 and '1-11.5' ends
-	// at 11.5
+	// the fraction is that of the first Ep that writes the number, read from
+	// the end of the name for the end of a range, so that 'S01E12 +
+	// S01E12.5' is episode 12 and '1-11.5' ends at 11.5. It belongs to the
+	// Last of an Ep, which is the episode itself when the Ep is no range
 	frac := func(n int, end bool) string {
-		spans := r.EpisodeSpans()
+		eps := slices.Clone(r.Numbering.Episodes)
 		if end {
-			slices.Reverse(spans)
+			slices.Reverse(eps)
 		}
-		for _, span := range spans {
-			ends := []string{span.First, span.Last}
+		for _, e := range eps {
+			ends := []int{e.First, e.Last}
 			if end {
 				slices.Reverse(ends)
 			}
-			for _, s := range ends {
-				if s != "" && wholeEpisode(s) == n {
-					_, f, _ := strings.Cut(s, ".")
-					if f = strings.TrimRight(f, "0"); f != "" {
-						return "." + f
-					}
-					return ""
+			for _, episode := range ends {
+				if episode != n {
+					continue
 				}
+				if e.Frac != 0 && n == e.Last {
+					return "." + strconv.Itoa(int(e.Frac))
+				}
+				return ""
 			}
 		}
 		return ""
@@ -349,11 +353,10 @@ func scoreSample(c labelledCase, r Release) map[string]bool {
 		m["type"] = anyOf(v, r.Type.String(), strings.EqualFold)
 	}
 	if v, ok := values(c.AnimeSeason); ok {
+		// in rising order, as a sample lists them
 		var got []string
-		if r.HasSeason() {
-			for _, n := range r.Seasons() {
-				got = append(got, strconv.Itoa(n))
-			}
+		for _, n := range slices.Sorted(slices.Values(r.Numbering.Seasons)) {
+			got = append(got, strconv.Itoa(n))
 		}
 		m["season"] = slices.Equal(got, sampleNums(v))
 	}
@@ -630,8 +633,8 @@ func TestCorpusStructural(t *testing.T) {
 }
 
 // TestAbsoluteEpisode pins the distinction between the three ways a release can
-// carry an episode number. Release.Episode alone cannot tell them apart, which
-// is why Absolute exists.
+// carry an episode number. Numbering.Episode alone cannot tell them apart,
+// which is why Absolute exists.
 func TestAbsoluteEpisode(t *testing.T) {
 	for _, test := range []struct {
 		s                         string
@@ -650,9 +653,9 @@ func TestAbsoluteEpisode(t *testing.T) {
 		{"[Group] Show Title E05-E07 [1080p]", 0, 5, 0, false, "the ends of a range between two tags are not one episode"},
 		{"[Group] Show Title (E001-E130) (480p)", 0, 1, 0, false, "the same in a bracket"},
 		{"[Group] Show Title E05~E07 [1080p]", 0, 5, 0, false, "and with a tilde"},
-		{"[Group] Show Title E07-E05 [1080p]", 0, 7, 7, true, "a lower number after the hyphen is no range"},
+		{"[Group] Show Title E07-E05 [1080p]", 0, 7, 0, false, "a lower number after the hyphen is no range, and two episodes have no absolute number"},
 		{"[Group] Show Title - 21.5 (720p) [4191AC97].mkv", 0, 21, 0, false, "half an episode has no absolute number"},
-		{"[Group] Show Title - 01 ~ 12 [1080p][BATCH]", 0, 0, 0, false, "a batch is a range, not an episode"},
+		{"[Group] Show Title - 01 ~ 12 [1080p][BATCH]", 0, 1, 0, false, "a batch is a range, not an episode, and starts at its first"},
 		{"[SubsPlease] Hell Mode S2 - 04 (480p) [20BE14E8].mkv", 2, 4, 0, false, "season marker qualifies it: not absolute"},
 		{"Show.Title.S01E05.1080p.WEB-DL-GRP", 1, 5, 0, false, "SxxExx is qualified"},
 		{"Show.Title.S00E05.1080p.WEB-DL-GRP", 0, 5, 0, false, "S00Exx is a special, not an absolute number"},
@@ -660,11 +663,13 @@ func TestAbsoluteEpisode(t *testing.T) {
 		{"Show.Title.2024.03.11.1080p.WEB-DL-GRP", 0, 0, 0, false, "date based, no episode at all"},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
-			r := ParseString(test.s)
-			absolute, ok := r.Absolute()
-			if r.Series != test.series || r.Episode != test.episode || absolute != test.absolute || ok != test.ok {
+			n := ParseString(test.s).Numbering
+			series, _ := n.Season()
+			episode, _ := n.Episode()
+			absolute, ok := n.Absolute()
+			if series != test.series || episode != test.episode || absolute != test.absolute || ok != test.ok {
 				t.Errorf("%q\n  expected series=%d episode=%d absolute=%d ok=%t\n  got      series=%d episode=%d absolute=%d ok=%t",
-					test.s, test.series, test.episode, test.absolute, test.ok, r.Series, r.Episode, absolute, ok)
+					test.s, test.series, test.episode, test.absolute, test.ok, series, episode, absolute, ok)
 			}
 		})
 	}
@@ -676,30 +681,42 @@ func TestAbsoluteInvariants(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping corpus walk in short mode")
 	}
-	f, err := os.Open(corpusDir + "/nyaa.txt")
-	if err != nil {
-		t.Skipf("corpus not present: %v", err)
-	}
-	defer f.Close()
-	sc := bufio.NewScanner(f)
-	sc.Buffer(make([]byte, 1<<20), 1<<20)
-	var n, abs int
-	for sc.Scan() {
-		line := strings.TrimSpace(sc.Text())
-		if line == "" {
+	var n, abs, second int
+	for _, line := range corpusNames(t, "nyaa.txt") {
+		n++
+		num := ParseString(line).Numbering
+		absolute, ok := num.Absolute()
+		if !ok {
 			continue
 		}
-		n++
-		r := ParseString(line)
-		switch absolute, ok := r.Absolute(); {
-		case !ok:
-		case absolute != r.Episode:
-			t.Fatalf("%q: Absolute %d does not match Episode %d", line, absolute, r.Episode)
-		case r.Series != 0:
-			t.Fatalf("%q: Absolute %d set alongside season %d", line, absolute, r.Series)
-		default:
+		// with no season the absolute episode is the one episode of the
+		// name, which Episode gives. Beside a season it is a second
+		// numbering, which is another number than the season's episode and
+		// not inside a range the name writes ('S04E29-31v2')
+		season, seasoned := num.Season()
+		episode, _ := num.Episode()
+		one := func(e Ep) bool { return e.First == absolute && e.Last == absolute && e.Frac == 0 }
+		ranged := slices.ContainsFunc(num.Episodes, func(e Ep) bool {
+			return e.First != e.Last && e.First <= absolute && absolute <= e.Last
+		})
+		switch {
+		case !seasoned && absolute != episode:
+			t.Fatalf("%q: Absolute %d does not match Episode %d", line, absolute, episode)
+		case !seasoned && num.Shape() != ShapeEpisode:
+			t.Fatalf("%q: Absolute %d of more than one episode, %v", line, absolute, num.Episodes)
+		case !seasoned:
 			abs++
+		case season == 0:
+			t.Fatalf("%q: Absolute %d set alongside the specials", line, absolute)
+		case absolute == episode:
+			t.Fatalf("%q: Absolute %d is the episode of season %d", line, absolute, season)
+		case ranged:
+			t.Fatalf("%q: Absolute %d is inside a range of episodes of season %d", line, absolute, season)
+		case !slices.ContainsFunc(num.Alt, one):
+			t.Fatalf("%q: Absolute %d is no second numbering of %v", line, absolute, num.Alt)
+		default:
+			second++
 		}
 	}
-	t.Logf("%d of %d names carry an absolute episode number", abs, n)
+	t.Logf("%d of %d names carry an absolute episode number, %d of them beside a season and an episode", abs+second, n, second)
 }

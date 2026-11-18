@@ -58,13 +58,24 @@ type Event struct {
 // A release parsed with Hint.Sports is an event on the caller's word. Event
 // then returns true for any name of any type, with an empty Competition when
 // it knows none, and with whatever round, session and part the name gives.
+//
+// Two things a parse knows are not in the exported fields: that hint, and
+// whether the name writes an episode or the range of a batch. A Release with
+// no tags, made by hand or decoded from a stored form, is read without the
+// hint and by its Numbering alone, where every range with no season counts as
+// a batch: 'UFC 300 - E01-E03 [1080p]' is a show when parsed, and an event
+// once its tags are gone.
 func (r Release) Event() (Event, bool) {
+	season, _ := r.Numbering.Season()
+	episode, _ := r.Numbering.Episode()
 	if !r.sports {
 		switch r.Type {
 		case App, Audiobook, Book, Comic, Education, Game, Magazine, Music:
 			return Event{}, false
 		}
-		if r.Series != 0 && r.Series < 1900 || r.Series == 0 && r.Episode != 0 {
+		// an episode of no season is a show ('WWE.Unreal.E02'), where the
+		// range of a batch is no episode ('UFC 300 - 01-03 [1080p]')
+		if season != 0 && season < 1900 || season == 0 && r.showEpisode() {
 			return Event{}, false
 		}
 	}
@@ -161,8 +172,8 @@ func (r Release) Event() (Event, bool) {
 	}
 	// 'Formula1.2024x05' and 'S2024E05' give the year as the season and the
 	// round as the episode
-	if ev.Round == 0 && plain && r.Series >= 1900 && r.Episode != 0 {
-		ev.Round, ev.RoundKind, found = r.Episode, "Round", true
+	if ev.Round == 0 && plain && season >= 1900 && episode != 0 {
+		ev.Round, ev.RoundKind, found = episode, "Round", true
 	}
 	switch {
 	case r.sports, found, ev.Number != 0,
@@ -374,4 +385,22 @@ var eventNumberWords = map[string]int{
 	"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
 	"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5, "sixth": 6, "seventh": 7,
 	"erste": 1, "zweite": 2, "dritte": 3, "vierte": 4,
+}
+
+// showEpisode reports whether the release gives an episode other than 0 that
+// is not the range of a batch, which makes a show of a name that starts with a
+// competition. A parse knows it from its tags, where a range is that of a
+// batch when its tag writes no episode in its first place ('01-12', and not
+// 'E01-E03'). A release with no tags is read by its Numbering: an Ep counts
+// when it is one episode or is in a season.
+func (r Release) showEpisode() bool {
+	if r.tags != nil {
+		return r.numbered
+	}
+	for _, e := range r.Numbering.Episodes {
+		if e.Kind == EpRegular && (e.single() || e.Season != NoSeason) && (e.First != 0 || e.Last != 0) {
+			return true
+		}
+	}
+	return false
 }

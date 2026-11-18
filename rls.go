@@ -53,10 +53,10 @@ type Release struct {
 	// ('2014-2015', '2024-25', '1999-2003'), and Year is the first.
 	YearEnd int
 
-	Series  int
-	Episode int
-	Version string
-	Disc    string
+	// Numbering is the seasons and the episodes the name gives.
+	Numbering Numbering
+	Version   string
+	Disc      string
 
 	Codec    []string
 	HDR      []string
@@ -87,17 +87,18 @@ type Release struct {
 
 	// path is whether the name is a file path, which isPath reports.
 	path bool
+	// numbered is whether a tag that is no second numbering writes an episode
+	// other than 0 in its first place, which the range of a batch does not
+	// ('01-12'). The type is read by it, and Event tells a show from an event
+	// by it.
+	numbered bool
+	// groupFrom is where Group was read.
+	groupFrom groupOrigin
 
 	tags   []Tag
 	dates  []int
 	unused []int
 	end    int
-	// absolute is the episode Absolute returns, and isAbsolute whether there
-	// is one.
-	absolute   int
-	isAbsolute bool
-	// groupFrom is where Group was read.
-	groupFrom groupOrigin
 }
 
 // Parse creates a release from src.
@@ -190,166 +191,41 @@ func (r Release) Tags() []Tag {
 // 'E1-E99999.E1-E99999...' from growing into millions of episodes.
 const maxRangeFill = 10000
 
-// SeriesEpisodes returns all series and episodes. The episodes inside a range
-// are included, up to maxRangeFill of them. A written episode 0 is an episode
-// ('S01E00', '[Grp] Show - 00-12'), and a season with no episode gives no
-// pair ('S01'). As in EpisodeRange, an episode that is a second numbering
-// gives no pair of its own, so 'S02E01.Episode.1' and 'S23E19.Episode.1174'
-// each give one pair. An episode written twice gives one pair
-// ('S11E11-GRP/S11E11-GRP.mkv').
-func (r Release) SeriesEpisodes() [][]int {
-	var v [][]int
-	last, fill, none := -1, maxRangeFill, 0
-	for i, tag := range r.tags {
-		if !tag.Is(TagTypeSeries) || r.secondNumbering(i) {
-			continue
-		}
-		series, _ := tag.Series()
-		// a tag that writes no season is in the season written before it,
-		// which a written season 0 is not ('S04E29 ... S00E36')
-		bare := tag.val(1) == ""
-		for k, episode := range tag.episodes(&fill) {
-			s := series
-			if bare && last != -1 {
-				s, _ = r.tags[last].Series()
-			}
-			// a hyphen or a tilde between two episode tags of one season
-			// makes a range ('E02-E04', 'S00E02-S00E04', 'E29~E31'), which
-			// runs from the last episode of the tag before it, unless that
-			// tag is a second numbering ('S01E01.Episode.5-E07')
-			if k == 0 && i >= 2 && r.tags[i-2].Is(TagTypeSeries) && !r.secondNumbering(i-2) && (bare || tag.val(1) == r.tags[i-2].val(1)) && r.tags[i-1].rangeDelim() {
-				if prev := r.tags[i-2].episodes(&none); len(prev) != 0 {
-					if first := prev[len(prev)-1] + 1; episode-first <= fill {
-						for j := first; j < episode; j++ {
-							v = append(v, []int{s, j})
-						}
-						fill -= max(episode-first, 0)
-					}
-				}
-			}
-			v = append(v, []int{s, episode})
-		}
-		if !bare {
-			// an episode after a range or a list of seasons is in none of
-			// them
-			if last = i; r.seasonRange(i) != -1 || r.seasonList(i) != -1 {
-				last = -1
-			}
-		}
-	}
-	slices.SortFunc(v, func(a, b []int) int {
-		return cmp.Or(cmp.Compare(a[0], b[0]), cmp.Compare(a[1], b[1]))
-	})
-
-	return slices.CompactFunc(v, slices.Equal[[]int])
-}
-
-// secondNumbering reports whether the series tag at i writes an episode
-// without a season that numbers an episode of the name a second way, ie the
-// 'Episode.1174' of 'S23E19.Episode.1174' and the '1174' of '1174 (S23E19)'.
-// The episode is in the season written nearest before it, and is a second
-// numbering when the name writes that season's episode too: the '13' of 'S2 -
-// 13 (S02E01)' is, and the 'Episode.2' of 'S01E01.S02.Episode.2' is episode 2
-// of season 2. With no season before it, any season written with an episode
-// makes it one. An 'E06' continuation is another episode, and not one.
-func (r Release) secondNumbering(i int) bool {
-	tag := r.tags[i]
-	if tag.typ != TagTypeSeries || tag.val(1) != "" || tag.continuation() {
+// rangeEnd reports whether the series tag at i writes the end of a range that
+// the series tag before it starts, ie the '31' of 'S04E29-31v2'. The series
+// lexer reads 'S04E29-31' as one tag, and leaves the '31' to the next tag when
+// a version follows it. The tag at i is a bare number, a bare hyphen or tilde
+// stands between the two, the tag before writes a season and an episode, and
+// the number at i is higher than the last episode it writes.
+//
+// As in the lexer, four digits after a lower episode are a year or another
+// number and not the end of a range ('S23E19-1174v2', 'S01E05-2020v2'), unless
+// the episodes are numbered that high ('S01E998-1002v2'). An episode written
+// with a word numbers the episode a second way, as it does after a dot
+// ('S01E05-Episode.10').
+func (r Release) rangeEnd(i int) bool {
+	if i < 2 || !r.tags[i-1].rangeDelim() {
 		return false
 	}
-	season := ""
-	for j := i - 1; j >= 0 && season == ""; j-- {
-		if r.tags[j].typ == TagTypeSeries {
-			season = r.tags[j].val(1)
+	tag, prev := r.tags[i], r.tags[i-2]
+	if prev.typ != TagTypeSeries || prev.val(1) == "" {
+		return false
+	}
+	if s := tag.val(0); s == "" || s[0] < '0' || s[0] > '9' {
+		return false
+	}
+	var start string
+	for _, b := range prev.rest(2) {
+		if b != "" && b != "-" {
+			start = b
 		}
 	}
-	for _, t := range r.tags {
-		if t.typ == TagTypeSeries && t.val(1) != "" && t.wroteEpisode() && (season == "" || atoi(t.val(1)) == atoi(season)) {
-			return true
-		}
+	end := tag.val(2)
+	first, last := atoi(start), atoi(end)
+	if start == "" || len(end) >= 4 && (len(start) < 3 || last-first >= 1000) {
+		return false
 	}
-	return false
-}
-
-// Absolute returns the episode when the name numbers its episodes absolutely
-// and not within a season, ie '[Group] One Piece - 1169'. Episode carries the
-// same number. What Absolute adds is that no season qualifies it, so it is not
-// comparable against a season's episode without an external mapping (AniDB,
-// anime-relations, TheTVDB). ok is false for a season relative number ('Hell
-// Mode S2 - 04') and for a special ('Show.S00E05'), both of which are already
-// qualified. A written episode 0 is absolute like any other: '[Group] Show -
-// 00' gives 0 and true, and a name with no episode 0 and false.
-//
-// A name may write the absolute episode beside the season and episode, as a
-// second numbering ('S23E19.Episode.1174', '[Group] One Piece - 1174
-// (S23E19)'). Absolute then gives it, 1174 and true, and Episode is the
-// season's episode, 19. The season's episode written again is no absolute
-// number ('S02E06 [Episode 6]').
-func (r Release) Absolute() (episode int, ok bool) {
-	return r.absolute, r.isAbsolute
-}
-
-// HasSeason reports whether the name gives a season, which season 0 is
-// ('S00E05'). The Series field cannot tell a season 0 from none, and
-// HasSeason answers from the tags. A Release built by hand with a Series has
-// a season too.
-func (r Release) HasSeason() bool {
-	if r.Series != 0 {
-		return true
-	}
-	for _, tag := range r.tags {
-		if tag.typ == TagTypeSeries && tag.val(1) != "" {
-			return true
-		}
-	}
-	return false
-}
-
-// HasEpisode reports whether the name gives an episode, which episode 0 and
-// the episodes of a range are. So 'S01E00', '[Grp] Show - 00' and the batch
-// '[Grp] Show - 01-12' have an episode though Episode is 0, and the season
-// pack 'Show.S01' has none.
-func (r Release) HasEpisode() bool {
-	if r.Episode != 0 {
-		return true
-	}
-	for _, tag := range r.tags {
-		if tag.typ == TagTypeSeries && tag.wroteEpisode() {
-			return true
-		}
-	}
-	return false
-}
-
-// Seasons returns the seasons the name gives, each once and in order. Two
-// seasons written with no episode and a hyphen or a tilde between them are a
-// range ('S01-S03', 'S01-03', 'Seasons 1~7', '(Season 1 - 3)'), and the
-// seasons in between are included, up to maxRangeFill of them. The seasons of
-// a list are those it writes ('S01+S02', 'Season 1+2+3', 'Seasons 1 & 2'). A
-// Release built by hand with a Series and no tags gives that season.
-func (r Release) Seasons() []int {
-	var v []int
-	fill := maxRangeFill
-	for i, tag := range r.tags {
-		if tag.typ != TagTypeSeries || tag.val(1) == "" {
-			continue
-		}
-		season := atoi(tag.val(1))
-		if start := r.seasonRange(i); start != -1 {
-			if prev := atoi(r.tags[start].val(1)); season-prev-1 <= fill {
-				for j := prev + 1; j < season; j++ {
-					v = append(v, j)
-				}
-				fill -= season - prev - 1
-			}
-		}
-		v = append(v, season)
-	}
-	if v == nil && r.Series != 0 {
-		return []int{r.Series}
-	}
-	slices.Sort(v)
-	return slices.Compact(v)
+	return first < last
 }
 
 // seasonRange returns the index of the series tag that starts a range of
@@ -359,8 +235,7 @@ func (r Release) Seasons() []int {
 // ('S01-S03', 'S01-03', 'Seasons 1~7', '(Season 1 - 3)', 'S01 ~ S03').
 //
 // An episode written after the range with no season of its own is in none of
-// them, as SeriesEpisodes, EpisodeSpans and EpisodeRange have it ('Season 1-4
-// (1-76)').
+// them ('Season 1-4 (1-76)').
 func (r Release) seasonRange(i int) int {
 	tag, start := r.tags[i], -1
 	if tag.typ != TagTypeSeries || tag.val(1) == "" || tag.wroteEpisode() {
@@ -413,130 +288,6 @@ func (r Release) seasonList(i int) int {
 		}
 	}
 	return -1
-}
-
-// EpisodeRange returns the first and last episode when the name gives more
-// than one ('S01E05E06', 'S01E02-04', '01-12'). The episodes are those of the
-// first season the name gives, the one in Series: 'S01E01.S02E01' is not a
-// range. An episode that is a second numbering is not counted, so
-// 'S23E19.Episode.1174' is one episode under two numberings. The same episode
-// written twice is one episode. The ends of a range come back however wide it
-// is.
-func (r Release) EpisodeRange() (first, last int, ok bool) {
-	// cur is the season the nearest earlier tag wrote, which an episode
-	// written without one is in
-	cur, season, found := 0, 0, false
-	for i, tag := range r.tags {
-		if tag.typ != TagTypeSeries {
-			continue
-		}
-		s := cur
-		switch {
-		case tag.val(1) != "":
-			s = atoi(tag.val(1))
-			if cur = s; r.seasonRange(i) != -1 || r.seasonList(i) != -1 {
-				cur = 0
-			}
-		case r.secondNumbering(i):
-			continue
-		}
-		for _, b := range tag.rest(2) {
-			if b == "" || b == "-" {
-				continue
-			}
-			episode := atoi(b)
-			switch {
-			case !found:
-				season, first, last, found = s, episode, episode, true
-			case s == season:
-				first, last = min(first, episode), max(last, episode)
-			}
-		}
-	}
-	if !found || first == last {
-		return 0, 0, false
-	}
-	return first, last, true
-}
-
-// EpisodeSpan is one episode, or one range of episodes, as a name writes it.
-// Season is the season the name gives for it, and empty when it gives none.
-// First is the episode. Last is the end of a range, and empty for one episode.
-// The numbers are the digits of the name, so a leading zero and half an
-// episode are kept: '21.5', '06.5', '00'.
-type EpisodeSpan struct {
-	Season string
-	First  string
-	Last   string
-}
-
-// EpisodeSpans returns the episodes the name gives, in the order it gives
-// them, with a range as its two ends. It tells half an episode from the whole
-// one ('21.5' and '21' are both Episode 21) and an episode 0 from none. A
-// season pack gives no span.
-//
-// An episode written with no season is in the season written before it, as in
-// SeriesEpisodes: the '04' of 'S2 - 04'. Unlike SeriesEpisodes, a second
-// numbering of the same episode is listed too ('S23E19.Episode.1174' gives
-// 1174 in season 23), and an episode written twice is listed twice. A hyphen
-// or a tilde inside a tag makes a range ('S01E02-04', '01 ~ 12'), and so does
-// a bare hyphen or tilde between two tags of one season when the end is the
-// higher number ('E02-E04', 'E29~E31'). A Release built by hand with an
-// Episode and no episode in its tags gives that episode.
-func (r Release) EpisodeSpans() []EpisodeSpan {
-	var v []EpisodeSpan
-	var season string
-	// open is whether the tag before wrote the last span, which a hyphen may
-	// then extend
-	var open bool
-	for i, tag := range r.tags {
-		if tag.typ != TagTypeSeries {
-			continue
-		}
-		bare := tag.val(1) == ""
-		if !bare {
-			if season = tag.val(1); r.seasonRange(i) != -1 || r.seasonList(i) != -1 {
-				season = ""
-			}
-		}
-		eps := tag.rest(2)
-		ranged := open && i >= 2 && r.tags[i-2].typ == TagTypeSeries && r.tags[i-1].rangeDelim() &&
-			(bare || tag.val(1) == r.tags[i-2].val(1))
-		open = false
-		for k, b := range eps {
-			switch b {
-			case "":
-				continue
-			case "-":
-				ranged = open
-				continue
-			}
-			// the fraction follows the last number of the tag
-			if k == len(eps)-1 {
-				b += tag.fraction()
-			}
-			if last := len(v) - 1; ranged && wholeEpisode(b) > wholeEpisode(cmp.Or(v[last].Last, v[last].First)) {
-				v[last].Last = b
-			} else {
-				v = append(v, EpisodeSpan{Season: season, First: b})
-			}
-			ranged, open = false, true
-		}
-	}
-	if len(v) == 0 && r.Episode != 0 {
-		v = append(v, EpisodeSpan{First: strconv.Itoa(r.Episode)})
-		if r.Series != 0 {
-			v[0].Season = strconv.Itoa(r.Series)
-		}
-	}
-	return v
-}
-
-// wholeEpisode returns the whole number of an episode as EpisodeSpans gives
-// it, ie 21 for '21.5'.
-func wholeEpisode(s string) int {
-	s, _, _ = strings.Cut(s, ".")
-	return atoi(s)
 }
 
 // rangeDelim reports whether the tag is the bare hyphen or tilde that makes a
@@ -1543,8 +1294,13 @@ var CompareMap = map[Type]int{
 
 // Compare compares a to b, normalizing titles with Normalize, comparing the
 // resulting lower cased strings. Release types are grouped together based on
-// the precedence defined in CompareMap.
+// the precedence defined in CompareMap. The season and the episode compared
+// are those Numbering.Season and Numbering.Episode give, with 0 for none.
 func Compare(a, b Release) int {
+	aseason, _ := a.Numbering.Season()
+	bseason, _ := b.Numbering.Season()
+	aepisode, _ := a.Numbering.Episode()
+	bepisode, _ := b.Numbering.Episode()
 	var c int
 	for _, f := range []func() int{
 		compareInt(CompareMap[a.Type], CompareMap[b.Type]),
@@ -1553,8 +1309,8 @@ func Compare(a, b Release) int {
 		compareInt(a.Year, b.Year),
 		compareInt(a.Month, b.Month),
 		compareInt(a.Day, b.Day),
-		compareInt(a.Series, b.Series),
-		compareInt(a.Episode, b.Episode),
+		compareInt(aseason, bseason),
+		compareInt(aepisode, bepisode),
 		compareTitle(a.Subtitle, b.Subtitle),
 		compareTitles(a.Alt, b.Alt),
 		compareIntString(a.Resolution, b.Resolution),

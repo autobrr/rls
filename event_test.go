@@ -1,6 +1,7 @@
 package rls
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -318,6 +319,68 @@ func TestEventHint(t *testing.T) {
 	} {
 		if ev, ok := ParseString(s).Event(); ok {
 			t.Errorf("%q: expected no event without the hint, got: %+v", s, ev)
+		}
+	}
+}
+
+// TestEventRoundTrip checks Event on a release that lost its tags: one decoded
+// from its JSON holds the exported fields and nothing else a parse keeps. It
+// gives the same event for every name of tests.yaml and of the corpora that
+// are present, and for a batch after a competition. The one shape that
+// differs is pinned: a range of episodes with no season that is written with
+// an 'E', which only the tags tell from the range of a batch.
+func TestEventRoundTrip(t *testing.T) {
+	trip := func(r Release) Release {
+		buf, err := json.Marshal(r)
+		if err != nil {
+			t.Fatalf("%q: %v", r, err)
+		}
+		var v Release
+		if err := json.Unmarshal(buf, &v); err != nil {
+			t.Fatalf("%q: %v", r, err)
+		}
+		return v
+	}
+	names := benchCorpus(t)
+	if !testing.Short() {
+		for _, file := range []string{"nyaa.txt", "sports.txt"} {
+			v, _ := readCorpus(file)
+			names = append(names, v...)
+		}
+	}
+	var events int
+	for _, name := range names {
+		r := ParseString(name)
+		ev, ok := r.Event()
+		if ok {
+			events++
+		}
+		if ev2, ok2 := trip(r).Event(); ev2 != ev || ok2 != ok {
+			t.Errorf("%q: expected the event of the parse after a round trip, %+v %t, got: %+v %t", name, ev, ok, ev2, ok2)
+		}
+	}
+	t.Logf("%d names, %d events", len(names), events)
+	for _, test := range []struct {
+		name            string
+		parsed, tripped bool
+	}{
+		{"UFC.300.Prelims.1080p.WEB.h264-GRP", true, true},
+		{"Formula1.2024x05.Miami.Grand.Prix.Race.1080p.WEB.h264-GRP", true, true},
+		// a show about the sport
+		{"WWE.Unreal.E02.1080p.WEB.h264-GRP", false, false},
+		{"WWE.Unreal.S01E02.1080p.WEB.h264-GRP", false, false},
+		// the range of a batch is no episode
+		{"UFC 300 - 01-03 [1080p]", true, true},
+		{"WWE Raw 2024 - 01-05 [1080p]", true, true},
+		// and with no tags a range written with an 'E' reads as one
+		{"UFC 300 - E01-E03 [1080p]", false, true},
+	} {
+		r := ParseString(test.name)
+		if _, ok := r.Event(); ok != test.parsed {
+			t.Errorf("%q: expected an event %t when parsed, got: %t", test.name, test.parsed, ok)
+		}
+		if _, ok := trip(r).Event(); ok != test.tripped {
+			t.Errorf("%q: expected an event %t after a round trip, got: %t", test.name, test.tripped, ok)
 		}
 	}
 }
